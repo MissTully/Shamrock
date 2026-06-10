@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Event Sign-Up</title>
+<meta name="description" content="RSVP to Krewe of Shamrock events in Tampa Bay." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+</head>
+<body>
+
+  <nav class="krewe-nav">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. for good craic</small></span>
+    </a>
+    <div class="krewe-links">
+      <a href="index.html">Home</a>
+      <a href="event-signup.html" class="active">Events</a><a href="parades.html">Parades</a>
+      <a href="membership-application.html">Join</a><a href="volunteer.html">Service</a>
+      <a href="gallery.html">Gallery</a><a href="store.html">Shop</a>
+      <a href="videos.html">Videos</a>
+      <a href="learn.html">Learn</a>
+      <a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+  </nav>
+
+  <div class="form-stage">
+    <div class="form-card">
+      <div class="fc-head">
+        <div class="fc-bg" style="background-image:url('assets/img/parade-crowd.jpg')"></div>
+        <img class="em" src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+        <h1>Event Sign-Up</h1>
+        <p>RSVP &amp; reserve your spot</p>
+        <div class="banner-flourish" style="height:40px;margin:12px auto 0;width:80%;" aria-hidden="true"></div>
+      </div>
+      <form id="rsvpForm" class="krewe-form">
+        <label for="event">Choose an event</label>
+        <select id="event" required>
+          <option value="">Loading events…</option>
+        </select>
+
+        <div class="row">
+          <div>
+            <label for="firstName">First name</label>
+            <input id="firstName" type="text" required autocomplete="given-name" />
+          </div>
+          <div>
+            <label for="lastName">Last name</label>
+            <input id="lastName" type="text" required autocomplete="family-name" />
+          </div>
+        </div>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" required autocomplete="email" />
+        <div class="hint">We'll use this to confirm your spot and send event reminders.</div>
+
+        <div class="row">
+          <div>
+            <label for="guests">Guests you're bringing</label>
+            <input id="guests" type="number" min="0" max="20" value="0" />
+          </div>
+          <div>
+            <label for="role">I'm signing up as</label>
+            <select id="role">
+              <option value="attendee">Attendee</option>
+              <option value="volunteer">Volunteer</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="submitBtn" type="submit">☘ Sign me up</button>
+        <div id="message" class="msg"></div>
+      </form>
+      <div class="fc-foot">Sláinte! 🍀 We can't wait to see you.</div>
+    </div>
+  </div>
+
+  <!-- IKC CALENDAR -->
+  <section class="wrap" style="padding-top:10px;">
+    <details class="ikc-card" style="background:linear-gradient(180deg,var(--green-800),var(--green-900));color:#f1ead4;border:1px solid rgba(236,208,126,.45);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;">
+      <summary style="list-style:none;cursor:pointer;padding:22px 24px;display:flex;align-items:center;gap:14px;font-family:var(--display);font-size:20px;color:#fff;">
+        <span style="font-size:28px;line-height:1;">📅</span>
+        <span style="flex:1;">Inter-Krewe Council Event Calendar
+          <small style="display:block;font-family:var(--fancy);font-style:italic;font-size:15px;color:var(--gold-light);font-weight:400;">Click to view what's happening across Tampa Bay's krewes</small>
+        </span>
+        <span class="ikc-chev" aria-hidden="true" style="font-size:16px;color:var(--gold-light);">▼</span>
+      </summary>
+      <div style="padding:0 16px 18px;">
+        <a href="https://interkrewe.com/Calendar" target="_blank" rel="noopener" title="Open the live IKC Calendar"
+           style="display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid rgba(236,208,126,.3);">
+          <img src="https://interkrewe.com/resources/Pictures/Calendar%20Page/IKC%20Calendar.png"
+               alt="Inter-Krewe Council event calendar"
+               loading="lazy"
+               style="display:block;width:100%;height:auto;" />
+        </a>
+        <p style="margin:14px 4px 0;text-align:center;font-size:15px;color:#f1ead4;">
+          For the most up-to-date schedule,
+          <a href="https://interkrewe.com/Calendar" target="_blank" rel="noopener" style="color:var(--gold-light);font-weight:600;">open the live IKC Calendar ↗</a>
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
+    <div class="fname">Krewe of Shamrock</div>
+    <div class="flinks">
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+    <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+  </footer>
+
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="auto"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const SUPABASE_URL = "https://njfzrnqwbnuhmopgpsud.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const eventSelect = document.getElementById("event");
+    const form = document.getElementById("rsvpForm");
+    const btn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
+
+    function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
+
+    async function loadEvents() {
+      const { data, error } = await supabase
+        .from("events").select("id, name, start_time, location")
+        .eq("is_public", true).order("start_time", { ascending: true });
+      if (error) {
+        eventSelect.innerHTML = '<option value="">Could not load events</option>';
+        showMessage("Sorry, we couldn't load the events list. Please try again later.", "error");
+        return;
+      }
+      if (!data || data.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; return; }
+      eventSelect.innerHTML = '<option value="">— Select an event —</option>';
+      for (const ev of data) {
+        let when;
+        if (!ev.start_time) { when = "Date TBD"; }
+        else {
+          const d = new Date(ev.start_time);
+          const ds = d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
+          when = (d.getHours() === 0 && d.getMinutes() === 0) ? ds + ", Time TBA" : ds 

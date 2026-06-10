@@ -1,0 +1,369 @@
+/* ============================================================
+   Krewe of Shamrock — shared artistic theme
+   Irish heritage: deep greens, gold, parchment, Celtic knotwork
+   ============================================================ */
+
+:root{
+  /* greens */
+  --green-900:#0c3b21;
+  --green-800:#14532d;
+  --green-700:#1b6b39;
+  --green-600:#2b8b51;
+  --green-50:#e9f3ea;
+  /* gold */
+  --gold:#d4af37;
+  --gold-light:#ecd07e;
+  --gold-deep:#a9801c;
+  /* parchment / neutrals */
+  --cream:#f6efdd;
+  --cream-2:#efe5cc;
+  --paper:#fbf7ec;
+  --ink:#23291f;
+  --muted:#5f6b5a;
+  --error:#b91c1c;
+  /* fonts */
+  --display:"Cinzel", Georgia, "Times New Roman", serif;
+  --fancy:"Cormorant Garamond", Georgia, serif;
+  --body:"EB Garamond", Georgia, "Times New Roman", serif;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(12,59,33,.14);
+  --shadow-sm:0 4px 16px rgba(12,59,33,.10);
+}
+
+*{ box-sizing:border-box; }
+
+html{ scroll-behavior:smooth; }
+
+body{
+  margin:0;
+  font-family:var(--body);
+  color:var(--ink);
+  line-height:1.72;
+  font-size:18px;
+  background-color:var(--cream);
+  background-image:
+    radial-gradient(1200px 600px at 12% -8%, #fffdf5 0%, rgba(255,253,245,0) 60%),
+    radial-gradient(1000px 700px at 105% 0%, #f0e7cf 0%, rgba(240,231,207,0) 55%),
+    linear-gradient(180deg,#f7f1e1 0%, #f3ebd6 100%);
+  background-attachment:fixed;
+}
+
+a{ color:var(--green-700); }
+img{ max-width:100%; display:block; }
+
+/* ---------- Headings ---------- */
+h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
+.wordmark{ font-family:var(--display); }
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+.krewe-nav{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:10px;
+  padding:10px 26px;
+  background:
+    linear-gradient(180deg, var(--green-800), var(--green-900));
+  border-bottom:3px solid var(--gold);
+  box-shadow:0 6px 18px rgba(12,59,33,.28);
+}
+.krewe-nav .brand{
+  display:flex; align-items:center; gap:12px;
+  color:#fff; text-decoration:none;
+}
+.krewe-nav .brand img{ width:42px; height:42px; border-radius:50%;
+  border:2px solid var(--gold); box-shadow:0 0 0 2px rgba(212,175,55,.25); }
+.krewe-nav .brand .name{ display:flex; flex-direction:column; line-height:1.05; }
+.krewe-nav .brand .name b{ font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:.6px; }
+.krewe-nav .brand .name small{ font-family:var(--fancy); font-style:italic; font-size:13px; color:var(--gold-light); letter-spacing:.5px; }
+
+.krewe-links{ display:flex; flex-wrap:wrap; align-items:center; }
+.krewe-links a{
+  color:#f3ecd6; text-decoration:none; font-family:var(--display);
+  font-size:14px; font-weight:500; letter-spacing:.5px;
+  margin-left:6px; padding:8px 12px; border-radius:8px;
+  transition:background .15s, color .15s;
+}
+.krewe-links a:hover{ background:rgba(212,175,55,.16); color:#fff; }
+.krewe-links a.active{ color:var(--green-900); background:var(--gold); }
+
+/* ============================================================
+   KNOT DIVIDER  (reusable Celtic triquetra rule)
+   ============================================================ */
+.knot-divider{
+  display:flex; align-items:center; justify-content:center; gap:18px;
+  margin:34px auto; max-width:520px; color:var(--gold-deep);
+}
+.knot-divider::before,.knot-divider::after{
+  content:""; height:2px; flex:1;
+  background:linear-gradient(90deg, transparent, var(--gold) 60%, var(--gold-deep));
+}
+.knot-divider::after{ background:linear-gradient(270deg, transparent, var(--gold) 60%, var(--gold-deep)); }
+.knot-divider .knot{
+  width:46px; height:46px; flex:0 0 auto;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23a9801c' stroke-width='5' stroke-linejoin='round'%3E%3Cpath d='M50 16 C 68 42 68 58 50 84 C 32 58 32 42 50 16 Z'/%3E%3Cg transform='rotate(120 50 50)'%3E%3Cpath d='M50 16 C 68 42 68 58 50 84 C 32 58 32 42 50 16 Z'/%3E%3C/g%3E%3Cg transform='rotate(240 50 50)'%3E%3Cpath d='M50 16 C 68 42 68 58 50 84 C 32 58 32 42 50 16 Z'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='9'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   HERO  (homepage)
+   ============================================================ */
+.hero{
+  position:relative; isolation:isolate;
+  color:#fff; text-align:center;
+  padding:96px 22px 104px;
+  border-bottom:5px solid var(--gold);
+  overflow:hidden;
+}
+.hero .hero-bg{
+  position:absolute; inset:0; z-index:-2;
+  background:center/cover no-repeat;
+  transform:scale(1.04);
+}
+.hero::after{ /* overlay */
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:
+    linear-gradient(180deg, rgba(8,42,24,.62), rgba(8,42,24,.42) 45%, rgba(8,42,24,.82)),
+    radial-gradient(900px 420px at 50% 18%, rgba(8,42,24,.10), rgba(8,42,24,.66));
+}
+.hero .eyebrow{
+  font-family:var(--fancy); font-style:italic; font-size:20px;
+  letter-spacing:1px; color:var(--gold-light); margin:0 0 6px;
+  text-shadow:0 2px 10px rgba(0,0,0,.5);
+}
+.hero h1{
+  font-size:clamp(40px,7vw,72px); margin:4px 0 14px; font-weight:700;
+  text-shadow:0 3px 22px rgba(0,0,0,.55); letter-spacing:1px;
+}
+.hero .lede{
+  font-family:var(--fancy); font-size:clamp(19px,2.5vw,24px); font-weight:500;
+  max-width:660px; margin:0 auto 30px; color:#f4eed9;
+  text-shadow:0 2px 12px rgba(0,0,0,.5);
+}
+.hero .emblem{
+  width:96px; height:96px; margin:0 auto 10px; border-radius:50%;
+  border:3px solid var(--gold); box-shadow:0 6px 26px rgba(0,0,0,.5);
+}
+
+/* buttons */
+.btns{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:14px 28px; border-radius:11px; cursor:pointer;
+  font-family:var(--display); font-weight:600; font-size:16px; letter-spacing:.4px;
+  text-decoration:none; border:2px solid transparent; transition:transform .12s, background .15s, box-shadow .15s;
+}
+.btn:hover{ transform:translateY(-2px); }
+.btn-primary{ background:linear-gradient(180deg,var(--gold-light),var(--gold)); color:#3a2c00; box-shadow:0 8px 20px rgba(168,128,28,.4); border-color:var(--gold-deep); }
+.btn-primary:hover{ background:linear-gradient(180deg,#f3dd97,var(--gold-light)); }
+.btn-outline{ background:rgba(255,255,255,.06); color:#fff; border-color:rgba(236,208,126,.8); }
+.btn-outline:hover{ background:rgba(236,208,126,.18); border-color:#fff; }
+.btn-green{ background:linear-gradient(180deg,var(--green-600),var(--green-800)); color:#fff; box-shadow:var(--shadow-sm); }
+.btn-green:hover{ background:linear-gradient(180deg,var(--green-700),var(--green-900)); }
+
+/* ============================================================
+   PAGE HEAD (sub pages)
+   ============================================================ */
+.page-head{
+  position:relative; isolation:isolate; color:#fff; text-align:center;
+  padding:64px 22px 58px; border-bottom:5px solid var(--gold); overflow:hidden;
+}
+.page-head .ph-bg{ position:absolute; inset:0; z-index:-2; background:center/cover no-repeat; }
+.page-head::after{ content:""; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg, rgba(8,42,24,.72), rgba(8,42,24,.86)); }
+.page-head .eyebrow{ font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:18px; margin:0 0 4px; letter-spacing:.6px; }
+.page-head h1{ font-size:clamp(30px,5vw,46px); margin:0; text-shadow:0 3px 18px rgba(0,0,0,.5); letter-spacing:1px; }
+.page-head p.sub{ margin:10px auto 0; max-width:620px; font-family:var(--fancy); font-size:19px; color:#f1ead4; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.wrap{ max-width:1060px; margin:0 auto; padding:64px 22px; }
+.wrap.narrow{ max-width:820px; }
+.section-title{ text-align:center; }
+.section-title h2{ font-size:clamp(28px,4vw,38px); color:var(--green-800); margin:0 0 6px; }
+.section-title .sub{ font-family:var(--fancy); font-style:italic; font-size:20px; color:var(--muted); margin:0; }
+
+.band{ position:relative; }
+.band-green{ background:linear-gradient(180deg,var(--green-800),var(--green-900)); color:#f1ead4; }
+.band-green .section-title h2{ color:#fff; }
+.band-green .section-title .sub{ color:var(--gold-light); }
+.band-cream{ background:linear-gradient(180deg,#f1e8d2,#ece1c6); }
+
+/* ---------- Feature row (text + image) ---------- */
+.feature{ display:grid; grid-template-columns:1fr 1fr; gap:42px; align-items:center; }
+.feature.rev .ft-media{ order:2; }
+.feature .ft-media img{ width:100%; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(168,128,28,.25); }
+.feature h2{ color:var(--green-800); font-size:30px; margin:0 0 10px; }
+.band-green .feature h2{ color:#fff; }
+.feature p{ margin:0 0 14px; }
+
+/* framed image (clover wreath motif via gold frame) */
+.framed{ position:relative; padding:14px; background:
+   linear-gradient(135deg,var(--gold-light),var(--gold) 45%,var(--gold-deep));
+   border-radius:18px; box-shadow:var(--shadow); }
+.framed img{ border-radius:10px; display:block; width:100%; }
+
+/* ---------- Pillars (about cards) ---------- */
+.pillars{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.pillar{
+  background:var(--paper); border-radius:var(--radius); padding:28px 24px;
+  border-top:4px solid var(--gold); box-shadow:var(--shadow-sm);
+  text-align:center; transition:transform .15s, box-shadow .15s;
+}
+.pillar:hover{ transform:translateY(-4px); box-shadow:var(--shadow); }
+.pillar .ic{ font-size:40px; line-height:1; display:block; margin-bottom:10px; }
+.pillar h3{ color:var(--green-800); font-size:21px; margin:0 0 8px; }
+.pillar p{ margin:0; color:var(--ink); font-size:16.5px; }
+
+/* ---------- Cards / grids ---------- */
+.grid-auto{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:22px; }
+.tile{ background:var(--paper); border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow-sm); border-bottom:4px solid var(--gold);
+  transition:transform .15s, box-shadow .15s; }
+.tile:hover{ transform:translateY(-4px); box-shadow:var(--shadow); }
+.tile a{ display:block; }
+.tile img{ width:100%; height:220px; object-fit:cover; background:var(--green-50); }
+.tile .cap{ padding:14px 16px; }
+.tile .cap h3{ margin:0 0 2px; font-size:18px; color:var(--green-800); font-family:var(--display); }
+.tile .cap span{ font-size:14px; color:var(--muted); font-family:var(--fancy); font-style:italic; }
+
+/* event cards */
+.event-card{
+  background:var(--paper); border-radius:var(--radius); padding:22px 24px;
+  border-left:5px solid var(--gold); box-shadow:var(--shadow-sm);
+}
+.event-card .type{ font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--green-700); font-weight:700; font-family:var(--display); }
+.event-card h3{ margin:6px 0; color:var(--green-800); font-size:21px; }
+.event-card .meta{ color:var(--muted); font-size:15px; margin-bottom:14px; font-family:var(--fancy); font-style:italic; }
+.event-card a.rsvp{ font-family:var(--display); font-weight:600; text-decoration:none; color:var(--green-700); }
+.event-card a.rsvp:hover{ color:var(--gold-deep); }
+.empty{ color:var(--muted); font-style:italic; font-family:var(--fancy); font-size:18px; }
+
+/* ---------- Article / lessons ---------- */
+.article{
+  background:var(--paper); border-left:5px solid var(--gold); border-radius:12px;
+  padding:26px 28px; margin-bottom:26px; box-shadow:var(--shadow-sm);
+}
+.article .cat{ font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--green-700); font-weight:700; font-family:var(--display); }
+.article h2{ margin:4px 0 4px; color:var(--green-800); }
+.article .by{ color:var(--muted); font-size:14px; margin-bottom:10px; font-family:var(--fancy); font-style:italic; }
+.article img{ width:100%; border-radius:10px; margin:12px 0; }
+.article p{ margin:0 0 14px; }
+
+/* ---------- Poems ---------- */
+.poem{
+  background:var(--paper); border-radius:12px; padding:24px 26px;
+  border-left:5px solid var(--gold); box-shadow:var(--shadow-sm);
+}
+.poem h3{ margin:0 0 10px; color:var(--green-800); font-size:22px; }
+.poem .text{ white-space:pre-line; font-family:var(--fancy); font-size:19px; line-height:1.6; }
+.poem .by{ margin-top:12px; color:var(--muted); font-style:italic; }
+
+/* ---------- Videos ---------- */
+.ratio{ position:relative; width:100%; padding-top:56.25%; background:#000; border-radius:12px 12px 0 0; overflow:hidden; }
+.ratio iframe,.ratio video{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+/* ============================================================
+   FORM CARD  (event signup / membership)
+   ============================================================ */
+.form-stage{ display:flex; justify-content:center; padding:48px 22px 70px; }
+.form-card{
+  background:var(--paper); width:100%; max-width:560px; border-radius:18px;
+  overflow:hidden; box-shadow:var(--shadow); border-top:6px solid var(--gold);
+}
+.form-card .fc-head{ position:relative; isolation:isolate; color:#fff; text-align:center; padding:32px 28px 26px; overflow:hidden; }
+.form-card .fc-head .fc-bg{ position:absolute; inset:0; z-index:-2; background:center/cover no-repeat; }
+.form-card .fc-head::after{ content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(8,42,24,.72),rgba(8,42,24,.9)); }
+.form-card .fc-head img.em{ width:62px; height:62px; border-radius:50%; border:2px solid var(--gold); margin:0 auto 8px; }
+.form-card .fc-head h1{ margin:4px 0; font-size:24px; }
+.form-card .fc-head p{ margin:0; font-family:var(--fancy); font-style:italic; color:var(--gold-light); }
+form.krewe-form{ padding:26px 30px 30px; }
+.krewe-form label{ display:block; font-family:var(--display); font-weight:500; font-size:14px; margin:16px 0 6px; color:var(--green-800); }
+.krewe-form input,.krewe-form select,.krewe-form textarea{
+  width:100%; padding:12px 13px; font-size:16px; font-family:var(--body);
+  border:1.5px solid #cdd8cf; border-radius:10px; background:#fff; color:var(--ink);
+}
+.krewe-form textarea{ min-height:96px; resize:vertical; }
+.krewe-form input:focus,.krewe-form select:focus,.krewe-form textarea:focus{
+  outline:none; border-color:var(--green-600); box-shadow:0 0 0 3px rgba(43,139,81,.18); }
+.krewe-form .row{ display:flex; gap:14px; } .krewe-form .row>div{ flex:1; }
+.krewe-form .hint{ font-size:13px; color:var(--muted); margin-top:5px; font-family:var(--fancy); font-style:italic; }
+.krewe-form button{ margin-top:24px; width:100%; padding:14px; font-size:17px;
+  font-family:var(--display); font-weight:600; color:#3a2c00; cursor:pointer;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold)); border:2px solid var(--gold-deep); border-radius:11px; transition:transform .12s,background .15s; }
+.krewe-form button:hover{ transform:translateY(-2px); background:linear-gradient(180deg,#f3dd97,var(--gold-light)); }
+.krewe-form button:disabled{ background:#cbb87a; cursor:not-allowed; transform:none; }
+.msg{ margin-top:18px; padding:14px; border-radius:10px; font-size:15px; display:none; font-family:var(--body); }
+.msg.success{ display:block; background:var(--green-50); border:1px solid var(--green-600); color:var(--green-800); }
+.msg.waitlist{ display:block; background:#fff7e6; border:1px solid var(--gold); color:#7a5b00; }
+.msg.error{ display:block; background:#fdeaea; border:1px solid var(--error); color:var(--error); }
+.form-card .fc-foot{ text-align:center; font-size:14px; color:var(--muted); padding:0 28px 24px; font-family:var(--fancy); font-style:italic; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.krewe-foot{
+  background:linear-gradient(180deg,var(--green-800),var(--green-900));
+  color:#e9e0c6; text-align:center; padding:46px 22px 38px;
+  border-top:3px solid var(--gold);
+}
+.krewe-foot .fimg{ width:64px; height:64px; border-radius:50%; border:2px solid var(--gold); margin:0 auto 12px; }
+.krewe-foot .fname{ font-family:var(--display); font-size:22px; color:#fff; letter-spacing:.6px; }
+.krewe-foot .flinks{ margin:14px 0 10px; }
+.krewe-foot .flinks a{ color:var(--gold-light); text-decoration:none; margin:0 10px; font-family:var(--display); font-size:14px; }
+.krewe-foot .flinks a:hover{ color:#fff; text-decoration:underline; }
+.krewe-foot .slainte{ font-family:var(--fancy); font-style:italic; font-size:18px; color:var(--gold-light); margin-top:8px; }
+.krewe-foot .fine{ opacity:.6; font-size:13px; margin-top:6px; }
+
+/* ============================================================
+   MUSIC PLAYER  (floating, autoplay-muted, tap to unmute)
+   ============================================================ */
+.krewe-music{
+  position:fixed; left:18px; bottom:18px; z-index:80;
+  display:flex; align-items:center; gap:10px;
+}
+.krewe-music button{
+  width:54px; height:54px; border-radius:50%; cursor:pointer;
+  border:2px solid var(--gold); color:#3a2c00;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold));
+  box-shadow:0 8px 22px rgba(12,59,33,.32);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; transition:transform .15s;
+}
+.krewe-music button:hover{ transform:scale(1.06); }
+.krewe-music button .bars{ display:flex; gap:2.5px; align-items:flex-end; height:20px; }
+.krewe-music button .bars i{ width:3.5px; background:#23420f; border-radius:2px; height:7px; }
+.krewe-music.playing button .bars i{ animation:eq .9s ease-in-out infinite; }
+.krewe-music.playing button .bars i:nth-child(2){ animation-delay:.18s; }
+.krewe-music.playing button .bars i:nth-child(3){ animation-delay:.36s; }
+.krewe-music.playing button .bars i:nth-child(4){ animation-delay:.10s; }
+@keyframes eq{ 0%,100%{height:6px;} 50%{height:19px;} }
+.krewe-music .label{
+  background:var(--green-900); color:var(--gold-light);
+  font-family:var(--fancy); font-style:italic; font-size:15px;
+  padding:7px 14px; border-radius:20px; border:1px solid rgba(212,175,55,.4);
+  box-shadow:var(--shadow-sm); white-space:nowrap;
+  animation:nudge 2.4s ease-in-out 1s 2;
+}
+@keyframes nudge{ 0%,100%{transform:translateX(0);} 50%{transform:translateX(-4px);} }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:860px){
+  .feature{ grid-template-columns:1fr; gap:26px; }
+  .feature.rev .ft-media{ order:0; }
+  .pillars{ grid-template-columns:1fr; }
+}
+@media (max-width:680px){
+  body{ font-size:17px; }
+  .krewe-links a{ font-size:13px; padding:7px 9px; margin-left:2px; }
+  .krewe-nav .brand .name small{ display:none; }
+  .krewe-music .label{ display:none; }
+  .wrap{ padding:48px 18px; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; scroll-behavior:auto; }
+  .btn:hover,.tile:hover,.pillar:hover{ transform:none; }
+}

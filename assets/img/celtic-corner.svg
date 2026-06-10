@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Celtic knotwork corner ornament">
+  <defs>
+    <linearGradient id="cnGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecd07e"/>
+      <stop offset="0.55" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#a9801c"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- backing -->
+    <g stroke="#0c3b21" stroke-width="11">
+      <path d="M8,112 L8,40 C8,20 20,8 40,8 L112,8"/>
+      <path d="M8,40 C8,64 24,72 44,60 C60,50 52,30 36,34 C24,37 26,52 38,50"/>
+      <circle cx="92" cy="28" r="15"/>
+    </g>
+    <!-- gold ribbon -->
+    <g stroke="url(#cnGold)" stroke-width="6">
+      <path d="M8,112 L8,40 C8,20 20,8 40,8 L112,8"/>
+      <path d="M8,40 C8,64 24,72 44,60 C60,50 52,30 36,34 C24,37 26,52 38,50"/>
+      <circle cx="92" cy="28" r="15"/>
+    </g>
+    <!-- shamrock accent -->
+    <g transform="translate(92,28)" fill="#2b8b51" stroke="#0c3b21" stroke-width="1.4">
+      <circle cx="0" cy="-5" r="4.4"/>
+      <circle cx="-5" cy="2.5" r="4.4"/>
+      <circle cx="5" cy="2.5" r="4.4"/>
+    </g>
+  </g>
+</svg>

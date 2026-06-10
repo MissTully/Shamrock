@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0" stop-color="#1d6e3d"/><stop offset="0.7" stop-color="#0f5128"/><stop offset="1" stop-color="#072a15"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbeaa6"/><stop offset="0.5" stop-color="#e3bf57"/><stop offset="1" stop-color="#b8860b"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg)"/>
+  <rect x="16" y="16" width="568" height="568" rx="14" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.8"/>
+  <g transform="translate(300,300)">
+    <!-- cross bars -->
+    <g fill="url(#gold)" stroke="#062a14" stroke-width="6" stroke-linejoin="round">
+      <rect x="-26" y="-200" width="52" height="400" rx="14"/>
+      <rect x="-150" y="-86" width="300" height="52" rx="14"/>
+    </g>
+    <!-- ring at the crossing (centered slightly up) -->
+    <circle cx="0" cy="-60" r="92" fill="none" stroke="#062a14" stroke-width="26"/>
+    <circle cx="0" cy="-60" r="92" fill="none" stroke="url(#gold)" stroke-width="17"/>
+    <!-- recut bars over ring so they read in front -->
+    <g fill="url(#gold)" stroke="#062a14" stroke-width="6" stroke-linejoin="round">
+      <rect x="-26" y="-200" width="52" height="400" rx="14"/>
+      <rect x="-150" y="-86" width="300" height="52" rx="14"/>
+    </g>
+    <!-- center knot accent -->
+    <g fill="none" stroke="#062a14" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="0" cy="-60" r="26"/>
+    </g>
+    <g fill="none" stroke="#fff6da" stroke-width="3" opacity="0.5" stroke-linejoin="round">
+      <rect x="-26" y="-200" width="52" height="400" rx="14"/>
+      <rect x="-150" y="-86" width="300" height="52" rx="14"/>
+      <circle cx="0" cy="-60" r="92"/>
+    </g>
+  </g>
+</svg>

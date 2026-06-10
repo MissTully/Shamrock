@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0" stop-color="#1d6e3d"/><stop offset="0.7" stop-color="#0f5128"/><stop offset="1" stop-color="#072a15"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbeaa6"/><stop offset="0.5" stop-color="#e3bf57"/><stop offset="1" stop-color="#b8860b"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bg)"/>
+  <rect x="16" y="16" width="568" height="568" rx="14" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.8"/>
+  <g transform="translate(300,300)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="0" cy="0" r="170" stroke="#062a14" stroke-width="22"/>
+    <circle cx="0" cy="0" r="170" stroke="url(#gold)" stroke-width="13"/>
+
+    <!-- branches + roots: dark underlay then gold -->
+    <g id="tree" stroke="#062a14" stroke-width="16">
+      <!-- trunk -->
+      <path d="M0,165 C-9,95 -9,35 0,0"/>
+      <!-- canopy: central -->
+      <path d="M0,0 C-4,-55 -2,-110 0,-158"/>
+      <!-- canopy right -->
+      <path d="M0,-12 C28,-40 60,-58 92,-78 C116,-93 132,-118 140,-150"/>
+      <path d="M58,-58 C82,-78 92,-110 92,-150"/>
+      <path d="M0,-40 C40,-58 92,-78 150,-92"/>
+      <path d="M104,-86 C128,-104 150,-118 165,-138"/>
+      <path d="M0,-95 C30,-118 48,-140 52,-162"/>
+      <!-- canopy left (mirror) -->
+      <path d="M0,-12 C-28,-40 -60,-58 -92,-78 C-116,-93 -132,-118 -140,-150"/>
+      <path d="M-58,-58 C-82,-78 -92,-110 -92,-150"/>
+      <path d="M0,-40 C-40,-58 -92,-78 -150,-92"/>
+      <path d="M-104,-86 C-128,-104 -150,-118 -165,-138"/>
+      <path d="M0,-95 C-30,-118 -48,-140 -52,-162"/>
+      <!-- roots right -->
+      <path d="M0,150 C35,150 85,152 132,160"/>
+      <path d="M0,150 C28,160 60,168 96,172"/>
+      <!-- roots left -->
+      <path d="M0,150 C-35,150 -85,152 -132,160"/>
+      <path d="M0,150 C-28,160 -60,168 -96,172"/>
+    </g>
+    <use href="#tree" stroke="url(#gold)" stroke-width="8"/>
+
+    <!-- leaf buds at tips -->
+    <g fill="url(#gold)" stroke="none">
+      <circle cx="0" cy="-158" r="9"/>
+      <circle cx="140" cy="-150" r="9"/><circle cx="-140" cy="-150" r="9"/>
+      <circle cx="92" cy="-150" r="8"/><circle cx="-92" cy="-150" r="8"/>
+      <circle cx="150" cy="-92" r="8"/><circle cx="-150" cy="-92" r="8"/>
+      <circle cx="165" cy="-138" r="7"/><circle cx="-165" cy="-138" r="7"/>
+      <circle cx="52" cy="-162" r="8"/><circle cx="-52" cy="-162" r="8"/>
+    </g>
+  </g>
+</svg>

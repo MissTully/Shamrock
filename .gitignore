@@ -1,0 +1,21 @@
+# Large raw uploads & archives (optimized copies live under assets/)
+*.zip
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.heic
+*.HEIC
+
+# Raw source image/audio uploads kept in the project root
+/mtully_*.png
+/Kettle Singing.mp3
+/Copy of *
+/IMG_*.JPG
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+.vercel

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" preserveAspectRatio="none" role="img" aria-label="Celtic interlace border">
+  <defs>
+    <linearGradient id="bdGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ecd07e"/>
+      <stop offset="0.5" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#a9801c"/>
+    </linearGradient>
+  </defs>
+  <!-- one tileable unit (60 wide) drawn twice; interlocking sine ribbons -->
+  <g fill="none" stroke-linecap="round">
+    <g stroke="#0c3b21" stroke-width="9">
+      <path d="M0,20 C15,2 15,2 30,20 C45,38 45,38 60,20 C75,2 75,2 90,20 C105,38 105,38 120,20"/>
+      <path d="M0,20 C15,38 15,38 30,20 C45,2 45,2 60,20 C75,38 75,38 90,20 C105,2 105,2 120,20"/>
+    </g>
+    <g stroke="url(#bdGold)" stroke-width="4.5">
+      <path d="M0,20 C15,2 15,2 30,20 C45,38 45,38 60,20 C75,2 75,2 90,20 C105,38 105,38 120,20"/>
+      <path d="M0,20 C15,38 15,38 30,20 C45,2 45,2 60,20 C75,38 75,38 90,20 C105,2 105,2 120,20"/>
+    </g>
+  </g>
+</svg>

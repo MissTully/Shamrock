@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 80" role="img" aria-label="Celtic banner flourish">
+  <defs>
+    <linearGradient id="bnGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecd07e"/><stop offset="0.5" stop-color="#d4af37"/><stop offset="1" stop-color="#a9801c"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#0c3b21" stroke-width="12">
+      <path d="M30,40 C80,12 130,68 182,40"/><path d="M278,40 C330,68 380,12 430,40"/>
+      <circle cx="24" cy="40" r="14"/><circle cx="436" cy="40" r="14"/>
+    </g>
+    <g stroke="url(#bnGold)" stroke-width="6">
+      <path d="M30,40 C80,12 130,68 182,40"/><path d="M278,40 C330,68 380,12 430,40"/>
+      <circle cx="24" cy="40" r="14"/><circle cx="436" cy="40" r="14"/>
+    </g>
+    <g transform="translate(230,40)">
+      <g stroke="#0c3b21" stroke-width="12">
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z"/>
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z" transform="rotate(120)"/>
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z" transform="rotate(240)"/>
+        <circle cx="0" cy="0" r="6"/>
+      </g>
+      <g stroke="url(#bnGold)" stroke-width="6">
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z"/>
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z" transform="rotate(120)"/>
+        <path d="M0,2 C-16,-10 -18,-34 0,-34 C18,-34 16,-10 0,2 Z" transform="rotate(240)"/>
+        <circle cx="0" cy="0" r="6"/>
+      </g>
+    </g>
+    <circle cx="24" cy="40" r="4" fill="#d4af37" stroke="none"/><circle cx="436" cy="40" r="4" fill="#d4af37" stroke="none"/>
+  </g>
+</svg>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Members Area</title>
+<meta name="description" content="Members-only coordination tools for the Krewe of Shamrock: locker rentals, carpools, van pools, and the member directory." />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
+  .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
+  .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
+  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
+  .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
+  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
+  .member-grid{ display:grid; gap:26px; }
+  .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .app-card > .app-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px; }
+  .app-head .ic{ font-size:26px; } .app-head h2{ margin:0; font-family:var(--display); font-size:21px; }
+  .app-head small{ display:block; font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:14px; }
+  .app-body{ padding:20px 22px; }
+  .krewe-form .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .data-list{ list-style:none; padding:0; margin:14px 0 0; display:grid; gap:10px; }
+  .data-row{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; font-size:15px; }
+  .data-row b{ color:var(--green-800); }
+  .badge{ display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.5px; }
+  .badge.requested{ background:#f0e2bd; color:#7a5b00; }
+  .badge.assigned{ background:#cfe6d4; color:#1d5b34; }
+  .badge.paid{ background:#bfe0c6; color:#14532d; }
+  .badge.available{ background:#e6e6e6; color:#444; }
+  .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
+  .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
+  .seg button.on{ background:var(--green-700); color:#fff; }
+  .van-card{ border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:16px; margin-top:12px; background:#fbf7ec; }
+  .van-card .seats{ font-family:var(--display); color:var(--green-800); font-weight:700; }
+  .mini-form{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-top:10px; }
+  .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
+  .mini-form button{ white-space:nowrap; }
+  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
+  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; }
+  .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
+  .dir-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .msg{ margin-top:10px; font-size:14px; }
+  .msg.success{ color:#14532d; } .msg.error{ color:#a12; }
+  .empty{ color:var(--muted); font-style:italic; }
+  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+  <!-- PASSCODE GATE -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <h1>Members Area</h1>
+      <p>Enter the Krewe passcode to access member tools.</p>
+      <form id="gateForm">
+        <input id="gateInput" type="password" placeholder="Member passcode" autocomplete="off" autofocus />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Enter</button>
+        <div class="err" id="gateErr"></div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="krewe-nav">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. for good craic</small></span>
+    </a>
+    <div class="krewe-links">
+      <a href="index.html">Home</a>
+      <a href="event-signup.html">Events</a><a href="parades.html">Parades</a>
+      <a href="tartan-ball.html">Tartan Ball</a>
+      <a href="membership-application.html">Join</a><a href="volunteer.html">Service</a>
+      <a href="gallery.html">Gallery</a><a href="store.html">Shop</a>
+      <a href="videos.html">Videos</a>
+      <a href="learn.html">Learn</a>
+      <a href="poetry.html">Poetry &amp; Art</a>
+      <a href="members.html" class="active">Members</a>
+    </div>
+  </nav>
+
+  <header class="page-head">
+    <div class="ph-bg" style="background-image:url('assets/img/gallery/krewe-big-group.jpg')"></div>
+    <p class="eyebrow">For the Krewe</p>
+    <h1>Members Area</h1>
+    <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
+  </header>
+
+  <main class="wrap" id="memberContent" style="display:none;">
+    <div class="member-grid">
+
+      <!-- LOCKERS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Request and track your krewe locker</small></div></div>
+        <div class="app-body">
+          <form id="lockerForm" class="krewe-form">
+            <div class="row">
+              <div><label for="lkName">Your name</label><input id="lkName" required /></div>
+              <div><label for="lkEmail">Email</label><input id="lkEmail" type="email" /></div>
+            </div>
+            <label for="lkSize">Locker size</label>
+            <select id="lkSize"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select>
+            <label for="lkNotes">Notes (optional)</label>
+            <input id="lkNotes" placeholder="e.g. prefer near the entrance" />
+            <button class="btn btn-primary" type="submit">☘ Request a locker</button>
+            <div class="msg" id="lkMsg"></div>
+          </form>
+          <ul class="data-list" id="lockerList"><li class="empty">Loading lockers…</li></ul>
+        </div>
+      </section>
+
+      <!-- CARPOOLS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🚗</span><div><h2>Carpools</h2><small>Offer a ride or ask for one</small></div></div>
+        <div class="app-body">
+          <div class="seg" role="tablist">
+            <button type="button" id="segOffer" class="on" onclick="setCarKind('offer')">I can drive</button>
+            <button type="button" id="segRequest" onclick="setCarKind('request')">I need a ride</button>
+          </div>
+          <form id="carForm" class="krewe-form">
+            <div class="row">
+              <div><label for="cpName">Your name</label><input id="cpName" required /></div>
+              <div><label for="cpEmail">Email</label><input id="cpEmail" type="email" /></div>
+            </div>
+            <div class="row">
+              <div><label for="cpEvent">For which event?</label><input id="cpEvent" placeholder="e.g. Krewe Picnic" /></div>
+              <div><label for="cpPickup">Pickup area</label><input id="cpPickup" placeholder="e.g. South Tampa" /></div>
+            </div>
+            <div class="row">
+              <div id="cpSeatsWrap"><label for="cpSeats">Seats available</label><input id="cpSeats" type="number" min="0" max="20" value="3" /></div>
+              <div><label for="cpPhone">Phone (optional)</label><input id="cpPhone" /></div>
+            </div>
+            <label for="cpNotes">Notes (optional)</label>
+            <input id="cpNotes" placeholder="e.g. leaving at 9am sharp" />
+            <button class="btn btn-primary" type="submit">☘ Post to the board</button>
+            <div class="msg" id="cpMsg"></div>
+          </form>
+          <h3 style="margin:18px 0 0;color:var(--green-800);font-family:var(--display);">🚙 Drivers offering rides</h3>
+          <ul class="data-list" id="offerList"><li class="empty">Loading…</li></ul>
+          <h3 style="margin:18px 0 0;color:var(--green-800);font-family:var(--display);">🙋 Looking for a ride</h3>
+          <ul class="data-list" id="requestList"><li class="empty">Loading…</li></ul>
+        </div>
+      </section>
+
+      <!-- VAN POOLS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🚐</span><div><h2>Van Pools</h2><small>Reserve a seat on a krewe van</small></div></div>
+        <div class="app-body">
+          <div id="vanList"><p class="empty">Loading van pools…</p></div>
+        </div>
+      </section>
+
+      <!-- DIRECTORY -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
+        <div class="app-body">
+          <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
+          <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
+          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
+    <div class="fname">Krewe of Shamrock</div>
+    <div class="flinks">
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+    <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+  </footer>
+
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="auto"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+
+    // ---- Passcode gate (change PASSCODE to your krewe's code) ----
+    const PASSCODE = "2026";
+    const gate = document.getElementById("gate");
+    const content = document.getElementById("memberContent");
+    function unlock(){ gate.style.display="none"; content.style.display="block"; sessionStorage.setItem("kosMember","1"); initAll(); }
+    if (sessionStorage.getItem("kosMember")==="1") unlock();
+    document.getElementById("gateForm").addEventListener("submit",(e)=>{
+      e.preventDefault();
+      if (document.getElementById("gateInput").value.trim()===PASSCODE) unlock();
+      else document.getElementById("gateErr").textContent="Sorry, that passcode isn't right.";
+    });
+
+    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
+
+    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+
+    /* ---------------- LOCKERS ---------------- */
+    async function loadLockers(){
+      const list=document.getElementById("lockerList");
+      const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
+      if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
+      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet — be the first!</li>'; return; }
+      list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
+    }
+    document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
+      e.preventDefault();
+      const payload={ holder_name:document.getElementById("lkName").value.trim(), holder_email:document.getElementById("lkEmail").value.trim()||null, size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
+      if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
+      const { error } = await supabase.from("lockers").insert(payload);
+      if (error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
+      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); loadLockers();
+    });
+
+    /* ---------------- CARPOOLS ---------------- */
+    let carKind="offer";
+    window.setCarKind=(k)=>{ carKind=k;
+      document.getElementById("segOffer").classList.toggle("on",k==="offer");
+      document.getElementById("segRequest").classList.toggle("on",k==="request");
+      document.getElementById("cpSeatsWrap").style.display = k==="offer" ? "block":"none";
+    };
+    async function loadCarpools(){
+      const off=document.getElementById("offerList"), req=document.getElementById("requestList");
+      const { data, error } = await supabase.from("carpools").select("kind,event,person_name,seats,pickup_area,notes").order("created_at",{ascending:false});
+      if (error){ off.innerHTML=req.innerHTML='<li class="empty">Could not load.</li>'; return; }
+      const card=(c)=>`<li class="data-row"><b>${esc(c.person_name)}</b>${c.event?" · "+esc(c.event):""}${c.pickup_area?" · 📍 "+esc(c.pickup_area):""}${(c.kind==="offer"&&c.seats!=null)?` · ${esc(c.seats)} seats`:""}${c.notes?`<br><span class="empty">${esc(c.notes)}</span>`:""}</li>`;
+      const offers=data.filter(c=>c.kind==="offer"), reqs=data.filter(c=>c.kind==="request");
+      off.innerHTML=offers.length?offers.map(card).join(""):'<li class="empty">No rides offered yet.</li>';
+      req.innerHTML=reqs.length?reqs.map(card).join(""):'<li class="empty">No ride requests yet.</li>';
+    }
+    document.getElementById("carForm").addEventListener("submit",async(e)=>{
+      e.preventDefault();
+      const payload={ kind:carKind, person_name:document.getElementById("cpName").value.trim(), person_email:document.getElementById("cpEmail").value.trim()||null,
+        phone:document.getElementById("cpPhone").value.trim()||null, event:document.getElementById("cpEvent").value.trim()||null,
+        pickup_area:document.getElementById("cpPickup").value.trim()||null, notes:document.getElementById("cpNotes").value.trim()||null,
+        seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null };
+      if(!payload.person_name){ show("cpMsg","Please enter your name.","error"); return; }
+      const { error } = await supabase.from("carpools").insert(payload);
+      if (error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
+      show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); setCarKind(carKind); loadCarpools();
+    });
+
+    /* ---------------- VAN POOLS ---------------- */
+    async function loadVans(){
+      const wrap=document.getElementById("vanList");
+      const [{ data:vans, error:e1 }, { data:res, error:e2 }] = await Promise.all([
+        supabase.from("vanpools").select("id,van_name,event,capacity,departure,notes").order("created_at",{ascending:true}),
+        supabase.from("vanpool_reservations").select("vanpool_id,rider_name,seats")
+      ]);
+      if (e1||e2){ wrap.innerHTML='<p class="empty">Could not load van pools.</p>'; return; }
+      if (!vans.length){ wrap.innerHTML='<p class="empty">No van pools posted yet.</p>'; return; }
+      wrap.innerHTML=vans.map(v=>{
+        const rs=(res||[]).filter(r=>r.vanpool_id===v.id);
+        const taken=rs.reduce((n,r)=>n+(r.seats||0),0);
+        const left=Math.max(0,(v.capacity||0)-taken);
+        const riders=rs.length?rs.map(r=>`${esc(r.rider_name)} (${esc(r.seats)})`).join(", "):"No reservations yet";
+        return `<div class="van-card">
+          <div><b style="font-family:var(--display);color:var(--green-800);font-size:18px;">${esc(v.van_name)}</b>${v.event?" · "+esc(v.event):""}</div>
+          <div style="font-size:14px;color:var(--muted);">${v.departure?esc(v.departure):""}${v.notes?" · "+esc(v.notes):""}</div>
+          <div class="seats" style="margin-top:6px;">${left} of ${esc(v.capacity)} seats open</div>
+          <div style="font-size:14px;margin-top:4px;"><b>Riders:</b> ${riders}</div>
+          <form class="mini-form" data-van="${v.id}">
+            <input name="nm" placeholder="Your name" required />
+            <input name="em" type="email" placeholder="Email (optional)" />
+            <input name="st" type="number" min="1" max="${Math.max(1,left)}" value="1" title="Seats" style="max-width:80px;" />
+            <button class="btn btn-green" type="submit" ${left<=0?"disabled":""}>${left<=0?"Full":"Reserve"}</button>
+          </form>
+          <div class="msg" id="vanmsg-${v.id}"></div>
+        </div>`;
+      }).join("");
+      wrap.querySelectorAll(".mini-form").forEach(f=>f.addEventListener("submit",async(e)=>{
+        e.preventDefault(); const id=f.getAttribute("data-van");
+        const payload={ vanpool_id:id, rider_name:f.nm.value.trim(), rider_email:f.em.value.trim()||null, seats:parseInt(f.st.value||"1",10) };
+        if(!payload.rider_name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
+        const { error } = await supabase.from("vanpool_reservations").insert(payload);
+        if (error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
+        loadVans();
+      }));
+    }
+
+    /* ---------------- DIRECTORY ---------------- */
+    let dirData=[];
+    async function loadDir(){
+      const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
+      if (error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
+      dirData=data||[]; renderDir();
+    }
+    window.renderDir=()=>{
+      const q=(document.getElementById("dirSearch").value||"").toLowerCase();
+      const grid=document.getElementById("dirGrid");
+      const rows=dirData.filter(m=>(`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
+      if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
+      grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
+    };
+  </script>
+</body>
+</html>

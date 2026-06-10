@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Video Library</title>
+<meta name="description" content="Demonstrations, performances, and educational videos from the Krewe of Shamrock." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+</head>
+<body>
+
+  <nav class="krewe-nav">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. for good craic</small></span>
+    </a>
+    <div class="krewe-links">
+      <a href="index.html">Home</a>
+      <a href="event-signup.html">Events</a><a href="parades.html">Parades</a>
+      <a href="tartan-ball.html">Tartan Ball</a>
+      <a href="membership-application.html">Join</a><a href="volunteer.html">Service</a>
+      <a href="gallery.html">Gallery</a><a href="store.html">Shop</a>
+      <a href="videos.html" class="active">Videos</a>
+      <a href="learn.html">Learn</a>
+      <a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+  </nav>
+
+  <header class="page-head">
+    <div class="ph-bg" style="background-image:url('assets/img/festival-pipeband.jpg')"></div>
+    <p class="eyebrow">Watch &amp; listen</p>
+    <h1>Video Library</h1>
+    <p class="sub">Performances, demonstrations, and stories from the Krewe.</p>
+  </header>
+
+  <section class="photo-band">
+    <div class="pb-bg" style="background-image:url('assets/img/piper-painting.jpg')"></div>
+    <div class="pb-inner">
+      <div class="banner-flourish" aria-hidden="true"></div>
+      <h2>Sights &amp; Sounds of the Krewe</h2>
+      <p>Performances, parade footage, and the odd bit of mischief —
+         gathered here for a watch by the fire.</p>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <!-- Featured parade footage -->
+    <div class="section-title">
+      <h2>Parade Footage</h2>
+      <p class="sub">Rolling with the Krewe through Tampa Bay</p>
+    </div>
+    <div class="knot-divider"><span class="knot"></span></div>
+    <div class="grid-auto" style="margin-bottom:10px;">
+      <figure style="margin:0;">
+        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
+          <video controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0a0a;"
+                 src="https://www.kreweofshamrock.com/resources/Pictures/Parade%20Videos/2025%20Gasparilla.mp4"></video>
+        </div>
+        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">2025 Gasparilla Parade of Pirates</figcaption>
+      </figure>
+      <figure style="margin:0;">
+        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
+          <video controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0a0a0a;"
+                 src="https://www.kreweofshamrock.com/resources/Pictures/Parade%20Videos/2024%20Gasparilla.mp4"></video>
+        </div>
+        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">2024 Gasparilla Parade of Pirates</figcaption>
+      </figure>
+    </div>
+
+    <!-- Dynamic videos from the backend -->
+    <div id="content"><p class="empty" style="text-align:center;">Loading more videos…</p></div>
+  </main>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
+    <div class="fname">Krewe of Shamrock</div>
+    <div class="flinks">
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+    <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+  </footer>
+
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="auto"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const root = document.getElementById("content");
+    const esc = (s)=> (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    function youtubeId(url){ const m=(url||"").match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+    function vimeoId(url){ const m=(url||"").match(/vimeo\.com\/(?:v

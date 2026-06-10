@@ -1,0 +1,18 @@
+# Keep the deployment lean — exclude raw source uploads, archives & docs
+.git
+*.zip
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.heic
+*.HEIC
+mtully_*.png
+Kettle Singing.mp3
+Copy of *
+IMG_*.JPG
+20231202_*.mp4
+*.md
+krewe-of-shamrock-website/
+assets/img/Photos.zip
+assets/img/Photos-3-001.zip
