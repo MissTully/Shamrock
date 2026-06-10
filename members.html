@@ -50,7 +50,50 @@
   .msg{ margin-top:10px; font-size:14px; }
   .msg.success{ color:#14532d; } .msg.error{ color:#a12; }
   .empty{ color:var(--muted); font-style:italic; }
-  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } }
+
+  /* ---- Reports Dashboard ---- */
+  .dash-card{ cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .dash-card:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,.18); }
+  .dash-card .app-head{ background:linear-gradient(180deg,#1d6b3e,var(--green-900)); }
+  .dash-card .dash-go{ margin-left:auto; font-family:var(--display); color:var(--gold-light); font-size:15px; white-space:nowrap; }
+  .dash-body p{ margin:0 0 14px; color:#3a3a2e; }
+  .dash-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .dash-chips span{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); }
+
+  .modal-overlay{ position:fixed; inset:0; z-index:10000; background:rgba(12,28,18,.74); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; overflow-y:auto; }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{ background:#fbf7ec; width:100%; max-width:920px; border-radius:18px; border:1px solid var(--gold); box-shadow:0 30px 80px rgba(0,0,0,.5); overflow:hidden; margin:auto; }
+  .modal-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:16px 22px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:2; }
+  .modal-head h2{ margin:0; font-family:var(--display); font-size:21px; }
+  .modal-x{ margin-left:auto; background:rgba(255,255,255,.16); border:0; color:#fff; width:34px; height:34px; border-radius:9px; font-size:16px; cursor:pointer; }
+  .modal-x:hover{ background:rgba(255,255,255,.3); }
+  .modal-body{ padding:20px 22px 28px; }
+  .rpt-cat{ font-family:var(--display); color:var(--green-800); font-size:15px; letter-spacing:.6px; text-transform:uppercase; margin:20px 0 10px; border-bottom:1px solid rgba(168,128,28,.3); padding-bottom:6px; }
+  .rpt-cat:first-child{ margin-top:0; }
+  .rpt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+  .rpt-card{ text-align:left; background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:12px; padding:14px 15px; cursor:pointer; transition:transform .12s, box-shadow .12s; }
+  .rpt-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.12); }
+  .rpt-card .t{ font-family:var(--display); color:var(--green-800); font-size:16px; display:flex; align-items:center; gap:7px; }
+  .rpt-card .d{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
+  .rpt-card .lock{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#7a5b00; background:#f0e2bd; border-radius:999px; padding:2px 9px; display:inline-block; margin-top:9px; }
+  .rpt-back{ background:none; border:0; color:var(--green-700); font-family:var(--display); font-size:15px; cursor:pointer; padding:0; margin-bottom:10px; }
+  .rpt-back:hover{ text-decoration:underline; }
+  #reportTitle{ font-family:var(--display); color:var(--green-800); margin:0 0 14px; font-size:22px; }
+  .stat-row{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 16px; }
+  .stat{ flex:1 1 120px; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:14px; text-align:center; }
+  .stat .num{ font-family:var(--display); color:var(--green-800); font-size:26px; line-height:1.1; }
+  .stat .lab{ font-size:13px; color:var(--muted); margin-top:4px; }
+  .rpt-tablewrap{ overflow-x:auto; }
+  .rpt-table{ width:100%; border-collapse:collapse; font-size:14px; background:#fff; border-radius:10px; overflow:hidden; }
+  .rpt-table th{ background:var(--green-700); color:#fff; text-align:left; padding:9px 11px; font-family:var(--display); font-weight:600; white-space:nowrap; }
+  .rpt-table td{ padding:8px 11px; border-top:1px solid rgba(168,128,28,.18); }
+  .rpt-table tr:nth-child(even) td{ background:#fbf7ec; }
+  .rpt-note{ font-size:14px; color:var(--muted); margin-top:14px; }
+  .rpt-secure{ background:#fff; border:1px solid rgba(168,128,28,.3); border-left:4px solid var(--gold); border-radius:12px; padding:18px 20px; }
+  .rpt-secure h4{ margin:0 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
+  .rpt-secure p{ margin:0 0 8px; }
+
+  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
 </style>
 </head>
 <body>
@@ -96,6 +139,25 @@
 
   <main class="wrap" id="memberContent" style="display:none;">
     <div class="member-grid">
+
+      <!-- REPORTS DASHBOARD -->
+      <section class="app-card dash-card" id="dashCard" role="button" tabindex="0"
+               onclick="openReports()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReports();}">
+        <div class="app-head">
+          <span class="ic">📊</span>
+          <div><h2>Reports Dashboard</h2><small>Coordination reports drawn from the krewe's live data</small></div>
+          <span class="dash-go">Open →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>One place for every coordination report the website's data can produce — event headcounts and
+             volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
+             content inventory. Tap a report to run it against the latest data.</p>
+          <div class="dash-chips">
+            <span>📅 Events &amp; Attendance</span><span>👥 Membership</span><span>💶 Dues</span>
+            <span>🚐 Logistics</span><span>📚 Content</span>
+          </div>
+        </div>
+      </section>
 
       <!-- LOCKERS -->
       <section class="app-card">
@@ -170,6 +232,26 @@
 
     </div>
   </main>
+
+  <!-- REPORTS DASHBOARD MODAL -->
+  <div class="modal-overlay" id="reportsModal" aria-hidden="true"
+       onclick="if(event.target===this) closeReports()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member Reports Dashboard">
+      <div class="modal-head">
+        <span class="ic" style="font-size:24px;">📊</span>
+        <h2>Member Reports Dashboard</h2>
+        <button class="modal-x" type="button" onclick="closeReports()" aria-label="Close dashboard">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="reportGrid"></div>
+        <div id="reportView" style="display:none;">
+          <button class="rpt-back" type="button" onclick="showReportGrid()">← All reports</button>
+          <h3 id="reportTitle"></h3>
+          <div id="reportBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="krewe-foot">
     <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
@@ -308,6 +390,251 @@
       if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
       grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
     };
+
+    /* ================= REPORTS DASHBOARD ================= */
+    const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmtDate  = iso => { if(!iso) return "TBA"; const d=new Date(iso); return isNaN(d)?esc(String(iso)):d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"}); };
+    const num = v => (v==null?0:Number(v));
+    function rTable(headers, rows){
+      if(!rows.length) return '<p class="empty">No data yet.</p>';
+      return `<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+        rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    }
+    function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
+    function secureNotice(why){
+      return `<div class="rpt-secure"><h4>🔒 Secure member login required</h4>
+        <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so it is deliberately <b>not</b> served to the public web key that powers this page.</p>
+        <p>${esc(why)}</p>
+        <p class="rpt-note">When per‑member sign‑in is added (each member with their own login), this report unlocks automatically — the underlying data and secure views are already in place behind the scenes.</p></div>`;
+    }
+
+    const REPORTS = [
+      /* ---- Events & Attendance ---- */
+      { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
+        desc:"Every scheduled event with date and location.",
+        run: async()=>{
+          const now=new Date().toISOString();
+          const { data, error } = await supabase.from("events")
+            .select("name,event_type,start_time,location")
+            .or(`start_time.gte.${now},start_time.is.null`).order("start_time",{ascending:true});
+          if(error) throw error;
+          return rTable(["Event","Type","When","Location"],
+            (data||[]).map(e=>[e.name, e.event_type||"event", fmtDate(e.start_time), e.location||"—"]));
+        }},
+      { id:"event_headcount", cat:"Events & Attendance", icon:"🧮", title:"Event Headcount & Capacity",
+        desc:"RSVPs, guests, total headcount and spots remaining per event.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_event_headcount")
+            .select("name,start_time,signups,total_guests,total_headcount,capacity,spots_remaining,waitlisted")
+            .order("start_time",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]);
+          const totalHead=rows.reduce((n,r)=>n+num(r.total_headcount),0);
+          return rStats([{l:"Events",v:rows.length},{l:"Total headcount",v:totalHead}]) +
+            rTable(["Event","When","RSVPs","Guests","Headcount","Capacity","Spots left","Waitlist"],
+              rows.map(r=>[r.name,fmtDate(r.start_time),num(r.signups),num(r.total_guests),num(r.total_headcount),
+                r.capacity==null?"—":r.capacity, r.spots_remaining==null?"—":r.spots_remaining, num(r.waitlisted)]));
+        }},
+      { id:"volunteer_coverage", cat:"Events & Attendance", icon:"🙌", title:"Volunteer Coverage",
+        desc:"How many volunteers have signed up for each event.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_event_headcount")
+            .select("name,start_time,volunteers,event_type").order("start_time",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]);
+          const totalVol=rows.reduce((n,r)=>n+num(r.volunteers),0);
+          return rStats([{l:"Total volunteers",v:totalVol},{l:"Events",v:rows.length}]) +
+            rTable(["Event","When","Type","Volunteers"],
+              rows.map(r=>[r.name,fmtDate(r.start_time),r.event_type||"event",num(r.volunteers)]));
+        }},
+      { id:"attendee_contacts", cat:"Events & Attendance", icon:"📇", title:"Event Attendee Contact List", secure:true,
+        desc:"Names and emails of everyone signed up, for direct outreach.",
+        why:"It would expose each attendee's email address." },
+
+      /* ---- Membership ---- */
+      { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
+        desc:"Active members, prospects, officers, and new joiners this year.",
+        run: async()=>{
+          const [{ data:m, error:e1 }, { data:dir, error:e2 }] = await Promise.all([
+            supabase.from("v_report_membership").select("*").single(),
+            supabase.from("member_directory").select("member_role")
+          ]);
+          if(e1) throw e1; if(e2) throw e2;
+          const byRole={}; (dir||[]).forEach(d=>{ const k=d.member_role||"member"; byRole[k]=(byRole[k]||0)+1; });
+          return rStats([
+            {l:"Total members",v:m.total_members},{l:"Active",v:m.active_members},
+            {l:"Prospects",v:m.prospects},{l:"Officers",v:m.officers},{l:"New this year",v:m.new_this_year}
+          ]) + rTable(["Role","Count"], Object.keys(byRole).sort().map(k=>[k, byRole[k]]));
+        }},
+      { id:"officer_roster", cat:"Membership", icon:"🎖️", title:"Officer & Captain Roster",
+        desc:"Who holds leadership roles in the krewe (names only).",
+        run: async()=>{
+          const { data, error } = await supabase.from("member_directory")
+            .select("first_name,last_name,member_role,membership_status").order("last_name",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]).filter(m=>["captain","officer"].includes((m.member_role||"").toLowerCase()));
+          return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"—"]));
+        }},
+      { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Year",
+        desc:"Count of members who joined since January 1.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_report_membership").select("new_this_year,total_members").single();
+          if(error) throw error;
+          return rStats([{l:"Joined this year",v:data.new_this_year},{l:"Total members",v:data.total_members}]) +
+            `<p class="rpt-note">A full welcome list with contact details is available once secure member login is added.</p>`;
+        }},
+      { id:"member_directory_full", cat:"Membership", icon:"📒", title:"Member Contact Directory", secure:true,
+        desc:"Full roster with email and phone for each member.",
+        why:"It would publish every member's email and phone number." },
+      { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
+        desc:"Prospective members and their contact details.",
+        why:"It would expose applicants' personal contact information." },
+
+      /* ---- Dues & Finance ---- */
+      { id:"dues_summary", cat:"Dues & Finance", icon:"💶", title:"Dues Summary by Year",
+        desc:"Billed, collected and outstanding totals — no names.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_report_dues_summary").select("*");
+          if(error) throw error;
+          const rows=(data||[]);
+          const outstanding=rows.reduce((n,r)=>n+num(r.amount_outstanding),0);
+          const collected=rows.reduce((n,r)=>n+num(r.amount_collected),0);
+          return rStats([{l:"Collected",v:fmtMoney(collected)},{l:"Outstanding",v:fmtMoney(outstanding)}]) +
+            rTable(["Year","Invoices","Paid","Unpaid","Members owing","Collected","Outstanding"],
+              rows.map(r=>[r.membership_year,num(r.invoices),num(r.paid_count),num(r.unpaid_count),
+                num(r.members_owing),fmtMoney(r.amount_collected),fmtMoney(r.amount_outstanding)]));
+        }},
+      { id:"dues_by_member", cat:"Dues & Finance", icon:"🧾", title:"Outstanding Dues by Member", secure:true,
+        desc:"Who owes what, with days overdue, for follow‑up.",
+        why:"It would reveal individual members' names tied to money owed." },
+
+      /* ---- Logistics & Coordination ---- */
+      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
+        desc:"Locker status breakdown and current holders.",
+        run: async()=>{
+          const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]); const by={};
+          rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
+          return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
+            rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"—",l.holder_name||"—",l.status]));
+        }},
+      { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
+        desc:"Drivers offering rides vs members needing one.",
+        run: async()=>{
+          const { data, error } = await supabase.from("carpools").select("kind,event,person_name,seats,pickup_area").order("created_at",{ascending:false});
+          if(error) throw error;
+          const rows=(data||[]); const offers=rows.filter(c=>c.kind==="offer"), reqs=rows.filter(c=>c.kind==="request");
+          const seats=offers.reduce((n,c)=>n+num(c.seats),0);
+          return rStats([{l:"Drivers",v:offers.length},{l:"Seats offered",v:seats},{l:"Riders needing",v:reqs.length}]) +
+            rTable(["Type","Member","Event","Pickup","Seats"],
+              rows.map(c=>[c.kind==="offer"?"Driver":"Needs ride",c.person_name,c.event||"—",c.pickup_area||"—",c.kind==="offer"?num(c.seats):"—"]));
+        }},
+      { id:"vanpool_manifest", cat:"Logistics & Coordination", icon:"🚐", title:"Van Pool Manifest",
+        desc:"Seats reserved and remaining on each krewe van.",
+        run: async()=>{
+          const [{ data:vans, error:e1 }, { data:res, error:e2 }] = await Promise.all([
+            supabase.from("vanpools").select("id,van_name,event,capacity"),
+            supabase.from("vanpool_reservations").select("vanpool_id,seats")
+          ]);
+          if(e1) throw e1; if(e2) throw e2;
+          const rows=(vans||[]).map(v=>{
+            const taken=(res||[]).filter(r=>r.vanpool_id===v.id).reduce((n,r)=>n+num(r.seats),0);
+            return [v.van_name, v.event||"—", num(v.capacity), taken, Math.max(0,num(v.capacity)-taken)];
+          });
+          const cap=rows.reduce((n,r)=>n+r[2],0), tk=rows.reduce((n,r)=>n+r[3],0);
+          return rStats([{l:"Vans",v:rows.length},{l:"Seats reserved",v:tk},{l:"Seats open",v:Math.max(0,cap-tk)}]) +
+            rTable(["Van","Event","Capacity","Reserved","Open"], rows);
+        }},
+      { id:"ride_coverage", cat:"Logistics & Coordination", icon:"🧭", title:"Ride Coverage Gap",
+        desc:"Total seats available vs members who still need a ride.",
+        run: async()=>{
+          const [{ data:cp, error:e1 }, { data:vans, error:e2 }, { data:res, error:e3 }] = await Promise.all([
+            supabase.from("carpools").select("kind,seats"),
+            supabase.from("vanpools").select("id,capacity"),
+            supabase.from("vanpool_reservations").select("vanpool_id,seats")
+          ]);
+          if(e1) throw e1; if(e2) throw e2; if(e3) throw e3;
+          const carSeats=(cp||[]).filter(c=>c.kind==="offer").reduce((n,c)=>n+num(c.seats),0);
+          const riders=(cp||[]).filter(c=>c.kind==="request").length;
+          const vanCap=(vans||[]).reduce((n,v)=>n+num(v.capacity),0);
+          const vanTaken=(res||[]).reduce((n,r)=>n+num(r.seats),0);
+          const vanOpen=Math.max(0,vanCap-vanTaken);
+          const totalOpen=carSeats+vanOpen;
+          return rStats([
+            {l:"Carpool seats",v:carSeats},{l:"Van seats open",v:vanOpen},
+            {l:"Seats available",v:totalOpen},{l:"Riders needing",v:riders}
+          ]) + `<p class="rpt-note">${ totalOpen>=riders
+            ? "✅ There are enough offered seats to cover everyone who has asked for a ride."
+            : "⚠️ More ride requests than offered seats — consider recruiting another driver or van." }</p>`;
+        }},
+
+      /* ---- Content & Communications ---- */
+      { id:"content_inventory", cat:"Content & Communications", icon:"📚", title:"Published Content Inventory",
+        desc:"Poems, art, gallery and video items on the site.",
+        run: async()=>{
+          const { data, error } = await supabase.from("content_items").select("type,is_published");
+          if(error) throw error;
+          const rows=(data||[]); const by={};
+          rows.forEach(c=>{ const k=c.type||"other"; by[k]=by[k]||{pub:0,draft:0}; c.is_published?by[k].pub++:by[k].draft++; });
+          return rStats([{l:"Items",v:rows.length},{l:"Published",v:rows.filter(c=>c.is_published).length}]) +
+            rTable(["Type","Published","Draft"], Object.keys(by).sort().map(k=>[k.replace(/_/g," "),by[k].pub,by[k].draft]));
+        }},
+      { id:"comms_log", cat:"Content & Communications", icon:"✉️", title:"Communications Log", secure:true,
+        desc:"Outbound emails and reminders sent to members.",
+        why:"It records who was emailed and when, which is member personal data." },
+    ];
+
+    const CATS = ["Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
+
+    function buildReportGrid(){
+      const grid=document.getElementById("reportGrid");
+      grid.innerHTML = CATS.map(cat=>{
+        const items=REPORTS.filter(r=>r.cat===cat);
+        return `<div class="rpt-cat">${esc(cat)}</div><div class="rpt-grid">${
+          items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
+            <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
+            <div class="d">${esc(r.desc)}</div>
+            ${r.secure?'<span class="lock">🔒 Secure login</span>':''}
+          </div>`).join("")}</div>`;
+      }).join("");
+      grid.querySelectorAll(".rpt-card").forEach(c=>{
+        const go=()=>runReport(c.getAttribute("data-id"));
+        c.addEventListener("click",go);
+        c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+      });
+    }
+
+    window.openReports=()=>{
+      const m=document.getElementById("reportsModal");
+      if(!document.getElementById("reportGrid").childElementCount) buildReportGrid();
+      showReportGrid();
+      m.classList.add("open"); m.setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+    };
+    window.closeReports=()=>{
+      const m=document.getElementById("reportsModal");
+      m.classList.remove("open"); m.setAttribute("aria-hidden","true");
+      document.body.style.overflow="";
+    };
+    window.showReportGrid=()=>{
+      document.getElementById("reportView").style.display="none";
+      document.getElementById("reportGrid").style.display="block";
+    };
+    async function runReport(id){
+      const def=REPORTS.find(r=>r.id===id); if(!def) return;
+      document.getElementById("reportGrid").style.display="none";
+      const view=document.getElementById("reportView"); view.style.display="block";
+      document.getElementById("reportTitle").textContent=(def.icon?def.icon+" ":"")+def.title;
+      const body=document.getElementById("reportBody");
+      try{ document.querySelector(".modal-card").scrollIntoView({block:"start"}); }catch(_){}
+      if(def.secure){ body.innerHTML=secureNotice(def.why||""); return; }
+      body.innerHTML='<p class="empty">Running report…</p>';
+      try { body.innerHTML = await def.run(); }
+      catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
+    }
+    window.runReport=runReport;
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeReports(); });
   </script>
 </body>
 </html>

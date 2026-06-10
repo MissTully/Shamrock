@@ -156,4 +156,83 @@
           <p style="color:#f1ead4;">Meet great people, celebrate Irish heritage, and make memories all year long.
              New faces are always welcome — whether your roots run to Cork or Kilkenny or simply
              to the love of a good session, there's a place for you at our table.</p>
-          <ul style="list-style:none;padding:
+          <ul style="list-style:none;padding:0;margin:0 0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;color:#fff;font-family:var(--display);font-size:17px;">
+            <li>🍀 Parades</li>
+            <li>🤝 Brotherhood</li>
+            <li>💚 Charity</li>
+            <li>🎉 Fun</li>
+          </ul>
+          <div class="btns">
+            <a class="btn btn-primary" href="membership-application.html">☘ Become a Member</a>
+            <a class="btn btn-outline" href="gallery.html">Browse the Gallery</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
+    <div class="fname">Krewe of Shamrock</div>
+    <div class="flinks">
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+    <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+  </footer>
+
+  <!-- MUSIC PLAYER -->
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="auto"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <!-- EVENTS DATA -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient(
+      "https://njfzrnqwbnuhmopgpsud.supabase.co",
+      "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF"
+    );
+    const list = document.getElementById("eventList");
+    const esc = (s)=> (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    (async () => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, name, event_type, start_time, location")
+        .eq("is_public", true)
+        .or(`start_time.gte.${nowIso},start_time.is.null`)
+        .order("start_time", { ascending: true });
+
+      if (error) { list.innerHTML = '<p class="empty">Could not load events right now.</p>'; return; }
+      if (!data || data.length === 0) { list.innerHTML = '<p class="empty">No upcoming events yet — check back soon, or RSVP to be the first to know!</p>'; return; }
+
+      list.innerHTML = "";
+      for (const ev of data) {
+        const when = (() => {
+          if (!ev.start_time) return "Date to be announced";
+          const d = new Date(ev.start_time);
+          const dateStr = d.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+          return (d.getHours() === 0 && d.getMinutes() === 0)
+            ? dateStr + " · Time TBA"
+            : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        })();
+        const card = document.createElement("div");
+        card.className = "event-card";
+        card.innerHTML =
+          `<div class="type">${esc(ev.event_type ?? "event")}</div>` +
+          `<h3>${esc(ev.name)}</h3>` +
+          `<div class="meta">${when}${ev.location ? " · " + esc(ev.location) : ""}</div>` +
+          `<a class="rsvp" href="event-signup.html">RSVP →</a>`;
+        list.appendChild(card);
+      }
+    })();
+  </script>
+</body>
+</html>

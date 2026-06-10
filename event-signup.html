@@ -154,4 +154,36 @@
         else {
           const d = new Date(ev.start_time);
           const ds = d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
-          when = (d.getHours() === 0 && d.getMinutes() === 0) ? ds + ", Time TBA" : ds 
+          when = (d.getHours() === 0 && d.getMinutes() === 0) ? ds + ", Time TBA" : ds + ", " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        }
+        const loc = ev.location ? " · " + ev.location : "";
+        const opt = document.createElement("option");
+        opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc})`;
+        eventSelect.appendChild(opt);
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      message.className = "msg"; btn.disabled = true; btn.textContent = "Submitting…";
+      const { data, error } = await supabase.rpc("rsvp_to_event", {
+        p_event_id: eventSelect.value,
+        p_first_name: document.getElementById("firstName").value.trim(),
+        p_last_name: document.getElementById("lastName").value.trim(),
+        p_email: document.getElementById("email").value.trim(),
+        p_guests_count: parseInt(document.getElementById("guests").value || "0", 10),
+        p_signup_role: document.getElementById("role").value
+      });
+      btn.disabled = false; btn.textContent = "☘ Sign me up";
+      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again.", "error"); return; }
+      if (data && data.ok) {
+        if (data.status === "waitlisted") { showMessage(data.message, "waitlist"); }
+        else { showMessage(data.message, "success"); form.reset(); document.getElementById("guests").value = "0"; }
+      } else { showMessage((data && data.message) || "Please check your details and try again.", "error"); }
+    });
+
+    loadEvents();
+  </script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

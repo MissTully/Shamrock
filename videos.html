@@ -100,4 +100,28 @@
     const esc = (s)=> (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
     function youtubeId(url){ const m=(url||"").match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
-    function vimeoId(url){ const m=(url||"").match(/vimeo\.com\/(?:v
+    function vimeoId(url){ const m=(url||"").match(/vimeo\.com\/(?:video\/)?(\d+)/); return m?m[1]:null; }
+    function embed(it){
+      if (it.media_kind === "youtube") { const id=youtubeId(it.media_url); if(id) return `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen title="${esc(it.title)}"></iframe>`; }
+      if (it.media_kind === "vimeo")   { const id=vimeoId(it.media_url);  if(id) return `<iframe src="https://player.vimeo.com/video/${id}" allowfullscreen title="${esc(it.title)}"></iframe>`; }
+      if (it.media_kind === "video_file") return `<video controls preload="metadata" src="${esc(it.media_url)}"></video>`;
+      return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;">Video link not set</div>`;
+    }
+
+    (async () => {
+      const { data, error } = await supabase
+        .from("content_items").select("title, subtitle, media_url, media_kind, category")
+        .eq("type","video").eq("is_published",true)
+        .order("sort_order",{ascending:true}).order("created_at",{ascending:false});
+      if (error) { root.innerHTML = '<p class="empty" style="text-align:center;">Could not load videos right now.</p>'; return; }
+      if (!data || data.length===0) { root.innerHTML = '<p class="empty" style="text-align:center;">No videos yet — check back soon for performances and parade footage!</p>'; return; }
+
+      const groups = {};
+      for (const it of data){ const k = it.category || "Videos"; (groups[k] = groups[k]||[]).push(it); }
+      root.innerHTML = "";
+      for (const cat of Object.keys(groups)){
+        const sec = document.createElement("section");
+        sec.innerHTML = `<div class="section-title" style="margin-top:34px;"><h2>${esc(cat)}</h2></div><div class="knot-divider"><span class="knot"></span></div><div class="grid-auto"></div>`;
+        const grid = sec.querySelector(".grid-auto");
+        for (const it of groups[cat]){
+          cons

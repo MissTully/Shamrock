@@ -124,7 +124,7 @@
         desc:"Classic Scottish wool bonnet with a gold toorie and crest badge.", sizes:["One size"] },
       { id:"blazer", name:"Heritage Tweed Blazer", price:165, img:"assets/img/store/jacket.jpg",
         desc:"Handsome tweed jacket finished with a green shamrock lapel — sharp for the Tartan Ball or a day at the races.", sizes:["36","38","40","42","44","46"] },
-      { id:"tophat", name:"Tartan Top Hat", price:45, img:"assets/img/store/top-hat.png",
+      { id:"tophat", name:"Tartan Top Hat", price:45, img:"assets/img/top-hat.png",
         desc:"Show-stopping parade topper for the Tartan Ball and beyond.", sizes:["One size"] }
     ];
 
@@ -161,4 +161,9 @@
       ul.innerHTML = items.map(i=>`<li><span>${i.qty} × ${i.name} <small style="color:var(--muted)">(${i.size})</small></span><span>$${(i.qty*i.price).toFixed(2)}</span></li>`).join("");
       tot.textContent = "Total: $" + items.reduce((n,i)=>n+i.qty*i.price,0).toFixed(2);
     }
-    function openCart(){ renderCart(); 
+    function openCart(){ renderCart(); document.getElementById("cartPanel").classList.add("open"); }
+    function closeCart(){ document.getElementById("cartPanel").classList.remove("open"); }
+    document.getElementById("cartPanel").addEventListener("click",e=>{ if(e.target.id==="cartPanel") closeCart(); });
+  </script>
+</body>
+</html>

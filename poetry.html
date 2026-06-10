@@ -96,4 +96,62 @@ May God hold you in the palm of His hand.</div>
       <div class="tile glow"><a href="assets/img/warrior-woman.jpg" target="_blank" rel="noopener"><img loading="lazy" src="assets/img/warrior-woman.jpg" alt="Illustrated Celtic warrior woman"></a><div class="cap"><h3>Daughter of Éireann</h3><span>Manuscript illustration</span></div></div>
       <div class="tile glow"><a href="assets/img/piper-painting.jpg" target="_blank" rel="noopener"><img loading="lazy" src="assets/img/piper-painting.jpg" alt="Painterly portrait of a piper"></a><div class="cap"><h3>The Lone Piper</h3><span>Oil-painting style</span></div></div>
       <div class="tile glow"><a href="assets/img/gaelic-cottage.jpg" target="_blank" rel="noopener"><img loading="lazy" src="assets/img/gaelic-cottage.jpg" alt="Painterly Gaelic cottage scene"></a><div class="cap"><h3>Home Fires</h3><span>Painted scene</span></div></div>
-      <div class="tile glow"><a href=
+      <div class="tile glow"><a href="assets/img/irish-folk.jpg" target="_blank" rel="noopener"><img loading="lazy" src="assets/img/irish-folk.jpg" alt="Whimsical illustration of Irish folk"></a><div class="cap"><h3>The Lads in Green</h3><span>Whimsical illustration</span></div></div>
+    </div>
+    <div id="art" class="grid-auto" style="margin-top:22px;"><p class="empty">Loading community artwork…</p></div>
+  </main>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
+    <div class="fname">Krewe of Shamrock</div>
+    <div class="flinks">
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+    </div>
+    <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+  </footer>
+
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="auto"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <!-- POEMS & ART DATA -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    (async () => {
+      const poemsEl = document.getElementById("poems");
+      const artEl = document.getElementById("art");
+      const { data, error } = await supabase
+        .from("content_items")
+        .select("type,title,subtitle,body,media_url,author")
+        .eq("is_published", true)
+        .in("type", ["poem","art"])
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        poemsEl.innerHTML = '<p class="empty">Could not load poems right now.</p>';
+        artEl.innerHTML = '<p class="empty">Could not load artwork right now.</p>';
+        return;
+      }
+      const poems = (data||[]).filter(d => d.type === "poem");
+      const art = (data||[]).filter(d => d.type === "art" && d.media_url);
+
+      poemsEl.innerHTML = poems.length
+        ? poems.map(p => `<div class="poem-card"><h3>${esc(p.title)}</h3><div class="verse">${esc(p.body)}</div>${p.author?`<div class="src">— ${esc(p.author)}</div>`:""}</div>`).join("")
+        : '<p class="empty">No poems yet — share a verse with the krewe!</p>';
+
+      artEl.innerHTML = art.length
+        ? art.map(a => `<div class="tile glow"><a href="${esc(a.media_url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(a.media_url)}" alt="${esc(a.title)}"></a><div class="cap"><h3>${esc(a.title)}</h3>${a.subtitle?`<span>${esc(a.subtitle)}</span>`:""}</div></div>`).join("")
+        : '<p class="empty">No community artwork submitted yet.</p>';
+    })();
+  </script>
+</body>
+</html>
