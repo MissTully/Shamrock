@@ -87,6 +87,115 @@ h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
 }
 .krewe-links a:hover{ background:rgba(212,175,55,.16); color:#fff; }
 .krewe-links a.active{ color:var(--green-900); background:var(--gold); }
+/* ---------- Hamburger toggle (mobile) ---------- */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+/* ---------- Dropdown nav groups ---------- */
+.nav-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-group-btn {
+  color: #f3ecd6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background .15s, color .15s;
+}
+.nav-group-btn:hover,
+.nav-group.open .nav-group-btn {
+  background: rgba(212,175,55,.16);
+  color: #fff;
+}
+.nav-group-btn .caret {
+  font-size: 9px;
+  opacity: .7;
+  transition: transform .2s;
+}
+.nav-group.open .nav-group-btn .caret {
+  transform: rotate(180deg);
+}
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 160px;
+  background: var(--green-900);
+  border: 1px solid rgba(212,175,55,.3);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(12,59,33,.4);
+  z-index: 100;
+  padding: 6px 0;
+  flex-direction: column;
+}
+.nav-group.open .nav-dropdown {
+  display: flex;
+}
+.nav-dropdown a {
+  color: #f3ecd6 !important;
+  text-decoration: none;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: .4px;
+  padding: 9px 18px;
+  transition: background .12s, color .12s;
+  border-radius: 0;
+  margin: 0 !important;
+}
+.nav-dropdown a:hover {
+  background: rgba(212,175,55,.16);
+  color: #fff !important;
+}
+
+/* Mobile nav */
+@media (max-width: 860px) {
+  .nav-toggle { display: block; }
+  .krewe-links {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 0;
+    gap: 2px;
+  }
+  .krewe-links.open { display: flex; }
+  .nav-group { width: 100%; flex-direction: column; align-items: flex-start; }
+  .nav-group-btn { width: 100%; }
+  .nav-dropdown {
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-left: 3px solid var(--gold);
+    border-radius: 0;
+    background: rgba(0,0,0,.2);
+    padding: 0;
+    margin-left: 12px;
+    min-width: auto;
+    width: calc(100% - 12px);
+  }
+  .nav-group.open .nav-dropdown { display: flex; }
+}
+
+
 
 /* ============================================================
    KNOT DIVIDER  (reusable Celtic triquetra rule)
