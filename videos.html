@@ -124,4 +124,16 @@
         sec.innerHTML = `<div class="section-title" style="margin-top:34px;"><h2>${esc(cat)}</h2></div><div class="knot-divider"><span class="knot"></span></div><div class="grid-auto"></div>`;
         const grid = sec.querySelector(".grid-auto");
         for (const it of groups[cat]){
-          cons
+        const fig = document.createElement("figure");
+        fig.style = "margin:0;";
+        fig.innerHTML = `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">${embed(it)}</div>
+<figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">${esc(it.title)}</figcaption>`;
+        grid.appendChild(fig);
+      }
+      root.appendChild(sec);
+    }
+  })();
+</script>
+
+</body>
+</html>
