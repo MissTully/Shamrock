@@ -79,6 +79,89 @@
     </div>
   </div>
 
+  <!-- KREWE OF SHAMROCK CALENDAR -->
+  <section class="wrap" id="krewe-calendar" style="padding-top:28px;">
+    <div class="knot-divider"><span class="knot" aria-hidden="true"></span></div>
+    <div style="text-align:center;margin-bottom:18px;">
+      <h2 style="margin:0;color:var(--green-800);">Krewe of Shamrock Calendar</h2>
+      <p style="margin:6px 0 0;font-family:var(--fancy);font-style:italic;font-size:18px;color:var(--gold-deep);">
+        Our perpetual season at a glance — <span id="kcal-year">2026</span>
+      </p>
+    </div>
+
+    <div id="kcal-grids" style="display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));"></div>
+
+    <div style="margin-top:26px;background:linear-gradient(180deg,var(--green-800),var(--green-900));color:#f1ead4;border:1px solid rgba(236,208,126,.45);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;">
+      <div style="padding:18px 22px;font-family:var(--display);font-size:20px;color:#fff;border-bottom:1px solid rgba(236,208,126,.28);">☘ Dates to Remember</div>
+      <ul id="kcal-list" style="list-style:none;margin:0;padding:8px 8px 16px;"></ul>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    // Perpetual Krewe calendar data — edit this list each season.
+    var KREWE_YEAR = 2026;
+    // month is 0-indexed (6 = July, 7 = August, 9 = October)
+    var KREWE_EVENTS = [
+      { month:6, day:11, time:"8:30 AM",  name:"New Life Warehouse Delivery", location:"" },
+      { month:6, day:11, time:"1:00 PM",  name:"Family & Friends Krewe Picnic", location:"" },
+      { month:7, day:2,  time:"",         name:"Family Bowling Event", location:"" },
+      { month:9, day:3,  time:"",         name:"Golf Event", location:"PopStroke" },
+      { month:9, day:17, time:"",         name:"Tartan Ball Basket Social", location:"" },
+      { month:9, day:24, time:"",         name:"Tartan Ball", location:"" }
+    ];
+
+    var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+    var byMonth = {};
+    KREWE_EVENTS.forEach(function (e) { (byMonth[e.month] = byMonth[e.month] || {})[e.day] = (byMonth[e.month][e.day] || []).concat(e); });
+
+    var yearEl = document.getElementById("kcal-year");
+    if (yearEl) yearEl.textContent = KREWE_YEAR;
+
+    function buildMonth(month) {
+      var first = new Date(KREWE_YEAR, month, 1).getDay();
+      var days = new Date(KREWE_YEAR, month + 1, 0).getDate();
+      var html = '<div style="background:var(--paper);border:1px solid rgba(169,128,28,.3);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;">';
+      html += '<div style="background:linear-gradient(180deg,var(--green-700),var(--green-800));color:#fff;font-family:var(--display);text-align:center;padding:10px;letter-spacing:.5px;">' + MONTH_NAMES[month] + ' ' + KREWE_YEAR + '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--display);font-size:12px;color:var(--gold-deep);padding:8px 6px 2px;">';
+      DOW.forEach(function (d) { html += '<div>' + d + '</div>'; });
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:4px 6px 10px;">';
+      for (var i = 0; i < first; i++) html += '<div></div>';
+      for (var d = 1; d <= days; d++) {
+        var evs = byMonth[month] && byMonth[month][d];
+        if (evs) {
+          var tip = evs.map(function (e) { return (e.time ? e.time + " — " : "") + e.name + (e.location ? " (" + e.location + ")" : ""); }).join(" · ");
+          html += '<div title="' + tip.replace(/"/g, "&quot;") + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);cursor:default;">' + d + '</div>';
+        } else {
+          html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;">' + d + '</div>';
+        }
+      }
+      html += '</div></div>';
+      return html;
+    }
+
+    var months = Object.keys(byMonth).map(Number).sort(function (a, b) { return a - b; });
+    var gridsEl = document.getElementById("kcal-grids");
+    if (gridsEl) gridsEl.innerHTML = months.map(buildMonth).join("");
+
+    var listEl = document.getElementById("kcal-list");
+    if (listEl) {
+      var sorted = KREWE_EVENTS.slice().sort(function (a, b) { return (a.month - b.month) || (a.day - b.day); });
+      listEl.innerHTML = sorted.map(function (e) {
+        var dateStr = MONTH_NAMES[e.month] + " " + e.day;
+        var when = e.time ? dateStr + " · " + e.time : dateStr;
+        var loc = e.location ? ' <span style="color:var(--gold-light);">@ ' + e.location + '</span>' : "";
+        return '<li style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
+               '<span style="flex:0 0 130px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + when + '</span>' +
+               '<span style="flex:1;">' + e.name + loc + '</span></li>';
+      }).join("");
+    }
+  })();
+  </script>
+
   <!-- IKC CALENDAR -->
   <section class="wrap" style="padding-top:10px;">
     <details class="ikc-card" style="background:linear-gradient(180deg,var(--green-800),var(--green-900));color:#f1ead4;border:1px solid rgba(236,208,126,.45);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;">
@@ -186,4 +269,3 @@
   </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
