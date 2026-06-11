@@ -52,3 +52,70 @@
           init();
    }
 }());
+
+
+/* ============================================================
+  Navigation — hamburger toggle + dropdown groups
+  ============================================================ */
+(function () {
+  function initNav() {
+    /* --- Hamburger toggle --- */
+    var toggle = document.querySelector('.nav-toggle');
+    var links  = document.getElementById('kreweLinks');
+    if (toggle && links) {
+      toggle.addEventListener('click', function () {
+        var open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+
+    /* --- Dropdown groups --- */
+    var groups = document.querySelectorAll('.nav-group');
+    groups.forEach(function (group) {
+      var btn = group.querySelector('.nav-group-btn');
+      if (!btn) return;
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isOpen = group.classList.toggle('open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        // Close other open groups
+        groups.forEach(function (other) {
+          if (other !== group) {
+            other.classList.remove('open');
+            var ob = other.querySelector('.nav-group-btn');
+            if (ob) ob.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
+    });
+
+    /* --- Close dropdowns when clicking outside --- */
+    document.addEventListener('click', function () {
+      groups.forEach(function (group) {
+        group.classList.remove('open');
+        var btn = group.querySelector('.nav-group-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    /* --- Close dropdowns on Escape key --- */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        groups.forEach(function (group) {
+          group.classList.remove('open');
+          var btn = group.querySelector('.nav-group-btn');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+        if (links) links.classList.remove('open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNav);
+  } else {
+    initNav();
+  }
+}());
