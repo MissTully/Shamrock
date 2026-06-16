@@ -87,115 +87,6 @@ h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
 }
 .krewe-links a:hover{ background:rgba(212,175,55,.16); color:#fff; }
 .krewe-links a.active{ color:var(--green-900); background:var(--gold); }
-/* ---------- Hamburger toggle (mobile) ---------- */
-.nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 6px 10px;
-}
-
-/* ---------- Dropdown nav groups ---------- */
-.nav-group {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-.nav-group-btn {
-  color: #f3ecd6;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--display);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: .5px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: background .15s, color .15s;
-}
-.nav-group-btn:hover,
-.nav-group.open .nav-group-btn {
-  background: rgba(212,175,55,.16);
-  color: #fff;
-}
-.nav-group-btn .caret {
-  font-size: 9px;
-  opacity: .7;
-  transition: transform .2s;
-}
-.nav-group.open .nav-group-btn .caret {
-  transform: rotate(180deg);
-}
-.nav-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  min-width: 160px;
-  background: var(--green-900);
-  border: 1px solid rgba(212,175,55,.3);
-  border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(12,59,33,.4);
-  z-index: 100;
-  padding: 6px 0;
-  flex-direction: column;
-}
-.nav-group.open .nav-dropdown {
-  display: flex;
-}
-.nav-dropdown a {
-  color: #f3ecd6 !important;
-  text-decoration: none;
-  font-family: var(--display);
-  font-size: 13px;
-  letter-spacing: .4px;
-  padding: 9px 18px;
-  transition: background .12s, color .12s;
-  border-radius: 0;
-  margin: 0 !important;
-}
-.nav-dropdown a:hover {
-  background: rgba(212,175,55,.16);
-  color: #fff !important;
-}
-
-/* Mobile nav */
-@media (max-width: 860px) {
-  .nav-toggle { display: block; }
-  .krewe-links {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px 0;
-    gap: 2px;
-  }
-  .krewe-links.open { display: flex; }
-  .nav-group { width: 100%; flex-direction: column; align-items: flex-start; }
-  .nav-group-btn { width: 100%; }
-  .nav-dropdown {
-    position: static;
-    box-shadow: none;
-    border: none;
-    border-left: 3px solid var(--gold);
-    border-radius: 0;
-    background: rgba(0,0,0,.2);
-    padding: 0;
-    margin-left: 12px;
-    min-width: auto;
-    width: calc(100% - 12px);
-  }
-  .nav-group.open .nav-dropdown { display: flex; }
-}
-
-
 
 /* ============================================================
    KNOT DIVIDER  (reusable Celtic triquetra rule)
@@ -426,14 +317,14 @@ form.krewe-form{ padding:26px 30px 30px; }
 .krewe-foot .fine{ opacity:.6; font-size:13px; margin-top:6px; }
 
 /* ============================================================
-   MUSIC PLAYER  (floating, autoplay-muted, tap to unmute)
+   MUSIC PLAYER  (floating, paused by default, click violin to play)
    ============================================================ */
 .krewe-music{
   position:fixed; left:18px; bottom:18px; z-index:80;
   display:flex; align-items:center; gap:10px;
 }
 .krewe-music button{
-  width:54px; height:54px; border-radius:50%; cursor:pointer;
+  width:66px; height:66px; border-radius:50%; cursor:pointer;
   border:2px solid var(--gold); color:#3a2c00;
   background:linear-gradient(180deg,var(--gold-light),var(--gold));
   box-shadow:0 8px 22px rgba(12,59,33,.32);
@@ -441,13 +332,18 @@ form.krewe-form{ padding:26px 30px 30px; }
   font-size:22px; transition:transform .15s;
 }
 .krewe-music button:hover{ transform:scale(1.06); }
+
+/* Violin icon (injected by krewe.js). Inherits the button's dark colour. */
+.krewe-music button .violin-icon{ color:#23420f; display:block; }
+.krewe-music button .violin-bow{ transform-origin:center; }
+/* When music is playing, the bow gently "saws" across the strings. */
+.krewe-music.playing button .violin-bow{ animation:bow .9s ease-in-out infinite; }
+.krewe-music.playing button{ box-shadow:0 8px 22px rgba(12,59,33,.32),0 0 0 4px rgba(212,175,55,.35); }
+@keyframes bow{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(1.4px,-1px); } }
+
+/* Fallback: if the icon hasn't been injected yet, keep the old bars tidy. */
 .krewe-music button .bars{ display:flex; gap:2.5px; align-items:flex-end; height:20px; }
 .krewe-music button .bars i{ width:3.5px; background:#23420f; border-radius:2px; height:7px; }
-.krewe-music.playing button .bars i{ animation:eq .9s ease-in-out infinite; }
-.krewe-music.playing button .bars i:nth-child(2){ animation-delay:.18s; }
-.krewe-music.playing button .bars i:nth-child(3){ animation-delay:.36s; }
-.krewe-music.playing button .bars i:nth-child(4){ animation-delay:.10s; }
-@keyframes eq{ 0%,100%{height:6px;} 50%{height:19px;} }
 .krewe-music .label{
   background:var(--green-900); color:var(--gold-light);
   font-family:var(--fancy); font-style:italic; font-size:15px;
@@ -475,4 +371,161 @@ form.krewe-form{ padding:26px 30px 30px; }
 @media (prefers-reduced-motion:reduce){
   *{ animation:none !important; scroll-behavior:auto; }
   .btn:hover,.tile:hover,.pillar:hover{ transform:none; }
+}
+
+/* ============================================================
+   ✦  ENHANCED CELTIC ORNAMENTATION & MOTION  (added)
+   ============================================================ */
+
+/* ---- Banner flourish (decorative trinity-knot rule) ---- */
+.banner-flourish{
+  display:block; width:min(440px,86%); height:64px; margin:18px auto 6px;
+  background:center/contain no-repeat url("img/celtic-banner.svg");
+  filter:drop-shadow(0 4px 10px rgba(12,59,33,.25));
+}
+.band-green .banner-flourish{ filter:drop-shadow(0 4px 12px rgba(0,0,0,.45)); }
+
+/* ---- Woven interlace border strip ---- */
+.weave-rule{
+  height:26px; width:100%;
+  background:left center/120px 26px repeat-x url("img/celtic-border.svg");
+  opacity:.9; margin:8px 0;
+}
+.weave-rule.top{ border-top:1px solid rgba(168,128,28,.25); }
+
+/* ---- Knotwork-cornered frame (wraps any image/box) ---- */
+.ornate{ position:relative; }
+.ornate::before,.ornate::after,
+.ornate > .crn{ pointer-events:none; }
+.ornate::before,.ornate::after{
+  content:""; position:absolute; width:54px; height:54px; z-index:3;
+  background:center/contain no-repeat url("img/celtic-corner.svg");
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
+}
+.ornate::before{ top:-10px; left:-10px; }
+.ornate::after{ bottom:-10px; right:-10px; transform:rotate(180deg); }
+/* the other two corners via helper spans */
+.ornate .crn{ position:absolute; width:54px; height:54px; z-index:3;
+  background:center/contain no-repeat url("img/celtic-corner.svg");
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+.ornate .crn.tr{ top:-10px; right:-10px; transform:rotate(90deg); }
+.ornate .crn.bl{ bottom:-10px; left:-10px; transform:rotate(270deg); }
+
+/* ---- Crest medallion accent ---- */
+.crest{ position:relative; width:130px; height:130px; margin:0 auto 14px; display:block; border-radius:50%;
+  background:center/contain no-repeat url("img/kos-emblem.png");
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.45)); }
+.crest.lg{ width:166px; height:166px; }
+/* breathing golden halo behind the crest (sits below the medallion) */
+.crest::before{ content:""; position:absolute; inset:-26%; z-index:-1; border-radius:50%;
+  background:radial-gradient(circle, rgba(236,208,126,.6) 0%, rgba(236,208,126,.18) 45%, rgba(236,208,126,0) 70%);
+  filter:blur(7px); opacity:.5; animation:crestGlow 6.5s ease-in-out infinite; }
+@keyframes crestGlow{ 0%,100%{ opacity:.32; transform:scale(.88);} 50%{ opacity:.82; transform:scale(1.14);} }
+/* richer float: rise + tilt + subtle scale, with a depth shadow that softens as it lifts */
+@keyframes crestFloat{
+  0%   { transform:translateY(0) rotate(-2.2deg) scale(1);     filter:drop-shadow(0 10px 16px rgba(0,0,0,.42)); }
+  50%  { transform:translateY(-14px) rotate(2.2deg) scale(1.035); filter:drop-shadow(0 24px 26px rgba(0,0,0,.26)); }
+  100% { transform:translateY(0) rotate(-2.2deg) scale(1);     filter:drop-shadow(0 10px 16px rgba(0,0,0,.42)); }
+}
+.crest.float{ animation:crestFloat 6.5s cubic-bezier(.45,0,.55,1) infinite; will-change:transform, filter; }
+.crest.float:hover{ animation-duration:3.4s; }
+.crest.float:hover::before{ opacity:1; }
+
+/* ---- Slow cinematic drift on large background images ---- */
+.hero .hero-bg, .page-head .ph-bg{ animation:kenburns 28s ease-in-out infinite alternate; will-change:transform; }
+@keyframes kenburns{ from{ transform:scale(1.03); } to{ transform:scale(1.13); } }
+
+/* ---- Illuminated drop-cap (first letter of a block) ---- */
+.dropcap::first-letter{
+  font-family:"Cinzel Decorative","Cinzel",serif; float:left;
+  font-size:64px; line-height:.78; padding:6px 12px 2px 0;
+  color:var(--gold-deep); text-shadow:0 1px 0 var(--gold-light);
+}
+
+/* ---- Gold shimmer sweep on primary buttons ---- */
+.btn-primary{ position:relative; overflow:hidden; }
+.btn-primary::after{
+  content:""; position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+  transform:skewX(-18deg); animation:sheen 4.5s ease-in-out infinite;
+}
+@keyframes sheen{ 0%{ left:-60%; } 22%,100%{ left:130%; } }
+
+/* ---- Tile image hover zoom (tiles already clip overflow) ---- */
+.tile img{ transition:transform .5s ease; }
+.tile:hover img{ transform:scale(1.07); }
+
+/* ---- Captioned overlay tiles (for galleries) ---- */
+.tile.glow{ position:relative; }
+.tile.glow .cap{
+  background:linear-gradient(180deg, var(--paper), #f3ead3);
+}
+.tile.glow:hover{ box-shadow:0 14px 34px rgba(12,59,33,.28), 0 0 0 2px var(--gold); }
+
+/* ---- Photo mosaic (varied spans) ---- */
+.mosaic{ display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:170px; gap:14px; }
+.mosaic figure{ margin:0; position:relative; border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow-sm); border-bottom:4px solid var(--gold); }
+.mosaic figure img{ width:100%; height:100%; object-fit:cover; transition:transform .55s ease; }
+.mosaic figure:hover img{ transform:scale(1.08); }
+.mosaic figcaption{
+  position:absolute; left:0; right:0; bottom:0; padding:22px 14px 10px;
+  font-family:var(--display); font-size:15px; color:#fff;
+  background:linear-gradient(180deg, transparent, rgba(8,42,24,.82));
+  opacity:0; transform:translateY(8px); transition:opacity .3s, transform .3s;
+}
+.mosaic figcaption small{ display:block; font-family:var(--fancy); font-style:italic;
+  font-size:13px; color:var(--gold-light); }
+.mosaic figure:hover figcaption{ opacity:1; transform:translateY(0); }
+.mosaic .wide{ grid-column:span 2; }
+.mosaic .tall{ grid-row:span 2; }
+.mosaic .big{ grid-column:span 2; grid-row:span 2; }
+
+/* ---- Photo band (image strip with caption, for text-only pages) ---- */
+.photo-band{ position:relative; isolation:isolate; overflow:hidden;
+  border-top:4px solid var(--gold); border-bottom:4px solid var(--gold); }
+.photo-band .pb-bg{ position:absolute; inset:0; z-index:-2; background:center/cover no-repeat;
+  transform:scale(1.05); }
+.photo-band::after{ content:""; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg, rgba(8,42,24,.55), rgba(8,42,24,.72)); }
+.photo-band .pb-inner{ max-width:760px; margin:0 auto; text-align:center;
+  color:#fff; padding:70px 22px; }
+.photo-band h2{ color:#fff; font-size:clamp(26px,4vw,38px); margin:0 0 8px;
+  text-shadow:0 2px 14px rgba(0,0,0,.5); }
+.photo-band p{ font-family:var(--fancy); font-size:20px; color:#f1ead4; margin:0;
+  text-shadow:0 2px 10px rgba(0,0,0,.5); }
+
+/* ---- Scroll-reveal ---- */
+.reveal{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.in{ opacity:1; transform:none; }
+
+/* ---- Floating shamrock field (particles injected by JS) ---- */
+.shamrock-field{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.shamrock-field span{
+  position:absolute; top:-40px; font-size:22px; line-height:1; color:#2b8b51;
+  opacity:.16; animation:drift linear infinite; will-change:transform;
+}
+@keyframes drift{
+  0%{ transform:translateY(-40px) rotate(0deg); }
+  100%{ transform:translateY(108vh) rotate(360deg); }
+}
+/* keep page content above the drifting field */
+.krewe-nav, .hero, .page-head, .wrap, .band, .form-stage, .krewe-foot,
+.photo-band, .weave-rule{ position:relative; z-index:1; }
+
+@media (max-width:860px){
+  .mosaic{ grid-template-columns:repeat(2,1fr); grid-auto-rows:150px; }
+  .mosaic .big{ grid-column:span 2; grid-row:span 1; }
+}
+@media (max-width:680px){
+  .mosaic{ grid-template-columns:repeat(2,1fr); grid-auto-rows:130px; }
+  .ornate::before,.ornate::after,.ornate .crn{ width:38px; height:38px; }
+  .crest{ width:96px; height:96px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .btn-primary::after{ animation:none; display:none; }
+  .crest.float, .crest::before, .hero .hero-bg, .page-head .ph-bg{ animation:none; }
+  .shamrock-field{ display:none; }
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .tile:hover img,.mosaic figure:hover img{ transform:none; }
 }
