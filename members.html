@@ -612,15 +612,19 @@
       if(pass!==pass2){ q("jErr").textContent="Passwords do not match."; return; }
       if(pass.length<6){ q("jErr").textContent="Password must be at least 6 characters."; return; }
       q("jBtn").disabled=true; q("jBtn").textContent="Creating account…";
-      const { data, error } = await supabase.auth.signUp({ email, password:pass,
-        options:{ data:{ display_name:name } } });
+      /* Use edge function so account is confirmed immediately — no email verification step */
+      const res = await fetch("https://njfzrnqwbnuhmopgpsud.supabase.co/functions/v1/signup", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ email, password:pass, display_name:name })
+      });
+      const result = await res.json();
       q("jBtn").disabled=false; q("jBtn").textContent="☘ Create Account";
+      if(!res.ok){ q("jErr").textContent=result.error||"Something went wrong."; return; }
+      /* Account created and confirmed — sign in immediately */
+      const { error } = await supabase.auth.signInWithPassword({ email, password:pass });
       if(error){ q("jErr").textContent=error.message; return; }
-      if(data.session){
-        /* Auto-signed in — onAuthStateChange will fire */
-      } else {
-        q("jInfo").textContent="Check your email to confirm your account, then sign in.";
-      }
+      /* onAuthStateChange will fire and bring them into the members area */
     };
 
     /* ---- Sign Out ---- */
