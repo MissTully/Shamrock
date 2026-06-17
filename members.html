@@ -59,6 +59,8 @@
   .dash-body p{ margin:0 0 14px; color:#3a3a2e; }
   .dash-chips{ display:flex; flex-wrap:wrap; gap:8px; }
   .dash-chips span{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); }
+  .dash-chip-link{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); text-decoration:none; display:inline-block; transition:background .15s,border-color .15s; }
+  .dash-chip-link:hover{ background:#e8ddc0; border-color:var(--green-700); color:var(--green-800); }
 
   .modal-overlay{ position:fixed; inset:0; z-index:10000; background:rgba(12,28,18,.74); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; overflow-y:auto; }
   .modal-overlay.open{ display:flex; }
@@ -254,10 +256,14 @@
           <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
              publish a poem, short story, essay, or recipe. Everything you submit is reviewed before it appears
              on the public pages.</p>
-          <div class="dash-chips">
-            <span>🎬 Videos</span><span>📷 Gallery photos</span><span>🎨 Artwork</span>
-            <span>✒️ Poems</span><span>📖 Stories &amp; essays</span><span>🍲 Recipes</span>
-          </div>
+          <<div class="dash-chips">
+              <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
+              <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
+              <a href="share.html?type=art" class="dash-chip-link">🎨 Artwork</a>
+              <a href="share.html?type=poem" class="dash-chip-link">✊️ Poems</a>
+              <a href="share.html?type=story" class="dash-chip-link">📖 Stories &amp; essays</a>
+              <a href="share.html?type=recipe" class="dash-chip-link">🍲 Recipes</a>
+            </div>
         </div>
       </section>
 
