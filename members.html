@@ -17,9 +17,10 @@
   .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
   .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
-  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
+  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 4px; }
+  .gate-card .gate-subtitle{ color:var(--muted); font-size:13px; margin:0 0 16px; font-family:var(--fancy); font-style:italic; }
   .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
-  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; box-sizing:border-box; margin-bottom:10px; }
   .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
   .member-grid{ display:grid; gap:26px; }
   .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
@@ -94,20 +95,58 @@
   .rpt-secure h4{ margin:0 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .rpt-secure p{ margin:0 0 8px; }
 
-  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
+  /* ---- Games Dashboard card ---- */
+  .card-games{ cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .card-games:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,.2); }
+  .card-games .app-head{ background:linear-gradient(135deg,#4b2a7a,#7b3f9e,#c9a84c); }
+  .card-games .dash-go{ margin-left:auto; font-family:var(--display); color:#fde68a; font-size:15px; white-space:nowrap; }
+
+  /* ---- Games modal mini-cards grid ---- */
+  .games-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-top:8px; }
+  .game-card{ background:#fff; border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:20px 16px; text-align:center; cursor:pointer; transition:transform .12s, box-shadow .12s; }
+  .game-card:hover:not(.game-card-disabled){ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.14); }
+  .game-card-disabled{ opacity:.5; cursor:not-allowed; }
+  .game-card .g-ic{ font-size:36px; margin-bottom:10px; }
+  .game-card .g-title{ font-family:var(--display); color:var(--green-800); font-size:18px; margin-bottom:4px; }
+  .game-card .g-sub{ font-size:13px; color:var(--muted); }
+
+  /* ---- Raffle modal ---- */
+  .raffle-seg-wrap{ margin-bottom:16px; }
+  .raffle-event-info{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:12px; padding:14px 16px; margin-bottom:18px; }
+  .raffle-event-info .ev-name{ font-family:var(--display); color:var(--green-800); font-size:18px; margin-bottom:4px; }
+  .raffle-event-info .ev-desc{ font-size:14px; color:#3a3a2e; margin-bottom:6px; line-height:1.5; }
+  .raffle-event-info .ev-price{ font-family:var(--display); color:#7a5b00; font-size:15px; }
+  .raffle-tab{ display:none; }
+  .raffle-tab.active{ display:block; }
+  .basket-card{ border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:16px; margin-top:12px; background:#fff; }
+  .basket-card .bk-name{ font-family:var(--display); color:var(--green-800); font-size:17px; margin-bottom:4px; }
+  .basket-card .bk-desc{ font-size:14px; color:#3a3a2e; margin-bottom:6px; }
+  .basket-card .bk-meta{ font-size:13px; color:var(--muted); margin-bottom:10px; }
+  .basket-place-row{ display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; margin-top:8px; }
+  .basket-place-row input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; width:80px; }
+  .raffle-totals{ background:#f0e8d2; border:1px solid rgba(168,128,28,.35); border-radius:10px; padding:12px 16px; font-size:15px; margin-bottom:14px; color:var(--green-800); font-family:var(--display); }
+  /* Standing bars */
+  .standing-item{ margin-bottom:16px; }
+  .standing-label{ font-family:var(--display); color:var(--green-800); font-size:15px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:baseline; }
+  .standing-bar-bg{ background:#e8e0d0; border-radius:999px; height:18px; overflow:hidden; }
+  .standing-bar-fill{ background:linear-gradient(90deg,#4b2a7a,#c9a84c); height:100%; border-radius:999px; transition:width .4s ease; min-width:4px; }
+  .standing-count{ font-size:13px; color:var(--muted); }
+
+  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } .basket-place-row{ grid-template-columns:1fr auto; } }
 </style>
 </head>
 <body>
 
-  <!-- PASSCODE GATE -->
+  <!-- EMAIL + PASSWORD GATE -->
   <div class="gate" id="gate">
     <div class="gate-card">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-      <h1>Members Area</h1>
-      <p>Enter the Krewe passcode to access member tools.</p>
+      <h1>Members Only</h1>
+      <p class="gate-subtitle">Krewe of Shamrock — Members Area</p>
       <form id="gateForm">
-        <input id="gateInput" type="password" placeholder="Member passcode" autocomplete="off" autofocus />
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Enter</button>
+        <input id="gateEmail" type="email" placeholder="Your email address" autocomplete="email" autofocus />
+        <input id="gatePass" type="password" placeholder="Krewe passcode" autocomplete="off" />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:4px;">☘ Enter</button>
         <div class="err" id="gateErr"></div>
       </form>
     </div>
@@ -127,7 +166,7 @@
       <a href="videos.html">Videos</a>
       <a href="learn.html">Learn</a>
       <a href="poetry.html">Poetry &amp; Art</a>
-      <a href="members.html" class="active">Members</a>
+      <a href="members.html" class="active">🔒 Members Only</a>
     </div>
   </nav>
 
@@ -135,11 +174,27 @@
     <div class="ph-bg" style="background-image:url('assets/img/gallery/krewe-big-group.jpg')"></div>
     <p class="eyebrow">For the Krewe</p>
     <h1>Members Area</h1>
-    <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
+    <p class="sub" id="headerSub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
   </header>
 
   <main class="wrap" id="memberContent" style="display:none;">
     <div class="member-grid">
+
+      <!-- SHAMROCK GAMES DASHBOARD -->
+      <section class="app-card card-games dash-card" id="gamesCard" role="button" tabindex="0"
+               onclick="openGames()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGames();}">
+        <div class="app-head">
+          <span class="ic">🎲</span>
+          <div><h2>Shamrock Games</h2><small>Fundraiser game apps for the krewe</small></div>
+          <span class="dash-go">Open →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>Launch game coordination apps for krewe fundraising events — basket raffles, prize wheels, and more. Click to open the Games Dashboard.</p>
+          <div class="dash-chips">
+            <span>🎟 Basket Raffle</span><span>🏆 Coming Soon</span>
+          </div>
+        </div>
+      </section>
 
       <!-- REPORTS DASHBOARD -->
       <section class="app-card dash-card" id="dashCard" role="button" tabindex="0"
@@ -234,6 +289,90 @@
     </div>
   </main>
 
+  <!-- GAMES MODAL -->
+  <div class="modal-overlay" id="gamesModal" aria-hidden="true"
+       onclick="if(event.target===this) closeGames()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Shamrock Games Dashboard">
+      <div class="modal-head" style="background:linear-gradient(135deg,#4b2a7a,#7b3f9e,#c9a84c);">
+        <span class="ic" style="font-size:24px;">🎲</span>
+        <h2>Shamrock Games</h2>
+        <button class="modal-x" type="button" onclick="closeGames()" aria-label="Close games dashboard">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:#3a3a2e;margin:0 0 16px;">Choose a fundraising game app to launch.</p>
+        <div class="games-grid">
+          <div class="game-card" onclick="openRaffle()">
+            <div class="g-ic">🎟</div>
+            <div class="g-title">Basket Raffle</div>
+            <div class="g-sub">Sell tickets &amp; coordinate basket bids</div>
+          </div>
+          <div class="game-card game-card-disabled">
+            <div class="g-ic">🎡</div>
+            <div class="g-title">Prize Wheel</div>
+            <div class="g-sub">Coming soon</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BASKET RAFFLE MODAL -->
+  <div class="modal-overlay" id="raffleModal" aria-hidden="true"
+       onclick="if(event.target===this) closeRaffle()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Basket Raffle" style="max-width:740px;">
+      <div class="modal-head" style="background:linear-gradient(135deg,#4b2a7a,#7b3f9e);">
+        <span class="ic" style="font-size:24px;">🎟</span>
+        <h2>Basket Raffle</h2>
+        <button class="modal-x" type="button" onclick="closeRaffle()" aria-label="Close raffle">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Event info banner -->
+        <div class="raffle-event-info" id="raffleEventInfo">
+          <div class="ev-name" id="raffleEventName">Loading…</div>
+          <div class="ev-desc" id="raffleEventDesc"></div>
+          <div class="ev-price" id="raffleEventPrice"></div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="raffle-seg-wrap">
+          <div class="seg" role="tablist">
+            <button type="button" class="on" onclick="setRaffleTab('buy')">🎟 Buy Tickets</button>
+            <button type="button" onclick="setRaffleTab('place')">🧺 Place Tickets</button>
+            <button type="button" onclick="setRaffleTab('standings')">🏆 Standings</button>
+          </div>
+        </div>
+
+        <!-- Tab 1: Buy Tickets -->
+        <div class="raffle-tab active" id="raffleTabBuy">
+          <form id="buyTicketsForm" class="krewe-form">
+            <div class="row">
+              <div><label for="rtBuyName">Your name</label><input id="rtBuyName" required /></div>
+              <div><label for="rtBuyEmail">Email</label><input id="rtBuyEmail" type="email" required /></div>
+            </div>
+            <label for="rtQty">How many tickets?</label>
+            <input id="rtQty" type="number" min="1" value="5" style="max-width:120px;" />
+            <button class="btn btn-primary" type="submit" style="margin-top:8px;">☘ Buy Tickets</button>
+            <div class="msg" id="buyMsg"></div>
+          </form>
+          <div id="buyTicketSummary" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Tab 2: Place Tickets on Baskets -->
+        <div class="raffle-tab" id="raffleTabPlace">
+          <div class="raffle-totals" id="placeTotals">Loading your ticket balance…</div>
+          <div id="basketList"><p class="empty">Loading baskets…</p></div>
+          <div class="msg" id="placeMsg" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Tab 3: Standings -->
+        <div class="raffle-tab" id="raffleTabStandings">
+          <div id="standingsList"><p class="empty">Loading standings…</p></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- REPORTS DASHBOARD MODAL -->
   <div class="modal-overlay" id="reportsModal" aria-hidden="true"
        onclick="if(event.target===this) closeReports()">
@@ -277,132 +416,389 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
-    // ---- Passcode gate (change PASSCODE to your krewe's code) ----
+    // ---- Email + password gate ----
     const PASSCODE = "2026";
     const gate = document.getElementById("gate");
     const content = document.getElementById("memberContent");
-    function unlock(){ gate.style.display="none"; content.style.display="block"; sessionStorage.setItem("kosMember","1"); initAll(); }
-    if (sessionStorage.getItem("kosMember")==="1") unlock();
-    document.getElementById("gateForm").addEventListener("submit",(e)=>{
+
+    function emailToName(email) {
+      if (!email) return "";
+      const local = email.split("@")[0];
+      return local.replace(/[._\-+]/g, " ")
+        .split(" ")
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+    }
+
+    function unlock(email) {
+      gate.style.display = "none";
+      content.style.display = "block";
+      sessionStorage.setItem("kosMember", "1");
+      sessionStorage.setItem("kosEmail", email);
+      // Update header subtitle
+      document.getElementById("headerSub").textContent = "Welcome, " + email;
+      // Pre-fill email fields
+      prefillForms(email);
+      initAll();
+    }
+
+    function prefillForms(email) {
+      const name = emailToName(email);
+      const fields = [
+        { id: "lkName", val: name }, { id: "lkEmail", val: email },
+        { id: "cpName", val: name }, { id: "cpEmail", val: email },
+      ];
+      fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && !el.value) el.value = f.val;
+      });
+    }
+
+    const savedEmail = sessionStorage.getItem("kosEmail");
+    if (sessionStorage.getItem("kosMember") === "1" && savedEmail) {
+      unlock(savedEmail);
+    }
+
+    document.getElementById("gateForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      if (document.getElementById("gateInput").value.trim()===PASSCODE) unlock();
-      else document.getElementById("gateErr").textContent="Sorry, that passcode isn't right.";
+      const email = document.getElementById("gateEmail").value.trim();
+      const pass = document.getElementById("gatePass").value.trim();
+      if (!email) { document.getElementById("gateErr").textContent = "Please enter your email."; return; }
+      if (pass !== PASSCODE) { document.getElementById("gateErr").textContent = "Sorry, that passcode isn't right."; return; }
+      unlock(email);
     });
 
-    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
+    const esc = (s) => (s ?? "").toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const show = (el, t, k) => { const m = document.getElementById(el); m.textContent = t; m.className = "msg " + (k || ""); };
 
-    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+    function initAll() { loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
     /* ---------------- LOCKERS ---------------- */
-    async function loadLockers(){
-      const list=document.getElementById("lockerList");
-      const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
-      if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
-      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet — be the first!</li>'; return; }
-      list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
+    async function loadLockers() {
+      const list = document.getElementById("lockerList");
+      const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at", {ascending: true});
+      if (error) { list.innerHTML = '<li class="empty">Could not load lockers.</li>'; return; }
+      if (!data.length) { list.innerHTML = '<li class="empty">No locker requests yet — be the first!</li>'; return; }
+      list.innerHTML = data.map(l => `<li class="data-row"><b>${l.locker_number ? ("Locker " + esc(l.locker_number)) : "Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
     }
-    document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
+    document.getElementById("lockerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const payload={ holder_name:document.getElementById("lkName").value.trim(), holder_email:document.getElementById("lkEmail").value.trim()||null, size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
-      if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
+      const payload = { holder_name: document.getElementById("lkName").value.trim(), holder_email: document.getElementById("lkEmail").value.trim() || null, size: document.getElementById("lkSize").value, notes: document.getElementById("lkNotes").value.trim() || null, status: "requested" };
+      if (!payload.holder_name) { show("lkMsg", "Please enter your name.", "error"); return; }
       const { error } = await supabase.from("lockers").insert(payload);
-      if (error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
-      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); loadLockers();
+      if (error) { show("lkMsg", "Something went wrong — please try again.", "error"); return; }
+      show("lkMsg", "Locker request submitted! 🍀", "success"); e.target.reset(); loadLockers();
     });
 
     /* ---------------- CARPOOLS ---------------- */
-    let carKind="offer";
-    window.setCarKind=(k)=>{ carKind=k;
-      document.getElementById("segOffer").classList.toggle("on",k==="offer");
-      document.getElementById("segRequest").classList.toggle("on",k==="request");
-      document.getElementById("cpSeatsWrap").style.display = k==="offer" ? "block":"none";
+    let carKind = "offer";
+    window.setCarKind = (k) => {
+      carKind = k;
+      document.getElementById("segOffer").classList.toggle("on", k === "offer");
+      document.getElementById("segRequest").classList.toggle("on", k === "request");
+      document.getElementById("cpSeatsWrap").style.display = k === "offer" ? "block" : "none";
     };
-    async function loadCarpools(){
-      const off=document.getElementById("offerList"), req=document.getElementById("requestList");
-      const { data, error } = await supabase.from("carpools").select("kind,event,person_name,seats,pickup_area,notes").order("created_at",{ascending:false});
-      if (error){ off.innerHTML=req.innerHTML='<li class="empty">Could not load.</li>'; return; }
-      const card=(c)=>`<li class="data-row"><b>${esc(c.person_name)}</b>${c.event?" · "+esc(c.event):""}${c.pickup_area?" · 📍 "+esc(c.pickup_area):""}${(c.kind==="offer"&&c.seats!=null)?` · ${esc(c.seats)} seats`:""}${c.notes?`<br><span class="empty">${esc(c.notes)}</span>`:""}</li>`;
-      const offers=data.filter(c=>c.kind==="offer"), reqs=data.filter(c=>c.kind==="request");
-      off.innerHTML=offers.length?offers.map(card).join(""):'<li class="empty">No rides offered yet.</li>';
-      req.innerHTML=reqs.length?reqs.map(card).join(""):'<li class="empty">No ride requests yet.</li>';
+    async function loadCarpools() {
+      const off = document.getElementById("offerList"), req = document.getElementById("requestList");
+      const { data, error } = await supabase.from("carpools").select("kind,event,person_name,seats,pickup_area,notes").order("created_at", {ascending: false});
+      if (error) { off.innerHTML = req.innerHTML = '<li class="empty">Could not load.</li>'; return; }
+      const card = (c) => `<li class="data-row"><b>${esc(c.person_name)}</b>${c.event ? " · " + esc(c.event) : ""}${c.pickup_area ? " · 📍 " + esc(c.pickup_area) : ""}${(c.kind === "offer" && c.seats != null) ? ` · ${esc(c.seats)} seats` : ""}${c.notes ? `<br><span class="empty">${esc(c.notes)}</span>` : ""}</li>`;
+      const offers = data.filter(c => c.kind === "offer"), reqs = data.filter(c => c.kind === "request");
+      off.innerHTML = offers.length ? offers.map(card).join("") : '<li class="empty">No rides offered yet.</li>';
+      req.innerHTML = reqs.length ? reqs.map(card).join("") : '<li class="empty">No ride requests yet.</li>';
     }
-    document.getElementById("carForm").addEventListener("submit",async(e)=>{
+    document.getElementById("carForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const payload={ kind:carKind, person_name:document.getElementById("cpName").value.trim(), person_email:document.getElementById("cpEmail").value.trim()||null,
-        phone:document.getElementById("cpPhone").value.trim()||null, event:document.getElementById("cpEvent").value.trim()||null,
-        pickup_area:document.getElementById("cpPickup").value.trim()||null, notes:document.getElementById("cpNotes").value.trim()||null,
-        seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null };
-      if(!payload.person_name){ show("cpMsg","Please enter your name.","error"); return; }
+      const payload = { kind: carKind, person_name: document.getElementById("cpName").value.trim(), person_email: document.getElementById("cpEmail").value.trim() || null,
+        phone: document.getElementById("cpPhone").value.trim() || null, event: document.getElementById("cpEvent").value.trim() || null,
+        pickup_area: document.getElementById("cpPickup").value.trim() || null, notes: document.getElementById("cpNotes").value.trim() || null,
+        seats: carKind === "offer" ? parseInt(document.getElementById("cpSeats").value || "0", 10) : null };
+      if (!payload.person_name) { show("cpMsg", "Please enter your name.", "error"); return; }
       const { error } = await supabase.from("carpools").insert(payload);
-      if (error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
-      show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); setCarKind(carKind); loadCarpools();
+      if (error) { show("cpMsg", "Something went wrong — please try again.", "error"); return; }
+      show("cpMsg", "Posted to the board! 🍀", "success"); e.target.reset(); setCarKind(carKind); loadCarpools();
     });
 
     /* ---------------- VAN POOLS ---------------- */
-    async function loadVans(){
-      const wrap=document.getElementById("vanList");
-      const [{ data:vans, error:e1 }, { data:res, error:e2 }] = await Promise.all([
-        supabase.from("vanpools").select("id,van_name,event,capacity,departure,notes").order("created_at",{ascending:true}),
+    async function loadVans() {
+      const wrap = document.getElementById("vanList");
+      const [{ data: vans, error: e1 }, { data: res, error: e2 }] = await Promise.all([
+        supabase.from("vanpools").select("id,van_name,event,capacity,departure,notes").order("created_at", {ascending: true}),
         supabase.from("vanpool_reservations").select("vanpool_id,rider_name,seats")
       ]);
-      if (e1||e2){ wrap.innerHTML='<p class="empty">Could not load van pools.</p>'; return; }
-      if (!vans.length){ wrap.innerHTML='<p class="empty">No van pools posted yet.</p>'; return; }
-      wrap.innerHTML=vans.map(v=>{
-        const rs=(res||[]).filter(r=>r.vanpool_id===v.id);
-        const taken=rs.reduce((n,r)=>n+(r.seats||0),0);
-        const left=Math.max(0,(v.capacity||0)-taken);
-        const riders=rs.length?rs.map(r=>`${esc(r.rider_name)} (${esc(r.seats)})`).join(", "):"No reservations yet";
+      if (e1 || e2) { wrap.innerHTML = '<p class="empty">Could not load van pools.</p>'; return; }
+      if (!vans.length) { wrap.innerHTML = '<p class="empty">No van pools posted yet.</p>'; return; }
+      const kosEmail = sessionStorage.getItem("kosEmail") || "";
+      wrap.innerHTML = vans.map(v => {
+        const rs = (res || []).filter(r => r.vanpool_id === v.id);
+        const taken = rs.reduce((n, r) => n + (r.seats || 0), 0);
+        const left = Math.max(0, (v.capacity || 0) - taken);
+        const riders = rs.length ? rs.map(r => `${esc(r.rider_name)} (${esc(r.seats)})`).join(", ") : "No reservations yet";
         return `<div class="van-card">
-          <div><b style="font-family:var(--display);color:var(--green-800);font-size:18px;">${esc(v.van_name)}</b>${v.event?" · "+esc(v.event):""}</div>
-          <div style="font-size:14px;color:var(--muted);">${v.departure?esc(v.departure):""}${v.notes?" · "+esc(v.notes):""}</div>
+          <div><b style="font-family:var(--display);color:var(--green-800);font-size:18px;">${esc(v.van_name)}</b>${v.event ? " · " + esc(v.event) : ""}</div>
+          <div style="font-size:14px;color:var(--muted);">${v.departure ? esc(v.departure) : ""}${v.notes ? " · " + esc(v.notes) : ""}</div>
           <div class="seats" style="margin-top:6px;">${left} of ${esc(v.capacity)} seats open</div>
           <div style="font-size:14px;margin-top:4px;"><b>Riders:</b> ${riders}</div>
           <form class="mini-form" data-van="${v.id}">
-            <input name="nm" placeholder="Your name" required />
-            <input name="em" type="email" placeholder="Email (optional)" />
-            <input name="st" type="number" min="1" max="${Math.max(1,left)}" value="1" title="Seats" style="max-width:80px;" />
-            <button class="btn btn-green" type="submit" ${left<=0?"disabled":""}>${left<=0?"Full":"Reserve"}</button>
+            <input name="nm" placeholder="Your name" required value="${esc(emailToName(kosEmail))}" />
+            <input name="em" type="email" placeholder="Email (optional)" value="${esc(kosEmail)}" />
+            <input name="st" type="number" min="1" max="${Math.max(1, left)}" value="1" title="Seats" style="max-width:80px;" />
+            <button class="btn btn-green" type="submit" ${left <= 0 ? "disabled" : ""}>${left <= 0 ? "Full" : "Reserve"}</button>
           </form>
           <div class="msg" id="vanmsg-${v.id}"></div>
         </div>`;
       }).join("");
-      wrap.querySelectorAll(".mini-form").forEach(f=>f.addEventListener("submit",async(e)=>{
-        e.preventDefault(); const id=f.getAttribute("data-van");
-        const payload={ vanpool_id:id, rider_name:f.nm.value.trim(), rider_email:f.em.value.trim()||null, seats:parseInt(f.st.value||"1",10) };
-        if(!payload.rider_name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
+      wrap.querySelectorAll(".mini-form").forEach(f => f.addEventListener("submit", async (e) => {
+        e.preventDefault(); const id = f.getAttribute("data-van");
+        const payload = { vanpool_id: id, rider_name: f.nm.value.trim(), rider_email: f.em.value.trim() || null, seats: parseInt(f.st.value || "1", 10) };
+        if (!payload.rider_name) { show("vanmsg-" + id, "Please enter your name.", "error"); return; }
         const { error } = await supabase.from("vanpool_reservations").insert(payload);
-        if (error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
+        if (error) { show("vanmsg-" + id, "Could not reserve — please try again.", "error"); return; }
         loadVans();
       }));
     }
 
     /* ---------------- DIRECTORY ---------------- */
-    let dirData=[];
-    async function loadDir(){
-      const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
-      if (error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
-      dirData=data||[]; renderDir();
+    let dirData = [];
+    async function loadDir() {
+      const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name", {ascending: true});
+      if (error) { document.getElementById("dirGrid").innerHTML = '<p class="empty">Could not load directory.</p>'; return; }
+      dirData = data || []; renderDir();
     }
-    window.renderDir=()=>{
-      const q=(document.getElementById("dirSearch").value||"").toLowerCase();
-      const grid=document.getElementById("dirGrid");
-      const rows=dirData.filter(m=>(`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
-      if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
-      grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
+    window.renderDir = () => {
+      const q = (document.getElementById("dirSearch").value || "").toLowerCase();
+      const grid = document.getElementById("dirGrid");
+      const rows = dirData.filter(m => (`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
+      if (!rows.length) { grid.innerHTML = '<p class="empty">No members found.</p>'; return; }
+      grid.innerHTML = rows.map(m => `<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
     };
 
-    /* ================= REPORTS DASHBOARD ================= */
-    const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-    const fmtDate  = iso => { if(!iso) return "TBA"; const d=new Date(iso); return isNaN(d)?esc(String(iso)):d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"}); };
-    const num = v => (v==null?0:Number(v));
-    function rTable(headers, rows){
-      if(!rows.length) return '<p class="empty">No data yet.</p>';
-      return `<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
-        rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    /* ================= GAMES MODAL ================= */
+    window.openGames = () => {
+      const m = document.getElementById("gamesModal");
+      m.classList.add("open"); m.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    };
+    window.closeGames = () => {
+      const m = document.getElementById("gamesModal");
+      m.classList.remove("open"); m.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+    window.openRaffle = () => {
+      closeGames();
+      const m = document.getElementById("raffleModal");
+      m.classList.add("open"); m.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      initRaffle();
+    };
+    window.closeRaffle = () => {
+      const m = document.getElementById("raffleModal");
+      m.classList.remove("open"); m.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    /* ================= BASKET RAFFLE ================= */
+    let raffleEventId = null;
+    let raffleTicketPrice = 1.00;
+    let raffleBaskets = [];
+
+    async function initRaffle() {
+      // Load active event
+      const { data: evts, error: evtErr } = await supabase.from("raffle_events")
+        .select("id,name,description,ticket_price").eq("is_active", true).limit(1);
+      if (evtErr || !evts || !evts.length) {
+        document.getElementById("raffleEventName").textContent = "No active raffle at this time.";
+        document.getElementById("raffleEventDesc").textContent = "";
+        document.getElementById("raffleEventPrice").textContent = "";
+        return;
+      }
+      const evt = evts[0];
+      raffleEventId = evt.id;
+      raffleTicketPrice = Number(evt.ticket_price) || 1.00;
+      document.getElementById("raffleEventName").textContent = evt.name;
+      document.getElementById("raffleEventDesc").textContent = evt.description || "";
+      document.getElementById("raffleEventPrice").textContent = "$" + raffleTicketPrice.toFixed(2) + " per ticket";
+
+      // Pre-fill buyer fields from session
+      const kosEmail = sessionStorage.getItem("kosEmail") || "";
+      const buyNameEl = document.getElementById("rtBuyName");
+      const buyEmailEl = document.getElementById("rtBuyEmail");
+      if (buyNameEl && !buyNameEl.value) buyNameEl.value = emailToName(kosEmail);
+      if (buyEmailEl && !buyEmailEl.value) buyEmailEl.value = kosEmail;
+
+      // Load baskets
+      const { data: bkts, error: bkErr } = await supabase.from("raffle_baskets")
+        .select("id,name,description,estimated_value,display_order")
+        .eq("raffle_event_id", raffleEventId).order("display_order", {ascending: true});
+      raffleBaskets = bkErr ? [] : (bkts || []);
+
+      // Load buy summary
+      await refreshBuySummary();
     }
-    function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
-    function secureNotice(why){
+
+    async function refreshBuySummary() {
+      const kosEmail = sessionStorage.getItem("kosEmail") || "";
+      if (!raffleEventId || !kosEmail) return;
+      const { data, error } = await supabase.from("raffle_ticket_purchases")
+        .select("quantity").eq("raffle_event_id", raffleEventId).eq("buyer_email", kosEmail);
+      const total = error ? 0 : (data || []).reduce((n, r) => n + (r.quantity || 0), 0);
+      const summaryEl = document.getElementById("buyTicketSummary");
+      if (summaryEl) {
+        summaryEl.innerHTML = total > 0
+          ? `<div class="raffle-event-info" style="padding:10px 14px;"><span style="font-family:var(--display);color:var(--green-800);">Your tickets purchased: <b>${total}</b></span></div>`
+          : `<p class="empty" style="margin-top:8px;">You haven't purchased any tickets yet.</p>`;
+      }
+    }
+
+    // Tab switching
+    window.setRaffleTab = (tab) => {
+      document.querySelectorAll(".raffle-tab").forEach(t => t.classList.remove("active"));
+      document.getElementById("raffleTab" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add("active");
+      // Update seg buttons
+      const btns = document.querySelectorAll("#raffleModal .seg button");
+      const tabMap = ["buy", "place", "standings"];
+      btns.forEach((b, i) => b.classList.toggle("on", tabMap[i] === tab));
+      if (tab === "place") renderPlaceTab();
+      if (tab === "standings") renderStandings();
+    };
+
+    async function renderPlaceTab() {
+      if (!raffleEventId) return;
+      const kosEmail = sessionStorage.getItem("kosEmail") || "";
+
+      // Get purchased totals
+      const { data: purchases } = await supabase.from("raffle_ticket_purchases")
+        .select("quantity").eq("raffle_event_id", raffleEventId).eq("buyer_email", kosEmail);
+      const totalPurchased = (purchases || []).reduce((n, r) => n + (r.quantity || 0), 0);
+
+      // Get already placed
+      const { data: placed } = await supabase.from("raffle_entries")
+        .select("ticket_count").eq("raffle_event_id", raffleEventId).eq("buyer_email", kosEmail);
+      const totalPlaced = (placed || []).reduce((n, r) => n + (r.ticket_count || 0), 0);
+      const remaining = Math.max(0, totalPurchased - totalPlaced);
+
+      document.getElementById("placeTotals").textContent =
+        `You've purchased ${totalPurchased} ticket${totalPurchased !== 1 ? "s" : ""} · placed ${totalPlaced} · ${remaining} remaining to place`;
+
+      if (!raffleBaskets.length) {
+        document.getElementById("basketList").innerHTML = '<p class="empty">No baskets available yet.</p>';
+        return;
+      }
+
+      // Get per-basket entry totals
+      const { data: allEntries } = await supabase.from("raffle_entries")
+        .select("raffle_basket_id,ticket_count").eq("raffle_event_id", raffleEventId);
+      const basketTotals = {};
+      (allEntries || []).forEach(e => {
+        basketTotals[e.raffle_basket_id] = (basketTotals[e.raffle_basket_id] || 0) + e.ticket_count;
+      });
+
+      document.getElementById("basketList").innerHTML = raffleBaskets.map(b => `
+        <div class="basket-card">
+          <div class="bk-name">${esc(b.name)}</div>
+          <div class="bk-desc">${esc(b.description || "")}</div>
+          <div class="bk-meta">Estimated value: $${Number(b.estimated_value || 0).toFixed(2)} · ${basketTotals[b.id] || 0} tickets placed so far</div>
+          <div class="basket-place-row" data-bid="${b.id}">
+            <input type="number" min="1" value="1" placeholder="# tickets" class="bk-qty" />
+            <button class="btn btn-green bk-place-btn" type="button">Place Tickets</button>
+          </div>
+          <div class="msg bk-msg"></div>
+        </div>`).join("");
+
+      document.querySelectorAll(".basket-place-row").forEach(row => {
+        const btn = row.querySelector(".bk-place-btn");
+        const qtyIn = row.querySelector(".bk-qty");
+        const msgEl = row.parentElement.querySelector(".bk-msg");
+        btn.addEventListener("click", async () => {
+          if (!raffleEventId) return;
+          const qty = parseInt(qtyIn.value || "1", 10);
+          if (isNaN(qty) || qty < 1) { msgEl.textContent = "Enter a valid quantity."; msgEl.className = "msg error"; return; }
+
+          // Re-check remaining
+          const { data: pur2 } = await supabase.from("raffle_ticket_purchases")
+            .select("quantity").eq("raffle_event_id", raffleEventId).eq("buyer_email", kosEmail);
+          const { data: pl2 } = await supabase.from("raffle_entries")
+            .select("ticket_count").eq("raffle_event_id", raffleEventId).eq("buyer_email", kosEmail);
+          const tp2 = (pur2 || []).reduce((n, r) => n + r.quantity, 0);
+          const tpl2 = (pl2 || []).reduce((n, r) => n + r.ticket_count, 0);
+          if (qty > tp2 - tpl2) {
+            msgEl.textContent = `You only have ${tp2 - tpl2} ticket${tp2 - tpl2 !== 1 ? "s" : ""} left to place.`;
+            msgEl.className = "msg error"; return;
+          }
+
+          const { error } = await supabase.from("raffle_entries").insert({
+            raffle_basket_id: row.getAttribute("data-bid"),
+            raffle_event_id: raffleEventId,
+            buyer_name: emailToName(kosEmail),
+            buyer_email: kosEmail,
+            ticket_count: qty
+          });
+          if (error) { msgEl.textContent = "Could not place tickets — please try again."; msgEl.className = "msg error"; return; }
+          msgEl.textContent = `Placed ${qty} ticket${qty !== 1 ? "s" : ""} on this basket! 🍀`;
+          msgEl.className = "msg success";
+          qtyIn.value = "1";
+          renderPlaceTab();
+        });
+      });
+    }
+
+    async function renderStandings() {
+      if (!raffleEventId || !raffleBaskets.length) {
+        document.getElementById("standingsList").innerHTML = '<p class="empty">No data yet.</p>';
+        return;
+      }
+      const { data: entries, error } = await supabase.from("raffle_entries")
+        .select("raffle_basket_id,ticket_count").eq("raffle_event_id", raffleEventId);
+      if (error) { document.getElementById("standingsList").innerHTML = '<p class="empty">Could not load standings.</p>'; return; }
+
+      const totals = {};
+      (entries || []).forEach(e => {
+        totals[e.raffle_basket_id] = (totals[e.raffle_basket_id] || 0) + e.ticket_count;
+      });
+      const max = Math.max(1, ...Object.values(totals));
+
+      document.getElementById("standingsList").innerHTML = raffleBaskets.map(b => {
+        const count = totals[b.id] || 0;
+        const pct = Math.round((count / max) * 100);
+        return `<div class="standing-item">
+          <div class="standing-label"><span>${esc(b.name)}</span><span class="standing-count">${count} ticket${count !== 1 ? "s" : ""}</span></div>
+          <div class="standing-bar-bg"><div class="standing-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join("");
+    }
+
+    // Buy tickets form
+    document.getElementById("buyTicketsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!raffleEventId) { show("buyMsg", "No active raffle event found.", "error"); return; }
+      const name = document.getElementById("rtBuyName").value.trim();
+      const email = document.getElementById("rtBuyEmail").value.trim();
+      const qty = parseInt(document.getElementById("rtQty").value || "1", 10);
+      if (!name) { show("buyMsg", "Please enter your name.", "error"); return; }
+      if (!email) { show("buyMsg", "Please enter your email.", "error"); return; }
+      if (isNaN(qty) || qty < 1) { show("buyMsg", "Please enter a valid quantity.", "error"); return; }
+      const { error } = await supabase.from("raffle_ticket_purchases").insert({
+        raffle_event_id: raffleEventId,
+        buyer_name: name,
+        buyer_email: email,
+        quantity: qty
+      });
+      if (error) { show("buyMsg", "Could not process — please try again.", "error"); return; }
+      show("buyMsg", `✅ Purchased ${qty} ticket${qty !== 1 ? "s" : ""}! Head to "Place Tickets" to assign them to baskets.`, "success");
+      await refreshBuySummary();
+    });
+
+    /* ================= REPORTS DASHBOARD ================= */
+    const fmtMoney = n => "$" + Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const fmtDate  = iso => { if (!iso) return "TBA"; const d = new Date(iso); return isNaN(d) ? esc(String(iso)) : d.toLocaleDateString([], {month: "short", day: "numeric", year: "numeric"}); };
+    const num = v => (v == null ? 0 : Number(v));
+    function rTable(headers, rows) {
+      if (!rows.length) return '<p class="empty">No data yet.</p>';
+      return `<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+        rows.map(r => `<tr>${r.map(c => `<td>${c == null ? "" : esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    }
+    function rStats(items) { return `<div class="stat-row">${items.map(s => `<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
+    function secureNotice(why) {
       return `<div class="rpt-secure"><h4>🔒 Secure member login required</h4>
         <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so it is deliberately <b>not</b> served to the public web key that powers this page.</p>
         <p>${esc(why)}</p>
@@ -588,54 +984,54 @@
 
     const CATS = ["Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
 
-    function buildReportGrid(){
-      const grid=document.getElementById("reportGrid");
-      grid.innerHTML = CATS.map(cat=>{
-        const items=REPORTS.filter(r=>r.cat===cat);
+    function buildReportGrid() {
+      const grid = document.getElementById("reportGrid");
+      grid.innerHTML = CATS.map(cat => {
+        const items = REPORTS.filter(r => r.cat === cat);
         return `<div class="rpt-cat">${esc(cat)}</div><div class="rpt-grid">${
-          items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
-            <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
+          items.map(r => `<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
+            <div class="t">${r.icon || "📈"} ${esc(r.title)}</div>
             <div class="d">${esc(r.desc)}</div>
-            ${r.secure?'<span class="lock">🔒 Secure login</span>':''}
+            ${r.secure ? '<span class="lock">🔒 Secure login</span>' : ''}
           </div>`).join("")}</div>`;
       }).join("");
-      grid.querySelectorAll(".rpt-card").forEach(c=>{
-        const go=()=>runReport(c.getAttribute("data-id"));
-        c.addEventListener("click",go);
-        c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+      grid.querySelectorAll(".rpt-card").forEach(c => {
+        const go = () => runReport(c.getAttribute("data-id"));
+        c.addEventListener("click", go);
+        c.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
       });
     }
 
-    window.openReports=()=>{
-      const m=document.getElementById("reportsModal");
-      if(!document.getElementById("reportGrid").childElementCount) buildReportGrid();
+    window.openReports = () => {
+      const m = document.getElementById("reportsModal");
+      if (!document.getElementById("reportGrid").childElementCount) buildReportGrid();
       showReportGrid();
-      m.classList.add("open"); m.setAttribute("aria-hidden","false");
-      document.body.style.overflow="hidden";
+      m.classList.add("open"); m.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
     };
-    window.closeReports=()=>{
-      const m=document.getElementById("reportsModal");
-      m.classList.remove("open"); m.setAttribute("aria-hidden","true");
-      document.body.style.overflow="";
+    window.closeReports = () => {
+      const m = document.getElementById("reportsModal");
+      m.classList.remove("open"); m.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
     };
-    window.showReportGrid=()=>{
-      document.getElementById("reportView").style.display="none";
-      document.getElementById("reportGrid").style.display="block";
+    window.showReportGrid = () => {
+      document.getElementById("reportView").style.display = "none";
+      document.getElementById("reportGrid").style.display = "block";
     };
-    async function runReport(id){
-      const def=REPORTS.find(r=>r.id===id); if(!def) return;
-      document.getElementById("reportGrid").style.display="none";
-      const view=document.getElementById("reportView"); view.style.display="block";
-      document.getElementById("reportTitle").textContent=(def.icon?def.icon+" ":"")+def.title;
-      const body=document.getElementById("reportBody");
-      try{ document.querySelector(".modal-card").scrollIntoView({block:"start"}); }catch(_){}
-      if(def.secure){ body.innerHTML=secureNotice(def.why||""); return; }
-      body.innerHTML='<p class="empty">Running report…</p>';
+    async function runReport(id) {
+      const def = REPORTS.find(r => r.id === id); if (!def) return;
+      document.getElementById("reportGrid").style.display = "none";
+      const view = document.getElementById("reportView"); view.style.display = "block";
+      document.getElementById("reportTitle").textContent = (def.icon ? def.icon + " " : "") + def.title;
+      const body = document.getElementById("reportBody");
+      try { document.querySelector(".modal-card").scrollIntoView({block: "start"}); } catch (_) {}
+      if (def.secure) { body.innerHTML = secureNotice(def.why || ""); return; }
+      body.innerHTML = '<p class="empty">Running report…</p>';
       try { body.innerHTML = await def.run(); }
-      catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
+      catch(err) { body.innerHTML = '<p class="msg error">Could not load this report. ' + esc(err.message || "") + '</p>'; }
     }
-    window.runReport=runReport;
-    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeReports(); });
+    window.runReport = runReport;
+    document.addEventListener("keydown", e => { if (e.key === "Escape") { closeReports(); closeGames(); closeRaffle(); } });
   </script>
 </body>
 </html>
