@@ -12,18 +12,48 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css" />
 <style>
-  /* ---- Gate ---- */
-  .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
-    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
-  .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:400px; width:100%; text-align:center;
+  /* ---- Auth screen ---- */
+  .auth-screen{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; overflow-y:auto; }
+  .auth-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:420px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
-  .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
-  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:26px; margin:0 0 4px; }
-  .gate-card .gate-sub{ color:var(--muted); font-family:var(--fancy); font-style:italic; font-size:15px; margin:0 0 20px; }
-  .gate-field{ text-align:left; margin-bottom:12px; }
-  .gate-field label{ display:block; font-family:var(--display); font-size:13px; color:var(--green-800); margin-bottom:5px; letter-spacing:.4px; }
-  .gate-field input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; box-sizing:border-box; }
-  .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
+  .auth-card .emblem{ width:64px; height:auto; margin-bottom:10px; }
+  .auth-card h1{ font-family:var(--display); color:var(--green-800); font-size:26px; margin:0 0 4px; }
+  .auth-sub{ color:var(--muted); font-family:var(--fancy); font-style:italic; font-size:15px; margin:0 0 16px; }
+  .auth-tabs{ display:flex; border:1px solid rgba(168,128,28,.4); border-radius:10px; overflow:hidden; margin-bottom:18px; }
+  .auth-tab{ flex:1; border:0; background:#fff; color:var(--green-800); padding:10px; font-family:var(--display); font-size:14px; cursor:pointer; }
+  .auth-tab.on{ background:var(--green-700); color:#fff; }
+  .auth-field{ text-align:left; margin-bottom:12px; }
+  .auth-field label{ display:block; font-family:var(--display); font-size:13px; color:var(--green-800); margin-bottom:5px; letter-spacing:.4px; }
+  .auth-field input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; box-sizing:border-box; }
+  .auth-err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
+  .auth-info{ color:#14532d; font-size:14px; min-height:18px; margin-top:8px; }
+  /* ---- Avatar upload zone (profile setup) ---- */
+  .avatar-zone{ width:100px; height:100px; border-radius:50%; border:2px dashed rgba(168,128,28,.5); margin:0 auto 16px;
+    cursor:pointer; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:#fbf7ec; }
+  .avatar-zone img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .az-hint{ font-size:13px; color:var(--muted); text-align:center; line-height:1.4; pointer-events:none; }
+  /* ---- Member bar ---- */
+  .member-bar{ background:linear-gradient(135deg,var(--green-800),var(--green-900)); color:#fff; padding:12px 22px;
+    display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .member-bar .bar-name{ font-family:var(--display); font-size:16px; }
+  .member-bar .bar-email{ font-size:13px; opacity:.75; }
+  .bar-actions{ margin-left:auto; display:flex; gap:8px; }
+  .bar-edit,.bar-signout{ border:1px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1); color:#fff; padding:6px 14px; border-radius:8px; font-family:var(--display); font-size:13px; cursor:pointer; }
+  .bar-edit:hover,.bar-signout:hover{ background:rgba(255,255,255,.22); }
+  .av{ border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.5); flex-shrink:0; }
+  .av-init{ border-radius:50%; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; flex-shrink:0; }
+  /* ---- Krewe Profiles grid ---- */
+  .profile-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:14px; margin:14px 0; }
+  .profile-card{ background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:14px; padding:16px 12px; text-align:center; }
+  .profile-card .av,.profile-card .av-init{ margin:0 auto 8px; }
+  .pc-name{ font-family:var(--display); color:var(--green-800); font-size:15px; }
+  .pc-bio{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
+  /* ---- Profile edit modal ---- */
+  #profileEditModal .modal-head{ background:linear-gradient(135deg,var(--green-700),var(--green-800)); }
+  .pe-av-zone{ width:80px; height:80px; border-radius:50%; border:2px dashed rgba(168,128,28,.5); margin:0 auto 12px;
+    cursor:pointer; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:#fbf7ec; }
+  .pe-av-zone img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
 
   /* ---- Member grid / app cards ---- */
   .member-grid{ display:grid; gap:26px; }
@@ -170,24 +200,96 @@
 </head>
 <body>
 
-  <!-- LOGIN GATE -->
-  <div class="gate" id="gate">
-    <div class="gate-card">
-      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+  <!-- AUTH SCREEN -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <img class="emblem" src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>🔒 Members Only</h1>
-      <p class="gate-sub">Krewe of Shamrock — Members Area</p>
-      <form id="gateForm">
-        <div class="gate-field">
-          <label for="gateEmail">Email address</label>
-          <input id="gateEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+      <p class="auth-sub">Krewe of Shamrock</p>
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</button>
+        <button class="auth-tab" id="tabJoin" onclick="switchAuthTab('join')">Join the Krewe</button>
+      </div>
+      <!-- SIGN IN -->
+      <div id="formSignIn">
+        <div class="auth-field"><label for="siEmail">Email address</label>
+          <input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" /></div>
+        <div class="auth-field"><label for="siPass">Password</label>
+          <input id="siPass" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
+        <button class="btn btn-primary" type="button" id="siBtn" onclick="doSignIn()" style="width:100%;margin-top:4px;">☘ Sign In</button>
+        <div class="auth-err" id="siErr"></div>
+      </div>
+      <!-- JOIN / CREATE ACCOUNT -->
+      <div id="formJoin" style="display:none;">
+        <p style="font-size:14px;color:#555;margin:0 0 14px;text-align:left;">Create your krewe account. Your profile will be visible to fellow members.</p>
+        <div class="auth-field"><label for="jName">Display name</label>
+          <input id="jName" placeholder="Brigid O'Brien" /></div>
+        <div class="auth-field"><label for="jEmail">Email address</label>
+          <input id="jEmail" type="email" placeholder="you@example.com" autocomplete="email" /></div>
+        <div class="auth-field"><label for="jPass">Password (min 6 chars)</label>
+          <input id="jPass" type="password" placeholder="••••••••" autocomplete="new-password" /></div>
+        <div class="auth-field"><label for="jPass2">Confirm password</label>
+          <input id="jPass2" type="password" placeholder="••••••••" autocomplete="new-password" /></div>
+        <button class="btn btn-primary" type="button" id="jBtn" onclick="doJoin()" style="width:100%;margin-top:4px;">☘ Create Account</button>
+        <div class="auth-err" id="jErr"></div>
+        <div class="auth-info" id="jInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SETUP SCREEN (new members) -->
+  <div class="auth-screen" id="profileSetup" style="display:none;">
+    <div class="auth-card">
+      <h1 style="margin-bottom:6px;">Welcome to the Krewe! 🍀</h1>
+      <p class="auth-sub">Set up your member profile</p>
+      <div class="avatar-zone" id="avatarZone" onclick="document.getElementById('avatarFileInput').click()" title="Tap to add photo">
+        <img id="avatarPreview" style="display:none;width:100%;height:100%;object-fit:cover;" />
+        <div class="az-hint" id="avatarHint">📷<br>Add photo</div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="previewAvatar(event)" />
+      </div>
+      <div class="auth-field"><label for="setupName">Display name</label>
+        <input id="setupName" placeholder="How you appear to other members" /></div>
+      <div class="auth-field"><label for="setupBio">Bio (optional)</label>
+        <input id="setupBio" placeholder="A little about yourself…" /></div>
+      <button class="btn btn-primary" type="button" onclick="doSaveProfile()" style="width:100%;margin-top:4px;">Save Profile & Enter</button>
+      <div class="auth-err" id="setupErr" style="margin-top:8px;"></div>
+      <button type="button" onclick="skipProfile()" style="background:none;border:0;color:var(--muted);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;">Skip for now</button>
+    </div>
+  </div>
+
+  <!-- MEMBER BAR (shown when signed in) -->
+  <div class="member-bar" id="memberBar" style="display:none;">
+    <div id="barAvatar"></div>
+    <div>
+      <div class="bar-name" id="barName"></div>
+      <div class="bar-email" id="barEmail"></div>
+    </div>
+    <div class="bar-actions">
+      <button class="bar-edit" onclick="openProfileEdit()">Edit Profile</button>
+      <button class="bar-signout" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- PROFILE EDIT MODAL -->
+  <div class="modal-overlay" id="profileEditModal" aria-hidden="true" onclick="if(event.target===this)closeProfileEdit()">
+    <div class="modal-card" role="dialog" aria-modal="true" style="max-width:440px;">
+      <div class="modal-head">
+        <span class="ic" style="font-size:22px;">✏️</span>
+        <h2>Edit Your Profile</h2>
+        <button class="modal-x" type="button" onclick="closeProfileEdit()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="pe-av-zone" onclick="document.getElementById('peAvatarInput').click()" title="Change photo">
+          <img id="peAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;" />
+          <div class="az-hint" id="peAvatarHint">📷</div>
+          <input type="file" id="peAvatarInput" accept="image/*" style="display:none;" onchange="pePreviewAvatar(event)" />
         </div>
-        <div class="gate-field">
-          <label for="gatePass">Krewe password</label>
-          <input id="gatePass" type="password" placeholder="••••••••" autocomplete="current-password" autofocus />
-        </div>
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:4px;">☘ Enter Members Area</button>
-        <div class="err" id="gateErr"></div>
-      </form>
+        <div class="auth-field"><label for="peName">Display name</label><input id="peName" /></div>
+        <div class="auth-field"><label for="peBio">Bio</label><input id="peBio" placeholder="A little about yourself…" /></div>
+        <button class="btn btn-primary" type="button" onclick="doUpdateProfile()" style="width:100%;margin-top:4px;">Save Changes</button>
+        <div class="auth-err" id="peErr" style="margin-top:8px;"></div>
+        <div class="auth-info" id="peInfo" style="margin-top:8px;"></div>
+      </div>
     </div>
   </div>
 
@@ -317,6 +419,10 @@
       <section class="app-card">
         <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
         <div class="app-body">
+          <h3 style="font-family:var(--display);color:var(--green-800);font-size:17px;margin:0 0 4px;">Krewe Profiles</h3>
+          <p style="font-size:14px;color:var(--muted);margin:0 0 2px;">Members who have joined with an account.</p>
+          <div class="profile-grid" id="profileGrid"><p class="empty">Loading profiles…</p></div>
+          <h3 style="font-family:var(--display);color:var(--green-800);font-size:17px;margin:20px 0 8px;border-top:1px solid rgba(168,128,28,.2);padding-top:16px;">Full Roster</h3>
           <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
           <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
           <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
@@ -460,63 +566,228 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
-    /* ---- Gate: email + password ---- */
-    const PASSCODE = "2026";
-    const gate = document.getElementById("gate");
-    const content = document.getElementById("memberContent");
+    /* ---- Helpers ---- */
+    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const show=(el,t,k)=>{ const m=document.getElementById(el); if(m){ m.textContent=t; m.className="msg "+(k||""); }};
+    const q = (id) => document.getElementById(id);
 
     function guessName(email){
       if(!email) return "";
-      const local = email.split("@")[0];
-      return local.replace(/[._-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+      return email.split("@")[0].replace(/[._-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
     }
 
-    function unlock(email){
-      gate.style.display="none";
-      content.style.display="block";
-      sessionStorage.setItem("kosMember","1");
-      sessionStorage.setItem("kosEmail", email||"");
-      const welcome = document.getElementById("memberWelcome");
-      if(email) welcome.textContent = "Welcome, " + email + " — coordination tools, games, and more await.";
-      prefillForms(email);
+    function avatarHtml(profile, size=40){
+      if(profile?.avatar_url)
+        return `<img src="${esc(profile.avatar_url)}" class="av" width="${size}" height="${size}" style="width:${size}px;height:${size}px;" />`;
+      const initials=(profile?.display_name||"?").trim().split(/\s+/).map(w=>w[0]).join("").toUpperCase().slice(0,2);
+      return `<div class="av-init" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.35)}px;">${esc(initials)}</div>`;
+    }
+
+    /* ---- Auth tab switching ---- */
+    window.switchAuthTab=(tab)=>{
+      const isSignIn = tab==="signin";
+      q("tabSignIn").classList.toggle("on",isSignIn);
+      q("tabJoin").classList.toggle("on",!isSignIn);
+      q("formSignIn").style.display = isSignIn?"block":"none";
+      q("formJoin").style.display   = isSignIn?"none":"block";
+    };
+
+    /* ---- Sign In ---- */
+    window.doSignIn=async()=>{
+      const email=q("siEmail").value.trim(), pass=q("siPass").value;
+      q("siErr").textContent="";
+      if(!email||!pass){ q("siErr").textContent="Please fill in email and password."; return; }
+      q("siBtn").disabled=true; q("siBtn").textContent="Signing in…";
+      const { error } = await supabase.auth.signInWithPassword({ email, password:pass });
+      q("siBtn").disabled=false; q("siBtn").textContent="☘ Sign In";
+      if(error) q("siErr").textContent = error.message;
+    };
+
+    /* ---- Join / Create account ---- */
+    window.doJoin=async()=>{
+      const name=q("jName").value.trim(), email=q("jEmail").value.trim(),
+            pass=q("jPass").value, pass2=q("jPass2").value;
+      q("jErr").textContent=""; q("jInfo").textContent="";
+      if(!name||!email||!pass){ q("jErr").textContent="Please fill in all fields."; return; }
+      if(pass!==pass2){ q("jErr").textContent="Passwords do not match."; return; }
+      if(pass.length<6){ q("jErr").textContent="Password must be at least 6 characters."; return; }
+      q("jBtn").disabled=true; q("jBtn").textContent="Creating account…";
+      const { data, error } = await supabase.auth.signUp({ email, password:pass,
+        options:{ data:{ display_name:name } } });
+      q("jBtn").disabled=false; q("jBtn").textContent="☘ Create Account";
+      if(error){ q("jErr").textContent=error.message; return; }
+      if(data.session){
+        /* Auto-signed in — onAuthStateChange will fire */
+      } else {
+        q("jInfo").textContent="Check your email to confirm your account, then sign in.";
+      }
+    };
+
+    /* ---- Sign Out ---- */
+    window.doSignOut=async()=>{ await supabase.auth.signOut(); };
+
+    /* ---- Profile setup ---- */
+    let _avatarFile = null;
+    window.previewAvatar=(e)=>{
+      const file=e.target.files[0]; if(!file) return;
+      _avatarFile=file;
+      const url=URL.createObjectURL(file);
+      q("avatarPreview").src=url; q("avatarPreview").style.display="block";
+      q("avatarHint").style.display="none";
+    };
+
+    async function uploadAvatar(userId, file){
+      const ext=file.name.split(".").pop();
+      const path=`${userId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path,file,{upsert:true});
+      if(error) return null;
+      return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    }
+
+    window.doSaveProfile=async()=>{
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) return;
+      const display_name=q("setupName").value.trim();
+      const bio=q("setupBio").value.trim();
+      if(!display_name){ q("setupErr").textContent="Please enter a display name."; return; }
+      q("setupErr").textContent="";
+      let avatar_url=null;
+      if(_avatarFile) avatar_url=await uploadAvatar(session.user.id,_avatarFile);
+      const payload={ id:session.user.id, display_name, bio:bio||null, updated_at:new Date().toISOString() };
+      if(avatar_url) payload.avatar_url=avatar_url;
+      const { error } = await supabase.from("profiles").upsert(payload);
+      if(error){ q("setupErr").textContent=error.message; return; }
+      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+      enterMembersArea(session.user, profile);
+    };
+
+    window.skipProfile=async()=>{
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) return;
+      await supabase.from("profiles").upsert({
+        id:session.user.id, display_name:guessName(session.user.email)||"Member", updated_at:new Date().toISOString()
+      });
+      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+      enterMembersArea(session.user, profile);
+    };
+
+    /* ---- Profile edit ---- */
+    let _peAvatarFile=null;
+    window.openProfileEdit=async()=>{
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) return;
+      const { data:p } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+      if(p){
+        q("peName").value=p.display_name||"";
+        q("peBio").value=p.bio||"";
+        if(p.avatar_url){
+          q("peAvatarImg").src=p.avatar_url; q("peAvatarImg").style.display="block";
+          q("peAvatarHint").style.display="none";
+        } else {
+          q("peAvatarImg").style.display="none"; q("peAvatarHint").style.display="block";
+        }
+      }
+      _peAvatarFile=null;
+      q("peErr").textContent=""; q("peInfo").textContent="";
+      q("profileEditModal").classList.add("open"); q("profileEditModal").setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+    };
+    window.closeProfileEdit=()=>{
+      q("profileEditModal").classList.remove("open"); q("profileEditModal").setAttribute("aria-hidden","true");
+      document.body.style.overflow="";
+    };
+    window.pePreviewAvatar=(e)=>{
+      const file=e.target.files[0]; if(!file) return;
+      _peAvatarFile=file;
+      q("peAvatarImg").src=URL.createObjectURL(file);
+      q("peAvatarImg").style.display="block"; q("peAvatarHint").style.display="none";
+    };
+    window.doUpdateProfile=async()=>{
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) return;
+      const display_name=q("peName").value.trim(), bio=q("peBio").value.trim();
+      if(!display_name){ q("peErr").textContent="Display name required."; return; }
+      q("peErr").textContent=""; q("peInfo").textContent="Saving…";
+      let avatar_url=null;
+      if(_peAvatarFile) avatar_url=await uploadAvatar(session.user.id,_peAvatarFile);
+      const payload={ id:session.user.id, display_name, bio:bio||null, updated_at:new Date().toISOString() };
+      if(avatar_url) payload.avatar_url=avatar_url;
+      const { error } = await supabase.from("profiles").upsert(payload);
+      if(error){ q("peInfo").textContent=""; q("peErr").textContent=error.message; return; }
+      q("peInfo").textContent="Saved!";
+      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+      updateMemberBar(session.user, profile);
+      loadProfiles();
+      setTimeout(closeProfileEdit,900);
+    };
+
+    /* ---- Screen transitions ---- */
+    function showGate(){
+      q("authScreen").style.display="flex";
+      q("profileSetup").style.display="none";
+      q("memberBar").style.display="none";
+      q("memberContent").style.display="none";
+    }
+    function showProfileSetup(user){
+      q("authScreen").style.display="none";
+      q("profileSetup").style.display="flex";
+      q("memberBar").style.display="none";
+      q("memberContent").style.display="none";
+      q("setupName").value=user.user_metadata?.display_name||guessName(user.email)||"";
+    }
+    function enterMembersArea(user, profile){
+      q("authScreen").style.display="none";
+      q("profileSetup").style.display="none";
+      q("memberBar").style.display="flex";
+      q("memberContent").style.display="block";
+      updateMemberBar(user, profile);
+      const welcome=q("memberWelcome");
+      welcome.textContent="Welcome, "+(profile?.display_name||guessName(user.email))+" — coordination tools, games, and more await.";
+      prefillForms(user.email, profile);
       initAll();
     }
-
-    const storedEmail = sessionStorage.getItem("kosEmail")||"";
-    if(sessionStorage.getItem("kosMember")==="1") unlock(storedEmail);
-
-    document.getElementById("gateForm").addEventListener("submit",(e)=>{
-      e.preventDefault();
-      const email = document.getElementById("gateEmail").value.trim();
-      const pass  = document.getElementById("gatePass").value.trim();
-      if(!email){ document.getElementById("gateErr").textContent="Please enter your email address."; return; }
-      if(pass !== PASSCODE){ document.getElementById("gateErr").textContent="Sorry, that password isn't right."; return; }
-      unlock(email);
-    });
-
-    function prefillForms(email){
-      if(!email) return;
-      const name = guessName(email);
-      const lkName = document.getElementById("lkName");
-      const lkEmail = document.getElementById("lkEmail");
-      const cpName  = document.getElementById("cpName");
-      const cpEmail = document.getElementById("cpEmail");
-      const buyName = document.getElementById("buyName");
-      const buyEmail= document.getElementById("buyEmail");
-      const placeLookupEmail = document.getElementById("placeLookupEmail");
-      if(lkName && !lkName.value) lkName.value = name;
-      if(lkEmail && !lkEmail.value) lkEmail.value = email;
-      if(cpName  && !cpName.value)  cpName.value  = name;
-      if(cpEmail && !cpEmail.value) cpEmail.value = email;
-      if(buyName && !buyName.value) buyName.value = name;
-      if(buyEmail && !buyEmail.value) buyEmail.value = email;
-      if(placeLookupEmail && !placeLookupEmail.value) placeLookupEmail.value = email;
+    function updateMemberBar(user, profile){
+      q("barAvatar").innerHTML=avatarHtml(profile,40);
+      q("barName").textContent=profile?.display_name||guessName(user.email)||user.email;
+      q("barEmail").textContent=user.email;
     }
 
-    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const show=(el,t,k)=>{ const m=document.getElementById(el); if(m){ m.textContent=t; m.className="msg "+(k||""); }};
+    /* ---- Auth state ---- */
+    supabase.auth.onAuthStateChange(async(event, session)=>{
+      if(session){
+        const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+        if(!profile||!profile.display_name){
+          showProfileSetup(session.user);
+        } else {
+          enterMembersArea(session.user, profile);
+        }
+      } else {
+        showGate();
+      }
+    });
 
-    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+    function prefillForms(email, profile){
+      const name=profile?.display_name||guessName(email)||"";
+      const set=(id,v)=>{ const el=q(id); if(el&&!el.value) el.value=v; };
+      set("lkName",name); set("lkEmail",email);
+      set("cpName",name);  set("cpEmail",email);
+      set("buyName",name); set("buyEmail",email);
+      set("placeLookupEmail",email);
+    }
+
+    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); loadProfiles(); }
+
+    /* ===== KREWE PROFILES ===== */
+    async function loadProfiles(){
+      const { data } = await supabase.from("profiles").select("display_name,bio,avatar_url").order("created_at",{ascending:true});
+      const grid=q("profileGrid");
+      if(!data||!data.length){ grid.innerHTML='<p class="empty">No profiles yet — be the first to set one up!</p>'; return; }
+      grid.innerHTML=data.map(p=>`<div class="profile-card">
+        ${avatarHtml(p,64)}
+        <div class="pc-name">${esc(p.display_name)}</div>
+        ${p.bio?`<div class="pc-bio">${esc(p.bio)}</div>`:""}
+      </div>`).join("");
+    }
 
     /* ===== LOCKERS ===== */
     async function loadLockers(){
