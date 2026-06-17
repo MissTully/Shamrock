@@ -3,59 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock — Members Only</title>
-<meta name="description" content="Members-only area for the Krewe of Shamrock: games, coordination tools, lockers, carpools, and member directory." />
+<title>Krewe of Shamrock — Members Area</title>
+<meta name="description" content="Members-only coordination tools for the Krewe of Shamrock: locker rentals, carpools, van pools, and the member directory." />
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css" />
 <style>
-  /* ---- Auth screen ---- */
-  .auth-screen{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
-    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; overflow-y:auto; }
-  .auth-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:420px; width:100%; text-align:center;
+  .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
+  .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
-  .auth-card .emblem{ width:64px; height:auto; margin-bottom:10px; }
-  .auth-card h1{ font-family:var(--display); color:var(--green-800); font-size:26px; margin:0 0 4px; }
-  .auth-sub{ color:var(--muted); font-family:var(--fancy); font-style:italic; font-size:15px; margin:0 0 16px; }
-  .auth-tabs{ display:flex; border:1px solid rgba(168,128,28,.4); border-radius:10px; overflow:hidden; margin-bottom:18px; }
-  .auth-tab{ flex:1; border:0; background:#fff; color:var(--green-800); padding:10px; font-family:var(--display); font-size:14px; cursor:pointer; }
-  .auth-tab.on{ background:var(--green-700); color:#fff; }
-  .auth-field{ text-align:left; margin-bottom:12px; }
-  .auth-field label{ display:block; font-family:var(--display); font-size:13px; color:var(--green-800); margin-bottom:5px; letter-spacing:.4px; }
-  .auth-field input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; box-sizing:border-box; }
-  .auth-err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
-  .auth-info{ color:#14532d; font-size:14px; min-height:18px; margin-top:8px; }
-  /* ---- Avatar upload zone (profile setup) ---- */
-  .avatar-zone{ width:100px; height:100px; border-radius:50%; border:2px dashed rgba(168,128,28,.5); margin:0 auto 16px;
-    cursor:pointer; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:#fbf7ec; }
-  .avatar-zone img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
-  .az-hint{ font-size:13px; color:var(--muted); text-align:center; line-height:1.4; pointer-events:none; }
-  /* ---- Member bar ---- */
-  .member-bar{ background:linear-gradient(135deg,var(--green-800),var(--green-900)); color:#fff; padding:12px 22px;
-    display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.3); }
-  .member-bar .bar-name{ font-family:var(--display); font-size:16px; }
-  .member-bar .bar-email{ font-size:13px; opacity:.75; }
-  .bar-actions{ margin-left:auto; display:flex; gap:8px; }
-  .bar-edit,.bar-signout{ border:1px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1); color:#fff; padding:6px 14px; border-radius:8px; font-family:var(--display); font-size:13px; cursor:pointer; }
-  .bar-edit:hover,.bar-signout:hover{ background:rgba(255,255,255,.22); }
-  .av{ border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.5); flex-shrink:0; }
-  .av-init{ border-radius:50%; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; flex-shrink:0; }
-  /* ---- Krewe Profiles grid ---- */
-  .profile-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:14px; margin:14px 0; }
-  .profile-card{ background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:14px; padding:16px 12px; text-align:center; }
-  .profile-card .av,.profile-card .av-init{ margin:0 auto 8px; }
-  .pc-name{ font-family:var(--display); color:var(--green-800); font-size:15px; }
-  .pc-bio{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
-  /* ---- Profile edit modal ---- */
-  #profileEditModal .modal-head{ background:linear-gradient(135deg,var(--green-700),var(--green-800)); }
-  .pe-av-zone{ width:80px; height:80px; border-radius:50%; border:2px dashed rgba(168,128,28,.5); margin:0 auto 12px;
-    cursor:pointer; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:#fbf7ec; }
-  .pe-av-zone img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
-
-  /* ---- Member grid / app cards ---- */
+  .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
+  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
+  .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
+  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
   .member-grid{ display:grid; gap:26px; }
   .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
   .app-card > .app-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px; }
@@ -72,7 +36,7 @@
   .badge.paid{ background:#bfe0c6; color:#14532d; }
   .badge.available{ background:#e6e6e6; color:#444; }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
-  .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; font-size:14px; }
+  .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
   .seg button.on{ background:var(--green-700); color:#fff; }
   .van-card{ border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:16px; margin-top:12px; background:#fbf7ec; }
   .van-card .seats{ font-family:var(--display); color:var(--green-800); font-weight:700; }
@@ -87,7 +51,7 @@
   .msg.success{ color:#14532d; } .msg.error{ color:#a12; }
   .empty{ color:var(--muted); font-style:italic; }
 
-  /* ---- Dash / Reports card ---- */
+  /* ---- Reports Dashboard ---- */
   .dash-card{ cursor:pointer; transition:transform .15s, box-shadow .15s; }
   .dash-card:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,.18); }
   .dash-card .app-head{ background:linear-gradient(180deg,#1d6b3e,var(--green-900)); }
@@ -96,73 +60,14 @@
   .dash-chips{ display:flex; flex-wrap:wrap; gap:8px; }
   .dash-chips span{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); }
 
-  /* ---- Games card ---- */
-  .games-card{ cursor:pointer; transition:transform .15s, box-shadow .15s; }
-  .games-card:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,.22); }
-  .games-card .app-head{ background:linear-gradient(135deg,#4a1d7a,#2d0a52); }
-  .games-card .dash-go{ margin-left:auto; font-family:var(--display); color:#e2c4ff; font-size:15px; white-space:nowrap; }
-  .games-card .dash-body p{ margin:0 0 14px; color:#3a3a2e; }
-  .games-chips span{ background:#f0e8ff; border:1px solid rgba(100,50,180,.3); color:#4a1d7a; border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); }
-
-  /* ---- Modals (shared) ---- */
   .modal-overlay{ position:fixed; inset:0; z-index:10000; background:rgba(12,28,18,.74); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; overflow-y:auto; }
   .modal-overlay.open{ display:flex; }
-  .modal-card{ background:#fbf7ec; width:100%; max-width:960px; border-radius:18px; border:1px solid var(--gold); box-shadow:0 30px 80px rgba(0,0,0,.5); overflow:hidden; margin:auto; }
+  .modal-card{ background:#fbf7ec; width:100%; max-width:920px; border-radius:18px; border:1px solid var(--gold); box-shadow:0 30px 80px rgba(0,0,0,.5); overflow:hidden; margin:auto; }
   .modal-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:16px 22px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:2; }
   .modal-head h2{ margin:0; font-family:var(--display); font-size:21px; }
   .modal-x{ margin-left:auto; background:rgba(255,255,255,.16); border:0; color:#fff; width:34px; height:34px; border-radius:9px; font-size:16px; cursor:pointer; }
   .modal-x:hover{ background:rgba(255,255,255,.3); }
   .modal-body{ padding:20px 22px 28px; }
-
-  /* Games modal head */
-  .games-modal-head{ background:linear-gradient(135deg,#4a1d7a,#2d0a52); }
-  .games-app-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:8px; }
-  .games-app-card{ background:#fff; border:1px solid rgba(100,50,180,.25); border-radius:14px; padding:20px; cursor:pointer; transition:transform .12s, box-shadow .12s; text-align:center; }
-  .games-app-card:hover{ transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,.14); }
-  .games-app-card.disabled{ opacity:.5; cursor:default; pointer-events:none; }
-  .games-app-card .gic{ font-size:40px; margin-bottom:10px; }
-  .games-app-card .gt{ font-family:var(--display); color:#4a1d7a; font-size:18px; }
-  .games-app-card .gd{ font-size:13px; color:var(--muted); margin-top:5px; line-height:1.4; }
-  .games-app-card .coming{ display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; background:#f0e8ff; color:#4a1d7a; border-radius:999px; padding:2px 9px; margin-top:8px; }
-
-  /* Raffle modal head */
-  .raffle-modal-head{ background:linear-gradient(135deg,#7a1d1d,#4a0a0a); }
-  .raffle-modal .modal-head{ background:linear-gradient(135deg,#7a1d1d,#4a0a0a); }
-
-  /* Raffle tabs */
-  .raffle-tabs{ display:flex; border-bottom:2px solid rgba(168,128,28,.3); margin-bottom:18px; gap:0; }
-  .raffle-tab{ border:0; background:none; padding:10px 18px; font-family:var(--display); font-size:15px; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:color .15s; }
-  .raffle-tab.on{ color:var(--green-800); border-bottom-color:var(--green-700); }
-  .raffle-tab:hover:not(.on){ color:var(--green-700); }
-
-  /* Raffle buy tickets */
-  .raffle-event-info{ background:linear-gradient(135deg,#fff8ee,#fdf3e3); border:1px solid rgba(168,128,28,.35); border-radius:12px; padding:14px 16px; margin-bottom:18px; }
-  .raffle-event-info .en{ font-family:var(--display); color:var(--green-800); font-size:18px; }
-  .raffle-event-info .ed{ color:var(--muted); font-size:14px; margin-top:3px; }
-  .raffle-event-info .ep{ font-family:var(--display); color:#7a5b00; font-size:15px; margin-top:6px; }
-  .my-ticket-count{ background:#f0faf4; border:1px solid rgba(20,83,45,.25); border-radius:10px; padding:12px 14px; margin-top:14px; font-family:var(--display); color:var(--green-800); font-size:15px; }
-
-  /* Raffle basket cards (place tickets tab) */
-  .basket-place-card{ border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:16px 18px; background:#fff; margin-bottom:12px; }
-  .basket-place-card .bn{ font-family:var(--display); color:var(--green-800); font-size:18px; }
-  .basket-place-card .bd{ font-size:14px; color:#555; margin-top:3px; }
-  .basket-place-card .bv{ font-size:13px; color:var(--muted); margin-top:2px; }
-  .basket-place-card .bt{ font-size:14px; color:#14532d; font-weight:600; margin-top:6px; }
-  .basket-ticket-row{ display:flex; align-items:center; gap:10px; margin-top:12px; }
-  .basket-ticket-row input[type=number]{ width:80px; padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:15px; font-family:var(--display); }
-  .ticket-budget{ background:#fff8ee; border:1px solid rgba(168,128,28,.35); border-radius:10px; padding:11px 14px; margin-bottom:16px; font-size:15px; color:var(--green-800); }
-  .ticket-budget b{ font-family:var(--display); font-size:17px; }
-  .ticket-budget.over{ background:#fff0f0; border-color:rgba(180,20,20,.3); color:#a12; }
-
-  /* Standings tab */
-  .basket-standing{ border:1px solid rgba(168,128,28,.25); border-radius:14px; padding:16px 18px; background:#fff; margin-bottom:12px; }
-  .basket-standing .bsn{ font-family:var(--display); color:var(--green-800); font-size:17px; display:flex; justify-content:space-between; align-items:center; }
-  .basket-standing .bsn .cnt{ background:var(--green-700); color:#fff; border-radius:999px; padding:3px 12px; font-size:14px; }
-  .standing-bar{ height:10px; background:#e8f0e8; border-radius:999px; margin-top:10px; overflow:hidden; }
-  .standing-bar-fill{ height:100%; background:linear-gradient(90deg,var(--green-600,#16a34a),var(--green-700)); border-radius:999px; transition:width .5s; }
-  .basket-standing .bsd{ font-size:13px; color:var(--muted); margin-top:5px; }
-
-  /* Reports modal (existing) */
   .rpt-cat{ font-family:var(--display); color:var(--green-800); font-size:15px; letter-spacing:.6px; text-transform:uppercase; margin:20px 0 10px; border-bottom:1px solid rgba(168,128,28,.3); padding-bottom:6px; }
   .rpt-cat:first-child{ margin-top:0; }
   .rpt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
@@ -188,108 +93,40 @@
   .rpt-secure h4{ margin:0 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .rpt-secure p{ margin:0 0 8px; }
 
-  @media (max-width:640px){
-    .krewe-form .row,.mini-form{ grid-template-columns:1fr; }
-    .rpt-grid{ grid-template-columns:1fr; }
-    .modal-body{ padding:16px; }
-    .raffle-tabs{ flex-wrap:wrap; }
-    .raffle-tab{ padding:8px 12px; font-size:13px; }
-    .basket-ticket-row{ flex-wrap:wrap; }
-  }
+  /* ---- The Craic Cup (gamification) ---- */
+  .game-head .app-head{ background:linear-gradient(180deg,#b8860b,#6f5300); }
+  .game-tabs{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+  .game-tabs button{ border:0; background:#fff; color:var(--green-800); padding:9px 18px; font-family:var(--display); cursor:pointer; }
+  .game-tabs button.on{ background:var(--green-700); color:#fff; }
+  .lb-table .medal{ font-size:18px; white-space:nowrap; }
+  .rank-pill{ display:inline-flex; align-items:center; gap:6px; background:#f0e8d2; border:1px solid rgba(168,128,28,.4); color:var(--green-800); border-radius:999px; padding:3px 12px; font-family:var(--display); font-size:14px; white-space:nowrap; }
+  .badge-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:8px; }
+  .badge-chip{ border:1px solid rgba(168,128,28,.3); border-radius:12px; padding:12px; background:#fff; text-align:center; }
+  .badge-chip .ic{ font-size:30px; line-height:1; }
+  .badge-chip .nm{ font-family:var(--display); color:var(--green-800); font-size:14px; margin-top:6px; }
+  .badge-chip .ds{ font-size:12px; color:var(--muted); margin-top:3px; line-height:1.35; }
+  .prog{ background:#e7e0c8; border-radius:999px; height:14px; overflow:hidden; margin:8px 0; }
+  .prog > i{ display:block; height:100%; background:linear-gradient(90deg,#2e8b57,#1d6b3e); }
+  .pt-table td:last-child{ text-align:right; font-family:var(--display); color:var(--green-800); white-space:nowrap; }
+  .find-card{ background:#fff; border:1px solid var(--gold); border-radius:16px; padding:20px; margin-top:14px; box-shadow:var(--shadow-sm); }
+  .find-card .big{ font-family:var(--display); color:var(--green-800); font-size:40px; line-height:1; }
+
+  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
 </style>
 </head>
 <body>
 
-  <!-- AUTH SCREEN -->
-  <div class="auth-screen" id="authScreen">
-    <div class="auth-card">
-      <img class="emblem" src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-      <h1>🔒 Members Only</h1>
-      <p class="auth-sub">Krewe of Shamrock</p>
-      <div class="auth-tabs">
-        <button class="auth-tab on" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</button>
-        <button class="auth-tab" id="tabJoin" onclick="switchAuthTab('join')">Join the Krewe</button>
-      </div>
-      <!-- SIGN IN -->
-      <div id="formSignIn">
-        <div class="auth-field"><label for="siEmail">Email address</label>
-          <input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" /></div>
-        <div class="auth-field"><label for="siPass">Password</label>
-          <input id="siPass" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
-        <button class="btn btn-primary" type="button" id="siBtn" onclick="doSignIn()" style="width:100%;margin-top:4px;">☘ Sign In</button>
-        <div class="auth-err" id="siErr"></div>
-      </div>
-      <!-- JOIN / CREATE ACCOUNT -->
-      <div id="formJoin" style="display:none;">
-        <p style="font-size:14px;color:#555;margin:0 0 14px;text-align:left;">Create your krewe account. Your profile will be visible to fellow members.</p>
-        <div class="auth-field"><label for="jName">Display name</label>
-          <input id="jName" placeholder="Brigid O'Brien" /></div>
-        <div class="auth-field"><label for="jEmail">Email address</label>
-          <input id="jEmail" type="email" placeholder="you@example.com" autocomplete="email" /></div>
-        <div class="auth-field"><label for="jPass">Password (min 6 chars)</label>
-          <input id="jPass" type="password" placeholder="••••••••" autocomplete="new-password" /></div>
-        <div class="auth-field"><label for="jPass2">Confirm password</label>
-          <input id="jPass2" type="password" placeholder="••••••••" autocomplete="new-password" /></div>
-        <button class="btn btn-primary" type="button" id="jBtn" onclick="doJoin()" style="width:100%;margin-top:4px;">☘ Create Account</button>
-        <div class="auth-err" id="jErr"></div>
-        <div class="auth-info" id="jInfo"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PROFILE SETUP SCREEN (new members) -->
-  <div class="auth-screen" id="profileSetup" style="display:none;">
-    <div class="auth-card">
-      <h1 style="margin-bottom:6px;">Welcome to the Krewe! 🍀</h1>
-      <p class="auth-sub">Set up your member profile</p>
-      <div class="avatar-zone" id="avatarZone" onclick="document.getElementById('avatarFileInput').click()" title="Tap to add photo">
-        <img id="avatarPreview" style="display:none;width:100%;height:100%;object-fit:cover;" />
-        <div class="az-hint" id="avatarHint">📷<br>Add photo</div>
-        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="previewAvatar(event)" />
-      </div>
-      <div class="auth-field"><label for="setupName">Display name</label>
-        <input id="setupName" placeholder="How you appear to other members" /></div>
-      <div class="auth-field"><label for="setupBio">Bio (optional)</label>
-        <input id="setupBio" placeholder="A little about yourself…" /></div>
-      <button class="btn btn-primary" type="button" onclick="doSaveProfile()" style="width:100%;margin-top:4px;">Save Profile & Enter</button>
-      <div class="auth-err" id="setupErr" style="margin-top:8px;"></div>
-      <button type="button" onclick="skipProfile()" style="background:none;border:0;color:var(--muted);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline;">Skip for now</button>
-    </div>
-  </div>
-
-  <!-- MEMBER BAR (shown when signed in) -->
-  <div class="member-bar" id="memberBar" style="display:none;">
-    <div id="barAvatar"></div>
-    <div>
-      <div class="bar-name" id="barName"></div>
-      <div class="bar-email" id="barEmail"></div>
-    </div>
-    <div class="bar-actions">
-      <button class="bar-edit" onclick="openProfileEdit()">Edit Profile</button>
-      <button class="bar-signout" onclick="doSignOut()">Sign Out</button>
-    </div>
-  </div>
-
-  <!-- PROFILE EDIT MODAL -->
-  <div class="modal-overlay" id="profileEditModal" aria-hidden="true" onclick="if(event.target===this)closeProfileEdit()">
-    <div class="modal-card" role="dialog" aria-modal="true" style="max-width:440px;">
-      <div class="modal-head">
-        <span class="ic" style="font-size:22px;">✏️</span>
-        <h2>Edit Your Profile</h2>
-        <button class="modal-x" type="button" onclick="closeProfileEdit()" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="pe-av-zone" onclick="document.getElementById('peAvatarInput').click()" title="Change photo">
-          <img id="peAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;" />
-          <div class="az-hint" id="peAvatarHint">📷</div>
-          <input type="file" id="peAvatarInput" accept="image/*" style="display:none;" onchange="pePreviewAvatar(event)" />
-        </div>
-        <div class="auth-field"><label for="peName">Display name</label><input id="peName" /></div>
-        <div class="auth-field"><label for="peBio">Bio</label><input id="peBio" placeholder="A little about yourself…" /></div>
-        <button class="btn btn-primary" type="button" onclick="doUpdateProfile()" style="width:100%;margin-top:4px;">Save Changes</button>
-        <div class="auth-err" id="peErr" style="margin-top:8px;"></div>
-        <div class="auth-info" id="peInfo" style="margin-top:8px;"></div>
-      </div>
+  <!-- PASSCODE GATE -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <h1>Members Area</h1>
+      <p>Enter the Krewe passcode to access member tools.</p>
+      <form id="gateForm">
+        <input id="gateInput" type="password" placeholder="Member passcode" autocomplete="off" autofocus />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Enter</button>
+        <div class="err" id="gateErr"></div>
+      </form>
     </div>
   </div>
 
@@ -307,32 +144,35 @@
       <a href="videos.html">Videos</a>
       <a href="learn.html">Learn</a>
       <a href="poetry.html">Poetry &amp; Art</a>
-      <a href="members.html" class="active">🔒 Members Only</a>
+      <a href="members.html" class="active">Members</a>
     </div>
   </nav>
 
   <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/gallery/krewe-big-group.jpg')"></div>
     <p class="eyebrow">For the Krewe</p>
-    <h1>Members Only</h1>
-    <p class="sub" id="memberWelcome">Coordination tools, games, and more for krewe members.</p>
+    <h1>Members Area</h1>
+    <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
   </header>
 
   <main class="wrap" id="memberContent" style="display:none;">
     <div class="member-grid">
 
-      <!-- SHAMROCK GAMES -->
-      <section class="app-card games-card" role="button" tabindex="0"
-               onclick="openGames()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGames();}">
+      <!-- THE CRAIC CUP (gamified participation) -->
+      <section class="app-card dash-card game-head" role="button" tabindex="0"
+               onclick="openGame()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGame();}">
         <div class="app-head">
-          <span class="ic">🎲</span>
-          <div><h2>Shamrock Games</h2><small>Fundraiser game apps for the krewe</small></div>
-          <span class="dash-go">Open →</span>
+          <span class="ic">🍀</span>
+          <div><h2>The Craic Cup</h2><small>Earn Clovers for showing up &amp; pitching in — climb the ranks!</small></div>
+          <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Launch game coordination apps for krewe fundraising events — basket raffles, prize wheels, and more. Tap to open the Games Dashboard.</p>
-          <div class="dash-chips games-chips">
-            <span>🎟 Basket Raffle</span><span>🏆 Coming Soon</span>
+          <p>Our friendly participation game. Every event you attend and every shift you volunteer earns
+             <b>Clovers 🍀</b> that build your <b>rank</b> and unlock <b>badges</b>. See who's leading the
+             season, learn how to earn, and look up your own standing.</p>
+          <div class="dash-chips">
+            <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
+            <span>🤝 Volunteer bonuses</span><span>🔎 Your Clovers</span>
           </div>
         </div>
       </section>
@@ -346,10 +186,31 @@
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>One place for every coordination report the website's data can produce — event headcounts, membership summaries, locker, carpool and van‑pool logistics, and more.</p>
+          <p>One place for every coordination report the website's data can produce — event headcounts and
+             volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
+             content inventory. Tap a report to run it against the latest data.</p>
           <div class="dash-chips">
             <span>📅 Events &amp; Attendance</span><span>👥 Membership</span><span>💶 Dues</span>
             <span>🚐 Logistics</span><span>📚 Content</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHARE CONTENT -->
+      <section class="app-card dash-card" role="button" tabindex="0"
+               onclick="location.href='share.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();location.href='share.html';}">
+        <div class="app-head">
+          <span class="ic">☘</span>
+          <div><h2>Share Content</h2><small>Post videos, photos, artwork, poems, stories, essays &amp; recipes</small></div>
+          <span class="dash-go">Open →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
+             publish a poem, short story, essay, or recipe. Everything you submit is reviewed before it appears
+             on the public pages.</p>
+          <div class="dash-chips">
+            <span>🎬 Videos</span><span>📷 Gallery photos</span><span>🎨 Artwork</span>
+            <span>✒️ Poems</span><span>📖 Stories &amp; essays</span><span>🍲 Recipes</span>
           </div>
         </div>
       </section>
@@ -419,10 +280,6 @@
       <section class="app-card">
         <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
         <div class="app-body">
-          <h3 style="font-family:var(--display);color:var(--green-800);font-size:17px;margin:0 0 4px;">Krewe Profiles</h3>
-          <p style="font-size:14px;color:var(--muted);margin:0 0 2px;">Members who have joined with an account.</p>
-          <div class="profile-grid" id="profileGrid"><p class="empty">Loading profiles…</p></div>
-          <h3 style="font-family:var(--display);color:var(--green-800);font-size:17px;margin:20px 0 8px;border-top:1px solid rgba(168,128,28,.2);padding-top:16px;">Full Roster</h3>
           <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
           <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
           <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
@@ -432,100 +289,29 @@
     </div>
   </main>
 
-  <!-- GAMES MODAL -->
-  <div class="modal-overlay" id="gamesModal" aria-hidden="true" onclick="if(event.target===this) closeGames()">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Shamrock Games Dashboard">
-      <div class="modal-head games-modal-head">
-        <span class="ic" style="font-size:24px;">🎲</span>
-        <h2>Shamrock Games</h2>
-        <button class="modal-x" type="button" onclick="closeGames()" aria-label="Close games">✕</button>
+  <!-- THE CRAIC CUP MODAL -->
+  <div class="modal-overlay" id="gameModal" aria-hidden="true"
+       onclick="if(event.target===this) closeGame()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="The Craic Cup">
+      <div class="modal-head">
+        <span class="ic" style="font-size:24px;">🍀</span>
+        <h2>The Craic Cup</h2>
+        <button class="modal-x" type="button" onclick="closeGame()" aria-label="Close the game">✕</button>
       </div>
       <div class="modal-body">
-        <p style="color:var(--muted);margin:0 0 16px;">Krewe fundraiser game apps — click an app to launch it.</p>
-        <div class="games-app-grid">
-          <div class="games-app-card" onclick="closeGames();openRaffle();" role="button" tabindex="0">
-            <div class="gic">🎟</div>
-            <div class="gt">Basket Raffle</div>
-            <div class="gd">Buy tickets and place them on the baskets you want to win.</div>
-          </div>
-          <div class="games-app-card disabled" role="button" tabindex="-1">
-            <div class="gic">🎡</div>
-            <div class="gt">Prize Wheel</div>
-            <div class="gd">Spin to win — prize wheel coordinator.</div>
-            <span class="coming">Coming Soon</span>
-          </div>
-          <div class="games-app-card disabled" role="button" tabindex="-1">
-            <div class="gic">🃏</div>
-            <div class="gt">50/50 Raffle</div>
-            <div class="gd">Classic 50/50 cash raffle tracker.</div>
-            <span class="coming">Coming Soon</span>
-          </div>
+        <div class="game-tabs" role="tablist">
+          <button id="gt-standings" class="on" type="button" onclick="gameTab('standings')">🏆 Standings</button>
+          <button id="gt-howto" type="button" onclick="gameTab('howto')">📖 How to Play</button>
+          <button id="gt-find" type="button" onclick="gameTab('find')">🔎 Find My Clovers</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BASKET RAFFLE MODAL -->
-  <div class="modal-overlay" id="raffleModal" aria-hidden="true" onclick="if(event.target===this) closeRaffle()">
-    <div class="modal-card raffle-modal" role="dialog" aria-modal="true" aria-label="Basket Raffle App">
-      <div class="modal-head" style="background:linear-gradient(135deg,#7a1d1d,#4a0a0a);">
-        <span class="ic" style="font-size:24px;">🎟</span>
-        <h2>Basket Raffle</h2>
-        <button class="modal-x" type="button" onclick="closeRaffle()" aria-label="Close raffle">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="raffleEventInfo" class="raffle-event-info" style="display:none;"></div>
-        <div id="raffleNoEvent" style="display:none;"><p class="empty">No active raffle found. Check back soon!</p></div>
-        <div id="raffleContent" style="display:none;">
-          <div class="raffle-tabs" role="tablist">
-            <button class="raffle-tab on" id="rtab-buy" onclick="switchRaffleTab('buy')">🎟 Buy Tickets</button>
-            <button class="raffle-tab" id="rtab-place" onclick="switchRaffleTab('place')">🧺 Place Tickets</button>
-            <button class="raffle-tab" id="rtab-standings" onclick="switchRaffleTab('standings')">🏆 Standings</button>
-          </div>
-
-          <!-- BUY TICKETS -->
-          <div id="raffleTabBuy">
-            <p style="color:#555;font-size:15px;margin:0 0 16px;">Record how many raffle tickets you purchased at the event. This helps us track your ticket budget for placing on baskets.</p>
-            <form id="buyForm" class="krewe-form">
-              <div class="row">
-                <div><label for="buyName">Your name</label><input id="buyName" required placeholder="First Last" /></div>
-                <div><label for="buyEmail">Email</label><input id="buyEmail" type="email" placeholder="you@example.com" /></div>
-              </div>
-              <label for="buyQty">Number of tickets purchased</label>
-              <input id="buyQty" type="number" min="1" max="500" value="10" required style="max-width:140px;" />
-              <div style="font-size:13px;color:var(--muted);margin-top:4px;">Ticket price: <span id="buyPrice">$1.00</span> each</div>
-              <button class="btn btn-primary" type="submit" style="margin-top:12px;">☘ Record My Tickets</button>
-              <div class="msg" id="buyMsg"></div>
-            </form>
-            <div id="myTicketCount" class="my-ticket-count" style="display:none;"></div>
-          </div>
-
-          <!-- PLACE TICKETS -->
-          <div id="raffleTabPlace" style="display:none;">
-            <p style="color:#555;font-size:15px;margin:0 0 12px;">Place your raffle tickets on the baskets you want to win. You can split them however you like!</p>
-            <div id="placeEmailRow" style="margin-bottom:14px;">
-              <label style="font-family:var(--display);font-size:13px;color:var(--green-800);letter-spacing:.4px;display:block;margin-bottom:5px;">Your email (to check your ticket budget)</label>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input id="placeLookupEmail" type="email" placeholder="you@example.com" style="padding:10px 12px;border:1px solid rgba(168,128,28,.5);border-radius:9px;font-size:15px;flex:1;" />
-                <button class="btn btn-green" type="button" onclick="loadPlaceTab()">Check</button>
-              </div>
-            </div>
-            <div id="ticketBudgetBar" style="display:none;"></div>
-            <div id="basketPlaceList"><p class="empty">Enter your email above to see baskets.</p></div>
-          </div>
-
-          <!-- STANDINGS -->
-          <div id="raffleTabStandings" style="display:none;">
-            <p style="color:#555;font-size:15px;margin:0 0 16px;">Current ticket counts per basket — updated live.</p>
-            <div id="standingsList"><p class="empty">Loading standings…</p></div>
-          </div>
-        </div>
+        <div id="gameBody"></div>
       </div>
     </div>
   </div>
 
   <!-- REPORTS DASHBOARD MODAL -->
-  <div class="modal-overlay" id="reportsModal" aria-hidden="true" onclick="if(event.target===this) closeReports()">
+  <div class="modal-overlay" id="reportsModal" aria-hidden="true"
+       onclick="if(event.target===this) closeReports()">
     <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member Reports Dashboard">
       <div class="modal-head">
         <span class="ic" style="font-size:24px;">📊</span>
@@ -547,7 +333,7 @@
     <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
     <div class="fname">Krewe of Shamrock</div>
     <div class="flinks">
-      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members Only</a>
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
     </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
     <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
@@ -566,239 +352,29 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
-    /* ---- Helpers ---- */
-    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const show=(el,t,k)=>{ const m=document.getElementById(el); if(m){ m.textContent=t; m.className="msg "+(k||""); }};
-    const q = (id) => document.getElementById(id);
-
-    function guessName(email){
-      if(!email) return "";
-      return email.split("@")[0].replace(/[._-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
-    }
-
-    function avatarHtml(profile, size=40){
-      if(profile?.avatar_url)
-        return `<img src="${esc(profile.avatar_url)}" class="av" width="${size}" height="${size}" style="width:${size}px;height:${size}px;" />`;
-      const initials=(profile?.display_name||"?").trim().split(/\s+/).map(w=>w[0]).join("").toUpperCase().slice(0,2);
-      return `<div class="av-init" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.35)}px;">${esc(initials)}</div>`;
-    }
-
-    /* ---- Auth tab switching ---- */
-    window.switchAuthTab=(tab)=>{
-      const isSignIn = tab==="signin";
-      q("tabSignIn").classList.toggle("on",isSignIn);
-      q("tabJoin").classList.toggle("on",!isSignIn);
-      q("formSignIn").style.display = isSignIn?"block":"none";
-      q("formJoin").style.display   = isSignIn?"none":"block";
-    };
-
-    /* ---- Sign In ---- */
-    window.doSignIn=async()=>{
-      const email=q("siEmail").value.trim(), pass=q("siPass").value;
-      q("siErr").textContent="";
-      if(!email||!pass){ q("siErr").textContent="Please fill in email and password."; return; }
-      q("siBtn").disabled=true; q("siBtn").textContent="Signing in…";
-      const { error } = await supabase.auth.signInWithPassword({ email, password:pass });
-      q("siBtn").disabled=false; q("siBtn").textContent="☘ Sign In";
-      if(error) q("siErr").textContent = error.message;
-    };
-
-    /* ---- Join / Create account ---- */
-    window.doJoin=async()=>{
-      const name=q("jName").value.trim(), email=q("jEmail").value.trim(),
-            pass=q("jPass").value, pass2=q("jPass2").value;
-      q("jErr").textContent=""; q("jInfo").textContent="";
-      if(!name||!email||!pass){ q("jErr").textContent="Please fill in all fields."; return; }
-      if(pass!==pass2){ q("jErr").textContent="Passwords do not match."; return; }
-      if(pass.length<6){ q("jErr").textContent="Password must be at least 6 characters."; return; }
-      q("jBtn").disabled=true; q("jBtn").textContent="Creating account…";
-      /* Use edge function so account is confirmed immediately — no email verification step */
-      const res = await fetch("https://njfzrnqwbnuhmopgpsud.supabase.co/functions/v1/signup", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ email, password:pass, display_name:name })
-      });
-      const result = await res.json();
-      q("jBtn").disabled=false; q("jBtn").textContent="☘ Create Account";
-      if(!res.ok){ q("jErr").textContent=result.error||"Something went wrong."; return; }
-      /* Account created and confirmed — sign in immediately */
-      const { error } = await supabase.auth.signInWithPassword({ email, password:pass });
-      if(error){ q("jErr").textContent=error.message; return; }
-      /* onAuthStateChange will fire and bring them into the members area */
-    };
-
-    /* ---- Sign Out ---- */
-    window.doSignOut=async()=>{ await supabase.auth.signOut(); };
-
-    /* ---- Profile setup ---- */
-    let _avatarFile = null;
-    window.previewAvatar=(e)=>{
-      const file=e.target.files[0]; if(!file) return;
-      _avatarFile=file;
-      const url=URL.createObjectURL(file);
-      q("avatarPreview").src=url; q("avatarPreview").style.display="block";
-      q("avatarHint").style.display="none";
-    };
-
-    async function uploadAvatar(userId, file){
-      const ext=file.name.split(".").pop();
-      const path=`${userId}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("avatars").upload(path,file,{upsert:true});
-      if(error) return null;
-      return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
-    }
-
-    window.doSaveProfile=async()=>{
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
-      const display_name=q("setupName").value.trim();
-      const bio=q("setupBio").value.trim();
-      if(!display_name){ q("setupErr").textContent="Please enter a display name."; return; }
-      q("setupErr").textContent="";
-      let avatar_url=null;
-      if(_avatarFile) avatar_url=await uploadAvatar(session.user.id,_avatarFile);
-      const payload={ id:session.user.id, display_name, bio:bio||null, updated_at:new Date().toISOString() };
-      if(avatar_url) payload.avatar_url=avatar_url;
-      const { error } = await supabase.from("profiles").upsert(payload);
-      if(error){ q("setupErr").textContent=error.message; return; }
-      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-      enterMembersArea(session.user, profile);
-    };
-
-    window.skipProfile=async()=>{
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
-      await supabase.from("profiles").upsert({
-        id:session.user.id, display_name:guessName(session.user.email)||"Member", updated_at:new Date().toISOString()
-      });
-      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-      enterMembersArea(session.user, profile);
-    };
-
-    /* ---- Profile edit ---- */
-    let _peAvatarFile=null;
-    window.openProfileEdit=async()=>{
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
-      const { data:p } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-      if(p){
-        q("peName").value=p.display_name||"";
-        q("peBio").value=p.bio||"";
-        if(p.avatar_url){
-          q("peAvatarImg").src=p.avatar_url; q("peAvatarImg").style.display="block";
-          q("peAvatarHint").style.display="none";
-        } else {
-          q("peAvatarImg").style.display="none"; q("peAvatarHint").style.display="block";
-        }
-      }
-      _peAvatarFile=null;
-      q("peErr").textContent=""; q("peInfo").textContent="";
-      q("profileEditModal").classList.add("open"); q("profileEditModal").setAttribute("aria-hidden","false");
-      document.body.style.overflow="hidden";
-    };
-    window.closeProfileEdit=()=>{
-      q("profileEditModal").classList.remove("open"); q("profileEditModal").setAttribute("aria-hidden","true");
-      document.body.style.overflow="";
-    };
-    window.pePreviewAvatar=(e)=>{
-      const file=e.target.files[0]; if(!file) return;
-      _peAvatarFile=file;
-      q("peAvatarImg").src=URL.createObjectURL(file);
-      q("peAvatarImg").style.display="block"; q("peAvatarHint").style.display="none";
-    };
-    window.doUpdateProfile=async()=>{
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
-      const display_name=q("peName").value.trim(), bio=q("peBio").value.trim();
-      if(!display_name){ q("peErr").textContent="Display name required."; return; }
-      q("peErr").textContent=""; q("peInfo").textContent="Saving…";
-      let avatar_url=null;
-      if(_peAvatarFile) avatar_url=await uploadAvatar(session.user.id,_peAvatarFile);
-      const payload={ id:session.user.id, display_name, bio:bio||null, updated_at:new Date().toISOString() };
-      if(avatar_url) payload.avatar_url=avatar_url;
-      const { error } = await supabase.from("profiles").upsert(payload);
-      if(error){ q("peInfo").textContent=""; q("peErr").textContent=error.message; return; }
-      q("peInfo").textContent="Saved!";
-      const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-      updateMemberBar(session.user, profile);
-      loadProfiles();
-      setTimeout(closeProfileEdit,900);
-    };
-
-    /* ---- Screen transitions ---- */
-    function showGate(){
-      q("authScreen").style.display="flex";
-      q("profileSetup").style.display="none";
-      q("memberBar").style.display="none";
-      q("memberContent").style.display="none";
-    }
-    function showProfileSetup(user){
-      q("authScreen").style.display="none";
-      q("profileSetup").style.display="flex";
-      q("memberBar").style.display="none";
-      q("memberContent").style.display="none";
-      q("setupName").value=user.user_metadata?.display_name||guessName(user.email)||"";
-    }
-    function enterMembersArea(user, profile){
-      q("authScreen").style.display="none";
-      q("profileSetup").style.display="none";
-      q("memberBar").style.display="flex";
-      q("memberContent").style.display="block";
-      updateMemberBar(user, profile);
-      const welcome=q("memberWelcome");
-      welcome.textContent="Welcome, "+(profile?.display_name||guessName(user.email))+" — coordination tools, games, and more await.";
-      prefillForms(user.email, profile);
-      initAll();
-    }
-    function updateMemberBar(user, profile){
-      q("barAvatar").innerHTML=avatarHtml(profile,40);
-      q("barName").textContent=profile?.display_name||guessName(user.email)||user.email;
-      q("barEmail").textContent=user.email;
-    }
-
-    /* ---- Auth state ---- */
-    supabase.auth.onAuthStateChange(async(event, session)=>{
-      if(session){
-        const { data:profile } = await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-        if(!profile||!profile.display_name){
-          showProfileSetup(session.user);
-        } else {
-          enterMembersArea(session.user, profile);
-        }
-      } else {
-        showGate();
-      }
+    // ---- Passcode gate (change PASSCODE to your krewe's code) ----
+    const PASSCODE = "2026";
+    const gate = document.getElementById("gate");
+    const content = document.getElementById("memberContent");
+    function unlock(){ gate.style.display="none"; content.style.display="block"; sessionStorage.setItem("kosMember","1"); initAll(); }
+    if (sessionStorage.getItem("kosMember")==="1") unlock();
+    document.getElementById("gateForm").addEventListener("submit",(e)=>{
+      e.preventDefault();
+      if (document.getElementById("gateInput").value.trim()===PASSCODE) unlock();
+      else document.getElementById("gateErr").textContent="Sorry, that passcode isn't right.";
     });
 
-    function prefillForms(email, profile){
-      const name=profile?.display_name||guessName(email)||"";
-      const set=(id,v)=>{ const el=q(id); if(el&&!el.value) el.value=v; };
-      set("lkName",name); set("lkEmail",email);
-      set("cpName",name);  set("cpEmail",email);
-      set("buyName",name); set("buyEmail",email);
-      set("placeLookupEmail",email);
-    }
+    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
 
-    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); loadProfiles(); }
+    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
-    /* ===== KREWE PROFILES ===== */
-    async function loadProfiles(){
-      const { data } = await supabase.from("profiles").select("display_name,bio,avatar_url").order("created_at",{ascending:true});
-      const grid=q("profileGrid");
-      if(!data||!data.length){ grid.innerHTML='<p class="empty">No profiles yet — be the first to set one up!</p>'; return; }
-      grid.innerHTML=data.map(p=>`<div class="profile-card">
-        ${avatarHtml(p,64)}
-        <div class="pc-name">${esc(p.display_name)}</div>
-        ${p.bio?`<div class="pc-bio">${esc(p.bio)}</div>`:""}
-      </div>`).join("");
-    }
-
-    /* ===== LOCKERS ===== */
+    /* ---------------- LOCKERS ---------------- */
     async function loadLockers(){
       const list=document.getElementById("lockerList");
       const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
-      if(error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
-      if(!data.length){ list.innerHTML='<li class="empty">No locker requests yet — be the first!</li>'; return; }
+      if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
+      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet — be the first!</li>'; return; }
       list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
     }
     document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
@@ -806,21 +382,21 @@
       const payload={ holder_name:document.getElementById("lkName").value.trim(), holder_email:document.getElementById("lkEmail").value.trim()||null, size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
       if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("lockers").insert(payload);
-      if(error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
+      if (error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
       show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); loadLockers();
     });
 
-    /* ===== CARPOOLS ===== */
+    /* ---------------- CARPOOLS ---------------- */
     let carKind="offer";
     window.setCarKind=(k)=>{ carKind=k;
       document.getElementById("segOffer").classList.toggle("on",k==="offer");
       document.getElementById("segRequest").classList.toggle("on",k==="request");
-      document.getElementById("cpSeatsWrap").style.display = k==="offer"?"block":"none";
+      document.getElementById("cpSeatsWrap").style.display = k==="offer" ? "block":"none";
     };
     async function loadCarpools(){
       const off=document.getElementById("offerList"), req=document.getElementById("requestList");
       const { data, error } = await supabase.from("carpools").select("kind,event,person_name,seats,pickup_area,notes").order("created_at",{ascending:false});
-      if(error){ off.innerHTML=req.innerHTML='<li class="empty">Could not load.</li>'; return; }
+      if (error){ off.innerHTML=req.innerHTML='<li class="empty">Could not load.</li>'; return; }
       const card=(c)=>`<li class="data-row"><b>${esc(c.person_name)}</b>${c.event?" · "+esc(c.event):""}${c.pickup_area?" · 📍 "+esc(c.pickup_area):""}${(c.kind==="offer"&&c.seats!=null)?` · ${esc(c.seats)} seats`:""}${c.notes?`<br><span class="empty">${esc(c.notes)}</span>`:""}</li>`;
       const offers=data.filter(c=>c.kind==="offer"), reqs=data.filter(c=>c.kind==="request");
       off.innerHTML=offers.length?offers.map(card).join(""):'<li class="empty">No rides offered yet.</li>';
@@ -831,22 +407,22 @@
       const payload={ kind:carKind, person_name:document.getElementById("cpName").value.trim(), person_email:document.getElementById("cpEmail").value.trim()||null,
         phone:document.getElementById("cpPhone").value.trim()||null, event:document.getElementById("cpEvent").value.trim()||null,
         pickup_area:document.getElementById("cpPickup").value.trim()||null, notes:document.getElementById("cpNotes").value.trim()||null,
-        seats: carKind==="offer"?parseInt(document.getElementById("cpSeats").value||"0",10):null };
+        seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null };
       if(!payload.person_name){ show("cpMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("carpools").insert(payload);
-      if(error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
+      if (error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
       show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); setCarKind(carKind); loadCarpools();
     });
 
-    /* ===== VAN POOLS ===== */
+    /* ---------------- VAN POOLS ---------------- */
     async function loadVans(){
       const wrap=document.getElementById("vanList");
-      const [{ data:vans,error:e1 },{ data:res,error:e2 }] = await Promise.all([
+      const [{ data:vans, error:e1 }, { data:res, error:e2 }] = await Promise.all([
         supabase.from("vanpools").select("id,van_name,event,capacity,departure,notes").order("created_at",{ascending:true}),
         supabase.from("vanpool_reservations").select("vanpool_id,rider_name,seats")
       ]);
-      if(e1||e2){ wrap.innerHTML='<p class="empty">Could not load van pools.</p>'; return; }
-      if(!vans.length){ wrap.innerHTML='<p class="empty">No van pools posted yet.</p>'; return; }
+      if (e1||e2){ wrap.innerHTML='<p class="empty">Could not load van pools.</p>'; return; }
+      if (!vans.length){ wrap.innerHTML='<p class="empty">No van pools posted yet.</p>'; return; }
       wrap.innerHTML=vans.map(v=>{
         const rs=(res||[]).filter(r=>r.vanpool_id===v.id);
         const taken=rs.reduce((n,r)=>n+(r.seats||0),0);
@@ -871,16 +447,16 @@
         const payload={ vanpool_id:id, rider_name:f.nm.value.trim(), rider_email:f.em.value.trim()||null, seats:parseInt(f.st.value||"1",10) };
         if(!payload.rider_name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
         const { error } = await supabase.from("vanpool_reservations").insert(payload);
-        if(error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
+        if (error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
         loadVans();
       }));
     }
 
-    /* ===== DIRECTORY ===== */
+    /* ---------------- DIRECTORY ---------------- */
     let dirData=[];
     async function loadDir(){
       const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
-      if(error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
+      if (error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
       dirData=data||[]; renderDir();
     }
     window.renderDir=()=>{
@@ -891,215 +467,7 @@
       grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
     };
 
-    /* ===== GAMES MODAL ===== */
-    window.openGames=()=>{
-      const m=document.getElementById("gamesModal");
-      m.classList.add("open"); m.setAttribute("aria-hidden","false");
-      document.body.style.overflow="hidden";
-    };
-    window.closeGames=()=>{
-      const m=document.getElementById("gamesModal");
-      m.classList.remove("open"); m.setAttribute("aria-hidden","true");
-      document.body.style.overflow="";
-    };
-
-    /* ===== BASKET RAFFLE ===== */
-    let activeRaffle = null;
-    let raffleBasketsData = [];
-
-    window.openRaffle=async()=>{
-      const m=document.getElementById("raffleModal");
-      m.classList.add("open"); m.setAttribute("aria-hidden","false");
-      document.body.style.overflow="hidden";
-      await loadRaffleEvent();
-    };
-    window.closeRaffle=()=>{
-      const m=document.getElementById("raffleModal");
-      m.classList.remove("open"); m.setAttribute("aria-hidden","true");
-      document.body.style.overflow="";
-    };
-
-    async function loadRaffleEvent(){
-      const { data, error } = await supabase.from("raffle_events")
-        .select("*").eq("is_active",true).order("event_date",{ascending:true}).limit(1).maybeSingle();
-      if(error||!data){
-        document.getElementById("raffleNoEvent").style.display="block";
-        document.getElementById("raffleContent").style.display="none";
-        document.getElementById("raffleEventInfo").style.display="none";
-        return;
-      }
-      activeRaffle = data;
-      const info = document.getElementById("raffleEventInfo");
-      const dateStr = data.event_date ? new Date(data.event_date+"T12:00:00").toLocaleDateString([],{month:"long",day:"numeric",year:"numeric"}) : "";
-      info.innerHTML = `<div class="en">🎟 ${esc(data.name)}</div>
-        ${dateStr?`<div class="ed">📅 ${esc(dateStr)}</div>`:""}
-        <div class="ep">Ticket price: $${Number(data.ticket_price||1).toFixed(2)} each</div>
-        ${data.description?`<div style="font-size:14px;color:#555;margin-top:6px;">${esc(data.description)}</div>`:""}`;
-      info.style.display="block";
-      document.getElementById("raffleNoEvent").style.display="none";
-      document.getElementById("raffleContent").style.display="block";
-      document.getElementById("buyPrice").textContent = "$"+Number(data.ticket_price||1).toFixed(2);
-
-      // pre-fill buy form from session
-      const email = sessionStorage.getItem("kosEmail")||"";
-      const buyEmailEl = document.getElementById("buyEmail");
-      const buyNameEl  = document.getElementById("buyName");
-      const placeLookup = document.getElementById("placeLookupEmail");
-      if(buyEmailEl && !buyEmailEl.value) buyEmailEl.value = email;
-      if(buyNameEl  && !buyNameEl.value)  buyNameEl.value  = guessName(email);
-      if(placeLookup && !placeLookup.value) placeLookup.value = email;
-
-      await loadRaffleBaskets();
-      await refreshMyTicketCount();
-    }
-
-    async function loadRaffleBaskets(){
-      if(!activeRaffle) return;
-      const { data, error } = await supabase.from("raffle_baskets")
-        .select("*").eq("raffle_event_id", activeRaffle.id).order("display_order",{ascending:true});
-      if(!error) raffleBasketsData = data||[];
-    }
-
-    async function refreshMyTicketCount(){
-      const email = document.getElementById("buyEmail")?.value?.trim() || sessionStorage.getItem("kosEmail")||"";
-      if(!email||!activeRaffle) return;
-      const { data } = await supabase.from("raffle_ticket_purchases")
-        .select("quantity").eq("raffle_event_id", activeRaffle.id).eq("buyer_email", email);
-      const total = (data||[]).reduce((n,r)=>n+Number(r.quantity||0),0);
-      const el = document.getElementById("myTicketCount");
-      if(total>0){
-        el.innerHTML = `🎟 You have recorded <b>${total} ticket${total!==1?"s":""}</b> purchased for this raffle.`;
-        el.style.display="block";
-      } else {
-        el.style.display="none";
-      }
-    }
-
-    document.getElementById("buyForm").addEventListener("submit",async(e)=>{
-      e.preventDefault();
-      if(!activeRaffle){ show("buyMsg","No active raffle.","error"); return; }
-      const buyer_name  = document.getElementById("buyName").value.trim();
-      const buyer_email = document.getElementById("buyEmail").value.trim()||null;
-      const quantity    = parseInt(document.getElementById("buyQty").value||"0",10);
-      if(!buyer_name){ show("buyMsg","Please enter your name.","error"); return; }
-      if(!quantity||quantity<1){ show("buyMsg","Please enter at least 1 ticket.","error"); return; }
-      const { error } = await supabase.from("raffle_ticket_purchases")
-        .insert({ raffle_event_id:activeRaffle.id, buyer_name, buyer_email, quantity });
-      if(error){ show("buyMsg","Could not record tickets — please try again.","error"); return; }
-      show("buyMsg",`✅ Recorded ${quantity} ticket${quantity!==1?"s":""}! 🍀`,"success");
-      await refreshMyTicketCount();
-    });
-
-    window.switchRaffleTab=(tab)=>{
-      ["buy","place","standings"].forEach(t=>{
-        document.getElementById("raffleTab"+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?"block":"none";
-        document.getElementById("rtab-"+t).classList.toggle("on", t===tab);
-      });
-      if(tab==="standings") loadStandings();
-      if(tab==="place"){
-        const email = sessionStorage.getItem("kosEmail")||"";
-        const el = document.getElementById("placeLookupEmail");
-        if(el && email && !el.value) el.value = email;
-      }
-    };
-
-    window.loadPlaceTab=async()=>{
-      if(!activeRaffle||!raffleBasketsData.length){
-        document.getElementById("basketPlaceList").innerHTML='<p class="empty">No baskets found for this raffle.</p>'; return;
-      }
-      const email = document.getElementById("placeLookupEmail").value.trim();
-      if(!email){
-        document.getElementById("basketPlaceList").innerHTML='<p class="empty">Please enter your email above.</p>'; return;
-      }
-
-      // Load how many this person bought
-      const { data:purchases } = await supabase.from("raffle_ticket_purchases")
-        .select("quantity").eq("raffle_event_id",activeRaffle.id).eq("buyer_email",email);
-      const totalBought = (purchases||[]).reduce((n,r)=>n+Number(r.quantity||0),0);
-
-      // Load how many they've already placed
-      const { data:placed } = await supabase.from("raffle_entries")
-        .select("ticket_count").eq("raffle_event_id",activeRaffle.id).eq("buyer_email",email);
-      const totalPlaced = (placed||[]).reduce((n,r)=>n+Number(r.ticket_count||0),0);
-      const remaining = totalBought - totalPlaced;
-
-      const budgetEl = document.getElementById("ticketBudgetBar");
-      budgetEl.style.display="block";
-      budgetEl.className = "ticket-budget" + (remaining<0?" over":"");
-      budgetEl.innerHTML = totalBought===0
-        ? `⚠️ No tickets recorded for <b>${esc(email)}</b> — <a href="#" onclick="event.preventDefault();switchRaffleTab('buy')">buy tickets first</a>.`
-        : `🎟 Budget: <b>${remaining}</b> of <b>${totalBought}</b> tickets remaining to place.`;
-
-      // Build basket list
-      // Get total tickets already in each basket
-      const basketIds = raffleBasketsData.map(b=>b.id);
-      const { data:allEntries } = await supabase.from("raffle_entries")
-        .select("raffle_basket_id,ticket_count").in("raffle_basket_id",basketIds);
-      const basketTotals = {};
-      (allEntries||[]).forEach(e=>{ basketTotals[e.raffle_basket_id]=(basketTotals[e.raffle_basket_id]||0)+Number(e.ticket_count||0); });
-
-      const list = document.getElementById("basketPlaceList");
-      list.innerHTML = raffleBasketsData.map(b=>`
-        <div class="basket-place-card">
-          <div class="bn">🧺 ${esc(b.name)}</div>
-          ${b.description?`<div class="bd">${esc(b.description)}</div>`:""}
-          ${b.estimated_value?`<div class="bv">Est. value: $${Number(b.estimated_value).toFixed(2)}</div>`:""}
-          <div class="bt">🎟 ${basketTotals[b.id]||0} total ticket${(basketTotals[b.id]||0)!==1?"s":""} in this basket</div>
-          <div class="basket-ticket-row">
-            <input type="number" min="0" max="${Math.max(0,remaining)}" value="0" id="place-${esc(b.id)}" style="width:80px;" />
-            <button class="btn btn-green" type="button" onclick="placeTickets('${esc(b.id)}','${esc(b.name)}','${esc(email)}')">Place Tickets</button>
-            <div class="msg" id="placemsg-${esc(b.id)}" style="margin-top:0;"></div>
-          </div>
-        </div>`).join("");
-    };
-
-    window.placeTickets=async(basketId, basketName, email)=>{
-      if(!activeRaffle) return;
-      const input = document.getElementById("place-"+basketId);
-      const count = parseInt(input?.value||"0",10);
-      const msgEl = "placemsg-"+basketId;
-      if(!count||count<1){ show(msgEl,"Enter at least 1 ticket.","error"); return; }
-      const buyer_name = guessName(email);
-      const { error } = await supabase.from("raffle_entries").insert({
-        raffle_basket_id: basketId, raffle_event_id: activeRaffle.id,
-        buyer_name, buyer_email: email, ticket_count: count
-      });
-      if(error){ show(msgEl,"Could not place tickets — try again.","error"); return; }
-      show(msgEl,`✅ ${count} ticket${count!==1?"s":""} placed on ${basketName}!`,"success");
-      if(input) input.value="0";
-      // Refresh the tab to update budget
-      await loadPlaceTab();
-    };
-
-    async function loadStandings(){
-      if(!activeRaffle){ document.getElementById("standingsList").innerHTML='<p class="empty">No active raffle.</p>'; return; }
-      await loadRaffleBaskets();
-      if(!raffleBasketsData.length){ document.getElementById("standingsList").innerHTML='<p class="empty">No baskets yet.</p>'; return; }
-
-      const basketIds = raffleBasketsData.map(b=>b.id);
-      const { data:entries, error } = await supabase.from("raffle_entries")
-        .select("raffle_basket_id,ticket_count").in("raffle_basket_id",basketIds);
-      if(error){ document.getElementById("standingsList").innerHTML='<p class="empty">Could not load standings.</p>'; return; }
-
-      const totals = {};
-      (entries||[]).forEach(e=>{ totals[e.raffle_basket_id]=(totals[e.raffle_basket_id]||0)+Number(e.ticket_count||0); });
-      const maxTickets = Math.max(1,...Object.values(totals));
-      const totalAll = Object.values(totals).reduce((a,b)=>a+b,0)||1;
-
-      document.getElementById("standingsList").innerHTML = raffleBasketsData.map(b=>{
-        const cnt = totals[b.id]||0;
-        const pct = Math.round((cnt/totalAll)*100);
-        const barW = Math.round((cnt/maxTickets)*100);
-        return `<div class="basket-standing">
-          <div class="bsn">🧺 ${esc(b.name)} <span class="cnt">${cnt} ticket${cnt!==1?"s":""}</span></div>
-          ${b.description?`<div class="bsd">${esc(b.description)}</div>`:""}
-          <div class="standing-bar"><div class="standing-bar-fill" style="width:${barW}%"></div></div>
-          <div style="font-size:13px;color:var(--muted);margin-top:5px;">${pct}% of all placed tickets</div>
-        </div>`;
-      }).join("");
-    }
-
-    /* ===== REPORTS DASHBOARD ===== */
+    /* ================= REPORTS DASHBOARD ================= */
     const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
     const fmtDate  = iso => { if(!iso) return "TBA"; const d=new Date(iso); return isNaN(d)?esc(String(iso)):d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"}); };
     const num = v => (v==null?0:Number(v));
@@ -1117,6 +485,7 @@
     }
 
     const REPORTS = [
+      /* ---- Events & Attendance ---- */
       { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
         desc:"Every scheduled event with date and location.",
         run: async()=>{
@@ -1157,6 +526,8 @@
       { id:"attendee_contacts", cat:"Events & Attendance", icon:"📇", title:"Event Attendee Contact List", secure:true,
         desc:"Names and emails of everyone signed up, for direct outreach.",
         why:"It would expose each attendee's email address." },
+
+      /* ---- Membership ---- */
       { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
         desc:"Active members, prospects, officers, and new joiners this year.",
         run: async()=>{
@@ -1194,6 +565,8 @@
       { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
         desc:"Prospective members and their contact details.",
         why:"It would expose applicants' personal contact information." },
+
+      /* ---- Dues & Finance ---- */
       { id:"dues_summary", cat:"Dues & Finance", icon:"💶", title:"Dues Summary by Year",
         desc:"Billed, collected and outstanding totals — no names.",
         run: async()=>{
@@ -1210,6 +583,8 @@
       { id:"dues_by_member", cat:"Dues & Finance", icon:"🧾", title:"Outstanding Dues by Member", secure:true,
         desc:"Who owes what, with days overdue, for follow‑up.",
         why:"It would reveal individual members' names tied to money owed." },
+
+      /* ---- Logistics & Coordination ---- */
       { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
         desc:"Locker status breakdown and current holders.",
         run: async()=>{
@@ -1265,10 +640,12 @@
           return rStats([
             {l:"Carpool seats",v:carSeats},{l:"Van seats open",v:vanOpen},
             {l:"Seats available",v:totalOpen},{l:"Riders needing",v:riders}
-          ]) + `<p class="rpt-note">${totalOpen>=riders
-            ?"✅ There are enough offered seats to cover everyone who has asked for a ride."
-            :"⚠️ More ride requests than offered seats — consider recruiting another driver or van."}</p>`;
+          ]) + `<p class="rpt-note">${ totalOpen>=riders
+            ? "✅ There are enough offered seats to cover everyone who has asked for a ride."
+            : "⚠️ More ride requests than offered seats — consider recruiting another driver or van." }</p>`;
         }},
+
+      /* ---- Content & Communications ---- */
       { id:"content_inventory", cat:"Content & Communications", icon:"📚", title:"Published Content Inventory",
         desc:"Poems, art, gallery and video items on the site.",
         run: async()=>{
@@ -1285,6 +662,7 @@
     ];
 
     const CATS = ["Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
+
     function buildReportGrid(){
       const grid=document.getElementById("reportGrid");
       grid.innerHTML = CATS.map(cat=>{
@@ -1302,6 +680,7 @@
         c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
       });
     }
+
     window.openReports=()=>{
       const m=document.getElementById("reportsModal");
       if(!document.getElementById("reportGrid").childElementCount) buildReportGrid();
@@ -1324,14 +703,157 @@
       const view=document.getElementById("reportView"); view.style.display="block";
       document.getElementById("reportTitle").textContent=(def.icon?def.icon+" ":"")+def.title;
       const body=document.getElementById("reportBody");
-      try{ document.querySelector("#reportsModal .modal-card").scrollIntoView({block:"start"}); }catch(_){}
+      try{ document.querySelector(".modal-card").scrollIntoView({block:"start"}); }catch(_){}
       if(def.secure){ body.innerHTML=secureNotice(def.why||""); return; }
       body.innerHTML='<p class="empty">Running report…</p>';
-      try{ body.innerHTML = await def.run(); }
+      try { body.innerHTML = await def.run(); }
       catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
     }
     window.runReport=runReport;
-    document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeReports(); closeGames(); closeRaffle(); } });
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeReports(); });
+  </script>
+
+  <!-- ================= THE CRAIC CUP (gamification) ================= -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const E = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const medal = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
+
+    const RANKS = [
+      {icon:'🌱',name:'Newcomer',min:0},
+      {icon:'☘️',name:'Clansfolk',min:100},
+      {icon:'🎻',name:'Bard',min:300},
+      {icon:'🛡️',name:'Chieftain',min:700},
+      {icon:'👑',name:'Highland Champion',min:1500}
+    ];
+    const POINTS = [
+      ["RSVP to an event","5"],
+      ["Attend an event (verified)","20"],
+      ["Attend a members' meeting","15"],
+      ["Volunteer at an event","+30"],
+      ["Volunteer for a priority shift (setup / teardown / parade day)","+60"],
+      ["Organize an event","+50"],
+      ["Bring a guest (up to 3)","5 each"],
+      ["Pay your dues on time","25"],
+      ["Pay your dues early (by St. Paddy's)","+15"],
+      ["Refer a member who joins","40"]
+    ];
+    const REASON = { rsvp:"RSVP", attend:"Attended", attend_meeting:"Attended meeting",
+      volunteer_bonus:"Volunteered", volunteer_priority_bonus:"Priority volunteer shift",
+      organizer_bonus:"Organized", guests:"Brought guests", dues_on_time:"Dues on time",
+      dues_early:"Dues paid early", referral:"Referred a member", quest:"Quest", manual:"Bonus" };
+
+    let gameLoaded=false;
+    window.openGame=()=>{
+      const m=document.getElementById("gameModal");
+      m.classList.add("open"); m.setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+      if(!gameLoaded){ gameTab("standings"); gameLoaded=true; }
+    };
+    window.closeGame=()=>{
+      const m=document.getElementById("gameModal");
+      m.classList.remove("open"); m.setAttribute("aria-hidden","true");
+      document.body.style.overflow="";
+    };
+    window.gameTab=(t)=>{
+      ["standings","howto","find"].forEach(k=>document.getElementById("gt-"+k).classList.toggle("on",k===t));
+      if(t==="standings") renderStandings();
+      else if(t==="howto") renderHowto();
+      else renderFind();
+    };
+
+    function rtable(headers, rowsHtml){
+      return '<div class="rpt-tablewrap"><table class="rpt-table lb-table"><thead><tr>'+
+        headers.map(h=>`<th>${E(h)}</th>`).join("")+'</tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+    }
+
+    async function renderStandings(){
+      const box=document.getElementById("gameBody");
+      box.innerHTML='<p class="empty">Tallying the Clovers…</p>';
+      const [{data:lb,error:e1},{data:vol,error:e2}] = await Promise.all([
+        sb.from("v_season_leaderboard").select("*").order("place",{ascending:true}),
+        sb.from("v_volunteer_leaderboard").select("*").order("volunteer_events",{ascending:false})
+      ]);
+      if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
+      const yr=new Date().getFullYear();
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most craic. Earn <b>Clovers 🍀</b> by showing up, volunteering, and pitching in — standings reset each season so it's always anyone's game.</p>`;
+      html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
+      html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
+        (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
+          `<td><span class="rank-pill">${r.rank_icon} ${E(r.rank_name)}</span></td>`+
+          `<td><b>${r.season_clovers}</b></td><td>${"🏅".repeat(Math.min(r.badge_count,6))||"—"} ${r.badge_count?("("+r.badge_count+")"):""}</td></tr>`).join("")
+          || '<tr><td colspan="5" class="empty">No Clovers earned yet.</td></tr>');
+      html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">— service gets its own podium</small></h3>`;
+      html+=rtable(["Member","Shifts","Volunteer 🍀"],
+        (vol||[]).map(r=>`<tr><td>${E(r.first_name)} ${E(r.last_name)}</td><td>${r.volunteer_events}</td><td><b>${r.volunteer_clovers}</b></td></tr>`).join("")
+          || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet — be the first!</td></tr>');
+      box.innerHTML=html;
+    }
+
+    async function renderHowto(){
+      const box=document.getElementById("gameBody");
+      box.innerHTML='<p class="empty">Loading…</p>';
+      const { data:badges } = await sb.from("badge_defs").select("*").order("sort",{ascending:true});
+      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Clovers add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun — recognition, bragging rights, and a wee bit of friendly rivalry to fill our events and volunteer shifts.</p>`;
+      html+=`<h3 class="rpt-cat">🍀 How to earn Clovers</h3>`;
+      html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
+        POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
+      html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers — an officer confirms who attended after each event.</p>`;
+      html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
+      html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Clovers</th></tr></thead><tbody>'+
+        RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" – "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
+      html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><div class="badge-gallery">`+
+        (badges||[]).map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div><div class="ds">${E(b.description||"")}</div></div>`).join("")+'</div>';
+      box.innerHTML=html;
+    }
+
+    function renderFind(){
+      const box=document.getElementById("gameBody");
+      box.innerHTML=`<p style="margin:0 0 12px;color:#3a3a2e;">Enter your email to see your Clovers, rank, badges, and how close you are to the next rank.</p>
+        <form id="findForm" class="krewe-form" style="max-width:420px;">
+          <label for="findEmail">Your email</label>
+          <input id="findEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          <button class="btn btn-primary" type="submit" style="margin-top:10px;">🍀 Find my Clovers</button>
+          <div class="msg" id="findMsg"></div>
+        </form>
+        <div id="findResult"></div>`;
+      document.getElementById("findForm").addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        const email=document.getElementById("findEmail").value.trim();
+        const msg=document.getElementById("findMsg"); const res=document.getElementById("findResult");
+        if(!email){ msg.textContent="Please enter your email."; msg.className="msg error"; return; }
+        msg.textContent="Looking…"; msg.className="msg"; res.innerHTML="";
+        const { data, error } = await sb.rpc("get_member_game_card",{ p_email:email });
+        if(error){ msg.textContent="Something went wrong — please try again."; msg.className="msg error"; return; }
+        if(!data || !data.found){ msg.textContent="We couldn't find a member with that email. Try the address the krewe has on file."; msg.className="msg error"; return; }
+        msg.textContent="";
+        const total = data.lifetime + (data.clovers_to_next||0);
+        const pct = data.clovers_to_next>0 ? Math.max(6, Math.round(100*data.lifetime/total)) : 100;
+        res.innerHTML=`<div class="find-card">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div class="big">${data.rank_icon}</div>
+            <div><div style="font-family:var(--display);color:var(--green-800);font-size:22px;">${E(data.first_name)} ${E(data.last_name)}</div>
+              <span class="rank-pill">${data.rank_icon} ${E(data.rank_name)}</span></div>
+            <div style="margin-left:auto;text-align:right;"><div class="big" style="font-size:34px;">${data.lifetime}</div><div style="font-size:13px;color:var(--muted);">lifetime Clovers 🍀</div></div>
+          </div>
+          <div style="margin-top:14px;">
+            ${ data.clovers_to_next>0
+              ? `<div style="font-size:14px;color:#3a3a2e;"><b>${data.clovers_to_next}</b> 🍀 to <b>${E(data.next_rank_name)}</b></div><div class="prog"><i style="width:${pct}%"></i></div>`
+              : `<div style="font-size:14px;color:#3a3a2e;">🏆 You've reached the top rank — a true legend of the krewe!</div>` }
+            <div style="font-size:13px;color:var(--muted);">${data.season} 🍀 earned this season</div>
+          </div>
+          <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Your badges</h4>
+          ${ (data.badges&&data.badges.length)
+              ? `<div class="badge-gallery">${data.badges.map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div></div>`).join("")}</div>`
+              : '<p class="empty">No badges yet — your first event earns one!</p>' }
+          <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Recent Clovers</h4>
+          <ul class="data-list">${ (data.recent||[]).map(r=>`<li class="data-row"><b>+${r.clovers} 🍀</b> · ${E(REASON[r.reason]||r.reason)}${r.event?(" · "+E(r.event)):""}</li>`).join("") || '<li class="empty">No activity yet.</li>' }</ul>
+        </div>`;
+      });
+    }
+
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeGame(); });
   </script>
 </body>
 </html>
