@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Share Content</title>
+<meta name="description" content="Share your videos, photos, artwork, poems, stories, and recipes with the Krewe of Shamrock community." />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+.gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
+.gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
+.gate-card img{ width:64px; height:auto; margin-bottom:10px; }
+.gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
+.gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
+.gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+.gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
+
+.share-hero{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:36px 0 28px; text-align:center; }
+.share-hero h1{ font-family:var(--display); font-size:clamp(22px,4vw,36px); margin:0 0 8px; }
+.share-hero p{ font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:18px; margin:0; }
+
+.type-tabs{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding:28px 0 0; }
+.type-tab{ border:2px solid rgba(168,128,28,.4); background:#fff; color:var(--green-800); border-radius:999px;
+  padding:10px 22px; font-family:var(--display); font-size:15px; cursor:pointer; transition:all .18s;
+  display:flex; align-items:center; gap:8px; }
+.type-tab:hover{ border-color:var(--green-700); background:#f5f0e8; }
+.type-tab.active{ background:var(--green-700); color:#fff; border-color:var(--green-700); }
+
+.share-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px;
+  box-shadow:0 4px 18px rgba(0,0,0,.08); overflow:hidden; margin-top:28px; }
+.share-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff;
+  padding:18px 24px; display:flex; align-items:center; gap:12px; }
+.share-head .ic{ font-size:28px; }
+.share-head h2{ margin:0; font-family:var(--display); font-size:22px; }
+.share-head small{ display:block; font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:14px; }
+.share-body{ padding:26px 28px 32px; }
+
+.form-group{ margin-bottom:18px; }
+.form-group label{ display:block; font-family:var(--display); color:var(--green-800); font-size:14px;
+  letter-spacing:.4px; margin-bottom:6px; }
+.form-group input, .form-group textarea, .form-group select{
+  width:100%; padding:11px 14px; border:1px solid rgba(168,128,28,.45); border-radius:10px;
+  font-size:15px; font-family:inherit; background:#fdfaf4; box-sizing:border-box;
+  transition:border-color .15s; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus{
+  outline:none; border-color:var(--green-600,#2e8b57); box-shadow:0 0 0 3px rgba(46,139,87,.12); }
+.form-group textarea{ resize:vertical; min-height:140px; line-height:1.6; }
+.form-group .hint{ font-size:13px; color:var(--muted); margin-top:5px; }
+
+.file-drop{ border:2px dashed rgba(168,128,28,.45); border-radius:12px; padding:32px 20px;
+  text-align:center; cursor:pointer; transition:all .18s; background:#fdfaf4; }
+.file-drop:hover, .file-drop.drag-over{ border-color:var(--green-700); background:#f0ebe0; }
+.file-drop .ic{ font-size:36px; line-height:1; margin-bottom:10px; }
+.file-drop p{ margin:0; color:var(--muted); font-size:14px; }
+.file-drop strong{ color:var(--green-800); }
+.file-drop input[type=file]{ display:none; }
+.file-chosen{ font-size:13px; color:var(--green-700); margin-top:8px; font-style:italic; }
+
+.form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:600px){ .form-row{ grid-template-columns:1fr; } }
+
+.submit-area{ display:flex; align-items:center; gap:16px; margin-top:24px; flex-wrap:wrap; }
+.submit-note{ font-size:13px; color:var(--muted); flex:1; min-width:200px; }
+
+.msg{ margin-top:16px; padding:14px 16px; border-radius:10px; font-size:15px; display:none; }
+.msg.success{ background:#e8f5ec; border:1px solid #a3d9b1; color:#145c2e; display:block; }
+.msg.error{ background:#fef0f0; border:1px solid #f5b8b8; color:#a12020; display:block; }
+
+.panel{ display:none; }
+.panel.active{ display:block; }
+
+.back-link{ display:inline-flex; align-items:center; gap:6px; color:var(--green-700);
+  font-family:var(--display); font-size:15px; text-decoration:none; margin-bottom:20px; }
+.back-link:hover{ text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<!-- Auth gate -->
+<div class="gate" id="gate" style="display:none;">
+  <div class="gate-card">
+    <img src="assets/img/emblem-shamrock.png" alt="Krewe emblem" onerror="this.style.display='none'" />
+    <h1>Members Only</h1>
+    <p>Enter your email to receive a magic sign-in link.</p>
+    <input type="email" id="gateEmail" placeholder="your@email.com" autocomplete="email" />
+    <div class="err" id="gateErr"></div>
+    <button class="btn btn-primary" style="margin-top:14px;width:100%;" id="gateSend">Send Magic Link</button>
+  </div>
+</div>
+
+<nav class="krewe-nav">
+  <a class="brand" href="index.html">
+    <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+    <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay &middot; Est. for good craic</small></span>
+  </a>
+  <div class="krewe-links">
+    <a href="index.html">Home</a>
+    <a href="event-signup.html">Events</a><a href="parades.html">Parades</a>
+    <a href="tartan-ball.html">Tartan Ball</a>
+    <a href="membership-application.html">Join</a><a href="volunteer.html">Service</a>
+    <a href="gallery.html">Gallery</a><a href="store.html">Shop</a>
+    <a href="videos.html">Videos</a>
+    <a href="learn.html">Learn</a>
+    <a href="poetry.html">Poetry &amp; Art</a>
+    <a href="members.html" class="active">Members Only</a>
+  </div>
+</nav>
+
+<main id="mainContent" style="display:none;">
+
+  <div class="share-hero">
+    <div class="wrap">
+      <h1>&#x2618; Share with the Krewe</h1>
+      <p>Post videos, photos, artwork, poems, stories &amp; recipes</p>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:16px;padding-bottom:60px;">
+
+    <a href="members.html" class="back-link">&#8592; Back to Members Area</a>
+
+    <p style="color:var(--muted);font-size:15px;margin:0 0 20px;">
+      Choose the type of content you&rsquo;d like to share. Everything you submit is reviewed by the krewe before appearing on the public pages.
+    </p>
+
+    <!-- Type selector tabs -->
+    <div class="type-tabs" id="typeTabs">
+      <button class="type-tab active" data-panel="video">&#127916; Videos</button>
+      <button class="type-tab" data-panel="photo">&#128247; Gallery Photos</button>
+      <button class="type-tab" data-panel="art">&#127912; Artwork</button>
+      <button class="type-tab" data-panel="poem">&#10002;&#65039; Poems</button>
+      <button class="type-tab" data-panel="story">&#128214; Stories &amp; Essays</button>
+      <button class="type-tab" data-panel="recipe">&#127858; Recipes</button>
+    </div>
+
+    <!-- VIDEO PANEL -->
+    <div class="panel active" id="panel-video">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#127916;</span>
+          <div><h2>Submit a Video</h2><small>MP4 link or YouTube/Vimeo URL</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formVideo" novalidate>
+            <div class="form-group">
+              <label for="vTitle">Video Title *</label>
+              <input id="vTitle" type="text" placeholder="Give your video a title" required />
+            </div>
+            <div class="form-group">
+              <label for="vUrl">Video URL *</label>
+              <input id="vUrl" type="url" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." required />
+              <div class="hint">Paste a YouTube, Vimeo, or direct MP4 link.</div>
+            </div>
+            <div class="form-group">
+              <label for="vDesc">Description</label>
+              <textarea id="vDesc" placeholder="Tell the krewe what this video is about..."></textarea>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Your submission goes to the krewe admins for review before publishing.</span>
+            </div>
+            <div class="msg" id="msgVideo"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTO PANEL -->
+    <div class="panel" id="panel-photo">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#128247;</span>
+          <div><h2>Upload Gallery Photos</h2><small>JPG, PNG, WebP &mdash; up to 10 MB each</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formPhoto" novalidate>
+            <div class="form-group">
+              <label for="pTitle">Photo Title / Caption *</label>
+              <input id="pTitle" type="text" placeholder="What does this photo show?" required />
+            </div>
+            <div class="form-group">
+              <label>Photo File *</label>
+              <div class="file-drop" id="dropPhoto">
+                <div class="ic">&#128247;</div>
+                <p><strong>Click to choose</strong> or drag &amp; drop your photo here</p>
+                <p>JPG, PNG, WebP &mdash; max 10 MB</p>
+                <input type="file" id="filePhoto" accept="image/jpeg,image/png,image/webp,image/gif" />
+              </div>
+              <div class="file-chosen" id="filePhotoName"></div>
+            </div>
+            <div class="form-group">
+              <label for="pDesc">Notes (optional)</label>
+              <textarea id="pDesc" placeholder="Where was this taken? Any story behind it?"></textarea>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Photos are reviewed before appearing in the gallery.</span>
+            </div>
+            <div class="msg" id="msgPhoto"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARTWORK PANEL -->
+    <div class="panel" id="panel-art">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#127912;</span>
+          <div><h2>Share Artwork</h2><small>Celtic art, illustrations, digital or traditional</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formArt" novalidate>
+            <div class="form-group">
+              <label for="aTitle">Artwork Title *</label>
+              <input id="aTitle" type="text" placeholder="Title of your piece" required />
+            </div>
+            <div class="form-group">
+              <label>Image File *</label>
+              <div class="file-drop" id="dropArt">
+                <div class="ic">&#127912;</div>
+                <p><strong>Click to choose</strong> or drag &amp; drop your artwork here</p>
+                <p>JPG, PNG, WebP, GIF &mdash; max 15 MB</p>
+                <input type="file" id="fileArt" accept="image/jpeg,image/png,image/webp,image/gif" />
+              </div>
+              <div class="file-chosen" id="fileArtName"></div>
+            </div>
+            <div class="form-group">
+              <label for="aDesc">Artist Statement / Description</label>
+              <textarea id="aDesc" placeholder="Tell us about this piece &mdash; medium, inspiration, technique..."></textarea>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Artwork is reviewed before appearing on the Poetry &amp; Art page.</span>
+            </div>
+            <div class="msg" id="msgArt"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- POEM PANEL -->
+    <div class="panel" id="panel-poem">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#10002;&#65039;</span>
+          <div><h2>Submit a Poem</h2><small>Original verse, blessings, limericks &amp; ballads</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formPoem" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="pmTitle">Poem Title *</label>
+                <input id="pmTitle" type="text" placeholder="Title of your poem" required />
+              </div>
+              <div class="form-group">
+                <label for="pmSubtitle">Subtitle / Tagline (optional)</label>
+                <input id="pmSubtitle" type="text" placeholder="e.g. A Blessing for Parade Day" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="pmBody">Your Poem *</label>
+              <textarea id="pmBody" style="min-height:220px;font-family:var(--fancy);font-size:16px;line-height:1.8;" placeholder="Write or paste your poem here..." required></textarea>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Poems are reviewed before appearing on the Poetry &amp; Art page.</span>
+            </div>
+            <div class="msg" id="msgPoem"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORY / ESSAY PANEL -->
+    <div class="panel" id="panel-story">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#128214;</span>
+          <div><h2>Submit a Story or Essay</h2><small>Short stories, personal essays, krewe memories</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formStory" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="stTitle">Title *</label>
+                <input id="stTitle" type="text" placeholder="Title of your piece" required />
+              </div>
+              <div class="form-group">
+                <label for="stSubtitle">Subtitle (optional)</label>
+                <input id="stSubtitle" type="text" placeholder="e.g. A Memory from Mardi Gras" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="stBody">Your Story or Essay *</label>
+              <textarea id="stBody" style="min-height:280px;" placeholder="Write or paste your story here..." required></textarea>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Stories are reviewed by the krewe before publishing.</span>
+            </div>
+            <div class="msg" id="msgStory"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECIPE PANEL -->
+    <div class="panel" id="panel-recipe">
+      <div class="share-card">
+        <div class="share-head">
+          <span class="ic">&#127858;</span>
+          <div><h2>Share a Recipe</h2><small>Irish, Celtic, krewe favourites &amp; parade snacks</small></div>
+        </div>
+        <div class="share-body">
+          <form id="formRecipe" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="rTitle">Recipe Name *</label>
+                <input id="rTitle" type="text" placeholder="e.g. Guinness Lamb Stew" required />
+              </div>
+              <div class="form-group">
+                <label for="rSubtitle">Subtitle / Occasion (optional)</label>
+                <input id="rSubtitle" type="text" placeholder="e.g. Perfect for Parade Day" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="rIngredients">Ingredients *</label>
+              <textarea id="rIngredients" style="min-height:140px;" placeholder="List ingredients, one per line..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="rBody">Method / Instructions *</label>
+              <textarea id="rBody" style="min-height:180px;" placeholder="Step-by-step instructions..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Photo of the Dish (optional)</label>
+              <div class="file-drop" id="dropRecipe">
+                <div class="ic">&#127860;</div>
+                <p><strong>Click to add a photo</strong> of your finished dish</p>
+                <p>JPG, PNG &mdash; max 10 MB</p>
+                <input type="file" id="fileRecipe" accept="image/jpeg,image/png,image/webp" />
+              </div>
+              <div class="file-chosen" id="fileRecipeName"></div>
+            </div>
+            <div class="submit-area">
+              <button type="submit" class="btn btn-primary">Submit for Review</button>
+              <span class="submit-note">&#x1f512; Recipes are reviewed before publishing to the krewe.</span>
+            </div>
+            <div class="msg" id="msgRecipe"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wrap -->
+</main>
+
+<footer class="site-footer" style="background:var(--green-900);color:#c8d9c0;text-align:center;padding:24px;font-size:14px;margin-top:0;">
+  <p style="margin:0;">&copy; 2025 Krewe of Shamrock &mdash; Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Members Area</a></p>
+</footer>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPA_URL = 'https://njfzrnqwbnuhmopgpsud.supabase.co';
+const SUPA_KEY = 'sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF';
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+// ---- Auth gate ----
+const gate = document.getElementById('gate');
+const mainContent = document.getElementById('mainContent');
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    gate.style.display = 'none';
+    mainContent.style.display = 'block';
+    prefillAuthor();
+  } else {
+    gate.style.display = 'flex';
+    mainContent.style.display = 'none';
+  }
+}
+
+function prefillAuthor() {
+  // If the user has display_name in metadata, use it; otherwise use email
+  const meta = currentUser?.user_metadata || {};
+  window._authorName = meta.full_name || meta.display_name || currentUser?.email || '';
+}
+
+checkAuth();
+
+// Magic link sign-in
+document.getElementById('gateSend').addEventListener('click', async () => {
+  const email = document.getElementById('gateEmail').value.trim();
+  const errEl = document.getElementById('gateErr');
+  if (!email) { errEl.textContent = 'Please enter your email.'; return; }
+  errEl.textContent = '';
+  const btn = document.getElementById('gateSend');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+  if (error) { errEl.textContent = error.message; btn.disabled=false; btn.textContent='Send Magic Link'; return; }
+  btn.textContent = 'Check your email!';
+  errEl.style.color = '#14532d';
+  errEl.textContent = 'Magic link sent. Click it to sign in.';
+});
+
+// ---- Tab switching ----
+document.getElementById('typeTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-tab');
+  if (!btn) return;
+  document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const panelId = 'panel-' + btn.dataset.panel;
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+});
+
+// Open correct tab from URL parameter e.g. share.html?type=poem
+const urlType = new URLSearchParams(location.search).get('type');
+if (urlType) {
+  const tabBtn = document.querySelector('[data-panel="' + urlType + '"]');
+  if (tabBtn) tabBtn.click();
+}
+
+// ---- File drop helpers ----
+function setupFileDrop(dropId, inputId, nameId) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  const nameEl = document.getElementById(nameId);
+  if (!drop || !input) return;
+  drop.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    const f = input.files[0];
+    nameEl.textContent = f ? f.name + ' (' + (f.size/1024/1024).toFixed(2) + ' MB)' : '';
+  });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) {
+      const dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      input.files = dt.files;
+      nameEl.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+}
+
+setupFileDrop('dropPhoto', 'filePhoto', 'filePhotoName');
+setupFileDrop('dropArt',   'fileArt',   'fileArtName');
+setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
+
+// ---- Upload file to Supabase Storage ----
+async function uploadFile(bucket, file) {
+  const ext = file.name.split('.').pop();
+  const path = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: false });
+  if (error) throw error;
+  const { data } = sb.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ---- Insert content_items row ----
+async function insertItem(fields) {
+  const row = {
+    type: fields.type,
+    title: fields.title,
+    subtitle: fields.subtitle || null,
+    body: fields.body || null,
+    media_url: fields.media_url || null,
+    author: window._authorName || 'Krewe Member',
+    submitted_by: currentUser?.id || null,
+    is_published: false,
+    sort_order: 999,
+  };
+  const { error } = await sb.from('content_items').insert(row);
+  if (error) throw error;
+}
+
+function showMsg(id, type, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'msg ' + type;
+  el.textContent = text;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setLoading(btn, loading) {
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Submitting...' : 'Submit for Review';
+}
+
+// ---- VIDEO form ----
+document.getElementById('formVideo').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  setLoading(btn, true);
+  try {
+    await insertItem({
+      type: 'video',
+      title: document.getElementById('vTitle').value.trim(),
+      body: document.getElementById('vDesc').value.trim() || null,
+      media_url: document.getElementById('vUrl').value.trim(),
+    });
+    showMsg('msgVideo', 'success', 'Thanks! Your video has been submitted and will appear after review.');
+    e.target.reset();
+  } catch(err) {
+    showMsg('msgVideo', 'error', 'Something went wrong: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+
+// ---- PHOTO form ----
+document.getElementById('formPhoto').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  const file = document.getElementById('filePhoto').files[0];
+  if (!file) { showMsg('msgPhoto','error','Please choose a photo to upload.'); return; }
+  setLoading(btn, true);
+  try {
+    const url = await uploadFile('gallery-photos', file);
+    await insertItem({
+      type: 'photo',
+      title: document.getElementById('pTitle').value.trim(),
+      body: document.getElementById('pDesc').value.trim() || null,
+      media_url: url,
+    });
+    showMsg('msgPhoto', 'success', 'Photo submitted! It will appear in the gallery after review.');
+    e.target.reset();
+    document.getElementById('filePhotoName').textContent = '';
+  } catch(err) {
+    showMsg('msgPhoto', 'error', 'Upload failed: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+
+// ---- ART form ----
+document.getElementById('formArt').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  const file = document.getElementById('fileArt').files[0];
+  if (!file) { showMsg('msgArt','error','Please choose an image file to upload.'); return; }
+  setLoading(btn, true);
+  try {
+    const url = await uploadFile('artwork', file);
+    await insertItem({
+      type: 'art',
+      title: document.getElementById('aTitle').value.trim(),
+      body: document.getElementById('aDesc').value.trim() || null,
+      media_url: url,
+    });
+    showMsg('msgArt', 'success', 'Artwork submitted! It will appear on the Poetry & Art page after review.');
+    e.target.reset();
+    document.getElementById('fileArtName').textContent = '';
+  } catch(err) {
+    showMsg('msgArt', 'error', 'Upload failed: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+
+// ---- POEM form ----
+document.getElementById('formPoem').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  setLoading(btn, true);
+  try {
+    await insertItem({
+      type: 'poem',
+      title: document.getElementById('pmTitle').value.trim(),
+      subtitle: document.getElementById('pmSubtitle').value.trim(),
+      body: document.getElementById('pmBody').value.trim(),
+    });
+    showMsg('msgPoem', 'success', 'Poem submitted! It will appear on the Poetry & Art page after review.');
+    e.target.reset();
+  } catch(err) {
+    showMsg('msgPoem', 'error', 'Something went wrong: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+
+// ---- STORY form ----
+document.getElementById('formStory').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  setLoading(btn, true);
+  try {
+    await insertItem({
+      type: 'story',
+      title: document.getElementById('stTitle').value.trim(),
+      subtitle: document.getElementById('stSubtitle').value.trim(),
+      body: document.getElementById('stBody').value.trim(),
+    });
+    showMsg('msgStory', 'success', 'Story submitted! It will appear after the krewe reviews it.');
+    e.target.reset();
+  } catch(err) {
+    showMsg('msgStory', 'error', 'Something went wrong: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+
+// ---- RECIPE form ----
+document.getElementById('formRecipe').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  const file = document.getElementById('fileRecipe').files[0];
+  setLoading(btn, true);
+  try {
+    let mediaUrl = null;
+    if (file) mediaUrl = await uploadFile('recipe-photos', file);
+    const ingredients = document.getElementById('rIngredients').value.trim();
+    const method = document.getElementById('rBody').value.trim();
+    const body = '## Ingredients\n' + ingredients + '\n\n## Method\n' + method;
+    await insertItem({
+      type: 'recipe',
+      title: document.getElementById('rTitle').value.trim(),
+      subtitle: document.getElementById('rSubtitle').value.trim(),
+      body,
+      media_url: mediaUrl,
+    });
+    showMsg('msgRecipe', 'success', 'Recipe submitted! It will be published after review.');
+    e.target.reset();
+    document.getElementById('fileRecipeName').textContent = '';
+  } catch(err) {
+    showMsg('msgRecipe', 'error', 'Something went wrong: ' + err.message);
+  }
+  setLoading(btn, false);
+});
+</script>
+</body>
+</html>
