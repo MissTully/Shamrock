@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Krewe of Shamrock — Members Area</title>
+<title>Krewe of Shamrock — Members Only</title>
 <meta name="description" content="Members-only coordination tools for the Krewe of Shamrock: locker rentals, carpools, van pools, and the member directory." />
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -111,21 +111,55 @@
   .find-card{ background:#fff; border:1px solid var(--gold); border-radius:16px; padding:20px; margin-top:14px; box-shadow:var(--shadow-sm); }
   .find-card .big{ font-family:var(--display); color:var(--green-800); font-size:40px; line-height:1; }
 
+  /* ---- Members Only: auth, tour, raffles ---- */
+  .auth-card .auth-features{ margin-top:18px; text-align:left; display:grid; gap:8px; }
+  .afe{ font-size:14px; color:#3a3a2e; } .afe span{ margin-right:6px; }
+  .tour-grid{ display:grid; gap:12px; }
+  .tour-item{ display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; }
+  .tour-item span{ font-size:26px; line-height:1; }
+  .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); }
+  .raffle-event{ margin-bottom:22px; }
+
   @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
 </style>
 </head>
 <body>
 
-  <!-- PASSCODE GATE -->
-  <div class="gate" id="gate">
-    <div class="gate-card">
+  <!-- AUTH STAGE (magic-link sign in) -->
+  <div class="gate" id="authStage">
+    <div class="gate-card auth-card">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-      <h1>Members Area</h1>
-      <p>Enter the Krewe passcode to access member tools.</p>
-      <form id="gateForm">
-        <input id="gateInput" type="password" placeholder="Member passcode" autocomplete="off" autofocus />
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Enter</button>
-        <div class="err" id="gateErr"></div>
+      <h1>Members Only</h1>
+      <p>Sign in with your email and we'll send you a secure magic link — no password to remember.</p>
+      <form id="magicForm">
+        <input id="magicEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a sign-in link</button>
+        <div class="err" id="magicMsg"></div>
+      </form>
+      <div class="auth-features">
+        <div class="afe"><span>🍀</span> The Craic Cup — earn Clovers, climb the ranks, collect badges</div>
+        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles — enter and track your tickets</div>
+        <div class="afe"><span>📅</span> RSVP to events &amp; volunteer — all tied to you</div>
+        <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE STAGE (first-time setup) -->
+  <div class="gate" id="profileStage" style="display:none;">
+    <div class="gate-card" style="max-width:440px;">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <h1>Welcome! Set up your profile</h1>
+      <p>Just a couple details to wire you into the Krewe and the Craic Cup.</p>
+      <form id="profileForm" class="krewe-form" style="text-align:left;">
+        <div class="row">
+          <div><label for="pfFirst">First name</label><input id="pfFirst" required /></div>
+          <div><label for="pfLast">Last name</label><input id="pfLast" required /></div>
+        </div>
+        <label for="pfPhone">Phone (optional)</label><input id="pfPhone" type="tel" />
+        <label for="pfBio">A line about you (optional)</label><input id="pfBio" placeholder="e.g. Marching since 2015, love the parade" />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Finish &amp; enter</button>
+        <div class="err" id="pfMsg"></div>
       </form>
     </div>
   </div>
@@ -144,14 +178,14 @@
       <a href="videos.html">Videos</a>
       <a href="learn.html">Learn</a>
       <a href="poetry.html">Poetry &amp; Art</a>
-      <a href="members.html" class="active">Members</a>
+      <a href="members.html" class="active">Members Only</a>
     </div>
   </nav>
 
   <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/gallery/krewe-big-group.jpg')"></div>
     <p class="eyebrow">For the Krewe</p>
-    <h1>Members Area</h1>
+    <h1>Members Only</h1>
     <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
   </header>
 
@@ -174,6 +208,18 @@
             <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
             <span>🤝 Volunteer bonuses</span><span>🔎 Your Clovers</span>
           </div>
+        </div>
+      </section>
+
+      <!-- RAFFLES -->
+      <section class="app-card dash-card raffle-head" role="button" tabindex="0"
+               onclick="openRaffles()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaffles();}">
+        <div class="app-head"><span class="ic">🎟️</span>
+          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50 — enter and track your tickets</small></div>
+          <span class="dash-go">Open →</span></div>
+        <div class="app-body dash-body">
+          <p>Try your luck and support the Krewe. Drop tickets in the baskets you love, or buy into the 50/50 pot. Every entry is tied to your account.</p>
+          <div class="dash-chips"><span>🧺 Basket raffles</span><span>💰 50/50</span><span>🎫 My tickets</span></div>
         </div>
       </section>
 
@@ -289,6 +335,33 @@
     </div>
   </main>
 
+  <!-- RAFFLES MODAL -->
+  <div class="modal-overlay" id="raffleModal" aria-hidden="true" onclick="if(event.target===this) closeRaffles()">
+    <div class="modal-card">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">🎟️</span><h2>Raffles</h2>
+        <button class="modal-x" type="button" onclick="closeRaffles()" aria-label="Close">✕</button></div>
+      <div class="modal-body"><div id="raffleBody"></div></div>
+    </div>
+  </div>
+
+  <!-- WELCOME TOUR -->
+  <div class="modal-overlay" id="tourOverlay" aria-hidden="true">
+    <div class="modal-card" style="max-width:680px;">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">🍀</span><h2>Welcome to Members Only</h2></div>
+      <div class="modal-body">
+        <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Craic Cup.</p>
+        <div class="tour-grid">
+          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Earn Clovers for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
+          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50 — your tickets are tracked to you.</div></div>
+          <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
+          <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
+          <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
+        </div>
+        <div style="text-align:center;margin-top:18px;"><button class="btn btn-primary" onclick="kosCloseTour()">☘ Let's go</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- THE CRAIC CUP MODAL -->
   <div class="modal-overlay" id="gameModal" aria-hidden="true"
        onclick="if(event.target===this) closeGame()">
@@ -333,7 +406,7 @@
     <img class="fimg" src="assets/img/emblem-shamrock.png" alt="" />
     <div class="fname">Krewe of Shamrock</div>
     <div class="flinks">
-      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members</a>
+      <a href="index.html">Home</a><a href="event-signup.html">Events</a><a href="parades.html">Parades</a><a href="tartan-ball.html">Tartan Ball</a><a href="membership-application.html">Join</a><a href="volunteer.html">Service</a><a href="gallery.html">Gallery</a><a href="store.html">Shop</a><a href="videos.html">Videos</a><a href="learn.html">Learn</a><a href="poetry.html">Poetry &amp; Art</a><a href="members.html">Members Only</a>
     </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
     <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
@@ -352,17 +425,10 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
-    // ---- Passcode gate (change PASSCODE to your krewe's code) ----
-    const PASSCODE = "2026";
-    const gate = document.getElementById("gate");
+    // ---- Members area reveals once auth + profile are confirmed (see auth module below) ----
     const content = document.getElementById("memberContent");
-    function unlock(){ gate.style.display="none"; content.style.display="block"; sessionStorage.setItem("kosMember","1"); initAll(); }
-    if (sessionStorage.getItem("kosMember")==="1") unlock();
-    document.getElementById("gateForm").addEventListener("submit",(e)=>{
-      e.preventDefault();
-      if (document.getElementById("gateInput").value.trim()===PASSCODE) unlock();
-      else document.getElementById("gateErr").textContent="Sorry, that passcode isn't right.";
-    });
+    function unlock(){ content.style.display="block"; if(!window.__kosInit){ window.__kosInit=true; initAll(); } }
+    window.kosUnlock = unlock;
 
     const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
@@ -854,6 +920,121 @@
     }
 
     document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeGame(); });
+  </script>
+  <!-- ============== MEMBERS ONLY: AUTH + PROFILE + TOUR ============== -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const authStage=document.getElementById("authStage");
+    const profileStage=document.getElementById("profileStage");
+    function showStage(which){
+      authStage.style.display = which==="auth" ? "flex":"none";
+      profileStage.style.display = which==="profile" ? "flex":"none";
+    }
+    async function route(){
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ showStage("auth"); return; }
+      let prof=null;
+      try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
+      window.kosProfile = prof || {};
+      if(!prof || !prof.profile_complete){ showStage("profile"); return; }
+      showStage("none");
+      if(window.kosUnlock) window.kosUnlock();
+      maybeTour();
+    }
+    document.getElementById("magicForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById("magicEmail").value.trim();
+      const msg=document.getElementById("magicMsg");
+      if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
+      msg.style.color=""; msg.textContent="Sending…";
+      const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+      if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+      msg.style.color="#14532d";
+      msg.textContent="✓ Check your email for a sign-in link, then click it on this device.";
+    });
+    document.getElementById("profileForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const msg=document.getElementById("pfMsg"); msg.style.color=""; msg.textContent="Saving…";
+      const { error } = await sb.rpc("complete_krewe_profile", {
+        p_first: document.getElementById("pfFirst").value.trim(),
+        p_last: document.getElementById("pfLast").value.trim(),
+        p_phone: document.getElementById("pfPhone").value.trim() || null,
+        p_bio: document.getElementById("pfBio").value.trim() || null
+      });
+      if(error){ msg.textContent="Couldn't save: "+error.message; return; }
+      localStorage.removeItem("kosTourDone");
+      await route();
+    });
+    function maybeTour(){
+      if(localStorage.getItem("kosTourDone")==="1") return;
+      const o=document.getElementById("tourOverlay"); if(o) o.classList.add("open");
+    }
+    window.kosCloseTour=()=>{ localStorage.setItem("kosTourDone","1"); const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
+    window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
+    sb.auth.onAuthStateChange(()=>route());
+    route();
+  </script>
+
+  <!-- ============== RAFFLES ============== -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const rb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const RE=(s)=>(s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
+    window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
+    async function renderRaffles(){
+      const box=document.getElementById("raffleBody"); box.innerHTML='<p class="empty">Loading raffles…</p>';
+      const [{data:events,error:e1},{data:baskets},{data:mine}] = await Promise.all([
+        rb.from("v_raffle_events_public").select("*").order("event_date",{ascending:true,nullsFirst:false}),
+        rb.from("v_raffle_baskets_public").select("*"),
+        rb.rpc("get_my_raffle_summary")
+      ]);
+      if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; return; }
+      if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now — check back soon! 🍀</p>'; return; }
+      const myB={}, myP={};
+      if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
+      let html="";
+      for(const e of events){
+        html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
+        if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
+        if(e.raffle_type==='fifty_fifty'){
+          html+=`<div class="van-card"><div class="seats">50/50 Pot</div>
+            <div style="font-size:14px;color:var(--muted);">${e.pot_tickets} tickets in${e.ticket_price?` · $${e.ticket_price} each`:''}</div>`;
+          if(e.drawn_at){ html+=`<div style="margin-top:8px;"><b>🏆 Winner:</b> ${RE(e.winner_name||'TBD')}</div>`; }
+          else { html+=`<div style="margin-top:6px;font-size:14px;">You have <b>${myP[e.id]||0}</b> tickets</div>
+            <form class="mini-form" data-pot="${e.id}" style="grid-template-columns:1fr auto;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Buy tickets</button></form>`; }
+          html+=`<div class="msg" id="rmsg-${e.id}"></div></div>`;
+        } else {
+          const bs=(baskets||[]).filter(b=>b.raffle_event_id===e.id).sort((a,b)=>(a.display_order||0)-(b.display_order||0));
+          html+=`<div class="dir-grid">`;
+          for(const b of bs){
+            html+=`<div class="dir-card"><div class="nm">${RE(b.name)}</div>`;
+            if(b.description) html+=`<div class="rl">${RE(b.description)}</div>`;
+            if(b.estimated_value) html+=`<div class="rl">~$${b.estimated_value}</div>`;
+            html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets} tickets in · you: <b>${myB[b.id]||0}</b></div>`;
+            if(e.drawn_at){ html+=`<div style="margin-top:6px;"><b>🏆 ${RE(b.winner_name||'TBD')}</b></div>`; }
+            else { html+=`<form class="mini-form" data-basket="${b.id}" style="grid-template-columns:1fr auto;margin-top:8px;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Enter</button></form>`; }
+            html+=`</div>`;
+          }
+          if(!bs.length) html+='<p class="empty">No baskets added yet.</p>';
+          html+=`</div>`;
+        }
+        html+=`</div>`;
+      }
+      box.innerHTML=html;
+      box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
+        ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
+        const { error}=await rb.rpc("enter_basket_as_member",{p_basket_id:id,p_tickets:q});
+        if(error){ alert(error.message); return; } renderRaffles();
+      }));
+      box.querySelectorAll("form[data-pot]").forEach(f=>f.addEventListener("submit",async(ev)=>{
+        ev.preventDefault(); const id=f.getAttribute("data-pot"); const q=parseInt(f.q.value||"1",10);
+        const { error}=await rb.rpc("buy_5050_as_member",{p_event_id:id,p_qty:q});
+        if(error){ alert(error.message); return; } renderRaffles();
+      }));
+    }
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 </body>
 </html>
