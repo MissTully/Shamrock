@@ -1072,6 +1072,7 @@
       }
       box.innerHTML=html;
       renderOfficerTools(events,baskets);
+      renderManage();
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
         ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
         const { error}=await rb.rpc("enter_basket_as_member",{p_basket_id:id,p_tickets:q});
@@ -1127,6 +1128,128 @@
         if(error){ alert(error.message); btn.disabled=false; return; }
         alert('\ud83c\udfc6 50/50 Winner: '+(data&&data.winner_name)+'  \u2014  Pot: $'+(data&&data.pot)); renderRaffles();
       }));
+    }
+    var MR_CTR=0;
+    function mrMoney(n){ return '$'+Number(n||0).toFixed(2); }
+    async function uploadBasketPhoto(file){
+      if(!file) return null;
+      var ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+      var path='b_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext;
+      var up=await rb.storage.from('raffle-baskets').upload(path,file,{cacheControl:'3600',upsert:false});
+      if(up.error) throw up.error;
+      return rb.storage.from('raffle-baskets').getPublicUrl(path).data.publicUrl;
+    }
+    function mrInput(label,html){ return '<label style="display:block;font-size:13px;color:#3a3a2e;margin:8px 0 2px;font-weight:600;">'+label+'</label>'+html; }
+    function makeBasketForm(eventId, b){
+      var IS='__IS__';
+      var box=document.createElement('div'); box.className='dir-card'; box.style.marginTop='8px';
+      box.innerHTML =
+        mrInput('Basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
+        mrInput('Approximate worth ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
+        mrInput('Contents (what’s inside)','<textarea class="bfContents" rows="2" '+IS+'>'+(b&&b.contents?RE(b.contents):'')+'</textarea>')+
+        mrInput('Details / description','<textarea class="bfDesc" rows="2" '+IS+'>'+(b&&b.description?RE(b.description):'')+'</textarea>')+
+        mrInput('Photo of the basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
+        (b&&b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="margin-top:8px;max-width:120px;border-radius:8px;" />':'')+
+        '<div style="margin-top:10px;"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
+        '<div class="msg bfMsg"></div>';
+      box.innerHTML=box.innerHTML.split('__IS__').join('style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"');
+      box.querySelector('.bfCancel').onclick=function(){ box.remove(); };
+      box.querySelector('.bfSave').onclick=async function(){
+        var msg=box.querySelector('.bfMsg'); var btn=box.querySelector('.bfSave');
+        var name=box.querySelector('.bfName').value.trim();
+        if(!name){ msg.className='msg error'; msg.textContent='Please enter a basket title.'; return; }
+        btn.disabled=true; msg.className='msg'; msg.textContent='Saving…';
+        var url=null;
+        try{ var f=box.querySelector('.bfPhoto').files[0]; if(f){ msg.textContent='Uploading photo…'; url=await uploadBasketPhoto(f); } }
+        catch(err){ msg.className='msg error'; msg.textContent='Photo upload failed: '+err.message; btn.disabled=false; return; }
+        var val=box.querySelector('.bfVal').value; var contents=box.querySelector('.bfContents').value; var desc=box.querySelector('.bfDesc').value;
+        var res;
+        if(b){ res=await rb.rpc('update_basket',{p_basket_id:b.id,p_name:name,p_estimated_value:val?parseFloat(val):null,p_contents:contents,p_description:desc,p_image_url:url}); }
+        else { res=await rb.rpc('add_basket',{p_event_id:eventId,p_name:name,p_estimated_value:val?parseFloat(val):null,p_contents:contents,p_description:desc,p_image_url:url}); }
+        if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; btn.disabled=false; return; }
+        renderRaffles();
+      };
+      return box;
+    }
+    async function renderManage(){
+      var box=document.getElementById("raffleBody"); if(!box) return;
+      var mine=[]; try{ var r=await rb.rpc("get_my_raffles"); mine=r.data||[]; }catch(e){}
+      var w=document.createElement("div"); w.className="raffle-event";
+      w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
+      w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
+        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets — you own and manage what you create.</p>'+
+        '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
+        '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
+      box.appendChild(w);
+      document.getElementById("mrNew").onclick=showCreateForm;
+      renderMine(mine);
+    }
+    function showCreateForm(){
+      var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
+      f.innerHTML='<div class="dir-card">'+
+        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" />')+
+        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🧺 Basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
+        mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+'></textarea>')+
+        mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
+        mrInput('Draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
+        '<div style="margin-top:10px;"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
+        '<div class="msg" id="crMsg"></div></div>';
+      document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
+      document.getElementById("crSave").onclick=async function(){
+        var msg=document.getElementById("crMsg"); var btn=document.getElementById("crSave");
+        var name=document.getElementById("crName").value.trim();
+        if(!name){ msg.className='msg error'; msg.textContent='Please enter a raffle name.'; return; }
+        btn.disabled=true; msg.className='msg'; msg.textContent='Creating…';
+        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null});
+        if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; btn.disabled=false; return; }
+        renderRaffles();
+      };
+    }
+    function renderMine(list){
+      var L=document.getElementById("mrList"); if(!L) return;
+      if(!list.length){ L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; return; }
+      L.innerHTML='';
+      list.forEach(function(e){
+        var card=document.createElement('div'); card.className='dir-card'; card.style.marginBottom='12px';
+        var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+RE(e.name)+'</b>'+
+          '<span style="font-size:12px;color:var(--muted);">'+(e.is_active?'live':'hidden')+(e.mine?'':' · (officer)')+'</span></div>';
+        var body='';
+        if(e.raffle_type==='fifty_fifty'){
+          body+='<div style="font-size:14px;margin:6px 0;">'+(e.pot_tickets||0)+' tickets in';
+          if(e.drawn_at){ body+=' · 🏆 '+RE(e.winner_name||'TBD'); }
+          body+='</div>';
+          if(!e.drawn_at){ body+='<button class="btn btn-green mrDraw5050" data-id="'+e.id+'" type="button" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
+        } else {
+          body+='<div class="mrBaskets" style="display:grid;gap:8px;margin:8px 0;"></div>';
+          body+='<button class="btn mrAddBasket" data-id="'+e.id+'" type="button">➕ Add a basket</button>';
+        }
+        card.innerHTML=head+body;
+        // baskets
+        if(e.raffle_type!=='fifty_fifty'){
+          var bw=card.querySelector('.mrBaskets');
+          (e.baskets||[]).forEach(function(b){
+            var row=document.createElement('div');
+            row.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid rgba(168,128,28,.25);border-radius:10px;padding:8px;';
+            row.innerHTML=(b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;" />':'<div style="width:54px;height:54px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;">🧺</div>')+
+              '<div style="flex:1;min-width:0;"><div style="font-weight:600;">'+RE(b.name)+'</div>'+
+              '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' tix'+(b.winner_name?' · 🏆 '+RE(b.winner_name):'')+'</div></div>'+
+              '<div style="display:flex;flex-direction:column;gap:4px;">'+
+                '<button class="btn mrEditB" type="button" style="padding:3px 8px;font-size:12px;">Edit</button>'+
+                (b.winner_name?'':'<button class="btn btn-green mrDrawB" type="button" style="padding:3px 8px;font-size:12px;">Draw</button>')+
+                ((b.tickets||0)>0?'':'<button class="btn mrDelB" type="button" style="padding:3px 8px;font-size:12px;">Delete</button>')+
+              '</div>';
+            row.querySelector('.mrEditB').onclick=function(){ var fm=makeBasketForm(e.id,b); row.parentNode.insertBefore(fm,row.nextSibling); };
+            var dr=row.querySelector('.mrDrawB'); if(dr) dr.onclick=async function(){ if(!confirm('Draw a winner for "'+b.name+'" now? This is final.')) return; var res=await rb.rpc('draw_basket_winner',{p_basket_id:b.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 Winner: '+(res.data&&res.data.winner_name)); renderRaffles(); };
+            var de=row.querySelector('.mrDelB'); if(de) de.onclick=async function(){ if(!confirm('Delete "'+b.name+'"?')) return; var res=await rb.rpc('delete_basket',{p_basket_id:b.id}); if(res.error){ alert(res.error.message); return; } renderRaffles(); };
+            bw.appendChild(row);
+          });
+          if(!(e.baskets||[]).length){ bw.innerHTML='<p class="empty" style="margin:0;">No baskets yet — add your first below.</p>'; }
+          card.querySelector('.mrAddBasket').onclick=function(){ var fm=makeBasketForm(e.id,null); card.appendChild(fm); fm.scrollIntoView({behavior:'smooth',block:'center'}); };
+        } else {
+          var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=async function(){ if(!confirm('Draw the 50/50 winner now? This is final.')) return; var res=await rb.rpc('draw_5050_winner',{p_event_id:e.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 50/50 Winner: '+(res.data&&res.data.winner_name)+'  —  Pot: $'+(res.data&&res.data.pot)); renderRaffles(); };
+        }
+        L.appendChild(card);
+      });
     }
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>

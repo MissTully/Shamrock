@@ -43,6 +43,10 @@
   .rf-msg.ok{ color:#14532b; } .rf-msg.err{ color:#b3261e; }
   .empty{ color:var(--muted,#6b6b5e); }
   @media (max-width:640px){ .rf-how{ grid-template-columns:1fr; } .rf-hero h1{ font-size:30px; } }
+  .basket .photo{ width:100%; height:170px; object-fit:cover; border-radius:10px; margin-bottom:10px; }
+  .basket .contents{ font-size:13.5px; color:#3a3a2e; margin:6px 0; }
+  .basket .contents b{ color:var(--green-800); }
+  .rf-empty-note{ color:var(--muted,#6b6b5e); text-align:center; padding:18px; }
 </style>
 </head>
 <body>
@@ -127,11 +131,7 @@
       Your entries are recorded the moment you submit, and a volunteer will confirm payment. Sláinte! 🍀
     </div>
 
-    <h2 class="rf-section-title">Prize Baskets <small id="basketSub">Loading…</small></h2>
-    <div id="basketGrid" class="basket-grid"><p class="empty">Loading baskets…</p></div>
-
-    <h2 class="rf-section-title">50/50 Cash Raffle</h2>
-    <div id="fiftyWrap"><p class="empty">Loading…</p></div>
+    <div id="raffleRoot"><p class="empty">Loading raffles…</p></div>
 
   </div>
 
@@ -144,73 +144,67 @@
   <script src="assets/krewe.js" defer></script>
 
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
     const E = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const params = new URLSearchParams(location.search);
     const wantBasket = params.get('basket');
     const fmt = (n)=> '$'+Number(n||0).toFixed(2);
 
+    function basketCard(b){
+      const won = b.winner_name ? `<div class="won">🏆 Winner: ${E(b.winner_name)}</div>` : `
+        <div class="count">🎟️ ${b.tickets||0} ticket${(b.tickets===1)?'':'s'} in this basket</div>
+        <form class="buyform" data-basket="${b.id}">
+          <input name="name" placeholder="Your name" required maxlength="80" />
+          <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
+          <div class="qtyrow"><input name="qty" type="number" min="1" max="200" value="1" required />
+            <button class="btn-rf" type="submit">Get tickets</button></div>
+          <div class="rf-msg" aria-live="polite"></div>
+        </form>`;
+      return `<div class="basket${wantBasket===b.id?' highlight':''}" id="b_${b.id}">`+
+        (b.image_url?`<img class="photo" src="${E(b.image_url)}" alt="${E(b.name)}" />`:'')+
+        `<h3>${E(b.name)}</h3>`+
+        (b.estimated_value?`<div class="val">Value ~ ${fmt(b.estimated_value)}</div>`:'')+
+        (b.contents?`<div class="contents"><b>Inside:</b> ${E(b.contents)}</div>`:'')+
+        (b.description?`<div class="desc">${E(b.description)}</div>`:'')+ won + `</div>`;
+    }
+
     async function load(){
+      const root=document.getElementById('raffleRoot');
       const [{data:events,error:e1},{data:baskets,error:e2}] = await Promise.all([
         sb.from("v_raffle_events_public").select("*"),
         sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
       ]);
-      const grid = document.getElementById('basketGrid');
-      const fifty = document.getElementById('fiftyWrap');
-      if(e1||e2){ grid.innerHTML='<p class="empty">Could not load the raffle right now. Please try again.</p>'; return; }
-      const basketEvent = (events||[]).find(x=>x.raffle_type==='basket' && x.is_active) || (events||[]).find(x=>x.raffle_type==='basket');
-      const potEvent = (events||[]).find(x=>x.raffle_type==='fifty_fifty' && x.is_active) || (events||[]).find(x=>x.raffle_type==='fifty_fifty');
-
-      if(basketEvent){
-        document.getElementById('rfTitle').textContent = basketEvent.name;
-        document.getElementById('basketSub').textContent = (basketEvent.basket_tickets||0)+' tickets in so far';
+      if(e1||e2){ root.innerHTML='<p class="rf-empty-note">Could not load the raffle right now. Please try again.</p>'; return; }
+      const active=(events||[]).filter(e=>e.is_active);
+      const basketEvents=active.filter(e=>e.raffle_type==='basket');
+      const potEvents=active.filter(e=>e.raffle_type==='fifty_fifty');
+      if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No raffles are running right now — check back soon! 🍀</p>'; return; }
+      let html='';
+      for(const ev of basketEvents){
+        const bs=(baskets||[]).filter(b=>b.raffle_event_id===ev.id);
+        html+=`<h2 class="rf-section-title">${E(ev.name)} <small>${ev.basket_tickets||0} tickets in${ev.event_date?` · draws ${E(ev.event_date)}`:''}</small></h2>`;
+        if(ev.description) html+=`<p style="color:#4a4a3e;margin:2px 0 6px;">${E(ev.description)}</p>`;
+        html+='<div class="basket-grid">'+ (bs.length?bs.map(basketCard).join(''):'<p class="empty">No baskets added yet.</p>') +'</div>';
       }
-      // baskets
-      const list = (baskets||[]).filter(b=>!basketEvent || b.raffle_event_id===basketEvent.id);
-      if(!list.length){ grid.innerHTML='<p class="empty">No baskets posted yet — check back soon!</p>'; }
-      else {
-        grid.innerHTML='';
-        for(const b of list){
-          const div=document.createElement('div');
-          div.className='basket'+(wantBasket===b.id?' highlight':'');
-          div.id='b_'+b.id;
-          const won = b.winner_name ? `<div class="won">🏆 Winner: ${E(b.winner_name)}</div>` : `
-            <div class="count">🎟️ ${b.tickets||0} ticket${(b.tickets===1)?'':'s'} in this basket</div>
-            <form class="buyform" data-basket="${b.id}">
+      for(const pe of potEvents){
+        if(pe.winner_name){
+          html+=`<div class="fifty"><h3>${E(pe.name)}</h3><div class="won">🏆 Winner: ${E(pe.winner_name)}</div></div>`;
+        } else {
+          const pot=(pe.pot_tickets||0)*Number(pe.ticket_price||0);
+          html+=`<div class="fifty"><h3>${E(pe.name)}</h3>
+            ${pe.description?`<div class="pot" style="margin-bottom:6px;">${E(pe.description)}</div>`:''}
+            <div class="pot">${pe.pot_tickets||0} tickets in · pot so far ${fmt(pot)} · winner takes ${fmt(pot/2)} · ${fmt(pe.ticket_price)} per ticket</div>
+            <form class="buyform" data-pot="${pe.id}" style="margin-top:12px;">
               <input name="name" placeholder="Your name" required maxlength="80" />
               <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
-              <div class="qtyrow">
-                <input name="qty" type="number" min="1" max="200" value="1" required />
-                <button class="btn-rf" type="submit">Get tickets</button>
-              </div>
+              <div class="qtyrow"><input name="qty" type="number" min="1" max="200" value="1" required />
+                <button class="btn-rf" type="submit">Buy 50/50 tickets</button></div>
               <div class="rf-msg" aria-live="polite"></div>
-            </form>`;
-          div.innerHTML = `<h3>${E(b.name)}</h3>`+
-            (b.estimated_value?`<div class="val">Value ~ ${fmt(b.estimated_value)}</div>`:'')+
-            (b.description?`<div class="desc">${E(b.description)}</div>`:'')+ won;
-          grid.appendChild(div);
+            </form></div>`;
         }
       }
-      // 50/50
-      if(!potEvent){ fifty.innerHTML='<p class="empty">No 50/50 running right now.</p>'; }
-      else if(potEvent.winner_name){
-        fifty.innerHTML = `<div class="fifty"><h3>${E(potEvent.name)}</h3><div class="won">🏆 Winner: ${E(potEvent.winner_name)}</div></div>`;
-      } else {
-        const pot = (potEvent.pot_tickets||0)*Number(potEvent.ticket_price||0);
-        fifty.innerHTML = `<div class="fifty">
-          <h3>${E(potEvent.name)}</h3>
-          <div class="pot">${potEvent.pot_tickets||0} tickets in · pot so far ${fmt(pot)} · winner takes ${fmt(pot/2)} · ${fmt(potEvent.ticket_price)} per ticket</div>
-          <form class="buyform" data-pot="${potEvent.id}" style="margin-top:12px;">
-            <input name="name" placeholder="Your name" required maxlength="80" />
-            <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
-            <div class="qtyrow">
-              <input name="qty" type="number" min="1" max="200" value="1" required />
-              <button class="btn-rf" type="submit">Buy 50/50 tickets</button>
-            </div>
-            <div class="rf-msg" aria-live="polite"></div>
-          </form></div>`;
-      }
+      root.innerHTML=html;
       wireForms();
       if(wantBasket){ const el=document.getElementById('b_'+wantBasket); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
     }
