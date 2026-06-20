@@ -198,3 +198,103 @@
     start();
   }
 })();
+
+
+/* ============================================================
+   Krewe of Shamrock — responsive navigation
+   Hamburger drawer, accessible dropdowns, auto active-state.
+   ============================================================ */
+(function () {
+  function init() {
+    var nav = document.querySelector('.krewe-nav');
+    if (!nav) return;
+    var toggle = nav.querySelector('.nav-toggle');
+    var menu = nav.querySelector('.krewe-menu');
+    if (!toggle || !menu) return;
+
+    // Highlight the link for the current page (and its parent group).
+    var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (path === '') path = 'index.html';
+    var marked = nav.querySelectorAll('[data-nav]');
+    for (var i = 0; i < marked.length; i++) {
+      if ((marked[i].getAttribute('data-nav') || '').toLowerCase() === path) {
+        marked[i].classList.add('active');
+        marked[i].setAttribute('aria-current', 'page');
+        var grp = marked[i].closest ? marked[i].closest('.nav-group') : null;
+        if (grp) grp.classList.add('is-active');
+      }
+    }
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'nav-backdrop';
+    nav.appendChild(backdrop);
+
+    var mq = window.matchMedia('(max-width:980px)');
+
+    function closeGroups() {
+      var open = nav.querySelectorAll('.nav-group.open');
+      for (var i = 0; i < open.length; i++) {
+        open[i].classList.remove('open');
+        var b = open[i].querySelector('.nav-group-btn');
+        if (b) b.setAttribute('aria-expanded', 'false');
+      }
+    }
+    function openMenu() {
+      nav.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.setAttribute('aria-label', 'Close menu');
+      document.body.classList.add('nav-open');
+    }
+    function closeMenu() {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Open menu');
+      document.body.classList.remove('nav-open');
+      closeGroups();
+    }
+
+    toggle.addEventListener('click', function () {
+      nav.classList.contains('open') ? closeMenu() : openMenu();
+    });
+    backdrop.addEventListener('click', closeMenu);
+
+    var groups = nav.querySelectorAll('.nav-group');
+    for (var g = 0; g < groups.length; g++) {
+      (function (group) {
+        var btn = group.querySelector('.nav-group-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var wasOpen = group.classList.contains('open');
+          closeGroups();
+          if (!wasOpen) { group.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+        });
+      })(groups[g]);
+    }
+
+    document.addEventListener('click', function (e) {
+      if (!nav.contains(e.target)) closeGroups();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' || e.keyCode === 27) {
+        closeGroups();
+        if (nav.classList.contains('open')) closeMenu();
+      }
+    });
+
+    var navLinks = menu.querySelectorAll('a[href]');
+    for (var k = 0; k < navLinks.length; k++) {
+      navLinks[k].addEventListener('click', function () { if (mq.matches) closeMenu(); });
+    }
+
+    function onMq() { if (!mq.matches) closeMenu(); }
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+    else if (mq.addListener) mq.addListener(onMq);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
