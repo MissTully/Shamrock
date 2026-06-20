@@ -529,3 +529,128 @@ form.krewe-form{ padding:26px 30px 30px; }
   .reveal{ opacity:1; transform:none; transition:none; }
   .tile:hover img,.mosaic figure:hover img{ transform:none; }
 }
+
+
+/* ============================================================
+   NAVIGATION — responsive redesign (2026)
+   Desktop: single-row bar with dropdown menus.
+   Mobile (<=980px): hamburger opens a slide-in drawer with
+   collapsible groups. All behaviour wired in krewe.js.
+   ============================================================ */
+.krewe-nav{
+  position:sticky; top:0; z-index:1000;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:nowrap; gap:14px; padding:10px 26px;
+  background:linear-gradient(180deg,var(--green-800),var(--green-900));
+  border-bottom:3px solid var(--gold);
+  box-shadow:0 6px 18px rgba(12,59,33,.28);
+}
+.krewe-nav .brand{ display:flex; align-items:center; gap:12px; color:#fff; text-decoration:none; flex:0 0 auto; }
+.krewe-nav .brand img{ width:42px; height:42px; border-radius:50%; border:2px solid var(--gold); box-shadow:0 0 0 2px rgba(212,175,55,.25); }
+.krewe-nav .brand .name{ display:flex; flex-direction:column; line-height:1.05; }
+.krewe-nav .brand .name b{ font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:.6px; }
+.krewe-nav .brand .name small{ font-family:var(--fancy); font-style:italic; font-size:13px; color:var(--gold-light); letter-spacing:.5px; }
+
+.krewe-menu{ display:flex; align-items:center; gap:8px; }
+.krewe-links{ display:flex; align-items:center; gap:2px; list-style:none; margin:0; padding:0; }
+.krewe-links > li{ position:relative; }
+.krewe-links a, .nav-group-btn{
+  display:flex; align-items:center; gap:6px;
+  color:#f3ecd6; font-family:var(--display); font-size:14px; font-weight:500; letter-spacing:.5px;
+  padding:9px 13px; border-radius:8px; text-decoration:none;
+  background:none; border:0; cursor:pointer; white-space:nowrap; font-kerning:none;
+  transition:background .15s, color .15s;
+}
+.krewe-links a:hover, .nav-group-btn:hover,
+.krewe-links a:focus-visible, .nav-group-btn:focus-visible{ background:rgba(212,175,55,.18); color:#fff; outline:none; }
+.krewe-links a:focus-visible, .nav-group-btn:focus-visible{ box-shadow:0 0 0 2px var(--gold-light); }
+.krewe-links a.active, .nav-group.is-active > .nav-group-btn{ color:var(--green-900); background:var(--gold); }
+.caret{ display:inline-block; width:0; height:0; border:5px solid transparent; border-top-color:currentColor; margin-top:4px; transition:transform .2s; }
+
+.nav-dropdown{
+  list-style:none; margin:0; padding:8px;
+  position:absolute; top:calc(100% + 8px); left:0; min-width:214px;
+  background:linear-gradient(180deg,var(--green-800),var(--green-900));
+  border:1px solid var(--gold); border-radius:12px;
+  box-shadow:0 16px 34px rgba(0,0,0,.34);
+  opacity:0; visibility:hidden; transform:translateY(-8px);
+  transition:opacity .16s, transform .16s, visibility .16s;
+}
+.nav-dropdown li{ list-style:none; }
+.nav-dropdown a{ display:block; width:100%; font-size:14px; }
+.nav-group:hover > .nav-dropdown,
+.nav-group:focus-within > .nav-dropdown,
+.nav-group.open > .nav-dropdown{ opacity:1; visibility:visible; transform:translateY(0); }
+.nav-group:hover > .nav-group-btn .caret,
+.nav-group.open > .nav-group-btn .caret{ transform:rotate(180deg); }
+
+.nav-cta{
+  display:inline-flex; align-items:center; gap:6px; margin-left:6px;
+  padding:10px 18px; border-radius:999px;
+  background:var(--gold); color:var(--green-900);
+  font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.5px;
+  text-decoration:none; white-space:nowrap;
+  box-shadow:0 4px 12px rgba(212,175,55,.35);
+  transition:transform .12s, box-shadow .15s, background .15s;
+}
+.nav-cta:hover{ background:var(--gold-light); transform:translateY(-1px); box-shadow:0 6px 16px rgba(212,175,55,.5); }
+.nav-cta:focus-visible{ outline:none; box-shadow:0 0 0 3px #fff; }
+.nav-cta.active{ box-shadow:0 0 0 2px #fff; }
+
+.nav-toggle{
+  display:none; position:relative; z-index:1002;
+  width:46px; height:42px; border:1px solid rgba(212,175,55,.55); border-radius:10px;
+  background:rgba(0,0,0,.14); cursor:pointer; align-items:center; justify-content:center;
+}
+.nav-toggle:focus-visible{ outline:none; box-shadow:0 0 0 3px var(--gold-light); }
+.nav-toggle-bars{ position:relative; display:block; width:22px; height:16px; }
+.nav-toggle-bars i{ position:absolute; left:0; right:0; height:2.5px; background:var(--gold-light); border-radius:2px; transition:transform .22s, opacity .2s, top .22s; }
+.nav-toggle-bars i:nth-child(1){ top:0; }
+.nav-toggle-bars i:nth-child(2){ top:6.7px; }
+.nav-toggle-bars i:nth-child(3){ top:13.4px; }
+.krewe-nav.open .nav-toggle-bars i:nth-child(1){ top:6.7px; transform:rotate(45deg); }
+.krewe-nav.open .nav-toggle-bars i:nth-child(2){ opacity:0; }
+.krewe-nav.open .nav-toggle-bars i:nth-child(3){ top:6.7px; transform:rotate(-45deg); }
+
+.nav-backdrop{ display:none; }
+
+/* ---------- MOBILE / TABLET ---------- */
+@media (max-width:980px){
+  .nav-toggle{ display:inline-flex; }
+  .krewe-menu{
+    position:fixed; top:0; right:0; z-index:1001;
+    height:100vh; height:100dvh; width:min(86vw,360px);
+    flex-direction:column; align-items:stretch; gap:0;
+    padding:84px 18px 28px;
+    background:linear-gradient(180deg,var(--green-800),var(--green-900));
+    border-left:3px solid var(--gold); box-shadow:-18px 0 40px rgba(0,0,0,.42);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    transform:translateX(100%); transition:transform .26s ease; visibility:hidden;
+  }
+  .krewe-nav.open .krewe-menu{ transform:translateX(0); visibility:visible; }
+  .krewe-links{ flex-direction:column; align-items:stretch; gap:2px; width:100%; }
+  .krewe-links > li{ width:100%; }
+  .krewe-links a, .nav-group-btn{ width:100%; font-size:16px; padding:14px 14px; justify-content:space-between; border-radius:10px; }
+  .nav-dropdown{
+    position:static; opacity:1; visibility:visible; transform:none;
+    box-shadow:none; border:0; background:rgba(0,0,0,.20);
+    border-radius:10px; margin:2px 0 6px; padding:0 4px;
+    max-height:0; overflow:hidden;
+    transition:max-height .26s ease, padding .26s ease;
+  }
+  .nav-group.open > .nav-dropdown{ max-height:360px; padding:6px 4px; }
+  .nav-dropdown a{ font-size:15px; padding:12px 14px 12px 22px; }
+  .nav-cta{ margin:16px 0 0; justify-content:center; padding:15px; font-size:16px; }
+  .nav-backdrop{ display:block; position:fixed; inset:0; z-index:1000;
+    background:rgba(6,28,16,.5); opacity:0; visibility:hidden; transition:opacity .22s; }
+  .krewe-nav.open .nav-backdrop{ opacity:1; visibility:visible; }
+}
+body.nav-open{ overflow:hidden; }
+@media (max-width:430px){
+  .krewe-nav{ padding:10px 16px; }
+  .krewe-nav .brand .name small{ display:none; }
+  .krewe-nav .brand .name b{ font-size:17px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .krewe-menu, .nav-dropdown, .nav-toggle-bars i, .caret, .nav-cta, .nav-backdrop{ transition:none !important; }
+}

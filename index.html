@@ -14,44 +14,51 @@
 <body>
 
   <!-- NAV -->
-  <nav class="krewe-nav">
-      <a class="brand" href="index.html">
-            <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-            <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. for good craic</small></span>
-      </a>
-    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-    <div class="krewe-links" id="kreweLinks">
-        <a href="index.html" class="active">Home</a>
-    
-        <div class="nav-group">
-              <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">
-                      Events <span class="caret">&#9660;</span>
-              </button>
-              <div class="nav-dropdown">
-                      <a href="event-signup.html">All Events</a>
-                      <a href="parades.html">Parades</a>
-                      <a href="tartan-ball.html">Tartan Ball</a>
-              </div>
-        </div>
-    
-        <a href="membership-application.html">Join</a>
-        <a href="volunteer.html">Service</a>
-    
-        <div class="nav-group">
-              <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">
-                      Explore <span class="caret">&#9660;</span>
-              </button>
-              <div class="nav-dropdown">
-                      <a href="gallery.html">Gallery</a>
-                      <a href="videos.html">Videos</a>
-                      <a href="store.html">Shop</a>
-                      <a href="learn.html">Learn</a>
-                      <a href="poetry.html">Poetry &amp; Art</a>
-                      <a href="krewe-history.html">Krewe History</a>
-              </div>
-        </div>
-    
-        <a href="members.html">Members Only</a>
+  <nav class="krewe-nav" aria-label="Primary">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. 1999</small></span>
+    </a>
+    <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
+      <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div class="krewe-menu" id="kreweMenu">
+      <ul class="krewe-links">
+        <li><a href="index.html" data-nav="index.html">Home</a></li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Events <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="event-signup.html" data-nav="event-signup.html">Upcoming Events</a></li>
+            <li><a href="parades.html" data-nav="parades.html">Parades</a></li>
+            <li><a href="tartan-ball.html" data-nav="tartan-ball.html">Tartan Ball</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="learn.html" data-nav="learn.html">Our Heritage</a></li>
+            <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Poetry &amp; Art</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Media <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="gallery.html" data-nav="gallery.html">Photo Gallery</a></li>
+            <li><a href="videos.html" data-nav="videos.html">Videos</a></li>
+            <li><a href="share.html" data-nav="share.html">Share Yours</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Get Involved <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
+            <li><a href="store.html" data-nav="store.html">Shop</a></li>
+            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
+          </ul>
+        </li>
+      </ul>
+      <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">☘ Join</a>
     </div>
   </nav>
 
@@ -205,15 +212,15 @@ to the love of a good session, there's a place for you at our table.</p>
 <a href="event-signup.html">Events</a>
 <a href="parades.html">Parades</a>
 <a href="tartan-ball.html">Tartan Ball</a>
-<a href="membership-application.html">Join</a>
-<a href="volunteer.html">Service</a>
-<a href="gallery.html">Gallery</a>
-<a href="store.html">Shop</a>
-<a href="videos.html">Videos</a>
-<a href="learn.html">Learn</a>
+<a href="learn.html">Heritage</a>
+<a href="krewe-history.html">History</a>
 <a href="poetry.html">Poetry &amp; Art</a>
-<a href="members.html">Members Only</a>
-<a href="krewe-history.html">Krewe History</a>
+<a href="gallery.html">Gallery</a>
+<a href="videos.html">Videos</a>
+<a href="volunteer.html">Volunteer</a>
+<a href="store.html">Shop</a>
+<a href="membership-application.html">Join</a>
+<a href="members.html">Members</a>
 </div>
 <div class="slainte">Sláinte! &#127808; Tampa Bay, Florida</div>
 <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
