@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Raffle QR Codes</title>
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  body{ background:#fff; }
+  .qr-top{ max-width:900px; margin:0 auto; padding:20px; text-align:center; }
+  .qr-top h1{ font-family:var(--display); color:var(--green-800); }
+  .qr-actions{ margin:10px 0 18px; }
+  .qr-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; max-width:900px; margin:0 auto; padding:0 20px 40px; }
+  .qr-card{ border:2px solid var(--green-800); border-radius:16px; padding:18px; text-align:center; break-inside:avoid; }
+  .qr-card h2{ font-family:var(--display); color:var(--green-800); font-size:22px; margin:0 0 4px; }
+  .qr-card .sub{ color:#7a1f2b; font-size:14px; margin:0 0 10px; }
+  .qr-card canvas{ width:230px; height:230px; }
+  .qr-card .scan{ font-family:var(--display); color:var(--green-800); margin-top:8px; font-size:15px; }
+  .qr-card.fifty{ border-color:#7a1f2b; }
+  @media print{ .qr-actions,.krewe-nav,.krewe-music{ display:none !important; } .qr-card{ box-shadow:none; } }
+</style>
+</head>
+<body>
+  <div class="qr-top">
+    <h1>Raffle QR Codes</h1>
+    <p>Print this page, cut out each card, and tape it to the matching basket. Guests scan to enter from their phones.</p>
+    <div class="qr-actions"><button class="btn btn-primary" onclick="window.print()">🖨️ Print</button> <a class="btn" href="members.html">← Back to Members</a></div>
+  </div>
+  <div id="qrGrid" class="qr-grid"><p style="text-align:center;grid-column:1/-1;">Loading…</p></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const E=(s)=>(s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const ORIGIN = location.origin;
+    const grid=document.getElementById('qrGrid');
+    function card(title, sub, url, cls){
+      const d=document.createElement('div'); d.className='qr-card'+(cls?' '+cls:'');
+      d.innerHTML='<h2>'+E(title)+'</h2><div class="sub">'+E(sub)+'</div><canvas></canvas><div class="scan">📷 Scan to enter</div>';
+      grid.appendChild(d);
+      QRCode.toCanvas(d.querySelector('canvas'), url, {width:230, margin:1, color:{dark:'#0c3b21',light:'#ffffff'}});
+    }
+    (async()=>{
+      const [{data:events},{data:baskets}] = await Promise.all([
+        sb.from("v_raffle_events_public").select("*"),
+        sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
+      ]);
+      grid.innerHTML='';
+      const basketEvent=(events||[]).find(x=>x.raffle_type==='basket');
+      const list=(baskets||[]).filter(b=>!basketEvent||b.raffle_event_id===basketEvent.id);
+      for(const b of list){ card(b.name, 'Basket Raffle'+(b.estimated_value?' · ~$'+b.estimated_value:''), ORIGIN+'/raffle.html?basket='+b.id); }
+      const pot=(events||[]).find(x=>x.raffle_type==='fifty_fifty');
+      if(pot){ card(pot.name||'50/50 Cash Raffle', 'Winner takes half the pot', ORIGIN+'/raffle.html?event='+pot.id, 'fifty'); }
+      if(!grid.children.length){ grid.innerHTML='<p style="text-align:center;grid-column:1/-1;">No baskets to show yet.</p>'; }
+    })();
+  </script>
+</body>
+</html>
