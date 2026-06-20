@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Krewe of Shamrock — Raffle</title>
+<meta name="description" content="Buy digital raffle tickets for the Krewe of Shamrock basket raffle and 50/50 cash raffle. Scan, pick your basket, and you're entered." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  .rf-wrap{ max-width:1040px; margin:0 auto; padding:26px 20px 60px; }
+  .rf-hero{ text-align:center; padding:30px 18px 6px; }
+  .rf-hero h1{ font-family:var(--display); color:var(--green-800); font-size:38px; margin:.2em 0 .1em; }
+  .rf-hero .sub{ font-family:var(--fancy); font-style:italic; color:#7a1f2b; font-size:20px; }
+  .rf-how{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:22px 0 8px; }
+  .rf-how .card{ background:#fff; border:1px solid rgba(168,128,28,.3); border-left:5px solid var(--gold); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow-sm,0 4px 14px rgba(0,0,0,.06)); }
+  .rf-how h3{ font-family:var(--display); color:var(--green-800); margin:0 0 6px; font-size:20px; }
+  .rf-how ol{ margin:8px 0 0; padding-left:20px; } .rf-how li{ margin:5px 0; color:#3a3a2e; }
+  .rf-pay{ background:#fbf6e9; border:1px dashed var(--gold); border-radius:12px; padding:14px 18px; margin:16px 0 6px; color:#5a4a1e; font-size:15px; }
+  .rf-section-title{ font-family:var(--display); color:var(--green-800); font-size:27px; margin:34px 0 4px; }
+  .rf-section-title small{ display:block; font-family:var(--fancy); font-style:italic; color:var(--muted,#6b6b5e); font-size:16px; }
+  .basket-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; margin-top:14px; }
+  .basket{ background:#fff; border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:18px; box-shadow:0 6px 18px rgba(0,0,0,.06); transition:box-shadow .15s, border-color .15s; }
+  .basket.highlight{ border-color:var(--green-700,#1c6b3f); box-shadow:0 0 0 3px rgba(28,107,63,.25),0 10px 24px rgba(0,0,0,.12); }
+  .basket h3{ font-family:var(--display); color:var(--green-800); font-size:20px; margin:0 0 4px; }
+  .basket .val{ color:#7a1f2b; font-weight:600; font-size:14px; }
+  .basket .desc{ color:#4a4a3e; font-size:14px; margin:8px 0; }
+  .basket .count{ font-size:14px; color:var(--green-800); font-weight:600; margin:6px 0 10px; }
+  .buyform{ display:grid; gap:8px; }
+  .buyform input{ width:100%; padding:11px 12px; border:1px solid rgba(168,128,28,.45); border-radius:9px; font-size:15px; }
+  .qtyrow{ display:flex; gap:8px; }
+  .qtyrow input{ flex:1; }
+  .btn-rf{ background:var(--gold); color:var(--green-900); border:0; border-radius:999px; padding:11px 16px; font-family:var(--display); font-weight:700; font-size:15px; cursor:pointer; white-space:nowrap; }
+  .btn-rf:hover{ filter:brightness(1.05); }
+  .fifty{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); color:#fff; border-radius:16px; padding:24px; margin-top:16px; }
+  .fifty h3{ font-family:var(--display); font-size:26px; margin:0 0 6px; }
+  .fifty .pot{ font-size:15px; opacity:.95; }
+  .fifty .buyform input{ background:#fff; }
+  .won{ background:#eaf5ee; border:1px solid #1c6b3f; color:#14532b; border-radius:10px; padding:8px 12px; font-weight:600; font-size:14px; }
+  .rf-msg{ font-size:14px; margin-top:6px; min-height:18px; }
+  .rf-msg.ok{ color:#14532b; } .rf-msg.err{ color:#b3261e; }
+  .empty{ color:var(--muted,#6b6b5e); }
+  @media (max-width:640px){ .rf-how{ grid-template-columns:1fr; } .rf-hero h1{ font-size:30px; } }
+</style>
+</head>
+<body>
+<nav class="krewe-nav" aria-label="Primary">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. 1999</small></span>
+    </a>
+    <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
+      <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div class="krewe-menu" id="kreweMenu">
+      <ul class="krewe-links">
+        <li><a href="index.html" data-nav="index.html">Home</a></li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Events <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="event-signup.html" data-nav="event-signup.html">Upcoming Events</a></li>
+            <li><a href="parades.html" data-nav="parades.html">Parades</a></li>
+            <li><a href="tartan-ball.html" data-nav="tartan-ball.html">Tartan Ball</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="learn.html" data-nav="learn.html">Our Heritage</a></li>
+            <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Poetry &amp; Art</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Media <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="gallery.html" data-nav="gallery.html">Photo Gallery</a></li>
+            <li><a href="videos.html" data-nav="videos.html">Videos</a></li>
+            <li><a href="share.html" data-nav="share.html">Share Yours</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Get Involved <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
+            <li><a href="store.html" data-nav="store.html">Shop</a></li>
+            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
+          </ul>
+        </li>
+      </ul>
+      <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">☘ Join</a>
+    </div>
+  </nav>
+
+  <header class="rf-hero">
+    <h1 id="rfTitle">Krewe of Shamrock Raffle</h1>
+    <p class="sub" id="rfSub">Pick a basket, grab your tickets, and you're in the draw ☘</p>
+  </header>
+
+  <div class="rf-wrap">
+
+    <div class="rf-how">
+      <div class="card">
+        <h3>🧺 How the Basket Raffle works</h3>
+        <ol>
+          <li>Browse the prize baskets below.</li>
+          <li>Enter your name and how many tickets you want for that basket.</li>
+          <li>Each ticket is one entry <em>in that basket</em> — load up on the ones you want most!</li>
+          <li>At the end, one ticket per basket is drawn at random. More tickets = better odds.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>💰 How the 50/50 works</h3>
+        <ol>
+          <li>Buy 50/50 tickets in any amount.</li>
+          <li>All tickets go into one pot.</li>
+          <li>One ticket is drawn at the end.</li>
+          <li>The winner takes <b>half the pot</b> — the other half supports the Krewe.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="rf-pay" id="rfPay">
+      <b>Paying:</b> Tickets are paid in person — settle up with any Krewe volunteer at the table (cash or card).
+      Your entries are recorded the moment you submit, and a volunteer will confirm payment. Sláinte! 🍀
+    </div>
+
+    <h2 class="rf-section-title">Prize Baskets <small id="basketSub">Loading…</small></h2>
+    <div id="basketGrid" class="basket-grid"><p class="empty">Loading baskets…</p></div>
+
+    <h2 class="rf-section-title">50/50 Cash Raffle</h2>
+    <div id="fiftyWrap"><p class="empty">Loading…</p></div>
+
+  </div>
+
+  <!-- MUSIC PLAYER -->
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="none"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune"><span class="bars"><i></i><i></i><i></i><i></i></span></button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const E = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const params = new URLSearchParams(location.search);
+    const wantBasket = params.get('basket');
+    const fmt = (n)=> '$'+Number(n||0).toFixed(2);
+
+    async function load(){
+      const [{data:events,error:e1},{data:baskets,error:e2}] = await Promise.all([
+        sb.from("v_raffle_events_public").select("*"),
+        sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
+      ]);
+      const grid = document.getElementById('basketGrid');
+      const fifty = document.getElementById('fiftyWrap');
+      if(e1||e2){ grid.innerHTML='<p class="empty">Could not load the raffle right now. Please try again.</p>'; return; }
+      const basketEvent = (events||[]).find(x=>x.raffle_type==='basket' && x.is_active) || (events||[]).find(x=>x.raffle_type==='basket');
+      const potEvent = (events||[]).find(x=>x.raffle_type==='fifty_fifty' && x.is_active) || (events||[]).find(x=>x.raffle_type==='fifty_fifty');
+
+      if(basketEvent){
+        document.getElementById('rfTitle').textContent = basketEvent.name;
+        document.getElementById('basketSub').textContent = (basketEvent.basket_tickets||0)+' tickets in so far';
+      }
+      // baskets
+      const list = (baskets||[]).filter(b=>!basketEvent || b.raffle_event_id===basketEvent.id);
+      if(!list.length){ grid.innerHTML='<p class="empty">No baskets posted yet — check back soon!</p>'; }
+      else {
+        grid.innerHTML='';
+        for(const b of list){
+          const div=document.createElement('div');
+          div.className='basket'+(wantBasket===b.id?' highlight':'');
+          div.id='b_'+b.id;
+          const won = b.winner_name ? `<div class="won">🏆 Winner: ${E(b.winner_name)}</div>` : `
+            <div class="count">🎟️ ${b.tickets||0} ticket${(b.tickets===1)?'':'s'} in this basket</div>
+            <form class="buyform" data-basket="${b.id}">
+              <input name="name" placeholder="Your name" required maxlength="80" />
+              <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
+              <div class="qtyrow">
+                <input name="qty" type="number" min="1" max="200" value="1" required />
+                <button class="btn-rf" type="submit">Get tickets</button>
+              </div>
+              <div class="rf-msg" aria-live="polite"></div>
+            </form>`;
+          div.innerHTML = `<h3>${E(b.name)}</h3>`+
+            (b.estimated_value?`<div class="val">Value ~ ${fmt(b.estimated_value)}</div>`:'')+
+            (b.description?`<div class="desc">${E(b.description)}</div>`:'')+ won;
+          grid.appendChild(div);
+        }
+      }
+      // 50/50
+      if(!potEvent){ fifty.innerHTML='<p class="empty">No 50/50 running right now.</p>'; }
+      else if(potEvent.winner_name){
+        fifty.innerHTML = `<div class="fifty"><h3>${E(potEvent.name)}</h3><div class="won">🏆 Winner: ${E(potEvent.winner_name)}</div></div>`;
+      } else {
+        const pot = (potEvent.pot_tickets||0)*Number(potEvent.ticket_price||0);
+        fifty.innerHTML = `<div class="fifty">
+          <h3>${E(potEvent.name)}</h3>
+          <div class="pot">${potEvent.pot_tickets||0} tickets in · pot so far ${fmt(pot)} · winner takes ${fmt(pot/2)} · ${fmt(potEvent.ticket_price)} per ticket</div>
+          <form class="buyform" data-pot="${potEvent.id}" style="margin-top:12px;">
+            <input name="name" placeholder="Your name" required maxlength="80" />
+            <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
+            <div class="qtyrow">
+              <input name="qty" type="number" min="1" max="200" value="1" required />
+              <button class="btn-rf" type="submit">Buy 50/50 tickets</button>
+            </div>
+            <div class="rf-msg" aria-live="polite"></div>
+          </form></div>`;
+      }
+      wireForms();
+      if(wantBasket){ const el=document.getElementById('b_'+wantBasket); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+    }
+
+    function wireForms(){
+      document.querySelectorAll('form.buyform').forEach(f=>{
+        f.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const msg=f.querySelector('.rf-msg'); const btn=f.querySelector('button');
+          const name=f.name.value.trim(); const email=f.email.value.trim(); const qty=parseInt(f.qty.value,10)||1;
+          if(!name){ msg.className='rf-msg err'; msg.textContent='Please enter your name.'; return; }
+          btn.disabled=true; msg.className='rf-msg'; msg.textContent='Entering…';
+          let res, err;
+          if(f.dataset.basket){ ({data:res,error:err} = await sb.rpc('enter_basket_public',{p_basket_id:f.dataset.basket,p_qty:qty,p_name:name,p_email:email||null})); }
+          else { ({data:res,error:err} = await sb.rpc('buy_5050_public',{p_event_id:f.dataset.pot,p_qty:qty,p_name:name,p_email:email||null})); }
+          if(err){ msg.className='rf-msg err'; msg.textContent='Sorry — '+(err.message||'something went wrong.'); btn.disabled=false; return; }
+          msg.className='rf-msg ok'; msg.textContent=`You're in! ${qty} ticket${qty===1?'':'s'} added. Pay a volunteer to confirm. 🍀`;
+          setTimeout(load, 900);
+        });
+      });
+    }
+    load();
+  </script>
+</body>
+</html>

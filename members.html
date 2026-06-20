@@ -1042,7 +1042,7 @@
       if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now — check back soon! 🍀</p>'; return; }
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      let html="";
+      let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>\ud83e\uddfa <b>Basket raffle:</b> buy tickets for the specific basket(s) you want \u2014 each ticket is one entry in that basket, and one ticket per basket is drawn at the end. \ud83d\udcb0 <b>50/50:</b> all tickets share one pot; one ticket wins half the pot. Tickets are paid in person \u2014 settle up with a volunteer. You can also scan the QR code on any basket to enter from your phone.</div>';
       for(const e of events){
         html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
         if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
@@ -1071,6 +1071,7 @@
         html+=`</div>`;
       }
       box.innerHTML=html;
+      renderOfficerTools(events,baskets);
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
         ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
         const { error}=await rb.rpc("enter_basket_as_member",{p_basket_id:id,p_tickets:q});
@@ -1080,6 +1081,51 @@
         ev.preventDefault(); const id=f.getAttribute("data-pot"); const q=parseInt(f.q.value||"1",10);
         const { error}=await rb.rpc("buy_5050_as_member",{p_event_id:id,p_qty:q});
         if(error){ alert(error.message); return; } renderRaffles();
+      }));
+    }
+
+    async function renderOfficerTools(events, baskets){
+      const box=document.getElementById("raffleBody"); if(!box) return;
+      let off=false; try{ const {data}=await rb.rpc("is_krewe_officer"); off=!!data; }catch(_){}
+      if(!off) return;
+      const PUB = location.origin + "/raffle.html";
+      let h='<div class="raffle-event" style="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;">';
+      h+='<h3 class="rpt-cat" style="margin-top:0;">\ud83d\udd11 Officer tools</h3>';
+      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Only krewe officers see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
+      h+='<p style="margin:0 0 12px;"><a class="btn btn-green" href="raffle-qr-sheet.html" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Print basket QR codes</a> <a class="btn" href="'+PUB+'" target="_blank" rel="noopener">\u2197 Public raffle page</a></p>';
+      for(const e of events){
+        h+='<div style="margin:10px 0;"><b>'+(e.raffle_type==='fifty_fifty'?'\ud83d\udcb0':'\ud83e\uddfa')+' '+RE(e.name)+'</b>';
+        if(e.raffle_type==='fifty_fifty'){
+          if(e.drawn_at){ h+=' \u2014 <span style="color:#14532b;font-weight:600;">\ud83c\udfc6 '+RE(e.winner_name||'TBD')+'</span>'; }
+          else { h+=' <button class="btn btn-green draw5050" data-id="'+e.id+'" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
+        } else {
+          const bs=(baskets||[]).filter(b=>b.raffle_event_id===e.id).sort((a,b)=>(a.display_order||0)-(b.display_order||0));
+          h+='<div style="display:grid;gap:6px;margin-top:6px;">';
+          for(const b of bs){
+            h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;"><span>'+RE(b.name)+' \u00b7 '+(b.tickets||0)+' tix</span>';
+            if(b.winner_name){ h+='<span style="color:#14532b;font-weight:600;">\ud83c\udfc6 '+RE(b.winner_name)+'</span>'; }
+            else { h+='<button class="btn btn-green drawbasket" data-id="'+b.id+'" style="padding:4px 10px;">Draw</button>'; }
+            h+='</div>';
+          }
+          h+='</div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+      const wrap=document.createElement('div'); wrap.innerHTML=h; box.appendChild(wrap);
+      wrap.querySelectorAll('.drawbasket').forEach(btn=>btn.addEventListener('click',async()=>{
+        if(!confirm('Draw a winner for this basket now? This is final.')) return;
+        btn.disabled=true;
+        const {data,error}=await rb.rpc('draw_basket_winner',{p_basket_id:btn.dataset.id,p_redraw:false});
+        if(error){ alert(error.message); btn.disabled=false; return; }
+        alert('\ud83c\udfc6 Winner: '+(data&&data.winner_name)); renderRaffles();
+      }));
+      wrap.querySelectorAll('.draw5050').forEach(btn=>btn.addEventListener('click',async()=>{
+        if(!confirm('Draw the 50/50 winner now? This is final.')) return;
+        btn.disabled=true;
+        const {data,error}=await rb.rpc('draw_5050_winner',{p_event_id:btn.dataset.id,p_redraw:false});
+        if(error){ alert(error.message); btn.disabled=false; return; }
+        alert('\ud83c\udfc6 50/50 Winner: '+(data&&data.winner_name)+'  \u2014  Pot: $'+(data&&data.pot)); renderRaffles();
       }));
     }
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
