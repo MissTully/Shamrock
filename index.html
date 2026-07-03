@@ -238,13 +238,13 @@ to the love of a good session, there's a place for you at our table.</p>
 
 <!-- EVENTS DATA -->
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const supabase = createClient(
   "https://njfzrnqwbnuhmopgpsud.supabase.co",
   "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF"
   );
 const list = document.getElementById("eventList");
-const esc = (s)=> (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
 (async () => {
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase

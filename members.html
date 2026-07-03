@@ -475,7 +475,7 @@
   <script src="assets/krewe.js" defer></script>
 
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
     // ---- Members area reveals once auth + profile are confirmed (see auth module below) ----
@@ -492,7 +492,7 @@
     }
     window.kosUnlock = unlock;
 
-    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
 
     // Identity comes from the signed-in profile, not free text — coordination
@@ -915,9 +915,9 @@
 
   <!-- ================= THE CRAIC CUP (gamification) ================= -->
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
-    const E = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const medal = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
 
     const RANKS = [
@@ -1057,7 +1057,7 @@
   </script>
   <!-- ============== MEMBERS ONLY: AUTH + PROFILE + TOUR ============== -->
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
     const authStage=document.getElementById("authStage");
     const profileStage=document.getElementById("profileStage");
@@ -1112,9 +1112,9 @@
 
   <!-- ============== RAFFLES ============== -->
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
-    const RE=(s)=>(s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const RE=(s)=>(s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
     window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
     async function renderRaffles(){

@@ -192,7 +192,7 @@
   <script src="assets/krewe.js" defer></script>
 
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://njfzrnqwbnuhmopgpsud.supabase.co";
     const SUPABASE_KEY = "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -204,7 +204,7 @@
 
     const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const hasTime = (d)=> !(d.getHours() === 0 && d.getMinutes() === 0);
     const timeStr = (d)=> d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 

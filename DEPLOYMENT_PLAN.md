@@ -347,28 +347,39 @@ so rows can't be filed under someone else's name.
 
 ---
 
-## 4. 🟡 Polish — safe to do after launch
+## 4. 🟡 Polish — mostly done
 
-- **Pin the Supabase JS version.** Most pages load `@supabase/supabase-js/+esm`
-  **unpinned** (latest); `share.html` uses `@2`. A major-version bump could
-  silently break the unpinned pages. Pin all to `@2`.
-- **XSS hardening.** The `esc()` helper doesn't escape single quotes; no live
-  exploit today (all DB values sit in double-quoted attributes and content is
-  admin-review-gated), but harden it for defense-in-depth.
-- **Consistent "age of krewe."** Copy drifts between "twenty years," "twenty-five
-  years," "over two decades," "25 Years of Shenanigans." Est. 1999 → 2026 = 27
-  years. Pick one.
-- **Tune-picker labels** in `poetry.html` name traditional songs ("The Parting
-  Glass," etc.) but all point to Krewe theme tracks. Fix labels or files.
-- **`share.html:395`** footer hardcodes "© 2025."
+**✅ Done (this branch / applied):**
+- **Pinned the Supabase JS version.** Every page now imports
+  `@supabase/supabase-js@2` (was unpinned `/+esm` = latest), so a future major
+  version can't silently break the pages.
+- **Hardened the `esc()`/`E()`/`RE()` escapers** to also escape single quotes
+  (`&#39;`) across all pages, for defense-in-depth.
+- **Fixed a real defect:** `membership-application.html` had 516 trailing **NUL
+  bytes** after `</html>` (which is why tools saw it as binary) — stripped.
+- **`share.html` footer** no longer hardcodes "© 2025" (now evergreen).
+- **Consistent "age of krewe" copy** — the plain "twenty years" / "over two
+  decades" phrases were brought to "twenty-five years" to match the rest (Est.
+  1999 → 2026 is 27, so "more than twenty-five years" is accurate). Slogans like
+  "25 Years of Shenanigans" were left as-is.
+- **Set fixed `search_path`** on the `kos_rank_*` helper functions (migration
+  `kos_rank_helpers_fixed_search_path`), clearing that advisor finding.
+
+**⏳ Deferred (needs a decision, a download, or the dashboard):**
+- **Tune-picker labels** in `poetry.html` name traditional songs but point to
+  Krewe theme tracks. Left alone deliberately — recent commits show these labels
+  were set intentionally; changing them is a content call for the krewe.
 - **Old-site external media.** `videos.html` hot-links two videos from
   `www.kreweofshamrock.com` and `event-signup.html` embeds an interkrewe.com
-  calendar PNG — these break if the old host retires. Re-host locally.
-- **Move `pg_net` out of the `public` schema**, set fixed `search_path` on the
-  `kos_rank_*` helper functions, and enable **leaked-password protection** in
-  Supabase Auth (all flagged by the advisor).
-- **Storage buckets** `avatars`, `media`, `raffle-baskets` are public and
-  listable — fine for images, but confirm nothing private was uploaded.
+  calendar image. Re-hosting needs the source files (and large video is excluded
+  from the repo by `.gitignore`), so this is a manual asset step.
+- **`pg_net` in `public` schema** — left in place; moving it risks breaking the
+  email-flush cron (`net.http_post`). Low-severity advisory; do it carefully with
+  a maintenance window if desired.
+- **Leaked-password protection** — a Supabase Auth dashboard toggle (no code),
+  worth enabling.
+- **Storage buckets** `avatars`, `media`, `raffle-baskets` are public/listable —
+  fine for images; just confirm nothing private was uploaded.
 - **No pagination anywhere.** Fine at 80 members; revisit if the roster grows.
 
 ---
