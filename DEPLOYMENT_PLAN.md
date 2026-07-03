@@ -247,7 +247,15 @@ client-side required-field validation. Add server-side length caps and simple
 rate-limiting (e.g. reject a second application from the same email within N
 minutes) before the form is publicized.
 
-### D-4. Visible markup bugs
+### D-4. Visible markup bugs — ✅ RESOLVED
+
+> **Fixed (this branch).** All five typos below are corrected: the stray `<` on the
+> members Share card, the Share-card chip deep-links (the chips now
+> `stopPropagation()` so the `?type=` links work instead of the card's click
+> handler hijacking them), the `gallery.html` stray `h` and `_bhlank` typo, and
+> the `index.html` `hrefh` preconnect. Verified: all pages render with no console
+> errors.
+
 - `members.html:289` — `<<div class="dash-chips">` renders a stray `<` on the
   Share-content chip row.
 - `members.html` Share card — chips wrapped in a `role="button"` section whose
@@ -258,14 +266,25 @@ minutes) before the form is publicized.
 - `gallery.html:89` — `target="_bhlank"` typo (should be `_blank`).
 - `index.html:10` — `hrefh=` typo makes the gstatic preconnect a no-op.
 
-### D-5. Two pages use the old, broken navigation
+### D-5. Two pages use the old, broken navigation — ✅ RESOLVED
+
+> **Fixed (this branch).** `videos.html` and `krewe-history.html` now use the same
+> responsive dropdown nav (with working mobile hamburger) and the standard footer
+> as every other page, and their brand tagline reads "Est. 1999". Verified: the
+> mobile nav toggle and dropdown menu render and open on both pages.
+
 `videos.html` and `krewe-history.html` still use the **old flat nav** (no mobile
 hamburger, no dropdowns, no active-state). `krewe.js` early-returns on them, so on
 a phone there is no working menu on those two pages. They also show the wrong
 tagline ("Est. for good craic" instead of "Est. 1999") and a condensed footer.
 Bring both onto the shared responsive nav/footer used by every other page.
 
-### D-6. No sign-out button in the portal
+### D-6. No sign-out button in the portal — ✅ RESOLVED
+
+> **Fixed (this branch).** The portal now shows a "Signed in as {name}" bar with a
+> **Sign out** button at the top of the members area, wired to the existing
+> `kosSignOut()` handler.
+
 `window.kosSignOut` is defined (`members.html:1022`) but never wired to a visible
 control — members can't log out. Add a sign-out link to the portal header.
 
