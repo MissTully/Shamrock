@@ -130,70 +130,9 @@
     </div>
   </section>
 
-  <script>
-  (function () {
-    // Perpetual Krewe calendar data — edit this list each season.
-    var KREWE_YEAR = 2026;
-    // month is 0-indexed (6 = July, 7 = August, 9 = October)
-    var KREWE_EVENTS = [
-      { month:6, day:11, time:"8:30 AM",  name:"New Life Warehouse Delivery", location:"" },
-      { month:6, day:11, time:"1:00 PM",  name:"Family & Friends Krewe Picnic", location:"" },
-      { month:7, day:2,  time:"",         name:"Family Bowling Event", location:"" },
-      { month:9, day:3,  time:"",         name:"Golf Event", location:"PopStroke" },
-      { month:9, day:17, time:"",         name:"Tartan Ball Basket Social", location:"" },
-      { month:9, day:24, time:"",         name:"Tartan Ball", location:"" }
-    ];
-
-    var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    var DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-
-    var byMonth = {};
-    KREWE_EVENTS.forEach(function (e) { (byMonth[e.month] = byMonth[e.month] || {})[e.day] = (byMonth[e.month][e.day] || []).concat(e); });
-
-    var yearEl = document.getElementById("kcal-year");
-    if (yearEl) yearEl.textContent = KREWE_YEAR;
-
-    function buildMonth(month) {
-      var first = new Date(KREWE_YEAR, month, 1).getDay();
-      var days = new Date(KREWE_YEAR, month + 1, 0).getDate();
-      var html = '<div style="background:var(--paper);border:1px solid rgba(169,128,28,.3);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;">';
-      html += '<div style="background:linear-gradient(180deg,var(--green-700),var(--green-800));color:#fff;font-family:var(--display);text-align:center;padding:10px;letter-spacing:.5px;">' + MONTH_NAMES[month] + ' ' + KREWE_YEAR + '</div>';
-      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--display);font-size:12px;color:var(--gold-deep);padding:8px 6px 2px;">';
-      DOW.forEach(function (d) { html += '<div>' + d + '</div>'; });
-      html += '</div>';
-      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:4px 6px 10px;">';
-      for (var i = 0; i < first; i++) html += '<div></div>';
-      for (var d = 1; d <= days; d++) {
-        var evs = byMonth[month] && byMonth[month][d];
-        if (evs) {
-          var tip = evs.map(function (e) { return (e.time ? e.time + " — " : "") + e.name + (e.location ? " (" + e.location + ")" : ""); }).join(" · ");
-          html += '<div title="' + tip.replace(/"/g, "&quot;") + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);cursor:default;">' + d + '</div>';
-        } else {
-          html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;">' + d + '</div>';
-        }
-      }
-      html += '</div></div>';
-      return html;
-    }
-
-    var months = Object.keys(byMonth).map(Number).sort(function (a, b) { return a - b; });
-    var gridsEl = document.getElementById("kcal-grids");
-    if (gridsEl) gridsEl.innerHTML = months.map(buildMonth).join("");
-
-    var listEl = document.getElementById("kcal-list");
-    if (listEl) {
-      var sorted = KREWE_EVENTS.slice().sort(function (a, b) { return (a.month - b.month) || (a.day - b.day); });
-      listEl.innerHTML = sorted.map(function (e) {
-        var dateStr = MONTH_NAMES[e.month] + " " + e.day;
-        var when = e.time ? dateStr + " · " + e.time : dateStr;
-        var loc = e.location ? ' <span style="color:var(--gold-light);">@ ' + e.location + '</span>' : "";
-        return '<li style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
-               '<span style="flex:0 0 130px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + when + '</span>' +
-               '<span style="flex:1;">' + e.name + loc + '</span></li>';
-      }).join("");
-    }
-  })();
-  </script>
+  <!-- The Krewe calendar above is rendered from the same Supabase `events`
+       data that fills the RSVP dropdown (see the module script below), so the
+       two never disagree. -->
 
   <!-- IKC CALENDAR -->
   <section class="wrap" style="padding-top:10px;">
@@ -263,6 +202,12 @@
     const btn = document.getElementById("submitBtn");
     const message = document.getElementById("message");
 
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+    const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const hasTime = (d)=> !(d.getHours() === 0 && d.getMinutes() === 0);
+    const timeStr = (d)=> d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
 
     async function loadEvents() {
@@ -272,9 +217,14 @@
       if (error) {
         eventSelect.innerHTML = '<option value="">Could not load events</option>';
         showMessage("Sorry, we couldn't load the events list. Please try again later.", "error");
+        buildCalendar([]);
         return;
       }
-      if (!data || data.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; return; }
+      if (!data || data.length === 0) {
+        eventSelect.innerHTML = '<option value="">No upcoming events</option>';
+        buildCalendar([]);
+        return;
+      }
       eventSelect.innerHTML = '<option value="">— Select an event —</option>';
       for (const ev of data) {
         let when;
@@ -282,12 +232,74 @@
         else {
           const d = new Date(ev.start_time);
           const ds = d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
-          when = (d.getHours() === 0 && d.getMinutes() === 0) ? ds + ", Time TBA" : ds + ", " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          when = hasTime(d) ? ds + ", " + timeStr(d) : ds + ", Time TBA";
         }
         const loc = ev.location ? " · " + ev.location : "";
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc})`;
         eventSelect.appendChild(opt);
+      }
+      buildCalendar(data);
+    }
+
+    // Render the "Krewe of Shamrock Calendar" from the very same events list.
+    function buildMonth(year, month, daysMap) {
+      const first = new Date(year, month, 1).getDay();
+      const days = new Date(year, month + 1, 0).getDate();
+      let html = '<div style="background:var(--paper);border:1px solid rgba(169,128,28,.3);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;">';
+      html += '<div style="background:linear-gradient(180deg,var(--green-700),var(--green-800));color:#fff;font-family:var(--display);text-align:center;padding:10px;letter-spacing:.5px;">' + MONTH_NAMES[month] + ' ' + year + '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--display);font-size:12px;color:var(--gold-deep);padding:8px 6px 2px;">';
+      DOW.forEach((d)=>{ html += '<div>' + d + '</div>'; });
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:4px 6px 10px;">';
+      for (let i = 0; i < first; i++) html += '<div></div>';
+      for (let d = 1; d <= days; d++) {
+        const evs = daysMap[d];
+        if (evs) {
+          const tip = evs.map((e)=> (hasTime(e.date) ? timeStr(e.date) + " — " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
+          html += '<div title="' + esc(tip) + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);cursor:default;">' + d + '</div>';
+        } else {
+          html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;">' + d + '</div>';
+        }
+      }
+      html += '</div></div>';
+      return html;
+    }
+
+    function buildCalendar(events) {
+      const gridsEl = document.getElementById("kcal-grids");
+      const listEl = document.getElementById("kcal-list");
+      const yearEl = document.getElementById("kcal-year");
+      const dated = (events || [])
+        .filter((e)=> e.start_time)
+        .map((e)=> ({ date: new Date(e.start_time), name: e.name, location: e.location || "" }))
+        .filter((e)=> !isNaN(e.date))
+        .sort((a, b)=> a.date - b.date);
+      if (!dated.length) {
+        if (gridsEl) gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No dated events on the calendar yet — check back soon!</p>';
+        if (listEl) listEl.innerHTML = '';
+        return;
+      }
+      const byYM = {};
+      for (const ev of dated) {
+        const y = ev.date.getFullYear(), m = ev.date.getMonth(), day = ev.date.getDate();
+        const key = y + "-" + m;
+        (byYM[key] = byYM[key] || { y, m, days: {} });
+        (byYM[key].days[day] = byYM[key].days[day] || []).push(ev);
+      }
+      const years = [...new Set(dated.map((e)=> e.date.getFullYear()))].sort();
+      if (yearEl) yearEl.textContent = years.length === 1 ? years[0] : years[0] + "–" + years[years.length - 1];
+      const keys = Object.keys(byYM).sort((a, b)=>{ const [ay, am] = a.split("-").map(Number), [by, bm] = b.split("-").map(Number); return (ay - by) || (am - bm); });
+      if (gridsEl) gridsEl.innerHTML = keys.map((k)=> buildMonth(byYM[k].y, byYM[k].m, byYM[k].days)).join("");
+      if (listEl) {
+        listEl.innerHTML = dated.map((ev)=>{
+          const dateStr = MONTH_NAMES[ev.date.getMonth()] + " " + ev.date.getDate() + ", " + ev.date.getFullYear();
+          const when = hasTime(ev.date) ? dateStr + " · " + timeStr(ev.date) : dateStr;
+          const loc = ev.location ? ' <span style="color:var(--gold-light);">@ ' + esc(ev.location) + '</span>' : "";
+          return '<li style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
+                 '<span style="flex:0 0 150px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
+                 '<span style="flex:1;">' + esc(ev.name) + loc + '</span></li>';
+        }).join("");
       }
     }
 

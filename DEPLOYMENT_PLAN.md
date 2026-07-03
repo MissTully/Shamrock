@@ -224,13 +224,28 @@ which was deferred due to a billing hold — resolve that first.
 
 ## 3. 🟠 Should-fix — during the launch window
 
-### D-1. Two disagreeing event sources on the RSVP page
+### D-1. Two disagreeing event sources on the RSVP page — ✅ RESOLVED
+
+> **Fixed (this branch).** The hardcoded `KREWE_EVENTS` calendar array is gone; the
+> "Krewe of Shamrock Calendar" (month grids + "Dates to Remember" list) now renders
+> from the same Supabase `events` fetch that fills the RSVP dropdown, so the two can
+> no longer disagree. One source of truth.
+
 `event-signup.html` shows a hardcoded static calendar (lines 138–145) **and** a
 live Supabase `events` dropdown (269–291). They can disagree — a member sees a
 date on the calendar that isn't an RSVP-able event, or vice-versa. Pick one
 source of truth (recommend: drive the calendar from `events` too).
 
-### D-2. Raffle is honor-system with no abuse control
+### D-2. Raffle is honor-system with no abuse control — ✅ PARTIALLY RESOLVED
+
+> **Hardened (migration `kos_abuse_controls_and_email_lock`).** `enter_basket_public`
+> and `buy_5050_public` now cap name/email length and reject rapid repeat entries
+> under the same name on the same basket/pot (15-second throttle), which blunts
+> accidental double-submits and casual stuffing. **Still honor-system on payment**
+> by design — there is no payment processor, so officers must reconcile cash before
+> drawing and treat on-screen counts as unverified until then (that's the Phase-6
+> payments work, still not built).
+
 `raffle.html` records ticket entries (`enter_basket_public` / `buy_5050_public`)
 from an unauthenticated QR page with just a name; payment is "pay a volunteer in
 person." Anyone can submit unlimited free entries under any name (qty capped at
@@ -241,7 +256,14 @@ should (a) add basic rate-limiting/duplicate detection to the public RPCs, and
 (b) make clear in officer training that on-screen counts are unverified until cash
 is reconciled.
 
-### D-3. Membership application endpoint has no spam protection
+### D-3. Membership application endpoint has no spam protection — ✅ RESOLVED
+
+> **Fixed (migration `kos_abuse_controls_and_email_lock`).**
+> `submit_membership_application` now caps every field length (name 80, email 120,
+> phone 40, notes 2000) and rate-limits brand-new applications (rejects if more than
+> 5 new prospects were created in the last minute), while still updating an existing
+> applicant's own record normally.
+
 `submit_membership_application` is a public, unauthenticated RPC with only
 client-side required-field validation. Add server-side length caps and simple
 rate-limiting (e.g. reject a second application from the same email within N
@@ -288,7 +310,18 @@ Bring both onto the shared responsive nav/footer used by every other page.
 `window.kosSignOut` is defined (`members.html:1022`) but never wired to a visible
 control — members can't log out. Add a sign-out link to the portal header.
 
-### D-7. "Secure" officer reports are permanently unreachable
+### D-7. "Secure" officer reports are permanently unreachable — ✅ RESOLVED
+
+> **Fixed (this branch).** The five officer/PII reports (attendee contacts, full
+> member directory, pending applications, outstanding dues by member, communications
+> log) now actually run for officers — each queries its officer-scoped view/table
+> (`v_event_attendee_emails`, `members`, `v_pending_applications`,
+> `v_outstanding_dues`, `outbound_emails`). Access is gated on `is_krewe_officer()`
+> in the UI **and** enforced by RLS underneath (a non-officer gets no rows even if
+> they bypass the UI). The stale "unlocks when per-member sign-in is added" notice
+> was replaced with an accurate "officers only" message. The `outbound_emails` queue
+> was also locked to officer-read (migration `kos_abuse_controls_and_email_lock`).
+
 Several officer/PII reports (`attendee_contacts`, `member_directory_full`,
 `pending_apps`, `dues_by_member`, `comms_log`) render a "unlocks when per-member
 sign-in is added" notice — but per-member sign-in already exists in the same file.
@@ -296,7 +329,17 @@ So officers currently have **no** in-app path to dues-by-member, attendee emails
 or pending applications. Wire these to `is_krewe_officer()` and let officers see
 them once B-1/B-2 make roles trustworthy.
 
-### D-8. Redundant identity entry / impersonation on member forms
+### D-8. Redundant identity entry / impersonation on member forms — ✅ RESOLVED
+
+> **Fixed (this branch).** The locker, carpool, and van-reservation forms now
+> pre-fill (and lock) the member's name and email from their signed-in profile, and
+> the insert handlers use that profile identity as the source of truth rather than
+> free-typed text — so a member can't file a row under someone else's name, and
+> doesn't have to re-type their details. (These tables have no `member_id` column, so
+> a hard server-side foreign-key stamp would need a small schema change — noted as a
+> future hardening, but the client now closes the practical impersonation path and
+> inserts are already restricted to signed-in members by RLS.)
+
 Locker, carpool, and van-reservation forms make an already-signed-in member
 re-type their name/email, and the row isn't tied to `auth.uid()`. After B-2,
 default these from the member's profile and stamp `caller_member_id()` server-side

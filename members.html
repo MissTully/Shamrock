@@ -495,7 +495,21 @@
     const esc = (s)=> (s??"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
 
-    function initAll(){ loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+    // Identity comes from the signed-in profile, not free text — coordination
+    // rows can't be filed under someone else's name.
+    function kosIdentity(){
+      const p = window.kosProfile || {};
+      const name = (p.display_name || [p.first_name,p.last_name].filter(Boolean).join(" ") || "").toString().trim();
+      const email = (p.email || "").toString().trim();
+      return { name, email };
+    }
+    function prefillIdentity(){
+      const { name, email } = kosIdentity();
+      [["lkName",name],["cpName",name]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+      [["lkEmail",email],["cpEmail",email]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+    }
+
+    function initAll(){ prefillIdentity(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
     /* ---------------- LOCKERS ---------------- */
     async function loadLockers(){
@@ -507,11 +521,12 @@
     }
     document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
       e.preventDefault();
-      const payload={ holder_name:document.getElementById("lkName").value.trim(), holder_email:document.getElementById("lkEmail").value.trim()||null, size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
+      const idn=kosIdentity();
+      const payload={ holder_name: idn.name || document.getElementById("lkName").value.trim(), holder_email: idn.email || (document.getElementById("lkEmail").value.trim()||null), size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
       if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("lockers").insert(payload);
       if (error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
-      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); loadLockers();
+      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); prefillIdentity(); loadLockers();
     });
 
     /* ---------------- CARPOOLS ---------------- */
@@ -532,14 +547,15 @@
     }
     document.getElementById("carForm").addEventListener("submit",async(e)=>{
       e.preventDefault();
-      const payload={ kind:carKind, person_name:document.getElementById("cpName").value.trim(), person_email:document.getElementById("cpEmail").value.trim()||null,
+      const idn=kosIdentity();
+      const payload={ kind:carKind, person_name: idn.name || document.getElementById("cpName").value.trim(), person_email: idn.email || (document.getElementById("cpEmail").value.trim()||null),
         phone:document.getElementById("cpPhone").value.trim()||null, event:document.getElementById("cpEvent").value.trim()||null,
         pickup_area:document.getElementById("cpPickup").value.trim()||null, notes:document.getElementById("cpNotes").value.trim()||null,
         seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null };
       if(!payload.person_name){ show("cpMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("carpools").insert(payload);
       if (error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
-      show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); setCarKind(carKind); loadCarpools();
+      show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); prefillIdentity(); setCarKind(carKind); loadCarpools();
     });
 
     /* ---------------- VAN POOLS ---------------- */
@@ -562,8 +578,8 @@
           <div class="seats" style="margin-top:6px;">${left} of ${esc(v.capacity)} seats open</div>
           <div style="font-size:14px;margin-top:4px;"><b>Riders:</b> ${riders}</div>
           <form class="mini-form" data-van="${v.id}">
-            <input name="nm" placeholder="Your name" required />
-            <input name="em" type="email" placeholder="Email (optional)" />
+            <input name="nm" placeholder="Your name" required value="${esc(kosIdentity().name)}" readonly />
+            <input name="em" type="email" placeholder="Email (optional)" value="${esc(kosIdentity().email)}" readonly />
             <input name="st" type="number" min="1" max="${Math.max(1,left)}" value="1" title="Seats" style="max-width:80px;" />
             <button class="btn btn-green" type="submit" ${left<=0?"disabled":""}>${left<=0?"Full":"Reserve"}</button>
           </form>
@@ -572,7 +588,8 @@
       }).join("");
       wrap.querySelectorAll(".mini-form").forEach(f=>f.addEventListener("submit",async(e)=>{
         e.preventDefault(); const id=f.getAttribute("data-van");
-        const payload={ vanpool_id:id, rider_name:f.nm.value.trim(), rider_email:f.em.value.trim()||null, seats:parseInt(f.st.value||"1",10) };
+        const idn=kosIdentity();
+        const payload={ vanpool_id:id, rider_name: idn.name || f.nm.value.trim(), rider_email: idn.email || (f.em.value.trim()||null), seats:parseInt(f.st.value||"1",10) };
         if(!payload.rider_name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
         const { error } = await supabase.from("vanpool_reservations").insert(payload);
         if (error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
@@ -605,11 +622,17 @@
         rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     }
     function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
-    function secureNotice(why){
-      return `<div class="rpt-secure"><h4>🔒 Secure member login required</h4>
-        <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so it is deliberately <b>not</b> served to the public web key that powers this page.</p>
-        <p>${esc(why)}</p>
-        <p class="rpt-note">When per‑member sign‑in is added (each member with their own login), this report unlocks automatically — the underlying data and secure views are already in place behind the scenes.</p></div>`;
+    let _isOfficer=null;
+    async function isOfficer(){
+      if(_isOfficer!==null) return _isOfficer;
+      try{ const { data } = await supabase.rpc("is_krewe_officer"); _isOfficer=!!data; }
+      catch(_){ _isOfficer=false; }
+      return _isOfficer;
+    }
+    function officerOnlyNotice(){
+      return `<div class="rpt-secure"><h4>🔒 Officers only</h4>
+        <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so access is limited to krewe officers. The database enforces this too — the underlying records aren't readable without an officer account.</p>
+        <p class="rpt-note">You're signed in, but this account isn't marked as an officer. If you should have access, ask a captain or board member to set your role.</p></div>`;
     }
 
     const REPORTS = [
@@ -653,7 +676,17 @@
         }},
       { id:"attendee_contacts", cat:"Events & Attendance", icon:"📇", title:"Event Attendee Contact List", secure:true,
         desc:"Names and emails of everyone signed up, for direct outreach.",
-        why:"It would expose each attendee's email address." },
+        run: async()=>{
+          const { data, error } = await supabase.from("v_event_attendee_emails")
+            .select("event_name,first_name,last_name,email,signup_role,status,guests_count")
+            .order("event_name",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]);
+          if(!rows.length) return '<p class="empty">No event signups yet.</p>';
+          return rStats([{l:"Signups",v:rows.length}]) +
+            rTable(["Event","Name","Email","Role","Status","Guests"],
+              rows.map(r=>[r.event_name, `${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.signup_role||"attendee", r.status||"—", num(r.guests_count)]));
+        }},
 
       /* ---- Membership ---- */
       { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
@@ -689,10 +722,28 @@
         }},
       { id:"member_directory_full", cat:"Membership", icon:"📒", title:"Member Contact Directory", secure:true,
         desc:"Full roster with email and phone for each member.",
-        why:"It would publish every member's email and phone number." },
+        run: async()=>{
+          const { data, error } = await supabase.from("members")
+            .select("first_name,last_name,email,phone,member_role,membership_status")
+            .order("last_name",{ascending:true});
+          if(error) throw error;
+          const rows=(data||[]);
+          return rStats([{l:"Members",v:rows.length}]) +
+            rTable(["Name","Email","Phone","Role","Status"],
+              rows.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), m.email||"—", m.phone||"—", m.member_role||"member", m.membership_status||"—"]));
+        }},
       { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
         desc:"Prospective members and their contact details.",
-        why:"It would expose applicants' personal contact information." },
+        run: async()=>{
+          const { data, error } = await supabase.from("v_pending_applications")
+            .select("first_name,last_name,email,phone,notes,created_at").order("created_at",{ascending:false});
+          if(error) throw error;
+          const rows=(data||[]);
+          if(!rows.length) return '<p class="empty">No pending applications right now. 🍀</p>';
+          return rStats([{l:"Pending",v:rows.length}]) +
+            rTable(["Name","Email","Phone","Applied","Notes"],
+              rows.map(a=>[`${a.first_name||""} ${a.last_name||""}`.trim(), a.email||"—", a.phone||"—", fmtDate(a.created_at), a.notes||"—"]));
+        }},
 
       /* ---- Dues & Finance ---- */
       { id:"dues_summary", cat:"Dues & Finance", icon:"💶", title:"Dues Summary by Year",
@@ -710,7 +761,18 @@
         }},
       { id:"dues_by_member", cat:"Dues & Finance", icon:"🧾", title:"Outstanding Dues by Member", secure:true,
         desc:"Who owes what, with days overdue, for follow‑up.",
-        why:"It would reveal individual members' names tied to money owed." },
+        run: async()=>{
+          const { data, error } = await supabase.from("v_outstanding_dues")
+            .select("first_name,last_name,email,membership_year,amount,due_date,days_overdue,reminders_sent")
+            .order("days_overdue",{ascending:false});
+          if(error) throw error;
+          const rows=(data||[]);
+          if(!rows.length) return '<p class="empty">No outstanding dues — everyone\'s paid up! 🍀</p>';
+          const owed=rows.reduce((n,r)=>n+num(r.amount),0);
+          return rStats([{l:"Members owing",v:rows.length},{l:"Total outstanding",v:fmtMoney(owed)}]) +
+            rTable(["Name","Email","Year","Amount","Due","Days overdue","Reminders"],
+              rows.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_year, fmtMoney(r.amount), fmtDate(r.due_date), num(r.days_overdue), num(r.reminders_sent)]));
+        }},
 
       /* ---- Logistics & Coordination ---- */
       { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
@@ -786,7 +848,17 @@
         }},
       { id:"comms_log", cat:"Content & Communications", icon:"✉️", title:"Communications Log", secure:true,
         desc:"Outbound emails and reminders sent to members.",
-        why:"It records who was emailed and when, which is member personal data." },
+        run: async()=>{
+          const { data, error } = await supabase.from("outbound_emails")
+            .select("to_email,to_name,subject,purpose,status,created_at,sent_at")
+            .order("created_at",{ascending:false}).limit(200);
+          if(error) throw error;
+          const rows=(data||[]);
+          if(!rows.length) return '<p class="empty">No emails queued or sent yet.</p>';
+          return rStats([{l:"Emails",v:rows.length},{l:"Sent",v:rows.filter(r=>r.status==="sent").length}]) +
+            rTable(["To","Subject","Purpose","Status","Queued","Sent"],
+              rows.map(r=>[r.to_name?`${r.to_name} <${r.to_email}>`:(r.to_email||"—"), r.subject||"—", (r.purpose||"—").replace(/_/g," "), r.status||"—", fmtDate(r.created_at), r.sent_at?fmtDate(r.sent_at):"—"]));
+        }},
     ];
 
     const CATS = ["Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
@@ -799,7 +871,7 @@
           items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
             <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
             <div class="d">${esc(r.desc)}</div>
-            ${r.secure?'<span class="lock">🔒 Secure login</span>':''}
+            ${r.secure?'<span class="lock">🔒 Officers only</span>':''}
           </div>`).join("")}</div>`;
       }).join("");
       grid.querySelectorAll(".rpt-card").forEach(c=>{
@@ -832,8 +904,8 @@
       document.getElementById("reportTitle").textContent=(def.icon?def.icon+" ":"")+def.title;
       const body=document.getElementById("reportBody");
       try{ document.querySelector(".modal-card").scrollIntoView({block:"start"}); }catch(_){}
-      if(def.secure){ body.innerHTML=secureNotice(def.why||""); return; }
       body.innerHTML='<p class="empty">Running report…</p>';
+      if(def.secure && !(await isOfficer())){ body.innerHTML=officerOnlyNotice(); return; }
       try { body.innerHTML = await def.run(); }
       catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
     }
