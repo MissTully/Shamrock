@@ -436,7 +436,7 @@ document.getElementById('gateSend').addEventListener('click', async () => {
   errEl.textContent = '';
   const btn = document.getElementById('gateSend');
   btn.disabled = true; btn.textContent = 'Sending...';
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser:false, emailRedirectTo: location.href } });
   if (error) { errEl.textContent = error.message; btn.disabled=false; btn.textContent='Send Magic Link'; return; }
   btn.textContent = 'Check your email!';
   errEl.style.color = '#14532d';

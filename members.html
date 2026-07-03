@@ -996,7 +996,7 @@
       const msg=document.getElementById("magicMsg");
       if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
       msg.style.color=""; msg.textContent="Sending…";
-      const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+      const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:false, emailRedirectTo: location.origin + location.pathname } });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
       msg.textContent="✓ Check your email for a sign-in link, then click it on this device.";
