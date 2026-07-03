@@ -32,11 +32,30 @@ This plan is organized as:
 Everything in Sections 2–4 was verified against the live database and the actual
 page source, not assumed.
 
+> **Update — July 3, 2026 (Day-1 security work applied).** Blockers **B-1, B-2,
+> B-3, and B-4 are now resolved** and verified against the live database. The
+> client sign-up fix is in this branch; the database changes were applied to the
+> Supabase project as two tracked migrations (`kos_rls_lockdown_member_vs_officer`,
+> `kos_function_authorization_guards`). Supabase's security advisor went from 25
+> "RLS policy always true" findings to 5 (the 5 remaining are the intended
+> insert-only policies on the coordination and public-raffle tables). An anonymous
+> caller now reads **0 rows** from `members`, `dues_payments`, `lockers`, and
+> `profiles`, while the member directory, public events, and published content
+> still work. **B-5 and B-6 (email + hosting/plan) remain** and are still
+> launch-blocking. See the per-item ✅ notes below.
+
 ---
 
 ## 2. 🔴 Blockers — fix before launch
 
-### B-1. Anyone can log into the "members-only" area (critical)
+### B-1. Anyone can log into the "members-only" area (critical) — ✅ RESOLVED
+
+> **Fixed (this branch).** Both `signInWithOtp` calls now pass
+> `shouldCreateUser:false`, so Supabase will only send a magic link to an email
+> that already has an account. New members must be pre-added by an officer (or the
+> `approve_member` flow) before they can sign in. *Recommended follow-up:* also
+> disable open sign-ups in Supabase → Authentication for defense in depth.
+
 
 `members.html:999` and `share.html:439` call:
 
@@ -60,7 +79,24 @@ rules currently let them read and edit everything.
 - **Belt-and-suspenders:** also turn off open sign-ups in Supabase → Authentication
   → Providers/Settings, and rely on officer-created accounts + invites.
 
-### B-2. Any signed-in user can read & modify every member's data (critical)
+### B-2. Any signed-in user can read & modify every member's data (critical) — ✅ RESOLVED
+
+> **Fixed (migration `kos_rls_lockdown_member_vs_officer`).** The blanket
+> `USING (true)` policies on `members`, `dues_payments`, `events`,
+> `event_signups`, and `dues_reminders` were replaced with member-vs-officer
+> scoping: ordinary members can read only their **own** member row / their **own**
+> dues and signups; officers (via `is_krewe_officer()`) read the full roster and
+> are the only role that can insert/update/delete. `profiles` no longer allows
+> public read of names/emails/phones, and `member_badges` / `points_ledger` are
+> now read-only to members (writes happen only inside SECURITY DEFINER triggers),
+> so members can't award themselves points or badges. Verified: an anonymous
+> caller now returns 0 rows from `members`, `dues_payments`, `lockers`, and
+> `profiles`; the `member_directory` view (name + role for active members) still
+> works. *Residual (follow-up, not launch-blocking):* the 10 `security_definer_view`
+> advisories remain — those views (the name+role directory and aggregate report
+> views, which contain **no** per-member contact info) run as owner and bypass
+> RLS by design. Converting them to `security_invoker` is a later hardening step.
+
 
 I pulled the live RLS policies. On `members`, `dues_payments`, `events`,
 `event_signups`, `dues_reminders`, and `content_items`, the write policies are
@@ -90,7 +126,14 @@ thing to fix.
 The building blocks (`is_krewe_officer()`, `caller_member_id()`) already exist,
 so this is mostly rewriting policy predicates, not new plumbing.
 
-### B-3. `content_items` is editable by anonymous (unauthenticated) users
+### B-3. `content_items` is editable by anonymous (unauthenticated) users — ✅ RESOLVED
+
+> **Fixed (migration `kos_rls_lockdown_member_vs_officer`).** The
+> `anon moderate update content`, `anon delete pending content`, and
+> `anon submit pending content` policies were dropped. Now: anyone can *read*
+> published content; signed-in members can *submit* only unpublished
+> (`is_published = false`) content; officers moderate (update/delete/read-all).
+
 
 There is an RLS policy named **"anon moderate update content"** that allows the
 `anon` role to `UPDATE content_items` with `USING (true)`. That means a
@@ -101,7 +144,30 @@ public site.
 policies. Keep only: anon can read published content, anon can *submit* pending
 (unpublished) content, and officers moderate.
 
-### B-4. Officer-only raffle actions rely on server checks — confirm they hold
+### B-4. Officer-only actions & admin functions — ✅ RESOLVED
+
+> **Fixed (migration `kos_function_authorization_guards`).** Three admin RPCs that
+> had **no** authorization check and were callable by any signed-in member —
+> `approve_member`, `decline_application`, and `queue_broadcast` (a member could
+> have approved members or emailed the whole roster) — now guard on
+> `is_krewe_officer()` (allowing the postgres/service/cron context too). Direct
+> `EXECUTE` was revoked from `anon`/`authenticated` on the internal gamification
+> helpers (`award_dues_points`, `award_signup_points`, `grant_badge`,
+> `recompute_member_badges`), the trigger functions, the cron-only
+> `send_dues_reminders`, and the legacy `rls_auto_enable`. The raffle draw/create
+> RPCs were already `SECURITY DEFINER` with genuine internal officer/owner checks
+> (`can_manage_raffle` / `is_krewe_officer`), so the UI gating is backed by the
+> server. *Residual (follow-up, low risk):* the advisor still lists self-guarded
+> and own-data functions as anon/authenticated-executable — they enforce their own
+> auth or only return the caller's own data, so this is advisory cleanup, not an
+> open door. One minor item: `get_member_game_card(email)` lets a caller look up
+> another member's badges/points (no contact info) by email. Also note the
+> `*_raffle_event` / `add_raffle_basket` function variants reference a
+> non-existent `kos_is_officer()` and therefore error out — dead duplicates safe
+> to drop later.
+
+*Original finding, for reference:*
+
 
 Good news, mostly verified: the sensitive raffle RPCs (`draw_5050_winner`,
 `draw_basket_winner`, `set_raffle_active`, `delete_basket`, `update_raffle`) are
@@ -295,12 +361,14 @@ a shared vercel.app URL.
 
 ## 6. Suggested timeline
 
-**Day 1 — Security (blockers B-1 → B-4).** Close open sign-up, rewrite the
-always-true RLS policies to member-vs-officer scoping, drop the anon
-content-edit policies, revoke anon EXECUTE on admin functions. Re-run the
-Supabase security advisor and confirm the "always true" and anon-execute findings
-are gone. *This is the gate — nothing goes to members until this day is done and
-verified.*
+**Day 1 — Security (blockers B-1 → B-4). ✅ DONE (July 3, 2026).** Closed open
+sign-up, rewrote the always-true RLS policies to member-vs-officer scoping,
+dropped the anon content-edit policies, guarded the unguarded admin functions,
+and revoked direct EXECUTE on internal helpers. Re-ran the Supabase security
+advisor: "RLS policy always true" fell from 25 to 5 (the 5 remaining are the
+intended insert-only policies on `lockers`, `carpools`, `vanpool_reservations`,
+`raffle_entries`, and `raffle_ticket_purchases` — see D-2/D-8 for the abuse
+controls that harden those). Remaining launch gate is **B-5/B-6 below**.
 
 **Day 2 — Infrastructure (B-5, B-6, 5.1–5.4).** Stand up Resend, upgrade Supabase
 to Pro (and/or migrate to a dedicated project), connect GitHub→Vercel, add
