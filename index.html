@@ -69,7 +69,7 @@
 <p class="eyebrow">Céad Míle Fáilte — a hundred thousand welcomes</p>
 <h1>Krewe of Shamrock</h1>
 <p class="lede">Celebrating Irish heritage and the spirit of St. Patrick's Day across Tampa Bay —
-parades, music, and good craic with great people.</p>
+parades, music, and good <button type="button" class="craic-def" id="craicDefBtn" aria-label="Play audio: what does craic mean?" aria-pressed="false"><span class="word">craic</span><span class="ic" aria-hidden="true">&#128266;</span></button> with great people.</p>
 <div class="btns">
 <a class="btn btn-primary" href="membership-application.html">&#9752; Become a Member</a>
 <a class="btn btn-outline" href="event-signup.html">RSVP to an Event</a>
@@ -234,7 +234,7 @@ to the love of a good session, there's a place for you at our table.</p>
 </button>
 <span class="label" id="kreweMusicLabel">Tap for a tune &#9752;</span>
 </div>
-<script src="assets/krewe.js" defer></script>
+<script src="assets/krewe.js" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><script>(function(){var btn=document.getElementById('craicDefBtn');var audio=document.getElementById('craicAudio');if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});})();</script>
 
 <!-- EVENTS DATA -->
 <script type="module">
