@@ -51,6 +51,20 @@
 .ph-w i{color:var(--muted);font-size:14px;}
 .ph-m{color:#3a3a2e;}
 @media(max-width:640px){ .hs-ph{flex-wrap:wrap;} .ph-w{min-width:0;} }
+.hs-more{margin-left:auto;flex:0 0 auto;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:15px;white-space:nowrap;}
+details[open] > summary .hs-more{display:none;}
+.hs-terms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 4px;}
+.hs-terms span{background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.18);color:var(--green-800);border-radius:14px;padding:3px 10px;font-size:13.5px;}
+.hs-terms .lbl{background:none;border:0;color:var(--muted);font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-size:12px;padding:0;}
+.hs-listen{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:12px 14px;margin:12px 0;}
+.hs-listen b{font-family:var(--display);color:var(--green-800);font-size:16px;}
+.hs-listen audio{width:100%;}
+.hs-goto{display:inline-block;margin-top:12px;font-weight:600;}
+.arch summary{cursor:pointer;list-style:none;}
+.arch summary::-webkit-details-marker{display:none;}
+.arch-hint{display:inline-block;margin-top:2px;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:16px;}
+details[open] > summary .arch-hint{display:none;}
+.arch-body{margin-top:8px;}
 </style>
 </head>
 <body>
@@ -115,50 +129,82 @@
     <!-- THE HERITAGE SCHOOL: short video lessons -->
     <div class="section-title">
       <h2>The Heritage School</h2>
-      <p class="sub">Five short lessons: watch a clip, catch the facts, and test your Irish wit</p>
+      <p class="sub">Seven short lessons: open a card, watch and listen, and test your Irish wit</p>
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
-    <p class="hs-progress" id="hsProgress">☘ 0 of 5 lessons complete</p>
+    <p class="hs-progress" id="hsProgress">☘ 0 of 7 lessons complete</p>
 
-    <details class="hs-mod" data-mod="patrick">
-      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod" data-mod="kilts">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>Krewe style · start here</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
-            <li>Patrick wasn't born Irish: he came from Britain, first as a captive, later as a missionary.</li>
-            <li>The famous "driving out the snakes" story is an allegory; Ireland never had snakes at all.</li>
-            <li>The parade tradition began in America, long before Ireland held one of its own.</li>
+            <li>A kilt is not a costume; it's Gaelic heritage you can wear, and the Krewe of Shamrock welcomes both great traditions on the parade route.</li>
+            <li>The Irish tradition favors saffron and solid-color kilts and county tartans, patterns tied to place rather than family.</li>
+            <li>The Scottish tradition marches in clan tartans, patterns tied to family names and handed down the generations.</li>
+            <li>On parade day, most of our men pair the kilt with a ghillie shirt, the loose lace-up shirt of the old Gaelic style that stays comfortable in the Florida sun.</li>
           </ul>
         </div>
-        <div class="hs-video" data-yt="h5KNQ1xciMQ" data-vtitle="St. Patrick's Day: Bet You Didn't Know (HISTORY)">
-          <button type="button" class="hs-play" aria-label="Play video: St. Patrick's Day, Bet You Didn't Know">
-            <img loading="lazy" src="https://i.ytimg.com/vi/h5KNQ1xciMQ/hqdefault.jpg" alt="Video thumbnail for the history of St. Patrick's Day" />
-            <span class="hs-playbtn" aria-hidden="true">▶</span>
-          </button>
-          <small class="hs-credit">Video: HISTORY, "St. Patrick's Day: Bet You Didn't Know"</small>
-        </div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> New York City marched a St. Patrick's Day parade in 1762, more than a century before Ireland held its own.</p>
+        <img loading="lazy" src="assets/img/kilt-guide.jpg" alt="Infographic comparing Irish and Scottish kilt styles, tartans, jackets, and footwear" style="width:100%;border-radius:12px;box-shadow:var(--shadow-sm);margin:8px 0;" />
+        <small class="hs-credit">The krewe's field guide: Irish and Scottish kilt styles side by side</small>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Saffron kilt</span><span>County tartan</span><span>Clan tartan</span><span>Ghillie shirt</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> We're Tampa's original kilted krewe: marching in tartan since 1999, long before Celtic style was everywhere at the bay's festivals.</p>
         <div class="hs-quiz" data-answer="b">
-          <p class="hs-q"><b>Quick check:</b> Where was St. Patrick born?</p>
+          <p class="hs-q"><b>Quick check:</b> Which look belongs to the Irish kilt tradition?</p>
           <div class="hs-opts">
-            <button type="button" data-k="a">Dublin</button>
-            <button type="button" data-k="b">Britain</button>
-            <button type="button" data-k="c">Boston</button>
+            <button type="button" data-k="a">Clan tartans only</button>
+            <button type="button" data-k="b">Saffron and solid colors</button>
+            <button type="button" data-k="c">Neon green sequins</button>
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
+        <a class="hs-goto" href="#art-kilts">☘ Keep learning: read "Kilts in the Krewe" in the Archive below</a>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="formal">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Formal Kilt Wear</b><small>Krewe style · dressed to the nines</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>A kilt is true formal wear: at a black-tie evening like our Tartan Ball, it stands equal to any tuxedo.</li>
+            <li>The Scottish formal standard is the Prince Charlie jacket and waistcoat, often with a fly plaid pinned at the shoulder with a brooch.</li>
+            <li>The Irish formal answer is the Brian Boru jacket, a braided cutaway worn with a waistcoat and its own understated elegance.</li>
+            <li>The finishing touches: a dress sporran, kilt hose with flashes, ghillie brogues laced up the calf, and a kilt pin to hold the apron true.</li>
+          </ul>
+        </div>
+        <img loading="lazy" src="assets/img/ball-dancing.jpg" alt="Couples in formal attire dancing under chandeliers in a grand ballroom" style="width:100%;border-radius:12px;box-shadow:var(--shadow-sm);margin:8px 0;" />
+        <small class="hs-credit">Where the formal kilt shines: the Tartan Ball</small>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Prince Charlie</span><span>Brian Boru jacket</span><span>Fly plaid</span><span>Dress sporran</span><span>Flashes</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> The little "flashes" peeking below the fold of the kilt hose began life as garters that kept a marching Gael's hose from sliding down.</p>
+        <div class="hs-quiz" data-answer="c">
+          <p class="hs-q"><b>Quick check:</b> Which jacket is the classic Irish formal kilt jacket?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Prince Charlie</button>
+            <button type="button" data-k="b">Dinner blazer</button>
+            <button type="button" data-k="c">Brian Boru</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="tartan-ball.html">☘ Keep learning: see formal kilts in their element at the Tartan Ball</a>
       </div>
     </details>
 
     <details class="hs-mod" data-mod="pipes">
-      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Pipes of Ireland</b><small>Music · a tune to listen for</small></span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
             <li>Ireland's uilleann pipes are gentler cousins of the Highland bagpipe, played sitting down.</li>
             <li>"Uilleann" comes from the Irish word for elbow: the piper pumps a bellows with one arm instead of blowing.</li>
+            <li>The bodhrán, a goatskin frame drum struck with a small tipper, is the heartbeat under the tunes.</li>
             <li>Put a few players in the corner of a pub and you have a session: tunes traded by ear, no sheet music in sight.</li>
           </ul>
+        </div>
+        <div class="hs-listen">
+          <b>♪ Press play for a session tune while you read</b>
+          <audio controls preload="none" src="assets/audio/Céilí Hearth.mp3"></audio>
+          <small class="hs-credit" style="text-align:left;margin-top:2px;">"Céilí Hearth", a tune from the krewe's own hearth</small>
         </div>
         <div class="hs-video" data-yt="IXJ4QZPNc94" data-vtitle="David Power, uilleann pipes at Dillon's Bar, Dungarvan">
           <button type="button" class="hs-play" aria-label="Play video: David Power playing the uilleann pipes">
@@ -167,6 +213,7 @@
           </button>
           <small class="hs-credit">Video: David Power, uilleann pipes at Dillon's Bar, Dungarvan, Ireland</small>
         </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Uilleann pipes</span><span>Bodhrán</span><span>Session</span><span>Céilí</span></div>
         <p class="hs-fact">☘ <b>Fun fact:</b> The uilleann chanter can play two full chromatic octaves, nearly twice the range of the Scottish pipes' nine notes.</p>
         <div class="hs-quiz" data-answer="c">
           <p class="hs-q"><b>Quick check:</b> How does an uilleann piper power the pipes?</p>
@@ -177,11 +224,12 @@
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
+        <a class="hs-goto" href="#art-session">☘ Keep learning: read "Pipes, Drums &amp; the Music Session" in the Archive below</a>
       </div>
     </details>
 
     <details class="hs-mod" data-mod="dance">
-      <summary><span class="hs-num">3</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -197,6 +245,7 @@
           </button>
           <small class="hs-credit">Video: Riverdance, the original 1994 Eurovision interval act, Dublin</small>
         </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Léine</span><span>Crios</span><span>Celtic Revival</span><span>Dance master</span></div>
         <p class="hs-fact">☘ <b>Fun fact:</b> Riverdance was created to fill a seven-minute TV intermission. It grew into a show seen live by over 25 million people.</p>
         <div class="hs-quiz" data-answer="a">
           <p class="hs-q"><b>Quick check:</b> Where did Riverdance premiere?</p>
@@ -207,11 +256,44 @@
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
+        <a class="hs-goto" href="#art-dance">☘ Keep learning: read "Dancing Irish Women" in the Archive below</a>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="patrick">
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>Patrick wasn't born Irish: he came from Britain, first as a captive, later as a missionary.</li>
+            <li>The famous "driving out the snakes" story is an allegory; Ireland never had snakes at all.</li>
+            <li>The parade tradition began in America, long before Ireland held one of its own.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="h5KNQ1xciMQ" data-vtitle="St. Patrick's Day: Bet You Didn't Know (HISTORY)">
+          <button type="button" class="hs-play" aria-label="Play video: St. Patrick's Day, Bet You Didn't Know">
+            <img loading="lazy" src="https://i.ytimg.com/vi/h5KNQ1xciMQ/hqdefault.jpg" alt="Video thumbnail for the history of St. Patrick's Day" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: HISTORY, "St. Patrick's Day: Bet You Didn't Know"</small>
+        </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Missionary</span><span>Allegory</span><span>Feast day: March 17</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> New York City marched a St. Patrick's Day parade in 1762, more than a century before Ireland held its own.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> Where was St. Patrick born?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Dublin</button>
+            <button type="button" data-k="b">Britain</button>
+            <button type="button" data-k="c">Boston</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-crosses">☘ Keep learning: read "High Crosses &amp; the Fields of Clover" in the Archive below</a>
       </div>
     </details>
 
     <details class="hs-mod" data-mod="legend">
-      <summary><span class="hs-num">4</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">6</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -227,6 +309,7 @@
           </button>
           <small class="hs-credit">Video: TED-Ed, "The Irish myth of the Giant's Causeway" by Iseult Gillespie</small>
         </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Fionn mac Cumhaill</span><span>Giant's Causeway</span><span>Basalt columns</span><span>The Fianna</span></div>
         <p class="hs-fact">☘ <b>Fun fact:</b> The hexagonal columns are real: cooling lava cracked into them some 60 million years ago. The story is better, though.</p>
         <div class="hs-quiz" data-answer="b">
           <p class="hs-q"><b>Quick check:</b> How did Finn "defeat" the Scottish giant?</p>
@@ -237,11 +320,12 @@
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
+        <a class="hs-goto" href="#art-causeway">☘ Keep learning: read the full tale, then meet the Salmon of Knowledge in the Archive below</a>
       </div>
     </details>
 
     <details class="hs-mod" data-mod="irish">
-      <summary><span class="hs-num">5</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">7</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -266,48 +350,48 @@
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
+        <a class="hs-goto" href="#art-gaelic">☘ Keep learning: read "Sláinte! A Few Words of Irish" in the Archive below</a>
       </div>
     </details>
 
-    <!-- Featured: Kilt Guide -->
+    <!-- Static heritage articles -->
     <div class="section-title" style="margin-top:56px;">
-      <h2>The Irish Kilt</h2>
-      <p class="sub">A guide to Gaelic heritage &amp; style</p>
+      <h2>From the Archive</h2>
+      <p class="sub">Click any story to read: a little learning over a cup of tea</p>
     </div>
-    <div class="banner-flourish" aria-hidden="true"></div>
-    <div class="framed ornate" style="margin-bottom:14px;"><span class="crn tr"></span><span class="crn bl"></span>
-      <img src="assets/img/kilt-guide.jpg" alt="Infographic comparing Irish and Scottish kilt styles, tartans, jackets, and footwear" />
-    </div>
-    <p style="text-align:center;color:var(--muted);font-family:var(--fancy);font-style:italic;">
-      Irish kilts often favor the saffron and solid colors, county-based tartans, and the Brian Boru jacket,
-      a Gaelic cousin to the Scottish Highland tradition.
-    </p>
+    <div class="knot-divider"><span class="knot"></span></div>
 
-    <article class="article">
-      <div class="cat">Krewe Style</div>
-      <h2>Kilts in the Krewe</h2>
-      <div class="by">What we wear on parade day</div>
+    <article class="article" id="art-kilts">
+      <details class="arch">
+        <summary>
+          <div class="cat">Krewe Style</div>
+          <h2>Kilts in the Krewe</h2>
+          <div class="by">What we wear on parade day</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <p class="dropcap">In the Krewe of Shamrock, the kilt is the uniform of the day, and both great Gaelic
          traditions are welcome on the route. Some members march Irish, in saffron or solid-color kilts and
          county tartans. Others march Scottish, in clan tartans handed down the family line. Wear whichever
          tradition calls to you; the only requirement is that you wear it proudly.</p>
       <p>Up top, most of our men pair the kilt with a ghillie shirt, the loose, lace-up shirt of the old
          Gaelic style that stays comfortable in the Florida sun. Add a sporran, kilt hose, and a good handful
-         of beads, and you're parade-ready. New to kilts? The guide above sorts the Irish styles from the
+         of beads, and you're parade-ready. New to kilts? The lesson cards above sort the Irish styles from the
          Scottish, and any member will happily talk tartan with you.</p>
+            </div>
+      </details>
     </article>
 
-    <!-- Static heritage articles -->
-    <div class="section-title" style="margin-top:56px;">
-      <h2>From the Archive</h2>
-      <p class="sub">A little learning over a cup of tea</p>
-    </div>
-    <div class="knot-divider"><span class="knot"></span></div>
 
-    <article class="article">
-      <div class="cat">Celtic Symbols</div>
-      <h2>The Triquetra: Knot of Three</h2>
-      <div class="by">Irish heritage</div>
+    <article class="article" id="art-triquetra">
+      <details class="arch">
+        <summary>
+          <div class="cat">Celtic Symbols</div>
+          <h2>The Triquetra: Knot of Three</h2>
+          <div class="by">Irish heritage</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
       <p class="dropcap">The triquetra, or trinity knot, is among the oldest and best-loved of Celtic symbols.
          Drawn as a single unbroken line, it has no beginning and no end, a fitting emblem for
@@ -315,24 +399,38 @@
       <p>You'll find it carved on standing stones, illuminated in the Book of Kells, and worked
          into jewelry to this day. We carry it as our quiet reminder that a krewe, like the knot,
          is stronger for being woven together.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Heritage</div>
-      <h2>High Crosses &amp; the Fields of Clover</h2>
-      <div class="by">Irish heritage</div>
+    <article class="article" id="art-crosses">
+      <details class="arch">
+        <summary>
+          <div class="cat">Heritage</div>
+          <h2>High Crosses &amp; the Fields of Clover</h2>
+          <div class="by">Irish heritage</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
       <p>The great stone high crosses of Ireland, ringed where the cross-arms meet, once stood as
          gathering points and teaching tools, their panels telling stories to all who passed.
          Set among the clover, they marry the sacred and the everyday in a way that feels deeply Irish.</p>
       <p>And the clover itself? Saint Patrick, so the tradition goes, plucked a humble shamrock to
          explain the Trinity with its three leaves on a single stem, and the little plant has been ours ever since.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Legends</div>
-      <h2>Daughters &amp; Warriors of Éireann</h2>
-      <div class="by">Irish legend</div>
+    <article class="article" id="art-warriors">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends</div>
+          <h2>Daughters &amp; Warriors of Éireann</h2>
+          <div class="by">Irish legend</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
       <p class="dropcap">Long before the parades, the women of the Celtic world were warriors, queens, and
          keepers of the law. Queen Medb of Connacht led armies into the great cattle raid of the Táin;
@@ -340,13 +438,20 @@
          the warrior-woman Scáthach trained the greatest heroes of the age.</p>
       <p>It's a heritage worth remembering: in the Krewe of Shamrock, the women march, pipe, and lead
          right alongside the men: daughters of Éireann, every one.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Music &amp; Dance</div>
-      <h2>Pipes, Drums &amp; the Music Session</h2>
-      <div class="by">Irish &amp; Scottish tradition</div>
-      <img src="assets/img/festival-pipeband.jpg" alt="Colorful pipe band marching in a parade" />
+    <article class="article" id="art-session">
+      <details class="arch">
+        <summary>
+          <div class="cat">Music &amp; Dance</div>
+          <h2>Pipes, Drums &amp; the Music Session</h2>
+          <div class="by">Irish &amp; Scottish tradition</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
       <p class="dropcap">There is no mistaking the first skirl of the pipes. Whether it's the Great Highland
          bagpipe of the Scottish tradition or the gentler Irish uilleann pipes, bellows-blown and played
          sitting down, the sound carries centuries in it. Add the heartbeat of the bodhrán, the goatskin
@@ -355,13 +460,20 @@
          reels rolling one into the next, no sheet music in sight. And when the fiddle strikes up, the
          céilí dancing begins: lines and circles and the whirl of a good time shared. It's participation,
          not performance, and that's exactly the spirit we march in.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Music &amp; Dance</div>
-      <h2>Dancing Irish Women</h2>
-      <div class="by">Steps through time</div>
-      <img src="assets/img/ball-dancing.jpg" alt="Irish dancers in costume" />
+    <article class="article" id="art-dance">
+      <details class="arch">
+        <summary>
+          <div class="cat">Music &amp; Dance</div>
+          <h2>Dancing Irish Women</h2>
+          <div class="by">Steps through time</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
       <p class="dropcap">From the curled hair and embroidered dresses to the fancy footwork, women's Irish dance
          carries centuries of heritage in every step. The costumes themselves tell the story: born of the late-19th
          century Celtic Revival, when a full-length <i>léine</i>, woven <i>crios</i> belt, and flowing <i>brat</i>
@@ -374,12 +486,19 @@
         <a class="btn btn-green" href="https://folklife.si.edu/magazine/women-irish-dance-costume-evolution"
            target="_blank" rel="noopener">Read the Smithsonian article ☘</a>
       </p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Gaelic &amp; Blessings</div>
-      <h2>Sláinte! A Few Words of Irish</h2>
-      <div class="by">As Gaeilge, in the Irish language</div>
+    <article class="article" id="art-gaelic">
+      <details class="arch">
+        <summary>
+          <div class="cat">Gaelic &amp; Blessings</div>
+          <h2>Sláinte! A Few Words of Irish</h2>
+          <div class="by">As Gaeilge, in the Irish language</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
       <p class="dropcap">A few words of Irish go a long way. Raise a glass and you'll hear <b>Sláinte</b>
          (SLAWN-cha), which means "health!" Our own welcome, <b>Céad Míle Fáilte</b> (kayd MEE-luh felt-cha), means
@@ -387,12 +506,19 @@
       <p>The old blessings are the loveliest of all: <i>"May the road rise up to meet you, may the wind be
          always at your back."</i> And when someone sneezes, you might hear <b>Dia linn</b>, "God be with us."
          You needn't be fluent; a single warm word, well meant, is pure Irish.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Festivals</div>
-      <h2>The Wheel of the Year</h2>
-      <div class="by">Seasons &amp; celebrations</div>
+    <article class="article" id="art-festivals">
+      <details class="arch">
+        <summary>
+          <div class="cat">Festivals</div>
+          <h2>The Wheel of the Year</h2>
+          <div class="by">Seasons &amp; celebrations</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
       <p class="dropcap">The Celtic calendar turns on four great fire-festivals. <b>Imbolc</b> in February greets
          the first stirrings of spring and Saint Brigid. <b>Bealtaine</b> in May lights the summer fires.
@@ -401,12 +527,19 @@
       <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
          and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
          finer place to wear your green than marching with the Krewe.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Legends &amp; Myth</div>
-      <h2>Finn McCool &amp; the Giant's Causeway</h2>
-      <div class="by">A tale of Éireann</div>
+    <article class="article" id="art-causeway">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends &amp; Myth</div>
+          <h2>Finn McCool &amp; the Giant's Causeway</h2>
+          <div class="by">A tale of Éireann</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/irish-folk.jpg" alt="Irish folk gathered together" />
       <p class="dropcap">They say the giant Fionn mac Cumhaill, better known as Finn McCool, built a causeway of stone columns
          across the sea to face a Scottish rival. When he saw the size of the other giant, clever Finn's wife
@@ -415,13 +548,20 @@
       <p>The basalt columns of the Giant's Causeway still stand on the Antrim coast to this day. It's a tale that
          captures the Irish gift entirely: when in doubt, out-wit rather than out-fight, then tell a grand story about
          it after.</p>
+            </div>
+      </details>
     </article>
 
     
-    <article class="article">
-      <div class="cat">Legends &amp; Myth</div>
-      <h2>The Salmon of Knowledge</h2>
-      <div class="by">A tale of Éireann</div>
+    <article class="article" id="art-salmon">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends &amp; Myth</div>
+          <h2>The Salmon of Knowledge</h2>
+          <div class="by">A tale of Éireann</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
       <p class="dropcap">There is a fish that swam in the Well of Segais, at the source of the River Boyne,
       and whoever tasted its flesh would gain all the wisdom in the world. The salmon had fed on hazelnuts
@@ -434,12 +574,19 @@
       <p>From that day forward, whenever Fionn needed guidance, he had only to press his thumb to his teeth and
       the knowledge would come. The great hero who would go on to lead the Fianna, Ireland's legendary warrior
       band, was made not by a sword stroke, but by an accidental taste of something wonderful.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Heritage &amp; Style</div>
-      <h2>Kilt Myths &amp; Legends</h2>
-      <div class="by">Sorting fact from folklore</div>
+    <article class="article" id="art-kiltmyths">
+      <details class="arch">
+        <summary>
+          <div class="cat">Heritage &amp; Style</div>
+          <h2>Kilt Myths &amp; Legends</h2>
+          <div class="by">Sorting fact from folklore</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns" />
       <p class="dropcap">Few garments carry as many tall tales as the kilt. Did the Irish bring it to Scotland?
          Did tartan begin in the Highlands? Does the number of colors mark the wearer's rank, or hide a secret
@@ -452,12 +599,19 @@
         <a class="btn btn-green" href="https://www.gaelicclothing.com/myths-and-legends"
            target="_blank" rel="noopener">Read the myths &amp; legends ☘</a>
       </p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">From the Blogs</div>
-      <h2>Did the Irish Invent the Kilt?</h2>
-      <div class="by">From the Celtic Fire blog</div>
+    <article class="article" id="art-invent">
+      <details class="arch">
+        <summary>
+          <div class="cat">From the Blogs</div>
+          <h2>Did the Irish Invent the Kilt?</h2>
+          <div class="by">From the Celtic Fire blog</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
       <p class="dropcap">Around 432 AD, in the days of Saint Patrick, what did the Irish actually wear? Author
          Erin O'Quinn paints the picture from old manuscripts, Roman accounts, Ireland's earliest legends, and
@@ -472,6 +626,8 @@
         <a class="btn btn-green" href="https://erinsromance.wordpress.com/2012/06/21/did-the-irish-invent-the-kilt/"
            target="_blank" rel="noopener">Read the blog post ☘</a>
       </p>
+            </div>
+      </details>
     </article>
 
     <!-- Feel-good stories -->
@@ -481,10 +637,15 @@
     </div>
     <div class="knot-divider"><span class="knot"></span></div>
 
-    <article class="article">
-      <div class="cat">Krewe Life</div>
-      <h2>The Morning the Pipes Start</h2>
-      <div class="by">Parade day</div>
+    <article class="article" id="art-morning">
+      <details class="arch">
+        <summary>
+          <div class="cat">Krewe Life</div>
+          <h2>The Morning the Pipes Start</h2>
+          <div class="by">Parade day</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/gallery/krewe-group-parade.jpg" alt="Krewe of Shamrock members in kilts gathered before a parade" />
       <p class="dropcap">There's a particular kind of magic to parade morning. The kilts come out of their garment
          bags, the beads get untangled, and somebody's always missing a sporran. Then the pipes start to tune,
@@ -492,30 +653,46 @@
       <p>By the time we step onto the route, the nerves are gone and the grins are out. Strangers on the curb wave
          their little flags, children dash for beads, and for a few green-and-gold hours, all of Tampa Bay feels
          like family. That feeling is exactly why we do it.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Krewe Life</div>
-      <h2>The Family You Choose</h2>
-      <div class="by">Our welcome</div>
+    <article class="article" id="art-family">
+      <details class="arch">
+        <summary>
+          <div class="cat">Krewe Life</div>
+          <h2>The Family You Choose</h2>
+          <div class="by">Our welcome</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/gallery/krewe-big-group.jpg" alt="A large group of smiling Krewe of Shamrock members together" />
       <p class="dropcap">Ask almost anyone in the Krewe what kept them, and they won't say the parades or the
          party. They'll say the people. Folks arrive knowing one member, or none, and within a season they've got
          a whole table of friends saving them a seat. Irish or not, kilted or not, everyone's welcome.</p>
       <p>"All for Fun, Fun for All" isn't just our motto; it's how a stranger at their first meeting becomes the
          one tuning the pipes a few years on. New faces, as we like to say, are simply old friends we haven't met yet.</p>
+            </div>
+      </details>
     </article>
 
-    <article class="article">
-      <div class="cat">Giving Back</div>
-      <h2>More Than a Good Time</h2>
-      <div class="by">Service &amp; charity</div>
+    <article class="article" id="art-giving">
+      <details class="arch">
+        <summary>
+          <div class="cat">Giving Back</div>
+          <h2>More Than a Good Time</h2>
+          <div class="by">Service &amp; charity</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
       <img src="assets/img/gallery/krewe-ladies-group.jpg" alt="Krewe of Shamrock members together at a community gathering" />
       <p class="dropcap">For all the craic, the Krewe has always believed a good time should do some good. Over the
          years our members have given thousands of dollars and countless hours to Tampa Bay: unloading donation
          trucks, supporting children fighting illness, and lending a hand wherever it's needed.</p>
       <p>It's quiet work, mostly, far from the parade route. But it's the truest part of who we are. If you'd like to
          roll up your sleeves with us, our <a href="volunteer.html">Service &amp; Charity</a> page is the place to start.</p>
+            </div>
+      </details>
     </article>
 
   </main>
@@ -601,6 +778,16 @@
     document.querySelectorAll(".hs-say").forEach(function(b){
       var a=new Audio(b.dataset.audio);
       b.addEventListener("click",function(){ a.currentTime=0; a.play(); });
+    });
+
+    // "Keep learning" links open the archive card they point to before jumping.
+    document.querySelectorAll(".hs-goto").forEach(function(a){
+      a.addEventListener("click",function(){
+        var href=a.getAttribute("href")||"";
+        if(href.charAt(0)!=="#") return;
+        var t=document.getElementById(href.slice(1));
+        if(t){ var d=t.querySelector("details"); if(d) d.open=true; }
+      });
     });
 
     refresh();
