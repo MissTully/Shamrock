@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Krewe of Shamrock — Members Only</title>
+<title>Krewe of Shamrock · Members Only</title>
 <meta name="description" content="Members-only coordination tools for the Krewe of Shamrock: locker rentals, carpools, van pools, and the member directory." />
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -132,16 +132,16 @@
     <div class="gate-card auth-card">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Members Only</h1>
-      <p>Sign in with your email and we'll send you a secure magic link — no password to remember.</p>
+      <p>Sign in with your email and we'll send you a secure magic link, so there's no password to remember.</p>
       <form id="magicForm">
         <input id="magicEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
         <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a sign-in link</button>
         <div class="err" id="magicMsg"></div>
       </form>
       <div class="auth-features">
-        <div class="afe"><span>🍀</span> The Craic Cup — earn Clovers, climb the ranks, collect badges</div>
-        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles — enter and track your tickets</div>
-        <div class="afe"><span>📅</span> RSVP to events &amp; volunteer — all tied to you</div>
+        <div class="afe"><span>🍀</span> The Craic Cup: earn Clovers, climb the ranks, collect badges</div>
+        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles: enter and track your tickets</div>
+        <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
       </div>
     </div>
@@ -234,7 +234,7 @@
                onclick="openGame()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGame();}">
         <div class="app-head">
           <span class="ic">🍀</span>
-          <div><h2>The Craic Cup</h2><small>Earn Clovers for showing up &amp; pitching in — climb the ranks!</small></div>
+          <div><h2>The Craic Cup</h2><small>Earn Clovers for showing up &amp; pitching in, and climb the ranks!</small></div>
           <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
@@ -252,7 +252,7 @@
       <section class="app-card dash-card raffle-head" role="button" tabindex="0"
                onclick="openRaffles()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaffles();}">
         <div class="app-head"><span class="ic">🎟️</span>
-          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50 — enter and track your tickets</small></div>
+          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50: enter and track your tickets</small></div>
           <span class="dash-go">Open →</span></div>
         <div class="app-body dash-body">
           <p>Try your luck and support the Krewe. Drop tickets in the baskets you love, or buy into the 50/50 pot. Every entry is tied to your account.</p>
@@ -269,7 +269,7 @@
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>One place for every coordination report the website's data can produce — event headcounts and
+          <p>One place for every coordination report the website's data can produce: event headcounts and
              volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
              content inventory. Tap a report to run it against the latest data.</p>
           <div class="dash-chips">
@@ -393,7 +393,7 @@
         <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Craic Cup.</p>
         <div class="tour-grid">
           <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Earn Clovers for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
-          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50 — your tickets are tracked to you.</div></div>
+          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50; your tickets are tracked to you.</div></div>
           <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
           <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
           <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
@@ -462,7 +462,7 @@
 <a href="members.html">Members</a>
 </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
-    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+    <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
 
   <div class="krewe-music" id="krewePlayer">
@@ -495,7 +495,7 @@
     const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
 
-    // Identity comes from the signed-in profile, not free text — coordination
+    // Identity comes from the signed-in profile, not free text, so coordination
     // rows can't be filed under someone else's name.
     function kosIdentity(){
       const p = window.kosProfile || {};
@@ -516,7 +516,7 @@
       const list=document.getElementById("lockerList");
       const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
       if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
-      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet — be the first!</li>'; return; }
+      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet. Be the first!</li>'; return; }
       list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
     }
     document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
@@ -525,7 +525,7 @@
       const payload={ holder_name: idn.name || document.getElementById("lkName").value.trim(), holder_email: idn.email || (document.getElementById("lkEmail").value.trim()||null), size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
       if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("lockers").insert(payload);
-      if (error){ show("lkMsg","Something went wrong — please try again.","error"); return; }
+      if (error){ show("lkMsg","Something went wrong. Please try again.","error"); return; }
       show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); prefillIdentity(); loadLockers();
     });
 
@@ -554,7 +554,7 @@
         seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null };
       if(!payload.person_name){ show("cpMsg","Please enter your name.","error"); return; }
       const { error } = await supabase.from("carpools").insert(payload);
-      if (error){ show("cpMsg","Something went wrong — please try again.","error"); return; }
+      if (error){ show("cpMsg","Something went wrong. Please try again.","error"); return; }
       show("cpMsg","Posted to the board! 🍀","success"); e.target.reset(); prefillIdentity(); setCarKind(carKind); loadCarpools();
     });
 
@@ -592,7 +592,7 @@
         const payload={ vanpool_id:id, rider_name: idn.name || f.nm.value.trim(), rider_email: idn.email || (f.em.value.trim()||null), seats:parseInt(f.st.value||"1",10) };
         if(!payload.rider_name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
         const { error } = await supabase.from("vanpool_reservations").insert(payload);
-        if (error){ show("vanmsg-"+id,"Could not reserve — please try again.","error"); return; }
+        if (error){ show("vanmsg-"+id,"Could not reserve. Please try again.","error"); return; }
         loadVans();
       }));
     }
@@ -631,7 +631,7 @@
     }
     function officerOnlyNotice(){
       return `<div class="rpt-secure"><h4>🔒 Officers only</h4>
-        <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so access is limited to krewe officers. The database enforces this too — the underlying records aren't readable without an officer account.</p>
+        <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so access is limited to krewe officers. The database enforces this too; the underlying records aren't readable without an officer account.</p>
         <p class="rpt-note">You're signed in, but this account isn't marked as an officer. If you should have access, ask a captain or board member to set your role.</p></div>`;
     }
 
@@ -646,7 +646,7 @@
             .or(`start_time.gte.${now},start_time.is.null`).order("start_time",{ascending:true});
           if(error) throw error;
           return rTable(["Event","Type","When","Location"],
-            (data||[]).map(e=>[e.name, e.event_type||"event", fmtDate(e.start_time), e.location||"—"]));
+            (data||[]).map(e=>[e.name, e.event_type||"event", fmtDate(e.start_time), e.location||"-"]));
         }},
       { id:"event_headcount", cat:"Events & Attendance", icon:"🧮", title:"Event Headcount & Capacity",
         desc:"RSVPs, guests, total headcount and spots remaining per event.",
@@ -660,7 +660,7 @@
           return rStats([{l:"Events",v:rows.length},{l:"Total headcount",v:totalHead}]) +
             rTable(["Event","When","RSVPs","Guests","Headcount","Capacity","Spots left","Waitlist"],
               rows.map(r=>[r.name,fmtDate(r.start_time),num(r.signups),num(r.total_guests),num(r.total_headcount),
-                r.capacity==null?"—":r.capacity, r.spots_remaining==null?"—":r.spots_remaining, num(r.waitlisted)]));
+                r.capacity==null?"-":r.capacity, r.spots_remaining==null?"-":r.spots_remaining, num(r.waitlisted)]));
         }},
       { id:"volunteer_coverage", cat:"Events & Attendance", icon:"🙌", title:"Volunteer Coverage",
         desc:"How many volunteers have signed up for each event.",
@@ -685,7 +685,7 @@
           if(!rows.length) return '<p class="empty">No event signups yet.</p>';
           return rStats([{l:"Signups",v:rows.length}]) +
             rTable(["Event","Name","Email","Role","Status","Guests"],
-              rows.map(r=>[r.event_name, `${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.signup_role||"attendee", r.status||"—", num(r.guests_count)]));
+              rows.map(r=>[r.event_name, `${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"-", r.signup_role||"attendee", r.status||"-", num(r.guests_count)]));
         }},
 
       /* ---- Membership ---- */
@@ -710,7 +710,7 @@
             .select("first_name,last_name,member_role,membership_status").order("last_name",{ascending:true});
           if(error) throw error;
           const rows=(data||[]).filter(m=>["captain","officer"].includes((m.member_role||"").toLowerCase()));
-          return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"—"]));
+          return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"-"]));
         }},
       { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Year",
         desc:"Count of members who joined since January 1.",
@@ -730,7 +730,7 @@
           const rows=(data||[]);
           return rStats([{l:"Members",v:rows.length}]) +
             rTable(["Name","Email","Phone","Role","Status"],
-              rows.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), m.email||"—", m.phone||"—", m.member_role||"member", m.membership_status||"—"]));
+              rows.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), m.email||"-", m.phone||"-", m.member_role||"member", m.membership_status||"-"]));
         }},
       { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
         desc:"Prospective members and their contact details.",
@@ -742,12 +742,12 @@
           if(!rows.length) return '<p class="empty">No pending applications right now. 🍀</p>';
           return rStats([{l:"Pending",v:rows.length}]) +
             rTable(["Name","Email","Phone","Applied","Notes"],
-              rows.map(a=>[`${a.first_name||""} ${a.last_name||""}`.trim(), a.email||"—", a.phone||"—", fmtDate(a.created_at), a.notes||"—"]));
+              rows.map(a=>[`${a.first_name||""} ${a.last_name||""}`.trim(), a.email||"-", a.phone||"-", fmtDate(a.created_at), a.notes||"-"]));
         }},
 
       /* ---- Dues & Finance ---- */
       { id:"dues_summary", cat:"Dues & Finance", icon:"💶", title:"Dues Summary by Year",
-        desc:"Billed, collected and outstanding totals — no names.",
+        desc:"Billed, collected and outstanding totals, with no names.",
         run: async()=>{
           const { data, error } = await supabase.from("v_report_dues_summary").select("*");
           if(error) throw error;
@@ -767,11 +767,11 @@
             .order("days_overdue",{ascending:false});
           if(error) throw error;
           const rows=(data||[]);
-          if(!rows.length) return '<p class="empty">No outstanding dues — everyone\'s paid up! 🍀</p>';
+          if(!rows.length) return '<p class="empty">No outstanding dues. Everyone\'s paid up! 🍀</p>';
           const owed=rows.reduce((n,r)=>n+num(r.amount),0);
           return rStats([{l:"Members owing",v:rows.length},{l:"Total outstanding",v:fmtMoney(owed)}]) +
             rTable(["Name","Email","Year","Amount","Due","Days overdue","Reminders"],
-              rows.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_year, fmtMoney(r.amount), fmtDate(r.due_date), num(r.days_overdue), num(r.reminders_sent)]));
+              rows.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"-", r.membership_year, fmtMoney(r.amount), fmtDate(r.due_date), num(r.days_overdue), num(r.reminders_sent)]));
         }},
 
       /* ---- Logistics & Coordination ---- */
@@ -783,7 +783,7 @@
           const rows=(data||[]); const by={};
           rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
           return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
-            rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"—",l.holder_name||"—",l.status]));
+            rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"-",l.holder_name||"-",l.status]));
         }},
       { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
         desc:"Drivers offering rides vs members needing one.",
@@ -794,7 +794,7 @@
           const seats=offers.reduce((n,c)=>n+num(c.seats),0);
           return rStats([{l:"Drivers",v:offers.length},{l:"Seats offered",v:seats},{l:"Riders needing",v:reqs.length}]) +
             rTable(["Type","Member","Event","Pickup","Seats"],
-              rows.map(c=>[c.kind==="offer"?"Driver":"Needs ride",c.person_name,c.event||"—",c.pickup_area||"—",c.kind==="offer"?num(c.seats):"—"]));
+              rows.map(c=>[c.kind==="offer"?"Driver":"Needs ride",c.person_name,c.event||"-",c.pickup_area||"-",c.kind==="offer"?num(c.seats):"-"]));
         }},
       { id:"vanpool_manifest", cat:"Logistics & Coordination", icon:"🚐", title:"Van Pool Manifest",
         desc:"Seats reserved and remaining on each krewe van.",
@@ -806,7 +806,7 @@
           if(e1) throw e1; if(e2) throw e2;
           const rows=(vans||[]).map(v=>{
             const taken=(res||[]).filter(r=>r.vanpool_id===v.id).reduce((n,r)=>n+num(r.seats),0);
-            return [v.van_name, v.event||"—", num(v.capacity), taken, Math.max(0,num(v.capacity)-taken)];
+            return [v.van_name, v.event||"-", num(v.capacity), taken, Math.max(0,num(v.capacity)-taken)];
           });
           const cap=rows.reduce((n,r)=>n+r[2],0), tk=rows.reduce((n,r)=>n+r[3],0);
           return rStats([{l:"Vans",v:rows.length},{l:"Seats reserved",v:tk},{l:"Seats open",v:Math.max(0,cap-tk)}]) +
@@ -832,7 +832,7 @@
             {l:"Seats available",v:totalOpen},{l:"Riders needing",v:riders}
           ]) + `<p class="rpt-note">${ totalOpen>=riders
             ? "✅ There are enough offered seats to cover everyone who has asked for a ride."
-            : "⚠️ More ride requests than offered seats — consider recruiting another driver or van." }</p>`;
+            : "⚠️ More ride requests than offered seats. Consider recruiting another driver or van." }</p>`;
         }},
 
       /* ---- Content & Communications ---- */
@@ -857,7 +857,7 @@
           if(!rows.length) return '<p class="empty">No emails queued or sent yet.</p>';
           return rStats([{l:"Emails",v:rows.length},{l:"Sent",v:rows.filter(r=>r.status==="sent").length}]) +
             rTable(["To","Subject","Purpose","Status","Queued","Sent"],
-              rows.map(r=>[r.to_name?`${r.to_name} <${r.to_email}>`:(r.to_email||"—"), r.subject||"—", (r.purpose||"—").replace(/_/g," "), r.status||"—", fmtDate(r.created_at), r.sent_at?fmtDate(r.sent_at):"—"]));
+              rows.map(r=>[r.to_name?`${r.to_name} <${r.to_email}>`:(r.to_email||"-"), r.subject||"-", (r.purpose||"-").replace(/_/g," "), r.status||"-", fmtDate(r.created_at), r.sent_at?fmtDate(r.sent_at):"-"]));
         }},
     ];
 
@@ -977,17 +977,17 @@
       ]);
       if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       const yr=new Date().getFullYear();
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most craic. Earn <b>Clovers 🍀</b> by showing up, volunteering, and pitching in — standings reset each season so it's always anyone's game.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most craic. Earn <b>Clovers 🍀</b> by showing up, volunteering, and pitching in. Standings reset each season, so it's always anyone's game.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
           `<td><span class="rank-pill">${r.rank_icon} ${E(r.rank_name)}</span></td>`+
-          `<td><b>${r.season_clovers}</b></td><td>${"🏅".repeat(Math.min(r.badge_count,6))||"—"} ${r.badge_count?("("+r.badge_count+")"):""}</td></tr>`).join("")
+          `<td><b>${r.season_clovers}</b></td><td>${"🏅".repeat(Math.min(r.badge_count,6))||"-"} ${r.badge_count?("("+r.badge_count+")"):""}</td></tr>`).join("")
           || '<tr><td colspan="5" class="empty">No Clovers earned yet.</td></tr>');
-      html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">— service gets its own podium</small></h3>`;
+      html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">service gets its own podium</small></h3>`;
       html+=rtable(["Member","Shifts","Volunteer 🍀"],
         (vol||[]).map(r=>`<tr><td>${E(r.first_name)} ${E(r.last_name)}</td><td>${r.volunteer_events}</td><td><b>${r.volunteer_clovers}</b></td></tr>`).join("")
-          || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet — be the first!</td></tr>');
+          || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet. Be the first!</td></tr>');
       box.innerHTML=html;
     }
 
@@ -995,11 +995,11 @@
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Loading…</p>';
       const { data:badges } = await sb.from("badge_defs").select("*").order("sort",{ascending:true});
-      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Clovers add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun — recognition, bragging rights, and a wee bit of friendly rivalry to fill our events and volunteer shifts.</p>`;
+      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Clovers add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun: recognition, bragging rights, and a wee bit of friendly rivalry to fill our events and volunteer shifts.</p>`;
       html+=`<h3 class="rpt-cat">🍀 How to earn Clovers</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
         POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
-      html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers — an officer confirms who attended after each event.</p>`;
+      html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers; an officer confirms who attended after each event.</p>`;
       html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Clovers</th></tr></thead><tbody>'+
         RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" – "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
@@ -1025,7 +1025,7 @@
         if(!email){ msg.textContent="Please enter your email."; msg.className="msg error"; return; }
         msg.textContent="Looking…"; msg.className="msg"; res.innerHTML="";
         const { data, error } = await sb.rpc("get_member_game_card",{ p_email:email });
-        if(error){ msg.textContent="Something went wrong — please try again."; msg.className="msg error"; return; }
+        if(error){ msg.textContent="Something went wrong. Please try again."; msg.className="msg error"; return; }
         if(!data || !data.found){ msg.textContent="We couldn't find a member with that email. Try the address the krewe has on file."; msg.className="msg error"; return; }
         msg.textContent="";
         const total = data.lifetime + (data.clovers_to_next||0);
@@ -1040,13 +1040,13 @@
           <div style="margin-top:14px;">
             ${ data.clovers_to_next>0
               ? `<div style="font-size:14px;color:#3a3a2e;"><b>${data.clovers_to_next}</b> 🍀 to <b>${E(data.next_rank_name)}</b></div><div class="prog"><i style="width:${pct}%"></i></div>`
-              : `<div style="font-size:14px;color:#3a3a2e;">🏆 You've reached the top rank — a true legend of the krewe!</div>` }
+              : `<div style="font-size:14px;color:#3a3a2e;">🏆 You've reached the top rank, a true legend of the krewe!</div>` }
             <div style="font-size:13px;color:var(--muted);">${data.season} 🍀 earned this season</div>
           </div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Your badges</h4>
           ${ (data.badges&&data.badges.length)
               ? `<div class="badge-gallery">${data.badges.map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div></div>`).join("")}</div>`
-              : '<p class="empty">No badges yet — your first event earns one!</p>' }
+              : '<p class="empty">No badges yet. Your first event earns one!</p>' }
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Recent Clovers</h4>
           <ul class="data-list">${ (data.recent||[]).map(r=>`<li class="data-row"><b>+${r.clovers} 🍀</b> · ${E(REASON[r.reason]||r.reason)}${r.event?(" · "+E(r.event)):""}</li>`).join("") || '<li class="empty">No activity yet.</li>' }</ul>
         </div>`;
@@ -1125,7 +1125,7 @@
         rb.rpc("get_my_raffle_summary")
       ]);
       if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; return; }
-      if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now — check back soon! 🍀</p>'; return; }
+      if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now. Check back soon! 🍀</p>'; return; }
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
       let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>\ud83e\uddfa <b>Basket raffle:</b> buy tickets for the specific basket(s) you want \u2014 each ticket is one entry in that basket, and one ticket per basket is drawn at the end. \ud83d\udcb0 <b>50/50:</b> all tickets share one pot; one ticket wins half the pot. Tickets are paid in person \u2014 settle up with a volunteer. You can also scan the QR code on any basket to enter from your phone.</div>';
@@ -1263,7 +1263,7 @@
       var w=document.createElement("div"); w.className="raffle-event";
       w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
-        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets — you own and manage what you create.</p>'+
+        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets. You own and manage what you create.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
       box.appendChild(w);
@@ -1329,10 +1329,10 @@
             var de=row.querySelector('.mrDelB'); if(de) de.onclick=async function(){ if(!confirm('Delete "'+b.name+'"?')) return; var res=await rb.rpc('delete_basket',{p_basket_id:b.id}); if(res.error){ alert(res.error.message); return; } renderRaffles(); };
             bw.appendChild(row);
           });
-          if(!(e.baskets||[]).length){ bw.innerHTML='<p class="empty" style="margin:0;">No baskets yet — add your first below.</p>'; }
+          if(!(e.baskets||[]).length){ bw.innerHTML='<p class="empty" style="margin:0;">No baskets yet. Add your first below.</p>'; }
           card.querySelector('.mrAddBasket').onclick=function(){ var fm=makeBasketForm(e.id,null); card.appendChild(fm); fm.scrollIntoView({behavior:'smooth',block:'center'}); };
         } else {
-          var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=async function(){ if(!confirm('Draw the 50/50 winner now? This is final.')) return; var res=await rb.rpc('draw_5050_winner',{p_event_id:e.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 50/50 Winner: '+(res.data&&res.data.winner_name)+'  —  Pot: $'+(res.data&&res.data.pot)); renderRaffles(); };
+          var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=async function(){ if(!confirm('Draw the 50/50 winner now? This is final.')) return; var res=await rb.rpc('draw_5050_winner',{p_event_id:e.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 50/50 Winner: '+(res.data&&res.data.winner_name)+' · Pot: $'+(res.data&&res.data.pot)); renderRaffles(); };
         }
         L.appendChild(card);
       });

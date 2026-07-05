@@ -1,5 +1,5 @@
 /* ============================================================
-   Krewe of Shamrock — shared artistic theme
+   Krewe of Shamrock: shared artistic theme
    Irish heritage: deep greens, gold, parchment, Celtic knotwork
    ============================================================ */
 
@@ -534,7 +534,7 @@ form.krewe-form{ padding:26px 30px 30px; }
 
 
 /* ============================================================
-   NAVIGATION — responsive redesign (2026)
+   NAVIGATION: responsive redesign (2026)
    Desktop: single-row bar with dropdown menus.
    Mobile (<=980px): hamburger opens a slide-in drawer with
    collapsible groups. All behavior wired in krewe.js.

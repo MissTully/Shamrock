@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock — Event Sign-Up</title>
+<title>Krewe of Shamrock · Event Sign-Up</title>
 <meta name="description" content="RSVP to Krewe of Shamrock events in Tampa Bay." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -118,7 +118,7 @@
     <div style="text-align:center;margin-bottom:18px;">
       <h2 style="margin:0;color:var(--green-800);">Krewe of Shamrock Calendar</h2>
       <p style="margin:6px 0 0;font-family:var(--fancy);font-style:italic;font-size:18px;color:var(--gold-deep);">
-        Our perpetual season at a glance — <span id="kcal-year">2026</span>
+        Our perpetual season at a glance: <span id="kcal-year">2026</span>
       </p>
     </div>
 
@@ -179,7 +179,7 @@
 <a href="members.html">Members</a>
 </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
-    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+    <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
 
   <div class="krewe-music" id="krewePlayer">
@@ -225,7 +225,7 @@
         buildCalendar([]);
         return;
       }
-      eventSelect.innerHTML = '<option value="">— Select an event —</option>';
+      eventSelect.innerHTML = '<option value="">Select an event…</option>';
       for (const ev of data) {
         let when;
         if (!ev.start_time) { when = "Date TBD"; }
@@ -256,7 +256,7 @@
       for (let d = 1; d <= days; d++) {
         const evs = daysMap[d];
         if (evs) {
-          const tip = evs.map((e)=> (hasTime(e.date) ? timeStr(e.date) + " — " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
+          const tip = evs.map((e)=> (hasTime(e.date) ? timeStr(e.date) + " · " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
           html += '<div title="' + esc(tip) + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);cursor:default;">' + d + '</div>';
         } else {
           html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;">' + d + '</div>';
@@ -276,7 +276,7 @@
         .filter((e)=> !isNaN(e.date))
         .sort((a, b)=> a.date - b.date);
       if (!dated.length) {
-        if (gridsEl) gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No dated events on the calendar yet — check back soon!</p>';
+        if (gridsEl) gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No dated events on the calendar yet. Check back soon!</p>';
         if (listEl) listEl.innerHTML = '';
         return;
       }

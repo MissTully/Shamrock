@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Krewe of Shamrock — Raffle</title>
+<title>Krewe of Shamrock · Raffle</title>
 <meta name="description" content="Buy digital raffle tickets for the Krewe of Shamrock basket raffle and 50/50 cash raffle. Scan, pick your basket, and you're entered." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,7 +111,7 @@
         <ol>
           <li>Browse the prize baskets below.</li>
           <li>Enter your name and how many tickets you want for that basket.</li>
-          <li>Each ticket is one entry <em>in that basket</em> — load up on the ones you want most!</li>
+          <li>Each ticket is one entry <em>in that basket</em>, so load up on the ones you want most!</li>
           <li>At the end, one ticket per basket is drawn at random. More tickets = better odds.</li>
         </ol>
       </div>
@@ -121,13 +121,13 @@
           <li>Buy 50/50 tickets in any amount.</li>
           <li>All tickets go into one pot.</li>
           <li>One ticket is drawn at the end.</li>
-          <li>The winner takes <b>half the pot</b> — the other half supports the Krewe.</li>
+          <li>The winner takes <b>half the pot</b>; the other half supports the Krewe.</li>
         </ol>
       </div>
     </div>
 
     <div class="rf-pay" id="rfPay">
-      <b>Paying:</b> Tickets are paid in person — settle up with any Krewe volunteer at the table (cash or card).
+      <b>Paying:</b> Tickets are paid in person. Settle up with any Krewe volunteer at the table (cash or card).
       Your entries are recorded the moment you submit, and a volunteer will confirm payment. Sláinte! 🍀
     </div>
 
@@ -179,7 +179,7 @@
       const active=(events||[]).filter(e=>e.is_active);
       const basketEvents=active.filter(e=>e.raffle_type==='basket');
       const potEvents=active.filter(e=>e.raffle_type==='fifty_fifty');
-      if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No raffles are running right now — check back soon! 🍀</p>'; return; }
+      if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No raffles are running right now. Check back soon! 🍀</p>'; return; }
       let html='';
       for(const ev of basketEvents){
         const bs=(baskets||[]).filter(b=>b.raffle_event_id===ev.id);
@@ -220,7 +220,7 @@
           let res, err;
           if(f.dataset.basket){ ({data:res,error:err} = await sb.rpc('enter_basket_public',{p_basket_id:f.dataset.basket,p_qty:qty,p_name:name,p_email:email||null})); }
           else { ({data:res,error:err} = await sb.rpc('buy_5050_public',{p_event_id:f.dataset.pot,p_qty:qty,p_name:name,p_email:email||null})); }
-          if(err){ msg.className='rf-msg err'; msg.textContent='Sorry — '+(err.message||'something went wrong.'); btn.disabled=false; return; }
+          if(err){ msg.className='rf-msg err'; msg.textContent='Sorry, '+(err.message||'something went wrong.'); btn.disabled=false; return; }
           msg.className='rf-msg ok'; msg.textContent=`You're in! ${qty} ticket${qty===1?'':'s'} added. Pay a volunteer to confirm. 🍀`;
           setTimeout(load, 900);
         });
