@@ -96,7 +96,7 @@
       btn.setAttribute("aria-pressed", on ? "true" : "false");
       btn.setAttribute("aria-label", on ? "Pause background music" : "Play background music");
       btn.setAttribute("title", on ? "Pause the music" : "Play our Irish tune");
-      if (label) label.textContent = on ? "♪ Kettle Singing" : "Tap for a tune ☘";
+      if (label) label.textContent = on ? "♪" : "Tap for a tune ☘";
     }
 
     btn.addEventListener("click", function () {
