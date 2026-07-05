@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock — Video Library</title>
+<title>Krewe of Shamrock · Video Library</title>
 <meta name="description" content="Demonstrations, performances, and educational videos from the Krewe of Shamrock." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,8 +73,8 @@
     <div class="pb-inner">
       <div class="banner-flourish" aria-hidden="true"></div>
       <h2>Sights &amp; Sounds of the Krewe</h2>
-      <p>Performances, parade footage, and the odd bit of mischief —
-         gathered here for a watch by the fire.</p>
+      <p>Performances, parade footage, and the odd bit of mischief,
+         all gathered here for a watch by the fire.</p>
     </div>
   </section>
 
@@ -125,7 +125,7 @@
 <a href="members.html">Members</a>
     </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
-    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+    <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
 
   <div class="krewe-music" id="krewePlayer">
@@ -160,7 +160,7 @@
         .eq("type","video").eq("is_published",true)
         .order("sort_order",{ascending:true}).order("created_at",{ascending:false});
       if (error) { root.innerHTML = '<p class="empty" style="text-align:center;">Could not load videos right now.</p>'; return; }
-      if (!data || data.length===0) { root.innerHTML = '<p class="empty" style="text-align:center;">No videos yet — check back soon for performances and parade footage!</p>'; return; }
+      if (!data || data.length===0) { root.innerHTML = '<p class="empty" style="text-align:center;">No videos yet. Check back soon for performances and parade footage!</p>'; return; }
 
       const groups = {};
       for (const it of data){ const k = it.category || "Videos"; (groups[k] = groups[k]||[]).push(it); }

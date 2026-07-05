@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock — Poetry &amp; Art</title>
+<title>Krewe of Shamrock · Poetry &amp; Art</title>
 <meta name="description" content="Original poems, blessings, and Celtic artwork from the Krewe of Shamrock community." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,7 @@ May the sun shine warm upon your face,
 The rains fall soft upon your fields,
 And until we meet again,
 May God hold you in the palm of His hand.</div>
-      <div class="src">— Traditional Irish blessing</div>
+      <div class="src">Traditional Irish blessing</div>
     </div>
 
     <!-- Poems (live) -->
@@ -151,7 +151,7 @@ May God hold you in the palm of His hand.</div>
 <a href="members.html">Members</a>
 </div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
-    <div class="fine">© Krewe of Shamrock — celebrating Irish heritage all year round.</div>
+    <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
 
   <div class="krewe-music" id="krewePlayer">
@@ -188,8 +188,8 @@ May God hold you in the palm of His hand.</div>
       const art = (data||[]).filter(d => d.type === "art" && d.media_url);
 
       poemsEl.innerHTML = poems.length
-        ? poems.map(p => `<div class="poem-card"><h3>${esc(p.title)}</h3><div class="verse">${esc(p.body)}</div>${p.author?`<div class="src">— ${esc(p.author)}</div>`:""}</div>`).join("")
-        : '<p class="empty">No poems yet — share a verse with the krewe!</p>';
+        ? poems.map(p => `<div class="poem-card"><h3>${esc(p.title)}</h3><div class="verse">${esc(p.body)}</div>${p.author?`<div class="src">${esc(p.author)}</div>`:""}</div>`).join("")
+        : '<p class="empty">No poems yet. Share a verse with the krewe!</p>';
 
       artEl.innerHTML = art.length
         ? art.map(a => `<div class="tile glow"><a href="${esc(a.media_url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(a.media_url)}" alt="${esc(a.title)}"></a><div class="cap"><h3>${esc(a.title)}</h3>${a.subtitle?`<span>${esc(a.subtitle)}</span>`:""}</div></div>`).join("")

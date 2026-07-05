@@ -1,7 +1,7 @@
-/* Krewe of Shamrock — floating music player
+/* Krewe of Shamrock: floating music player
    Behavior: the track is PAUSED by default. Nothing plays until the visitor
    clicks the violin button, which starts "Where the Kettle Sings". Clicking
-   again pauses it. No autoplay — the page is silent on arrival. */
+   again pauses it. No autoplay; the page is silent on arrival. */
 (function () {
   // A small, theme-colored violin icon drawn inline so every page shows the
   // same button without editing each HTML file. fill="currentColor" lets the
@@ -132,7 +132,7 @@
 })();
 
 /* ============================================================
-   Krewe of Shamrock — scroll reveal + floating shamrocks
+   Krewe of Shamrock: scroll reveal + floating shamrocks
    Both effects are skipped when the visitor prefers reduced motion.
    ============================================================ */
 (function () {
@@ -201,7 +201,7 @@
 
 
 /* ============================================================
-   Krewe of Shamrock — responsive navigation
+   Krewe of Shamrock: responsive navigation
    Hamburger drawer, accessible dropdowns, auto active-state.
    ============================================================ */
 (function () {
