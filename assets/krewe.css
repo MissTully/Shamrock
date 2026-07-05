@@ -333,7 +333,7 @@ form.krewe-form{ padding:26px 30px 30px; }
 }
 .krewe-music button:hover{ transform:scale(1.06); }
 
-/* Violin icon (injected by krewe.js). Inherits the button's dark colour. */
+/* Violin icon (injected by krewe.js). Inherits the button's dark color. */
 .krewe-music button .violin-icon{ color:#23420f; display:block; }
 .krewe-music button .violin-bow{ transform-origin:center; }
 /* When music is playing, the bow gently "saws" across the strings. */
@@ -535,7 +535,7 @@ form.krewe-form{ padding:26px 30px 30px; }
    NAVIGATION — responsive redesign (2026)
    Desktop: single-row bar with dropdown menus.
    Mobile (<=980px): hamburger opens a slide-in drawer with
-   collapsible groups. All behaviour wired in krewe.js.
+   collapsible groups. All behavior wired in krewe.js.
    ============================================================ */
 .krewe-nav{
   position:sticky; top:0; z-index:1000;
