@@ -65,6 +65,12 @@ details[open] > summary .hs-more{display:none;}
 .arch-hint{display:inline-block;margin-top:2px;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:16px;}
 details[open] > summary .arch-hint{display:none;}
 .arch-body{margin-top:8px;}
+.lib-cat{display:flex;align-items:center;gap:14px;margin:38px 0 14px;}
+.lib-cat h3{margin:0;font-family:var(--display);color:var(--green-800);font-size:22px;letter-spacing:.5px;white-space:nowrap;}
+.lib-cat::before,.lib-cat::after{content:"";flex:1;height:2px;border-radius:2px;}
+.lib-cat::before{background:linear-gradient(90deg,transparent,rgba(212,175,55,.55));}
+.lib-cat::after{background:linear-gradient(90deg,rgba(212,175,55,.55),transparent);}
+@media(max-width:560px){ .lib-cat h3{white-space:normal;font-size:19px;} }
 </style>
 </head>
 <body>
@@ -126,14 +132,15 @@ details[open] > summary .arch-hint{display:none;}
 
   <main class="wrap narrow">
 
-    <!-- THE HERITAGE SCHOOL: short video lessons -->
+    <!-- THE HERITAGE LIBRARY: lessons and stories, shelved by subject -->
     <div class="section-title">
-      <h2>The Heritage School</h2>
-      <p class="sub">Seven short lessons: open a card, watch and listen, and test your Irish wit</p>
+      <h2>The Heritage Library</h2>
+      <p class="sub">Lessons and stories shelved by subject: click any card to open it</p>
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
     <p class="hs-progress" id="hsProgress">☘ 0 of 7 lessons complete</p>
 
+    <div class="lib-cat"><h3>☘ Kilts &amp; Krewe Style</h3></div>
     <details class="hs-mod" data-mod="kilts">
       <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>Krewe style · start here</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
@@ -158,7 +165,7 @@ details[open] > summary .arch-hint{display:none;}
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
-        <a class="hs-goto" href="#art-kilts">☘ Keep learning: read "Kilts in the Krewe" in the Archive below</a>
+        <a class="hs-goto" href="#art-kilts">☘ Keep learning: read "Kilts in the Krewe" just below</a>
       </div>
     </details>
 
@@ -190,177 +197,6 @@ details[open] > summary .arch-hint{display:none;}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="pipes">
-      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
-      <div class="hs-body">
-        <div class="hs-learn"><h4>What you'll learn</h4>
-          <ul>
-            <li>Ireland's uilleann pipes are gentler cousins of the Highland bagpipe, played sitting down.</li>
-            <li>"Uilleann" comes from the Irish word for elbow: the piper pumps a bellows with one arm instead of blowing.</li>
-            <li>The bodhrán, a goatskin frame drum struck with a small tipper, is the heartbeat under the tunes.</li>
-            <li>Put a few players in the corner of a pub and you have a session: tunes traded by ear, no sheet music in sight.</li>
-          </ul>
-        </div>
-        <div class="hs-listen">
-          <b>♪ Press play for a session tune while you read</b>
-          <audio controls preload="none" src="assets/audio/Céilí Hearth.mp3"></audio>
-          <small class="hs-credit" style="text-align:left;margin-top:2px;">"Céilí Hearth", a tune from the krewe's own hearth</small>
-        </div>
-        <div class="hs-video" data-yt="IXJ4QZPNc94" data-vtitle="David Power, uilleann pipes at Dillon's Bar, Dungarvan">
-          <button type="button" class="hs-play" aria-label="Play video: David Power playing the uilleann pipes">
-            <img loading="lazy" src="https://i.ytimg.com/vi/IXJ4QZPNc94/hqdefault.jpg" alt="Video thumbnail of an uilleann piper performing in an Irish pub" />
-            <span class="hs-playbtn" aria-hidden="true">▶</span>
-          </button>
-          <small class="hs-credit">Video: David Power, uilleann pipes at Dillon's Bar, Dungarvan, Ireland</small>
-        </div>
-        <div class="hs-terms"><span class="lbl">Key terms</span><span>Uilleann pipes</span><span>Bodhrán</span><span>Session</span><span>Céilí</span></div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> The uilleann chanter can play two full chromatic octaves, nearly twice the range of the Scottish pipes' nine notes.</p>
-        <div class="hs-quiz" data-answer="c">
-          <p class="hs-q"><b>Quick check:</b> How does an uilleann piper power the pipes?</p>
-          <div class="hs-opts">
-            <button type="button" data-k="a">Blowing into a mouthpiece</button>
-            <button type="button" data-k="b">A foot pedal</button>
-            <button type="button" data-k="c">A bellows pumped by the elbow</button>
-          </div>
-          <p class="hs-verdict" aria-live="polite"></p>
-        </div>
-        <a class="hs-goto" href="#art-session">☘ Keep learning: read "Pipes, Drums &amp; the Music Session" in the Archive below</a>
-      </div>
-    </details>
-
-    <details class="hs-mod" data-mod="dance">
-      <summary><span class="hs-num">4</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
-      <div class="hs-body">
-        <div class="hs-learn"><h4>What you'll learn</h4>
-          <ul>
-            <li>In 1994, an unknown act called Riverdance filled the intermission of the Eurovision Song Contest in Dublin.</li>
-            <li>Those seven minutes electrified the world and relaunched Irish dance as a global phenomenon.</li>
-            <li>The stiff arms and flying feet come from the old dance-master tradition; the costumes from the Celtic Revival.</li>
-          </ul>
-        </div>
-        <div class="hs-video" data-yt="RAtkcHpSHCw" data-vtitle="Riverdance, the 1994 Eurovision interval act">
-          <button type="button" class="hs-play" aria-label="Play video: the original Riverdance Eurovision performance">
-            <img loading="lazy" src="https://i.ytimg.com/vi/RAtkcHpSHCw/hqdefault.jpg" alt="Video thumbnail of the original 1994 Riverdance performance" />
-            <span class="hs-playbtn" aria-hidden="true">▶</span>
-          </button>
-          <small class="hs-credit">Video: Riverdance, the original 1994 Eurovision interval act, Dublin</small>
-        </div>
-        <div class="hs-terms"><span class="lbl">Key terms</span><span>Léine</span><span>Crios</span><span>Celtic Revival</span><span>Dance master</span></div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> Riverdance was created to fill a seven-minute TV intermission. It grew into a show seen live by over 25 million people.</p>
-        <div class="hs-quiz" data-answer="a">
-          <p class="hs-q"><b>Quick check:</b> Where did Riverdance premiere?</p>
-          <div class="hs-opts">
-            <button type="button" data-k="a">The 1994 Eurovision Song Contest</button>
-            <button type="button" data-k="b">Broadway</button>
-            <button type="button" data-k="c">A Dublin street parade</button>
-          </div>
-          <p class="hs-verdict" aria-live="polite"></p>
-        </div>
-        <a class="hs-goto" href="#art-dance">☘ Keep learning: read "Dancing Irish Women" in the Archive below</a>
-      </div>
-    </details>
-
-    <details class="hs-mod" data-mod="patrick">
-      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
-      <div class="hs-body">
-        <div class="hs-learn"><h4>What you'll learn</h4>
-          <ul>
-            <li>Patrick wasn't born Irish: he came from Britain, first as a captive, later as a missionary.</li>
-            <li>The famous "driving out the snakes" story is an allegory; Ireland never had snakes at all.</li>
-            <li>The parade tradition began in America, long before Ireland held one of its own.</li>
-          </ul>
-        </div>
-        <div class="hs-video" data-yt="h5KNQ1xciMQ" data-vtitle="St. Patrick's Day: Bet You Didn't Know (HISTORY)">
-          <button type="button" class="hs-play" aria-label="Play video: St. Patrick's Day, Bet You Didn't Know">
-            <img loading="lazy" src="https://i.ytimg.com/vi/h5KNQ1xciMQ/hqdefault.jpg" alt="Video thumbnail for the history of St. Patrick's Day" />
-            <span class="hs-playbtn" aria-hidden="true">▶</span>
-          </button>
-          <small class="hs-credit">Video: HISTORY, "St. Patrick's Day: Bet You Didn't Know"</small>
-        </div>
-        <div class="hs-terms"><span class="lbl">Key terms</span><span>Missionary</span><span>Allegory</span><span>Feast day: March 17</span></div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> New York City marched a St. Patrick's Day parade in 1762, more than a century before Ireland held its own.</p>
-        <div class="hs-quiz" data-answer="b">
-          <p class="hs-q"><b>Quick check:</b> Where was St. Patrick born?</p>
-          <div class="hs-opts">
-            <button type="button" data-k="a">Dublin</button>
-            <button type="button" data-k="b">Britain</button>
-            <button type="button" data-k="c">Boston</button>
-          </div>
-          <p class="hs-verdict" aria-live="polite"></p>
-        </div>
-        <a class="hs-goto" href="#art-crosses">☘ Keep learning: read "High Crosses &amp; the Fields of Clover" in the Archive below</a>
-      </div>
-    </details>
-
-    <details class="hs-mod" data-mod="legend">
-      <summary><span class="hs-num">6</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
-      <div class="hs-body">
-        <div class="hs-learn"><h4>What you'll learn</h4>
-          <ul>
-            <li>The legend of Fionn mac Cumhaill, the giant who built a stone causeway to face a Scottish rival.</li>
-            <li>How Finn's quick-thinking wife won the day with a cradle and a costume.</li>
-            <li>The real basalt columns still standing on the Antrim coast, all forty thousand of them.</li>
-          </ul>
-        </div>
-        <div class="hs-video" data-yt="aQbyVYUob1o" data-vtitle="The Irish myth of the Giant's Causeway (TED-Ed)">
-          <button type="button" class="hs-play" aria-label="Play video: the Irish myth of the Giant's Causeway">
-            <img loading="lazy" src="https://i.ytimg.com/vi/aQbyVYUob1o/hqdefault.jpg" alt="Video thumbnail for the animated myth of the Giant's Causeway" />
-            <span class="hs-playbtn" aria-hidden="true">▶</span>
-          </button>
-          <small class="hs-credit">Video: TED-Ed, "The Irish myth of the Giant's Causeway" by Iseult Gillespie</small>
-        </div>
-        <div class="hs-terms"><span class="lbl">Key terms</span><span>Fionn mac Cumhaill</span><span>Giant's Causeway</span><span>Basalt columns</span><span>The Fianna</span></div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> The hexagonal columns are real: cooling lava cracked into them some 60 million years ago. The story is better, though.</p>
-        <div class="hs-quiz" data-answer="b">
-          <p class="hs-q"><b>Quick check:</b> How did Finn "defeat" the Scottish giant?</p>
-          <div class="hs-opts">
-            <button type="button" data-k="a">A sword duel on the causeway</button>
-            <button type="button" data-k="b">He out-witted him, disguised as a baby</button>
-            <button type="button" data-k="c">A dance contest</button>
-          </div>
-          <p class="hs-verdict" aria-live="polite"></p>
-        </div>
-        <a class="hs-goto" href="#art-causeway">☘ Keep learning: read the full tale, then meet the Salmon of Knowledge in the Archive below</a>
-      </div>
-    </details>
-
-    <details class="hs-mod" data-mod="irish">
-      <summary><span class="hs-num">7</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
-      <div class="hs-body">
-        <div class="hs-learn"><h4>What you'll learn</h4>
-          <ul>
-            <li>The four phrases every member of the krewe should have in their pocket.</li>
-            <li>How to pronounce them like you mean them (tap the speaker to hear two of them).</li>
-            <li>You needn't be fluent; a single warm word, well meant, is pure Irish.</li>
-          </ul>
-        </div>
-        <div class="hs-phrases">
-          <div class="hs-ph"><div class="ph-w"><b>Sláinte!</b> <i>(SLAWN-cha)</i></div><div class="ph-m">"Health!" The classic Irish toast.</div></div>
-          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/100 thousand welcomes.mp3" aria-label="Hear Céad Míle Fáilte">🔊</button><div class="ph-w"><b>Céad Míle Fáilte</b> <i>(kayd MEE-luh FAWL-cha)</i></div><div class="ph-m">"A hundred thousand welcomes."</div></div>
-          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/ElevenLabs_Untitled_project.mp3" aria-label="Hear what craic means">🔊</button><div class="ph-w"><b>Craic</b> <i>(crack)</i></div><div class="ph-m">Fun, laughter, news, and good company, all in one word.</div></div>
-          <div class="hs-ph"><div class="ph-w"><b>Dia dhuit</b> <i>(DEE-a GWIT)</i></div><div class="ph-m">"Hello." Literally, "God be with you."</div></div>
-        </div>
-        <p class="hs-fact">☘ <b>Fun fact:</b> Irish (Gaeilge) is one of Europe's oldest living written languages, with texts reaching back to the 4th century.</p>
-        <div class="hs-quiz" data-answer="b">
-          <p class="hs-q"><b>Quick check:</b> What does "Céad Míle Fáilte" mean?</p>
-          <div class="hs-opts">
-            <button type="button" data-k="a">Good luck to you</button>
-            <button type="button" data-k="b">A hundred thousand welcomes</button>
-            <button type="button" data-k="c">Health and wealth</button>
-          </div>
-          <p class="hs-verdict" aria-live="polite"></p>
-        </div>
-        <a class="hs-goto" href="#art-gaelic">☘ Keep learning: read "Sláinte! A Few Words of Irish" in the Archive below</a>
-      </div>
-    </details>
-
-    <!-- Static heritage articles -->
-    <div class="section-title" style="margin-top:56px;">
-      <h2>From the Archive</h2>
-      <p class="sub">Click any story to read: a little learning over a cup of tea</p>
-    </div>
-    <div class="knot-divider"><span class="knot"></span></div>
-
     <article class="article" id="art-kilts">
       <details class="arch">
         <summary>
@@ -378,202 +214,6 @@ details[open] > summary .arch-hint{display:none;}
          Gaelic style that stays comfortable in the Florida sun. Add a sporran, kilt hose, and a good handful
          of beads, and you're parade-ready. New to kilts? The lesson cards above sort the Irish styles from the
          Scottish, and any member will happily talk tartan with you.</p>
-            </div>
-      </details>
-    </article>
-
-
-    <article class="article" id="art-triquetra">
-      <details class="arch">
-        <summary>
-          <div class="cat">Celtic Symbols</div>
-          <h2>The Triquetra: Knot of Three</h2>
-          <div class="by">Irish heritage</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
-      <p class="dropcap">The triquetra, or trinity knot, is among the oldest and best-loved of Celtic symbols.
-         Drawn as a single unbroken line, it has no beginning and no end, a fitting emblem for
-         eternity, unity, and the bonds of community that the early Irish prized above all.</p>
-      <p>You'll find it carved on standing stones, illuminated in the Book of Kells, and worked
-         into jewelry to this day. We carry it as our quiet reminder that a krewe, like the knot,
-         is stronger for being woven together.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-crosses">
-      <details class="arch">
-        <summary>
-          <div class="cat">Heritage</div>
-          <h2>High Crosses &amp; the Fields of Clover</h2>
-          <div class="by">Irish heritage</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
-      <p>The great stone high crosses of Ireland, ringed where the cross-arms meet, once stood as
-         gathering points and teaching tools, their panels telling stories to all who passed.
-         Set among the clover, they marry the sacred and the everyday in a way that feels deeply Irish.</p>
-      <p>And the clover itself? Saint Patrick, so the tradition goes, plucked a humble shamrock to
-         explain the Trinity with its three leaves on a single stem, and the little plant has been ours ever since.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-warriors">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends</div>
-          <h2>Daughters &amp; Warriors of Éireann</h2>
-          <div class="by">Irish legend</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
-      <p class="dropcap">Long before the parades, the women of the Celtic world were warriors, queens, and
-         keepers of the law. Queen Medb of Connacht led armies into the great cattle raid of the Táin;
-         the war-goddess The Morrígan wheeled over the battlefield as a crow; and on the Isle of Skye,
-         the warrior-woman Scáthach trained the greatest heroes of the age.</p>
-      <p>It's a heritage worth remembering: in the Krewe of Shamrock, the women march, pipe, and lead
-         right alongside the men: daughters of Éireann, every one.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-session">
-      <details class="arch">
-        <summary>
-          <div class="cat">Music &amp; Dance</div>
-          <h2>Pipes, Drums &amp; the Music Session</h2>
-          <div class="by">Irish &amp; Scottish tradition</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
-      <p class="dropcap">There is no mistaking the first skirl of the pipes. Whether it's the Great Highland
-         bagpipe of the Scottish tradition or the gentler Irish uilleann pipes, bellows-blown and played
-         sitting down, the sound carries centuries in it. Add the heartbeat of the bodhrán, the goatskin
-         frame drum struck with a little wooden tipper, and you have the engine of any good krewe.</p>
-      <p>Gather a few players in a corner of a pub and you have a "session": tunes traded by ear, jigs and
-         reels rolling one into the next, no sheet music in sight. And when the fiddle strikes up, the
-         céilí dancing begins: lines and circles and the whirl of a good time shared. It's participation,
-         not performance, and that's exactly the spirit we march in.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-dance">
-      <details class="arch">
-        <summary>
-          <div class="cat">Music &amp; Dance</div>
-          <h2>Dancing Irish Women</h2>
-          <div class="by">Steps through time</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
-      <p class="dropcap">From the curled hair and embroidered dresses to the fancy footwork, women's Irish dance
-         carries centuries of heritage in every step. The costumes themselves tell the story: born of the late-19th
-         century Celtic Revival, when a full-length <i>léine</i>, woven <i>crios</i> belt, and flowing <i>brat</i>
-         cape became a proud emblem of Irish identity, and Celtic knotwork from the <i>Book of Kells</i> first
-         found its way onto the dancers' dresses.</p>
-      <p>Over the decades those costumes have evolved from school uniforms into dazzling, crystal-covered solo
-         dresses, a tradition kept alive by generations of women who march, pipe, and dance right alongside the men.
-         The Smithsonian's Center for Folklife &amp; Cultural Heritage tells the full story beautifully.</p>
-      <p style="text-align:center;margin-top:18px;">
-        <a class="btn btn-green" href="https://folklife.si.edu/magazine/women-irish-dance-costume-evolution"
-           target="_blank" rel="noopener">Read the Smithsonian article ☘</a>
-      </p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-gaelic">
-      <details class="arch">
-        <summary>
-          <div class="cat">Gaelic &amp; Blessings</div>
-          <h2>Sláinte! A Few Words of Irish</h2>
-          <div class="by">As Gaeilge, in the Irish language</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
-      <p class="dropcap">A few words of Irish go a long way. Raise a glass and you'll hear <b>Sláinte</b>
-         (SLAWN-cha), which means "health!" Our own welcome, <b>Céad Míle Fáilte</b> (kayd MEE-luh felt-cha), means
-         "a hundred thousand welcomes," and we mean every one of them.</p>
-      <p>The old blessings are the loveliest of all: <i>"May the road rise up to meet you, may the wind be
-         always at your back."</i> And when someone sneezes, you might hear <b>Dia linn</b>, "God be with us."
-         You needn't be fluent; a single warm word, well meant, is pure Irish.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-festivals">
-      <details class="arch">
-        <summary>
-          <div class="cat">Festivals</div>
-          <h2>The Wheel of the Year</h2>
-          <div class="by">Seasons &amp; celebrations</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
-      <p class="dropcap">The Celtic calendar turns on four great fire-festivals. <b>Imbolc</b> in February greets
-         the first stirrings of spring and Saint Brigid. <b>Bealtaine</b> in May lights the summer fires.
-         <b>Lúnasa</b> in August gives thanks for the harvest. And <b>Samhain</b> at the end of October,
-         when the veil between worlds grows thin, is the ancient root of our modern Halloween.</p>
-      <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
-         and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
-         finer place to wear your green than marching with the Krewe.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-causeway">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends &amp; Myth</div>
-          <h2>Finn McCool &amp; the Giant's Causeway</h2>
-          <div class="by">A tale of Éireann</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/irish-folk.jpg" alt="Irish folk gathered together" />
-      <p class="dropcap">They say the giant Fionn mac Cumhaill, better known as Finn McCool, built a causeway of stone columns
-         across the sea to face a Scottish rival. When he saw the size of the other giant, clever Finn's wife
-         disguised him as a baby in a cradle. The Scot took one look at the "child," reckoned the father must be
-         enormous, and fled home, tearing up the causeway behind him.</p>
-      <p>The basalt columns of the Giant's Causeway still stand on the Antrim coast to this day. It's a tale that
-         captures the Irish gift entirely: when in doubt, out-wit rather than out-fight, then tell a grand story about
-         it after.</p>
-            </div>
-      </details>
-    </article>
-
-    
-    <article class="article" id="art-salmon">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends &amp; Myth</div>
-          <h2>The Salmon of Knowledge</h2>
-          <div class="by">A tale of Éireann</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
-      <p class="dropcap">There is a fish that swam in the Well of Segais, at the source of the River Boyne,
-      and whoever tasted its flesh would gain all the wisdom in the world. The salmon had fed on hazelnuts
-      fallen from the nine sacred trees that ringed the well, and in each nut was the knowledge of the ages.</p>
-      <p>The poet Finnegas spent seven long years fishing that river, waiting for his chance. When at last he
-      caught the salmon, he set his young apprentice, a boy named Fionn mac Cumhaill, to cook it, but warned
-      him firmly: do not taste a single bite. As Fionn turned the fish over the fire, a blister of hot skin
-      burst and burned his thumb. Without thinking, he pressed it to his mouth to ease the sting, and in that
-      instant, all the wisdom of the world passed into him.</p>
-      <p>From that day forward, whenever Fionn needed guidance, he had only to press his thumb to his teeth and
-      the knowledge would come. The great hero who would go on to lead the Fianna, Ireland's legendary warrior
-      band, was made not by a sword stroke, but by an accidental taste of something wonderful.</p>
             </div>
       </details>
     </article>
@@ -630,13 +270,374 @@ details[open] > summary .arch-hint{display:none;}
       </details>
     </article>
 
-    <!-- Feel-good stories -->
-    <div class="section-title" style="margin-top:56px;">
-      <h2>Good News &amp; Good Craic</h2>
-      <p class="sub">A few warm tales from our corner of Tampa Bay</p>
-    </div>
-    <div class="knot-divider"><span class="knot"></span></div>
 
+    <div class="lib-cat"><h3>🎻 Music &amp; Dance</h3></div>
+    <details class="hs-mod" data-mod="pipes">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>Ireland's uilleann pipes are gentler cousins of the Highland bagpipe, played sitting down.</li>
+            <li>"Uilleann" comes from the Irish word for elbow: the piper pumps a bellows with one arm instead of blowing.</li>
+            <li>The bodhrán, a goatskin frame drum struck with a small tipper, is the heartbeat under the tunes.</li>
+            <li>Put a few players in the corner of a pub and you have a session: tunes traded by ear, no sheet music in sight.</li>
+          </ul>
+        </div>
+        <div class="hs-listen">
+          <b>♪ Press play for a session tune while you read</b>
+          <audio controls preload="none" src="assets/audio/Céilí Hearth.mp3"></audio>
+          <small class="hs-credit" style="text-align:left;margin-top:2px;">"Céilí Hearth", a tune from the krewe's own hearth</small>
+        </div>
+        <div class="hs-video" data-yt="IXJ4QZPNc94" data-vtitle="David Power, uilleann pipes at Dillon's Bar, Dungarvan">
+          <button type="button" class="hs-play" aria-label="Play video: David Power playing the uilleann pipes">
+            <img loading="lazy" src="https://i.ytimg.com/vi/IXJ4QZPNc94/hqdefault.jpg" alt="Video thumbnail of an uilleann piper performing in an Irish pub" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: David Power, uilleann pipes at Dillon's Bar, Dungarvan, Ireland</small>
+        </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Uilleann pipes</span><span>Bodhrán</span><span>Session</span><span>Céilí</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> The uilleann chanter can play two full chromatic octaves, nearly twice the range of the Scottish pipes' nine notes.</p>
+        <div class="hs-quiz" data-answer="c">
+          <p class="hs-q"><b>Quick check:</b> How does an uilleann piper power the pipes?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Blowing into a mouthpiece</button>
+            <button type="button" data-k="b">A foot pedal</button>
+            <button type="button" data-k="c">A bellows pumped by the elbow</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-session">☘ Keep learning: read "Pipes, Drums &amp; the Music Session" just below</a>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="dance">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>In 1994, an unknown act called Riverdance filled the intermission of the Eurovision Song Contest in Dublin.</li>
+            <li>Those seven minutes electrified the world and relaunched Irish dance as a global phenomenon.</li>
+            <li>The stiff arms and flying feet come from the old dance-master tradition; the costumes from the Celtic Revival.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="RAtkcHpSHCw" data-vtitle="Riverdance, the 1994 Eurovision interval act">
+          <button type="button" class="hs-play" aria-label="Play video: the original Riverdance Eurovision performance">
+            <img loading="lazy" src="https://i.ytimg.com/vi/RAtkcHpSHCw/hqdefault.jpg" alt="Video thumbnail of the original 1994 Riverdance performance" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: Riverdance, the original 1994 Eurovision interval act, Dublin</small>
+        </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Léine</span><span>Crios</span><span>Celtic Revival</span><span>Dance master</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> Riverdance was created to fill a seven-minute TV intermission. It grew into a show seen live by over 25 million people.</p>
+        <div class="hs-quiz" data-answer="a">
+          <p class="hs-q"><b>Quick check:</b> Where did Riverdance premiere?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">The 1994 Eurovision Song Contest</button>
+            <button type="button" data-k="b">Broadway</button>
+            <button type="button" data-k="c">A Dublin street parade</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-dance">☘ Keep learning: read "Dancing Irish Women" just below</a>
+      </div>
+    </details>
+
+    <article class="article" id="art-session">
+      <details class="arch">
+        <summary>
+          <div class="cat">Music &amp; Dance</div>
+          <h2>Pipes, Drums &amp; the Music Session</h2>
+          <div class="by">Irish &amp; Scottish tradition</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
+      <p class="dropcap">There is no mistaking the first skirl of the pipes. Whether it's the Great Highland
+         bagpipe of the Scottish tradition or the gentler Irish uilleann pipes, bellows-blown and played
+         sitting down, the sound carries centuries in it. Add the heartbeat of the bodhrán, the goatskin
+         frame drum struck with a little wooden tipper, and you have the engine of any good krewe.</p>
+      <p>Gather a few players in a corner of a pub and you have a "session": tunes traded by ear, jigs and
+         reels rolling one into the next, no sheet music in sight. And when the fiddle strikes up, the
+         céilí dancing begins: lines and circles and the whirl of a good time shared. It's participation,
+         not performance, and that's exactly the spirit we march in.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-dance">
+      <details class="arch">
+        <summary>
+          <div class="cat">Music &amp; Dance</div>
+          <h2>Dancing Irish Women</h2>
+          <div class="by">Steps through time</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
+      <p class="dropcap">From the curled hair and embroidered dresses to the fancy footwork, women's Irish dance
+         carries centuries of heritage in every step. The costumes themselves tell the story: born of the late-19th
+         century Celtic Revival, when a full-length <i>léine</i>, woven <i>crios</i> belt, and flowing <i>brat</i>
+         cape became a proud emblem of Irish identity, and Celtic knotwork from the <i>Book of Kells</i> first
+         found its way onto the dancers' dresses.</p>
+      <p>Over the decades those costumes have evolved from school uniforms into dazzling, crystal-covered solo
+         dresses, a tradition kept alive by generations of women who march, pipe, and dance right alongside the men.
+         The Smithsonian's Center for Folklife &amp; Cultural Heritage tells the full story beautifully.</p>
+      <p style="text-align:center;margin-top:18px;">
+        <a class="btn btn-green" href="https://folklife.si.edu/magazine/women-irish-dance-costume-evolution"
+           target="_blank" rel="noopener">Read the Smithsonian article ☘</a>
+      </p>
+            </div>
+      </details>
+    </article>
+
+
+    <div class="lib-cat"><h3>📜 History &amp; Festivals</h3></div>
+    <details class="hs-mod" data-mod="patrick">
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>Patrick wasn't born Irish: he came from Britain, first as a captive, later as a missionary.</li>
+            <li>The famous "driving out the snakes" story is an allegory; Ireland never had snakes at all.</li>
+            <li>The parade tradition began in America, long before Ireland held one of its own.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="h5KNQ1xciMQ" data-vtitle="St. Patrick's Day: Bet You Didn't Know (HISTORY)">
+          <button type="button" class="hs-play" aria-label="Play video: St. Patrick's Day, Bet You Didn't Know">
+            <img loading="lazy" src="https://i.ytimg.com/vi/h5KNQ1xciMQ/hqdefault.jpg" alt="Video thumbnail for the history of St. Patrick's Day" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: HISTORY, "St. Patrick's Day: Bet You Didn't Know"</small>
+        </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Missionary</span><span>Allegory</span><span>Feast day: March 17</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> New York City marched a St. Patrick's Day parade in 1762, more than a century before Ireland held its own.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> Where was St. Patrick born?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Dublin</button>
+            <button type="button" data-k="b">Britain</button>
+            <button type="button" data-k="c">Boston</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-crosses">☘ Keep learning: read "High Crosses &amp; the Fields of Clover" just below</a>
+      </div>
+    </details>
+
+    <article class="article" id="art-crosses">
+      <details class="arch">
+        <summary>
+          <div class="cat">Heritage</div>
+          <h2>High Crosses &amp; the Fields of Clover</h2>
+          <div class="by">Irish heritage</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
+      <p>The great stone high crosses of Ireland, ringed where the cross-arms meet, once stood as
+         gathering points and teaching tools, their panels telling stories to all who passed.
+         Set among the clover, they marry the sacred and the everyday in a way that feels deeply Irish.</p>
+      <p>And the clover itself? Saint Patrick, so the tradition goes, plucked a humble shamrock to
+         explain the Trinity with its three leaves on a single stem, and the little plant has been ours ever since.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-festivals">
+      <details class="arch">
+        <summary>
+          <div class="cat">Festivals</div>
+          <h2>The Wheel of the Year</h2>
+          <div class="by">Seasons &amp; celebrations</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
+      <p class="dropcap">The Celtic calendar turns on four great fire-festivals. <b>Imbolc</b> in February greets
+         the first stirrings of spring and Saint Brigid. <b>Bealtaine</b> in May lights the summer fires.
+         <b>Lúnasa</b> in August gives thanks for the harvest. And <b>Samhain</b> at the end of October,
+         when the veil between worlds grows thin, is the ancient root of our modern Halloween.</p>
+      <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
+         and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
+         finer place to wear your green than marching with the Krewe.</p>
+            </div>
+      </details>
+    </article>
+
+
+    <div class="lib-cat"><h3>🏰 Legends &amp; Myth</h3></div>
+    <details class="hs-mod" data-mod="legend">
+      <summary><span class="hs-num">6</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>The legend of Fionn mac Cumhaill, the giant who built a stone causeway to face a Scottish rival.</li>
+            <li>How Finn's quick-thinking wife won the day with a cradle and a costume.</li>
+            <li>The real basalt columns still standing on the Antrim coast, all forty thousand of them.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="aQbyVYUob1o" data-vtitle="The Irish myth of the Giant's Causeway (TED-Ed)">
+          <button type="button" class="hs-play" aria-label="Play video: the Irish myth of the Giant's Causeway">
+            <img loading="lazy" src="https://i.ytimg.com/vi/aQbyVYUob1o/hqdefault.jpg" alt="Video thumbnail for the animated myth of the Giant's Causeway" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: TED-Ed, "The Irish myth of the Giant's Causeway" by Iseult Gillespie</small>
+        </div>
+        <div class="hs-terms"><span class="lbl">Key terms</span><span>Fionn mac Cumhaill</span><span>Giant's Causeway</span><span>Basalt columns</span><span>The Fianna</span></div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> The hexagonal columns are real: cooling lava cracked into them some 60 million years ago. The story is better, though.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> How did Finn "defeat" the Scottish giant?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">A sword duel on the causeway</button>
+            <button type="button" data-k="b">He out-witted him, disguised as a baby</button>
+            <button type="button" data-k="c">A dance contest</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-causeway">☘ Keep learning: read the full tale, then meet the Salmon of Knowledge just below</a>
+      </div>
+    </details>
+
+    <article class="article" id="art-causeway">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends &amp; Myth</div>
+          <h2>Finn McCool &amp; the Giant's Causeway</h2>
+          <div class="by">A tale of Éireann</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/irish-folk.jpg" alt="Irish folk gathered together" />
+      <p class="dropcap">They say the giant Fionn mac Cumhaill, better known as Finn McCool, built a causeway of stone columns
+         across the sea to face a Scottish rival. When he saw the size of the other giant, clever Finn's wife
+         disguised him as a baby in a cradle. The Scot took one look at the "child," reckoned the father must be
+         enormous, and fled home, tearing up the causeway behind him.</p>
+      <p>The basalt columns of the Giant's Causeway still stand on the Antrim coast to this day. It's a tale that
+         captures the Irish gift entirely: when in doubt, out-wit rather than out-fight, then tell a grand story about
+         it after.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-salmon">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends &amp; Myth</div>
+          <h2>The Salmon of Knowledge</h2>
+          <div class="by">A tale of Éireann</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
+      <p class="dropcap">There is a fish that swam in the Well of Segais, at the source of the River Boyne,
+      and whoever tasted its flesh would gain all the wisdom in the world. The salmon had fed on hazelnuts
+      fallen from the nine sacred trees that ringed the well, and in each nut was the knowledge of the ages.</p>
+      <p>The poet Finnegas spent seven long years fishing that river, waiting for his chance. When at last he
+      caught the salmon, he set his young apprentice, a boy named Fionn mac Cumhaill, to cook it, but warned
+      him firmly: do not taste a single bite. As Fionn turned the fish over the fire, a blister of hot skin
+      burst and burned his thumb. Without thinking, he pressed it to his mouth to ease the sting, and in that
+      instant, all the wisdom of the world passed into him.</p>
+      <p>From that day forward, whenever Fionn needed guidance, he had only to press his thumb to his teeth and
+      the knowledge would come. The great hero who would go on to lead the Fianna, Ireland's legendary warrior
+      band, was made not by a sword stroke, but by an accidental taste of something wonderful.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-warriors">
+      <details class="arch">
+        <summary>
+          <div class="cat">Legends</div>
+          <h2>Daughters &amp; Warriors of Éireann</h2>
+          <div class="by">Irish legend</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
+      <p class="dropcap">Long before the parades, the women of the Celtic world were warriors, queens, and
+         keepers of the law. Queen Medb of Connacht led armies into the great cattle raid of the Táin;
+         the war-goddess The Morrígan wheeled over the battlefield as a crow; and on the Isle of Skye,
+         the warrior-woman Scáthach trained the greatest heroes of the age.</p>
+      <p>It's a heritage worth remembering: in the Krewe of Shamrock, the women march, pipe, and lead
+         right alongside the men: daughters of Éireann, every one.</p>
+            </div>
+      </details>
+    </article>
+
+
+    <div class="lib-cat"><h3>🗣 Language &amp; Symbols</h3></div>
+    <details class="hs-mod" data-mod="irish">
+      <summary><span class="hs-num">7</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>The four phrases every member of the krewe should have in their pocket.</li>
+            <li>How to pronounce them like you mean them (tap the speaker to hear two of them).</li>
+            <li>You needn't be fluent; a single warm word, well meant, is pure Irish.</li>
+          </ul>
+        </div>
+        <div class="hs-phrases">
+          <div class="hs-ph"><div class="ph-w"><b>Sláinte!</b> <i>(SLAWN-cha)</i></div><div class="ph-m">"Health!" The classic Irish toast.</div></div>
+          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/100 thousand welcomes.mp3" aria-label="Hear Céad Míle Fáilte">🔊</button><div class="ph-w"><b>Céad Míle Fáilte</b> <i>(kayd MEE-luh FAWL-cha)</i></div><div class="ph-m">"A hundred thousand welcomes."</div></div>
+          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/ElevenLabs_Untitled_project.mp3" aria-label="Hear what craic means">🔊</button><div class="ph-w"><b>Craic</b> <i>(crack)</i></div><div class="ph-m">Fun, laughter, news, and good company, all in one word.</div></div>
+          <div class="hs-ph"><div class="ph-w"><b>Dia dhuit</b> <i>(DEE-a GWIT)</i></div><div class="ph-m">"Hello." Literally, "God be with you."</div></div>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> Irish (Gaeilge) is one of Europe's oldest living written languages, with texts reaching back to the 4th century.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> What does "Céad Míle Fáilte" mean?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Good luck to you</button>
+            <button type="button" data-k="b">A hundred thousand welcomes</button>
+            <button type="button" data-k="c">Health and wealth</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+        <a class="hs-goto" href="#art-gaelic">☘ Keep learning: read "Sláinte! A Few Words of Irish" just below</a>
+      </div>
+    </details>
+
+    <article class="article" id="art-gaelic">
+      <details class="arch">
+        <summary>
+          <div class="cat">Gaelic &amp; Blessings</div>
+          <h2>Sláinte! A Few Words of Irish</h2>
+          <div class="by">As Gaeilge, in the Irish language</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
+      <p class="dropcap">A few words of Irish go a long way. Raise a glass and you'll hear <b>Sláinte</b>
+         (SLAWN-cha), which means "health!" Our own welcome, <b>Céad Míle Fáilte</b> (kayd MEE-luh felt-cha), means
+         "a hundred thousand welcomes," and we mean every one of them.</p>
+      <p>The old blessings are the loveliest of all: <i>"May the road rise up to meet you, may the wind be
+         always at your back."</i> And when someone sneezes, you might hear <b>Dia linn</b>, "God be with us."
+         You needn't be fluent; a single warm word, well meant, is pure Irish.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-triquetra">
+      <details class="arch">
+        <summary>
+          <div class="cat">Celtic Symbols</div>
+          <h2>The Triquetra: Knot of Three</h2>
+          <div class="by">Irish heritage</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
+      <p class="dropcap">The triquetra, or trinity knot, is among the oldest and best-loved of Celtic symbols.
+         Drawn as a single unbroken line, it has no beginning and no end, a fitting emblem for
+         eternity, unity, and the bonds of community that the early Irish prized above all.</p>
+      <p>You'll find it carved on standing stones, illuminated in the Book of Kells, and worked
+         into jewelry to this day. We carry it as our quiet reminder that a krewe, like the knot,
+         is stronger for being woven together.</p>
+            </div>
+      </details>
+    </article>
+
+
+    <div class="lib-cat"><h3>💚 Krewe Life &amp; Giving Back</h3></div>
     <article class="article" id="art-morning">
       <details class="arch">
         <summary>
@@ -694,6 +695,7 @@ details[open] > summary .arch-hint{display:none;}
             </div>
       </details>
     </article>
+
 
   </main>
 
