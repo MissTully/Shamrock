@@ -95,6 +95,17 @@
   .rpt-secure h4{ margin:0 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .rpt-secure p{ margin:0 0 8px; }
 
+  /* ---- Parade Ready ---- */
+  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 12px;}
+  .pr-pill.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+  .pr-gate{padding:5px 2px;font-size:15.5px;}
+  .pr-gate small{color:var(--muted);font-size:13.5px;}
+  .pr-waiver{background:#fffdf4;border:1px dashed rgba(168,128,28,.5);border-radius:12px;padding:12px 14px;margin-top:10px;}
+  .pr-hrs{font-size:15px;margin:0 0 6px;}
+  .rpt-btn{font:inherit;font-size:13.5px;padding:5px 12px;border-radius:14px;border:1px solid rgba(168,128,28,.5);background:#fff;cursor:pointer;}
+  .rpt-btn.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+  .rpt-btn:hover{opacity:.85;}
+
   /* ---- The Craic Cup (gamification) ---- */
   .game-head .app-head{ background:linear-gradient(180deg,#b8860b,#6f5300); }
   .game-tabs{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:16px; }
@@ -124,6 +135,14 @@
 
   @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+  <script>
+  /* A meeting QR lands here as ?checkin=CODE; stash it so it survives the magic-link sign-in. */
+  try{
+    var _kosCk = new URLSearchParams(location.search).get("checkin");
+    if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); history.replaceState(null, "", location.pathname); }
+  }catch(_){}
+  </script>
 </head>
 <body>
 
@@ -228,6 +247,26 @@
               style="cursor:pointer;border:1px solid rgba(168,128,28,.5);background:transparent;color:var(--green-800,#14532d);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600;">Sign out</button>
     </div>
     <div class="member-grid">
+
+      <!-- PARADE READY -->
+      <section class="app-card" id="prCard">
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; meeting: your wristband eligibility</small></div></div>
+        <div class="app-body">
+          <div id="prStatus"><p class="empty">Loading your status…</p></div>
+          <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
+          <div id="prHours"></div>
+          <form id="vhForm" class="krewe-form" style="margin-top:10px;">
+            <div class="row">
+              <div><label for="vhActivity">Activity</label><input id="vhActivity" required placeholder="e.g. New Life Warehouse delivery" /></div>
+              <div><label for="vhHours">Hours</label><input id="vhHours" type="number" min="0.5" max="24" step="0.5" required /></div>
+            </div>
+            <label for="vhDate">Date</label>
+            <input id="vhDate" type="date" />
+            <button class="btn btn-primary" type="submit">☘ Log volunteer hours</button>
+            <div class="msg" id="vhMsg"></div>
+          </form>
+        </div>
+      </section>
 
       <!-- THE CRAIC CUP (gamified participation) -->
       <section class="app-card dash-card game-head" role="button" tabindex="0"
@@ -478,6 +517,7 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
 
+
     // ---- Members area reveals once auth + profile are confirmed (see auth module below) ----
     const content = document.getElementById("memberContent");
     function unlock(){
@@ -509,7 +549,7 @@
       [["lkEmail",email],["cpEmail",email]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
     }
 
-    function initAll(){ prefillIdentity(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+    function initAll(){ prefillIdentity(); loadParadeReady(); handlePendingCheckin(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
     /* ---------------- LOCKERS ---------------- */
     async function loadLockers(){
@@ -612,6 +652,127 @@
       grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
     };
 
+
+    /* ================= PARADE READY ================= */
+    const SEASON = new Date().getFullYear();
+    let _prMe = null;
+    async function loadParadeReady(){
+      const el = document.getElementById("prStatus");
+      if(!el) return;
+      const meId = (window.kosProfile||{}).member_id || null;
+      const { data, error } = await supabase.from("v_parade_ready").select("*");
+      const rows = data || [];
+      const me = (meId && rows.find(r=>r.member_id===meId)) || (rows.length===1 ? rows[0] : null);
+      if(error || !me){
+        el.innerHTML = '<p class="empty">Your account is not linked to a member record yet. Ask an officer to link your profile to the roster.</p>';
+        return;
+      }
+      _prMe = me;
+      const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended];
+      const ready = gates.every(Boolean);
+      const gate = (ok, label, hint) =>
+        `<div class="pr-gate">${ok?"✅":"⬜"} <b>${label}</b>${ok?"":` <small>· ${hint}</small>`}</div>`;
+      el.innerHTML =
+        `<div class="pr-pill ${ready?"ok":""}">${ready
+          ? "🎗️ PARADE READY! Pick up your wristband at the next meeting."
+          : "☘ " + gates.filter(Boolean).length + " of 3 requirements complete"}</div>`
+        + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
+        + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
+        + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
+        + (me.waiver_signed ? "" : waiverForm());
+      renderHoursBar(me);
+    }
+    function waiverForm(){
+      const nm = esc(kosIdentity().name);
+      return `<div class="pr-waiver">
+        <p style="font-size:14px;color:var(--muted);margin:0 0 10px;">I release and hold harmless the Krewe of Shamrock, its officers, and event organizers
+        from liability arising from my voluntary participation in krewe parades and events during the ${SEASON} season,
+        and I agree to follow all parade safety rules.</p>
+        <label for="wvName">Type your full legal name to sign</label>
+        <input id="wvName" value="${nm}" />
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${SEASON} waiver</button>
+        <div class="msg" id="wvMsg"></div>
+      </div>`;
+    }
+    window.kosSignWaiver = async function(){
+      const nm = (document.getElementById("wvName").value||"").trim();
+      if(nm.length < 2){ show("wvMsg","Please type your full name to sign.","error"); return; }
+      const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:SEASON, signed_name:nm });
+      if(error){ show("wvMsg","Could not record your signature. "+(error.message||""),"error"); return; }
+      loadParadeReady();
+    };
+    function renderHoursBar(me){
+      const el = document.getElementById("prHours"); if(!el) return;
+      const done = Number(me.hours_approved||0), logged = Number(me.hours_logged||0), goal = 12;
+      const pct = Math.min(100, Math.round(done/goal*100));
+      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
+        <div class="prog"><i style="width:${pct}%"></i></div>`;
+    }
+    document.getElementById("vhForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      if(!_prMe){ show("vhMsg","Your account is not linked to a member record yet.","error"); return; }
+      const activity = (document.getElementById("vhActivity").value||"").trim();
+      const hours = Number(document.getElementById("vhHours").value);
+      const d = document.getElementById("vhDate").value;
+      if(activity.length < 2 || !(hours > 0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
+      const row = { member_id:_prMe.member_id, season_year:SEASON, activity, hours };
+      if(d) row.worked_on = d;
+      const { error } = await supabase.from("volunteer_hours").insert(row);
+      if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
+      show("vhMsg","Logged! An officer will confirm them shortly.","success");
+      document.getElementById("vhForm").reset();
+      loadParadeReady();
+    });
+
+    /* ---- QR meeting check-in (?checkin=CODE survives the sign-in flow) ---- */
+    async function handlePendingCheckin(){
+      let code = null;
+      try{ code = localStorage.getItem("kos_checkin"); }catch(_){}
+      if(!code) return;
+      const { data, error } = await supabase.rpc("meeting_check_in", { p_code: code });
+      try{ localStorage.removeItem("kos_checkin"); }catch(_){}
+      const ok = data && data.ok;
+      const bar = document.getElementById("memberBar");
+      if(bar){
+        const note = document.createElement("div");
+        note.textContent = ok
+          ? "✅ Checked in to " + (data.event||"the meeting") + ". Fáilte!"
+          : "⚠️ Check-in failed: " + ((data && data.error) || (error && error.message) || "unknown error");
+        note.style.cssText = "flex:1;font-weight:600;color:" + (ok ? "#14532d" : "#b3452e") + ";";
+        bar.prepend(note);
+      }
+      if(ok) loadParadeReady();
+    }
+
+    /* ---- Officer actions used by the Parade Readiness reports ---- */
+    window.kosReviewHours = async (id, approved)=>{
+      const { error } = await supabase.rpc("officer_review_hours", { p_id:id, p_approved:approved });
+      if(error){ alert("Could not update: " + (error.message||"")); return; }
+      runReport("volunteer_review");
+    };
+    window.kosCreateMeeting = async ()=>{
+      const name = (document.getElementById("mtName").value||"").trim();
+      const when = document.getElementById("mtWhen").value;
+      const mand = document.getElementById("mtMand").checked;
+      if(name.length < 3 || !when){ show("mtMsg","Give the meeting a name and a date.","error"); return; }
+      const { error } = await supabase.rpc("officer_upsert_meeting",
+        { p_name:name, p_start:new Date(when).toISOString(), p_mandatory:mand });
+      if(error){ show("mtMsg","Could not create the meeting. "+(error.message||""),"error"); return; }
+      runReport("meeting_checkin");
+    };
+    window.kosShowCheckinQR = async (eventId, btn)=>{
+      const { data:code, error } = await supabase.rpc("officer_enable_checkin", { p_event:eventId });
+      if(error || !code){ alert("Could not get a check-in code. " + ((error&&error.message)||"")); return; }
+      const url = location.origin + location.pathname + "?checkin=" + code;
+      const slot = btn.parentElement.querySelector(".qr-slot");
+      slot.innerHTML = `<canvas></canvas><div style="font-size:13px;color:var(--muted);margin-top:4px;">Members scan this, or use the link: <a href="${url}">${esc(url)}</a></div>`;
+      if(window.QRCode){
+        QRCode.toCanvas(slot.querySelector("canvas"), url, { width:220, margin:1, color:{ dark:"#14532d", light:"#ffffff" } });
+      } else {
+        slot.querySelector("canvas").replaceWith(Object.assign(document.createElement("p"),{ textContent:"QR library unavailable; share the link instead." }));
+      }
+    };
+
     /* ================= REPORTS DASHBOARD ================= */
     const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
     const fmtDate  = iso => { if(!iso) return "TBA"; const d=new Date(iso); return isNaN(d)?esc(String(iso)):d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"}); };
@@ -636,6 +797,71 @@
     }
 
     const REPORTS = [
+      /* ---- Parade Readiness ---- */
+      { id:"wristband_pickup", cat:"Parade Readiness", icon:"🎗️", title:"Wristband Pickup List", secure:true,
+        desc:"Who is Parade Ready (dues + waiver + meeting), and exactly what everyone else is missing.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_parade_ready").select("*").order("last_name",{ascending:true});
+          if(error) throw error;
+          const rows=data||[];
+          const isReady=r=>r.dues_paid&&r.waiver_signed&&r.meeting_attended;
+          const ready=rows.filter(isReady), not=rows.filter(r=>!isReady(r));
+          const mark=v=>v?"✅":"—";
+          return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
+            + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
+            + rTable(["Name","Status"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-"]))
+            + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
+            + rTable(["Name","Dues","Waiver","Meeting"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended)]));
+        }},
+      { id:"volunteer_review", cat:"Parade Readiness", icon:"🙌", title:"Volunteer Hours Review", secure:true,
+        desc:"Approve members' logged service hours toward the 12-hour commitment.",
+        run: async()=>{
+          const [{data:vh,error:e1},{data:pr,error:e2}] = await Promise.all([
+            supabase.from("volunteer_hours").select("*").order("created_at",{ascending:false}),
+            supabase.from("v_parade_ready").select("member_id,first_name,last_name")
+          ]);
+          if(e1) throw e1; if(e2) throw e2;
+          const nm={}; (pr||[]).forEach(p=>{ nm[p.member_id]=`${p.first_name} ${p.last_name}`; });
+          const rows=vh||[];
+          if(!rows.length) return '<p class="empty">No volunteer hours logged yet.</p>';
+          const pending=rows.filter(r=>!r.approved).length;
+          return rStats([{l:"Entries",v:rows.length},{l:"Pending review",v:pending}])
+            + '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Member</th><th>Activity</th><th>Hours</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'
+            + rows.map(r=>`<tr><td>${esc(nm[r.member_id]||"?")}</td><td>${esc(r.activity)}</td><td>${esc(String(r.hours))}</td><td>${fmtDate(r.worked_on)}</td>`
+              + `<td>${r.approved?"✅ approved":"⏳ pending"}</td>`
+              + `<td>${r.approved
+                  ? `<button class="rpt-btn" type="button" onclick="kosReviewHours('${r.id}',false)">Undo</button>`
+                  : `<button class="rpt-btn ok" type="button" onclick="kosReviewHours('${r.id}',true)">Approve</button>`}</td></tr>`).join("")
+            + '</tbody></table></div>';
+        }},
+      { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
+        desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
+        run: async()=>{
+          const since=new Date(Date.now()-86400000).toISOString();
+          const { data, error } = await supabase.from("events")
+            .select("id,name,start_time,is_mandatory").eq("event_type","meeting")
+            .gte("start_time",since).order("start_time",{ascending:true});
+          if(error) throw error;
+          const rows=data||[];
+          let html = `<div class="krewe-form" style="padding:0 0 14px;">
+            <h3 class="rpt-cat" style="margin-top:0;">➕ Schedule a meeting</h3>
+            <div class="row">
+              <div><label for="mtName">Meeting name</label><input id="mtName" placeholder="e.g. February parade briefing" /></div>
+              <div><label for="mtWhen">Date &amp; time</label><input id="mtWhen" type="datetime-local" /></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;"><input type="checkbox" id="mtMand" checked style="width:auto;" /> Mandatory (counts toward Parade Ready)</label>
+            <button type="button" class="btn btn-primary" onclick="kosCreateMeeting()">☘ Create meeting</button>
+            <div class="msg" id="mtMsg"></div></div>
+            <h3 class="rpt-cat">📲 Upcoming meetings</h3>`;
+          if(!rows.length) html += '<p class="empty">No upcoming meetings yet. Create one above.</p>';
+          else html += rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
+              <b>${esc(r.name)}</b> <span>${fmtDate(r.start_time)}</span> ${r.is_mandatory?'<span class="rank-pill">mandatory</span>':""}
+              <button class="rpt-btn ok" type="button" onclick="kosShowCheckinQR('${r.id}', this)">Show check-in QR</button>
+              <div class="qr-slot" style="flex-basis:100%;"></div>
+            </div>`).join("");
+          return html;
+        }},
+
       /* ---- Events & Attendance ---- */
       { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
         desc:"Every scheduled event with date and location.",
@@ -861,7 +1087,7 @@
         }},
     ];
 
-    const CATS = ["Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
+    const CATS = ["Parade Readiness","Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
 
     function buildReportGrid(){
       const grid=document.getElementById("reportGrid");

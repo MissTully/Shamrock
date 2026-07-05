@@ -214,3 +214,24 @@ in the Supabase dashboard — happy to help.
    - A dashboard showing active members and upcoming events.
 
 Tell me which of these you'd like to tackle next.
+
+## Parade Ready engine (added 2026-07)
+
+Migrations: `kos_parade_ready_engine`, `kos_checkin_codes_private`.
+
+| Object | Purpose |
+| --- | --- |
+| `waivers` | One signed liability waiver per member per season (`member_id`, `season_year`, `signed_name`, `signed_at`). Members insert/read their own; officers read all. |
+| `events.is_mandatory` | Marks meetings that count toward parade eligibility. |
+| `meeting_checkin_codes` | Officer-only table of QR check-in codes per meeting (kept out of `events`, which members can read). |
+| `volunteer_hours` | Member-logged service hours toward the 12-hour commitment (`activity`, `hours`, `worked_on`, `approved`). Members insert/read their own; officers approve via RPC. |
+| `v_parade_ready` (view, security invoker) | Per member: `dues_paid` (current year), `waiver_signed`, `meeting_attended` (mandatory meeting this year), `hours_approved`, `hours_logged`. Members see their own row; officers see the roster. |
+| `kos_current_member_id()` | Maps `auth.uid()` to the linked `members.id` via `profiles`. |
+| `meeting_check_in(p_code)` | Member RPC: marks attendance for the meeting whose code matches, within ±12h of its start. |
+| `officer_upsert_meeting(name, start, mandatory)` | Officer RPC: schedules a meeting event. |
+| `officer_enable_checkin(event_id)` | Officer RPC: creates/returns the meeting's check-in code. |
+| `officer_review_hours(id, approved)` | Officer RPC: approves or un-approves a volunteer-hours entry. |
+
+Frontend: the members portal's **Parade Ready** card (status gates, waiver signing, hour logging), the
+`?checkin=CODE` QR flow on members.html, and three officer reports (Wristband Pickup List, Volunteer
+Hours Review, Meeting Check-In QR) under the "Parade Readiness" report category.

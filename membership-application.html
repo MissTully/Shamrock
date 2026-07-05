@@ -10,6 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css" />
+<style>
+.mem-glance{padding:20px 26px 4px;}
+.mem-glance h2{font-family:var(--display);color:var(--green-800);text-align:center;margin:0 0 6px;}
+.mg-sub{text-align:center;color:var(--muted);font-family:var(--fancy);font-style:italic;margin:0 0 14px;}
+.mem-table{width:100%;border-collapse:collapse;font-size:15px;}
+.mem-table th,.mem-table td{padding:8px 10px;border:1px solid rgba(168,128,28,.3);text-align:left;}
+.mem-table thead th{background:var(--green-800);color:#f6efdc;font-family:var(--display);letter-spacing:.4px;}
+.mem-table td:first-child{font-weight:600;color:var(--green-800);}
+.mg-note{font-size:14px;color:var(--muted);margin:12px 0 4px;}
+</style>
 </head>
 <body>
 
@@ -69,6 +79,23 @@
         <h1>Join the Krewe</h1>
         <p>A hundred thousand welcomes await</p>
         <div class="banner-flourish" style="height:40px;margin:12px auto 0;width:80%;" aria-hidden="true"></div>
+      </div>
+      <div class="mem-glance">
+        <h2>Membership at a Glance</h2>
+        <p class="mg-sub">The krewe is capped at 140 members, so every seat matters. No Irish or Scottish
+           ancestry required; only a commitment to community.</p>
+        <table class="mem-table">
+          <thead><tr><th></th><th>Full Member</th><th>Associate</th></tr></thead>
+          <tbody>
+            <tr><td>Annual dues</td><td>$375</td><td>$450</td></tr>
+            <tr><td>Parade access</td><td>All krewe parades</td><td>2 parades of choice</td></tr>
+            <tr><td>Volunteer commitment</td><td>12 hours (or $12/hr donation)</td><td>None required</td></tr>
+            <tr><td>Voting rights</td><td>Full</td><td>None</td></tr>
+            <tr><td>Duration</td><td>Permanent</td><td>1 year, then renew as Full</td></tr>
+          </tbody>
+        </table>
+        <p class="mg-note">Every application includes a background check ($50 single, $75 couple), a current member
+           as sponsor, and Board approval. No sponsor yet? Apply anyway; we'll invite you along to meet the krewe.</p>
       </div>
       <form id="appForm" class="krewe-form">
         <div class="row">
