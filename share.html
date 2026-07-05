@@ -392,7 +392,7 @@
 </main>
 
 <footer class="site-footer" style="background:var(--green-900);color:#c8d9c0;text-align:center;padding:24px;font-size:14px;margin-top:0;">
-  <p style="margin:0;">&copy; 2025 Krewe of Shamrock &mdash; Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Members Area</a></p>
+  <p style="margin:0;">&copy; Krewe of Shamrock &mdash; Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Members Area</a></p>
 </footer>
 
 <script type="module">
@@ -436,7 +436,7 @@ document.getElementById('gateSend').addEventListener('click', async () => {
   errEl.textContent = '';
   const btn = document.getElementById('gateSend');
   btn.disabled = true; btn.textContent = 'Sending...';
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser:false, emailRedirectTo: location.href } });
   if (error) { errEl.textContent = error.message; btn.disabled=false; btn.textContent='Send Magic Link'; return; }
   btn.textContent = 'Check your email!';
   errEl.style.color = '#14532d';
