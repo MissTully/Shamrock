@@ -10,6 +10,48 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css" />
+<style>
+/* ---- The Heritage School (learning modules) ---- */
+.hs-progress{text-align:center;font-family:var(--display);color:var(--green-800);font-size:18px;margin:0 0 18px;}
+.hs-mod{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:14px;box-shadow:var(--shadow-sm);margin:0 0 14px;overflow:hidden;}
+.hs-mod summary{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;list-style:none;}
+.hs-mod summary::-webkit-details-marker{display:none;}
+.hs-num{flex:0 0 38px;height:38px;border-radius:50%;background:var(--green-800);color:#f6efdc;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;}
+.hs-t{flex:1;display:flex;flex-direction:column;}
+.hs-t b{font-family:var(--display);color:var(--green-800);font-size:20px;letter-spacing:.5px;}
+.hs-t small{color:var(--muted);font-family:var(--fancy);font-style:italic;font-size:15px;}
+.hs-badge{opacity:.15;font-size:22px;transition:opacity .3s;}
+.hs-mod.done .hs-badge{opacity:1;}
+.hs-mod.done .hs-num{background:var(--gold);color:#23420f;}
+.hs-body{padding:4px 20px 20px;border-top:1px dashed rgba(168,128,28,.35);}
+.hs-learn h4{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:15px;text-transform:uppercase;letter-spacing:1px;}
+.hs-learn ul{margin:0 0 14px;padding-left:20px;}
+.hs-learn li{margin:4px 0;}
+.hs-video{margin:8px 0 4px;}
+.hs-play{position:relative;display:block;width:100%;padding:0;border:0;cursor:pointer;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);background:#000;}
+.hs-play img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;opacity:.85;}
+.hs-playbtn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(20,83,45,.92);color:#f6efdc;display:flex;align-items:center;justify-content:center;font-size:24px;padding-left:5px;border:2px solid var(--gold);}
+.hs-play:hover .hs-playbtn{background:var(--green-700);}
+.hs-frame{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);}
+.hs-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+.hs-credit{display:block;text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px;}
+.hs-fact{background:rgba(20,83,45,.06);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 10px 10px 0;margin:14px 0;}
+.hs-q{margin:0 0 8px;}
+.hs-opts{display:flex;flex-wrap:wrap;gap:8px;}
+.hs-opts button{font:inherit;padding:8px 14px;border-radius:20px;border:1px solid rgba(168,128,28,.5);background:#fff;cursor:pointer;}
+.hs-opts button:hover{background:rgba(212,175,55,.15);}
+.hs-opts button.right{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+.hs-opts button.wrong{background:#b3452e;color:#fff;border-color:#b3452e;}
+.hs-verdict{min-height:1.2em;font-family:var(--fancy);font-style:italic;color:var(--green-800);font-size:18px;margin:8px 0 0;}
+.hs-phrases{display:grid;gap:8px;margin:8px 0 14px;}
+.hs-ph{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:10px;padding:10px 14px;}
+.hs-say{font:inherit;font-size:17px;border:1px solid rgba(168,128,28,.5);background:#fffdf4;border-radius:50%;width:38px;height:38px;flex:0 0 38px;cursor:pointer;}
+.hs-say:hover{background:rgba(212,175,55,.2);}
+.ph-w{min-width:230px;}
+.ph-w i{color:var(--muted);font-size:14px;}
+.ph-m{color:#3a3a2e;}
+@media(max-width:640px){ .hs-ph{flex-wrap:wrap;} .ph-w{min-width:0;} }
+</style>
 </head>
 <body>
 
@@ -70,8 +112,165 @@
 
   <main class="wrap narrow">
 
-    <!-- Featured: Kilt Guide -->
+    <!-- THE HERITAGE SCHOOL: short video lessons -->
     <div class="section-title">
+      <h2>The Heritage School</h2>
+      <p class="sub">Five short lessons: watch a clip, catch the facts, and test your Irish wit</p>
+    </div>
+    <div class="banner-flourish" aria-hidden="true"></div>
+    <p class="hs-progress" id="hsProgress">☘ 0 of 5 lessons complete</p>
+
+    <details class="hs-mod" data-mod="patrick">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>Patrick wasn't born Irish: he came from Britain, first as a captive, later as a missionary.</li>
+            <li>The famous "driving out the snakes" story is an allegory; Ireland never had snakes at all.</li>
+            <li>The parade tradition began in America, long before Ireland held one of its own.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="h5KNQ1xciMQ" data-vtitle="St. Patrick's Day: Bet You Didn't Know (HISTORY)">
+          <button type="button" class="hs-play" aria-label="Play video: St. Patrick's Day, Bet You Didn't Know">
+            <img loading="lazy" src="https://i.ytimg.com/vi/h5KNQ1xciMQ/hqdefault.jpg" alt="Video thumbnail for the history of St. Patrick's Day" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: HISTORY, "St. Patrick's Day: Bet You Didn't Know"</small>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> New York City marched a St. Patrick's Day parade in 1762, more than a century before Ireland held its own.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> Where was St. Patrick born?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Dublin</button>
+            <button type="button" data-k="b">Britain</button>
+            <button type="button" data-k="c">Boston</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="pipes">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Pipes of Ireland</b><small>Music · a tune to listen for</small></span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>Ireland's uilleann pipes are gentler cousins of the Highland bagpipe, played sitting down.</li>
+            <li>"Uilleann" comes from the Irish word for elbow: the piper pumps a bellows with one arm instead of blowing.</li>
+            <li>Put a few players in the corner of a pub and you have a session: tunes traded by ear, no sheet music in sight.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="IXJ4QZPNc94" data-vtitle="David Power, uilleann pipes at Dillon's Bar, Dungarvan">
+          <button type="button" class="hs-play" aria-label="Play video: David Power playing the uilleann pipes">
+            <img loading="lazy" src="https://i.ytimg.com/vi/IXJ4QZPNc94/hqdefault.jpg" alt="Video thumbnail of an uilleann piper performing in an Irish pub" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: David Power, uilleann pipes at Dillon's Bar, Dungarvan, Ireland</small>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> The uilleann chanter can play two full chromatic octaves, nearly twice the range of the Scottish pipes' nine notes.</p>
+        <div class="hs-quiz" data-answer="c">
+          <p class="hs-q"><b>Quick check:</b> How does an uilleann piper power the pipes?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Blowing into a mouthpiece</button>
+            <button type="button" data-k="b">A foot pedal</button>
+            <button type="button" data-k="c">A bellows pumped by the elbow</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="dance">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>In 1994, an unknown act called Riverdance filled the intermission of the Eurovision Song Contest in Dublin.</li>
+            <li>Those seven minutes electrified the world and relaunched Irish dance as a global phenomenon.</li>
+            <li>The stiff arms and flying feet come from the old dance-master tradition; the costumes from the Celtic Revival.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="RAtkcHpSHCw" data-vtitle="Riverdance, the 1994 Eurovision interval act">
+          <button type="button" class="hs-play" aria-label="Play video: the original Riverdance Eurovision performance">
+            <img loading="lazy" src="https://i.ytimg.com/vi/RAtkcHpSHCw/hqdefault.jpg" alt="Video thumbnail of the original 1994 Riverdance performance" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: Riverdance, the original 1994 Eurovision interval act, Dublin</small>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> Riverdance was created to fill a seven-minute TV intermission. It grew into a show seen live by over 25 million people.</p>
+        <div class="hs-quiz" data-answer="a">
+          <p class="hs-q"><b>Quick check:</b> Where did Riverdance premiere?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">The 1994 Eurovision Song Contest</button>
+            <button type="button" data-k="b">Broadway</button>
+            <button type="button" data-k="c">A Dublin street parade</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="legend">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>The legend of Fionn mac Cumhaill, the giant who built a stone causeway to face a Scottish rival.</li>
+            <li>How Finn's quick-thinking wife won the day with a cradle and a costume.</li>
+            <li>The real basalt columns still standing on the Antrim coast, all forty thousand of them.</li>
+          </ul>
+        </div>
+        <div class="hs-video" data-yt="aQbyVYUob1o" data-vtitle="The Irish myth of the Giant's Causeway (TED-Ed)">
+          <button type="button" class="hs-play" aria-label="Play video: the Irish myth of the Giant's Causeway">
+            <img loading="lazy" src="https://i.ytimg.com/vi/aQbyVYUob1o/hqdefault.jpg" alt="Video thumbnail for the animated myth of the Giant's Causeway" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: TED-Ed, "The Irish myth of the Giant's Causeway" by Iseult Gillespie</small>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> The hexagonal columns are real: cooling lava cracked into them some 60 million years ago. The story is better, though.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> How did Finn "defeat" the Scottish giant?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">A sword duel on the causeway</button>
+            <button type="button" data-k="b">He out-witted him, disguised as a baby</button>
+            <button type="button" data-k="c">A dance contest</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+
+    <details class="hs-mod" data-mod="irish">
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-badge">☘</span></summary>
+      <div class="hs-body">
+        <div class="hs-learn"><h4>What you'll learn</h4>
+          <ul>
+            <li>The four phrases every member of the krewe should have in their pocket.</li>
+            <li>How to pronounce them like you mean them (tap the speaker to hear two of them).</li>
+            <li>You needn't be fluent; a single warm word, well meant, is pure Irish.</li>
+          </ul>
+        </div>
+        <div class="hs-phrases">
+          <div class="hs-ph"><div class="ph-w"><b>Sláinte!</b> <i>(SLAWN-cha)</i></div><div class="ph-m">"Health!" The classic Irish toast.</div></div>
+          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/100 thousand welcomes.mp3" aria-label="Hear Céad Míle Fáilte">🔊</button><div class="ph-w"><b>Céad Míle Fáilte</b> <i>(kayd MEE-luh FAWL-cha)</i></div><div class="ph-m">"A hundred thousand welcomes."</div></div>
+          <div class="hs-ph"><button type="button" class="hs-say" data-audio="assets/audio/ElevenLabs_Untitled_project.mp3" aria-label="Hear what craic means">🔊</button><div class="ph-w"><b>Craic</b> <i>(crack)</i></div><div class="ph-m">Fun, laughter, news, and good company, all in one word.</div></div>
+          <div class="hs-ph"><div class="ph-w"><b>Dia dhuit</b> <i>(DEE-a GWIT)</i></div><div class="ph-m">"Hello." Literally, "God be with you."</div></div>
+        </div>
+        <p class="hs-fact">☘ <b>Fun fact:</b> Irish (Gaeilge) is one of Europe's oldest living written languages, with texts reaching back to the 4th century.</p>
+        <div class="hs-quiz" data-answer="b">
+          <p class="hs-q"><b>Quick check:</b> What does "Céad Míle Fáilte" mean?</p>
+          <div class="hs-opts">
+            <button type="button" data-k="a">Good luck to you</button>
+            <button type="button" data-k="b">A hundred thousand welcomes</button>
+            <button type="button" data-k="c">Health and wealth</button>
+          </div>
+          <p class="hs-verdict" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Featured: Kilt Guide -->
+    <div class="section-title" style="margin-top:56px;">
       <h2>The Irish Kilt</h2>
       <p class="sub">A guide to Gaelic heritage &amp; style</p>
     </div>
@@ -83,6 +282,20 @@
       Irish kilts often favor the saffron and solid colors, county-based tartans, and the Brian Boru jacket,
       a Gaelic cousin to the Scottish Highland tradition.
     </p>
+
+    <article class="article">
+      <div class="cat">Krewe Style</div>
+      <h2>Kilts in the Krewe</h2>
+      <div class="by">What we wear on parade day</div>
+      <p class="dropcap">In the Krewe of Shamrock, the kilt is the uniform of the day, and both great Gaelic
+         traditions are welcome on the route. Some members march Irish, in saffron or solid-color kilts and
+         county tartans. Others march Scottish, in clan tartans handed down the family line. Wear whichever
+         tradition calls to you; the only requirement is that you wear it proudly.</p>
+      <p>Up top, most of our men pair the kilt with a ghillie shirt, the loose, lace-up shirt of the old
+         Gaelic style that stays comfortable in the Florida sun. Add a sporran, kilt hose, and a good handful
+         of beads, and you're parade-ready. New to kilts? The guide above sorts the Irish styles from the
+         Scottish, and any member will happily talk tartan with you.</p>
+    </article>
 
     <!-- Static heritage articles -->
     <div class="section-title" style="margin-top:56px;">
@@ -337,5 +550,61 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
+  <script>
+  /* The Heritage School: video facades, quick checks, and progress */
+  (function(){
+    var KEY="kos_heritage_school";
+    function getDone(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
+    function setDone(d){ try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){} }
+    var mods=document.querySelectorAll(".hs-mod");
+
+    function refresh(){
+      var d=getDone(), n=0;
+      mods.forEach(function(m){ if(d[m.dataset.mod]){ m.classList.add("done"); n++; } });
+      var p=document.getElementById("hsProgress");
+      if(p) p.textContent = n>=mods.length
+        ? "🏆 All "+mods.length+" lessons complete. A true scholar of the krewe!"
+        : "☘ "+n+" of "+mods.length+" lessons complete";
+    }
+
+    // Click-to-load video embeds: the page stays light until a lesson is played.
+    document.querySelectorAll(".hs-video").forEach(function(v){
+      var btn=v.querySelector(".hs-play"); if(!btn) return;
+      btn.addEventListener("click",function(){
+        var wrap=document.createElement("div"); wrap.className="hs-frame";
+        var f=document.createElement("iframe");
+        f.src="https://www.youtube-nocookie.com/embed/"+v.dataset.yt+"?autoplay=1&rel=0";
+        f.title=v.dataset.vtitle||"Heritage lesson video";
+        f.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        f.allowFullscreen=true;
+        wrap.appendChild(f); btn.replaceWith(wrap);
+      });
+    });
+
+    document.querySelectorAll(".hs-quiz").forEach(function(q){
+      var mod=q.closest(".hs-mod"), verdict=q.querySelector(".hs-verdict");
+      q.querySelectorAll(".hs-opts button").forEach(function(b){
+        b.addEventListener("click",function(){
+          var right = b.dataset.k===q.dataset.answer;
+          q.querySelectorAll(".hs-opts button").forEach(function(x){ x.classList.remove("right","wrong"); });
+          b.classList.add(right?"right":"wrong");
+          if(right){
+            verdict.textContent="☘ Spot on! Lesson complete.";
+            var d=getDone(); d[mod.dataset.mod]=true; setDone(d); refresh();
+          } else {
+            verdict.textContent="Not quite. Have another go!";
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll(".hs-say").forEach(function(b){
+      var a=new Audio(b.dataset.audio);
+      b.addEventListener("click",function(){ a.currentTime=0; a.play(); });
+    });
+
+    refresh();
+  })();
+  </script>
 </body>
 </html>
