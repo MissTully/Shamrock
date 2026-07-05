@@ -351,7 +351,7 @@ form.krewe-form{ padding:26px 30px 30px; }
   box-shadow:var(--shadow-sm); white-space:nowrap;
   animation:nudge 2.4s ease-in-out 1s 2;
 }
-@keyframes nudge{ 0%,100%{transform:translateX(0);} 50%{transform:translateX(-4px);} } .craic-def{background:none;border:0;padding:0;margin:0;cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:var(--gold-light);text-underline-offset:4px;} .craic-def:hover{color:var(--gold-light);} .craic-def .ic{font-size:.8em;} .craic-def.playing{color:var(--gold-light);} .craic-def:focus-visible{outline:2px solid var(--gold-light);outline-offset:3px;border-radius:4px;}
+@keyframes nudge{ 0%,100%{transform:translateX(0);} 50%{transform:translateX(-4px);} } .craic-def{background:none;border:0;padding:0;margin:0;cursor:pointer;font:inherit;color:var(--gold-light);display:inline-flex;align-items:baseline;gap:.28em;text-decoration:none;transition:color .18s,text-shadow .18s,transform .18s;} .craic-def:hover{color:#fff;transform:translateY(-1px);text-shadow:0 2px 18px rgba(212,175,55,.55);} .craic-def .ic{font-size:.5em;opacity:.7;transition:opacity .18s;} .craic-def:hover .ic{opacity:1;} .craic-def.playing{color:#fff;text-shadow:0 2px 22px rgba(212,175,55,.7);} .craic-def:focus-visible{outline:2px solid var(--gold-light);outline-offset:6px;border-radius:8px;} #failteDefBtn{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(34px,5vw,56px);line-height:1.1;letter-spacing:.5px;text-shadow:0 2px 24px rgba(0,0,0,.35);}
 
 /* ============================================================
    RESPONSIVE
