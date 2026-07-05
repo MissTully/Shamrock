@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock · Poetry &amp; Art</title>
-<meta name="description" content="Original poems, blessings, and Celtic artwork from the Krewe of Shamrock community." />
+<title>Krewe of Shamrock · Krewe Creativity</title>
+<meta name="description" content="Krewe Creativity: photography, music, video, art, and writing shared by the Krewe of Shamrock community." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
@@ -34,6 +34,16 @@
   .poem-card .verse{ font-family:var(--fancy); white-space:pre-line; font-size:18px; line-height:1.65; color:#3a3326; }
   .poem-card .src{ font-style:italic; color:var(--muted); margin-top:12px; }
 </style>
+<style>
+.cre-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:18px 0 10px;}
+.cre-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:#fffdf4;
+  border:1px solid rgba(168,128,28,.35);border-radius:14px;padding:18px 14px;box-shadow:var(--shadow-sm);
+  text-decoration:none;color:#3a3a2e;transition:box-shadow .25s ease,transform .25s ease;}
+.cre-card:hover{box-shadow:var(--shadow);transform:translateY(-3px);}
+.cre-card .ic{font-size:30px;line-height:1;}
+.cre-card b{font-family:var(--display);color:var(--green-800);font-size:17px;letter-spacing:.4px;}
+.cre-card span:last-child{font-family:var(--fancy);font-style:italic;color:var(--muted);font-size:14.5px;}
+</style>
 </head>
 <body>
 
@@ -61,7 +71,7 @@
           <ul class="nav-dropdown">
             <li><a href="learn.html" data-nav="learn.html">Our Heritage</a></li>
             <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
-            <li><a href="poetry.html" data-nav="poetry.html">Poetry &amp; Art</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
           </ul>
         </li>
         <li class="nav-group">
@@ -87,14 +97,33 @@
 
   <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/gaelic-cottage.jpg')"></div>
-    <p class="eyebrow">Words &amp; pictures</p>
-    <h1>Poetry &amp; Art</h1>
-    <p class="sub">Blessings, verse, and artwork from our community.</p>
+    <p class="eyebrow">Made by the krewe</p>
+    <h1>Krewe Creativity</h1>
+    <p class="sub">Photography, music, video, art, and writing, shared by our community.</p>
   </header>
 
   <main class="wrap narrow">
 
-    <span class="crest float" role="img" aria-label="Shamrock crest"></span><div class="tune-picker" style="max-width:520px;margin:0 auto 40px;text-align:center;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow-sm);"><h3 style="font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:20px;">Play a Tune &#9752;</h3><p class="sub" style="margin:0 0 14px;">Pick a song to set the mood while you read.</p><audio id="tuneAudio" preload="none"></audio><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;"><select id="tuneSelect" aria-label="Choose a tune" style="padding:9px 12px;border:1px solid rgba(168,128,28,.45);border-radius:8px;font-family:var(--display);font-size:15px;background:#fbf4df;color:#3a3326;"><option value="assets/audio/krewe-theme.mp3">The Parting Glass</option><option value="assets/audio/Krewe of Shamrock.mp3">The Wild Rover</option><option value="assets/audio/Shamrock Krewe.mp3">Whiskey in the Jar</option><option value="assets/audio/The Krewe of Shamrock (1).mp3">The Krewe of Shamrock</option></select><button id="tunePlayBtn" class="btn btn-primary" type="button" aria-pressed="false" style="cursor:pointer;">&#9654; Play a Tune</button></div></div><script>(function(){var a=document.getElementById('tuneAudio'),s=document.getElementById('tuneSelect'),b=document.getElementById('tunePlayBtn');if(!a||!s||!b)return;function L(){a.src=s.value;}L();s.addEventListener('change',function(){var p=!a.paused;L();if(p){a.play().catch(function(){});}else{b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');}});b.addEventListener('click',function(){if(a.paused){if(!a.src)L();a.play().then(function(){b.textContent='\u275A\u275A Pause';b.setAttribute('aria-pressed','true');}).catch(function(){});}else{a.pause();b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');}});a.addEventListener('ended',function(){b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');});})();</script>
+    <span class="crest float" role="img" aria-label="Shamrock crest"></span><div class="tune-picker" style="max-width:520px;margin:0 auto 40px;text-align:center;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow-sm);"><h3 style="font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:20px;">Play a Tune &#9752;</h3><p class="sub" style="margin:0 0 14px;">Pick a song to set the mood while you read.</p><audio id="tuneAudio" preload="none"></audio><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;"><select id="tuneSelect" aria-label="Choose a tune" style="padding:9px 12px;border:1px solid rgba(168,128,28,.45);border-radius:8px;font-family:var(--display);font-size:15px;background:#fbf4df;color:#3a3326;"><option value="assets/audio/Céilí Hearth.mp3">Céilí Hearth</option><option value="assets/audio/krewe-theme.mp3">The Parting Glass</option><option value="assets/audio/Krewe of Shamrock.mp3">The Wild Rover</option><option value="assets/audio/Shamrock Krewe.mp3">Whiskey in the Jar</option><option value="assets/audio/The Krewe of Shamrock (1).mp3">The Krewe of Shamrock</option></select><button id="tunePlayBtn" class="btn btn-primary" type="button" aria-pressed="false" style="cursor:pointer;">&#9654; Play a Tune</button></div></div><script>(function(){var a=document.getElementById('tuneAudio'),s=document.getElementById('tuneSelect'),b=document.getElementById('tunePlayBtn');if(!a||!s||!b)return;function L(){a.src=s.value;}L();s.addEventListener('change',function(){var p=!a.paused;L();if(p){a.play().catch(function(){});}else{b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');}});b.addEventListener('click',function(){if(a.paused){if(!a.src)L();a.play().then(function(){b.textContent='\u275A\u275A Pause';b.setAttribute('aria-pressed','true');}).catch(function(){});}else{a.pause();b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');}});a.addEventListener('ended',function(){b.textContent='\u25B6 Play a Tune';b.setAttribute('aria-pressed','false');});})();</script>
+
+
+    <!-- SHARE YOUR CREATIVITY -->
+    <div class="section-title">
+      <h2>Share Your Creativity</h2>
+      <p class="sub">This page belongs to every maker in the krewe</p>
+    </div>
+    <div class="knot-divider"><span class="knot"></span></div>
+    <p style="text-align:center;max-width:660px;margin:0 auto 6px;">Photographs from the route, a song from your kitchen table,
+       a painting, a poem, a bit of film: if you made it, it belongs here. Pick your craft below, send it in, and
+       we'll hang it proudly for the whole community.</p>
+    <div class="cre-grid">
+      <a class="cre-card" href="share.html?type=photo"><span class="ic">📷</span><b>Photography</b><span>Beautiful photographic art: travel, landscapes &amp; the human spirit</span></a>
+      <a class="cre-card" href="share.html?type=video"><span class="ic">🎵</span><b>Music &amp; Video</b><span>Songs, sessions &amp; footage worth sharing</span></a>
+      <a class="cre-card" href="share.html?type=art"><span class="ic">🎨</span><b>Art</b><span>Paintings, drawings &amp; Celtic craft</span></a>
+      <a class="cre-card" href="share.html?type=poem"><span class="ic">✒️</span><b>Poetry</b><span>Verse, blessings &amp; toasts</span></a>
+      <a class="cre-card" href="share.html?type=story"><span class="ic">📖</span><b>Writing</b><span>Stories &amp; memories of the krewe</span></a>
+      <a class="cre-card" href="share.html?type=recipe"><span class="ic">🍲</span><b>Recipes</b><span>Irish favorites &amp; parade snacks</span></a>
+    </div>
 
     <!-- Illuminated feature: traditional Irish blessing -->
     <div class="illuminated ornate"><span class="crn tr"></span><span class="crn bl"></span>
@@ -142,7 +171,7 @@ May God hold you in the palm of His hand.</div>
 <a href="tartan-ball.html">Tartan Ball</a>
 <a href="learn.html">Heritage</a>
 <a href="krewe-history.html">History</a>
-<a href="poetry.html">Poetry &amp; Art</a>
+<a href="poetry.html">Krewe Creativity</a>
 <a href="gallery.html">Gallery</a>
 <a href="videos.html">Videos</a>
 <a href="volunteer.html">Volunteer</a>

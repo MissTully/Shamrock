@@ -118,7 +118,7 @@
           <ul class="nav-dropdown">
             <li><a href="learn.html" data-nav="learn.html">Our Heritage</a></li>
             <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
-            <li><a href="poetry.html" data-nav="poetry.html">Poetry &amp; Art</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
           </ul>
         </li>
         <li class="nav-group">
@@ -267,7 +267,7 @@
             </div>
             <div class="submit-area">
               <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Artwork is reviewed before appearing on the Poetry &amp; Art page.</span>
+              <span class="submit-note">&#x1f512; Artwork is reviewed before appearing on the Krewe Creativity page.</span>
             </div>
             <div class="msg" id="msgArt"></div>
           </form>
@@ -300,7 +300,7 @@
             </div>
             <div class="submit-area">
               <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Poems are reviewed before appearing on the Poetry &amp; Art page.</span>
+              <span class="submit-note">&#x1f512; Poems are reviewed before appearing on the Krewe Creativity page.</span>
             </div>
             <div class="msg" id="msgPoem"></div>
           </form>
@@ -592,7 +592,7 @@ document.getElementById('formArt').addEventListener('submit', async (e) => {
       body: document.getElementById('aDesc').value.trim() || null,
       media_url: url,
     });
-    showMsg('msgArt', 'success', 'Artwork submitted! It will appear on the Poetry & Art page after review.');
+    showMsg('msgArt', 'success', 'Artwork submitted! It will appear on the Krewe Creativity page after review.');
     e.target.reset();
     document.getElementById('fileArtName').textContent = '';
   } catch(err) {
@@ -614,7 +614,7 @@ document.getElementById('formPoem').addEventListener('submit', async (e) => {
       subtitle: document.getElementById('pmSubtitle').value.trim(),
       body: document.getElementById('pmBody').value.trim(),
     });
-    showMsg('msgPoem', 'success', 'Poem submitted! It will appear on the Poetry & Art page after review.');
+    showMsg('msgPoem', 'success', 'Poem submitted! It will appear on the Krewe Creativity page after review.');
     e.target.reset();
   } catch(err) {
     showMsg('msgPoem', 'error', 'Something went wrong: ' + err.message);

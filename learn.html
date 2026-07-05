@@ -71,6 +71,19 @@ details[open] > summary .arch-hint{display:none;}
 .lib-cat::before{background:linear-gradient(90deg,transparent,rgba(212,175,55,.55));}
 .lib-cat::after{background:linear-gradient(90deg,rgba(212,175,55,.55),transparent);}
 @media(max-width:560px){ .lib-cat h3{white-space:normal;font-size:19px;} }
+/* visual polish */
+.hs-mod{transition:box-shadow .25s ease;}
+.hs-mod summary:hover{background:rgba(212,175,55,.08);}
+.hs-mod[open]{box-shadow:var(--shadow);}
+.hs-bar{max-width:340px;height:8px;margin:-8px auto 24px;background:rgba(20,83,45,.12);border-radius:6px;overflow:hidden;}
+.hs-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green-700),var(--gold));border-radius:6px;transition:width .5s ease;}
+.arch summary{position:relative;padding-right:30px;}
+.arch summary:hover h2{color:var(--green-700);}
+.arch-caret{position:absolute;right:4px;top:4px;color:var(--gold-deep);font-size:18px;transition:transform .25s ease;}
+details[open] > summary .arch-caret{transform:rotate(180deg);}
+.arch-body > img{max-height:460px;object-fit:cover;}
+.article{transition:box-shadow .25s ease;}
+.article:hover{box-shadow:var(--shadow);}
 </style>
 </head>
 <body>
@@ -99,7 +112,7 @@ details[open] > summary .arch-hint{display:none;}
           <ul class="nav-dropdown">
             <li><a href="learn.html" data-nav="learn.html">Our Heritage</a></li>
             <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
-            <li><a href="poetry.html" data-nav="poetry.html">Poetry &amp; Art</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
           </ul>
         </li>
         <li class="nav-group">
@@ -139,10 +152,11 @@ details[open] > summary .arch-hint{display:none;}
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
     <p class="hs-progress" id="hsProgress">☘ 0 of 7 lessons complete</p>
+    <div class="hs-bar" aria-hidden="true"><i id="hsBarFill"></i></div>
 
     <div class="lib-cat"><h3>☘ Kilts &amp; Krewe Style</h3></div>
     <details class="hs-mod" data-mod="kilts">
-      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>Krewe style · start here</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>☘ Krewe style · start here</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -170,7 +184,7 @@ details[open] > summary .arch-hint{display:none;}
     </details>
 
     <details class="hs-mod" data-mod="formal">
-      <summary><span class="hs-num">2</span><span class="hs-t"><b>Formal Kilt Wear</b><small>Krewe style · dressed to the nines</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Formal Kilt Wear</b><small>🥂 Krewe style · watch and dress the part</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -180,8 +194,13 @@ details[open] > summary .arch-hint{display:none;}
             <li>The finishing touches: a dress sporran, kilt hose with flashes, ghillie brogues laced up the calf, and a kilt pin to hold the apron true.</li>
           </ul>
         </div>
-        <img loading="lazy" src="assets/img/ball-dancing.jpg" alt="Couples in formal attire dancing under chandeliers in a grand ballroom" style="width:100%;border-radius:12px;box-shadow:var(--shadow-sm);margin:8px 0;" />
-        <small class="hs-credit">Where the formal kilt shines: the Tartan Ball</small>
+        <div class="hs-video" data-yt="WcB7jZEWpHg" data-vtitle="Formal kilt wear">
+          <button type="button" class="hs-play" aria-label="Play video: formal kilt wear">
+            <img loading="lazy" src="https://i.ytimg.com/vi/WcB7jZEWpHg/hqdefault.jpg" alt="Video thumbnail: dressing the formal kilt" />
+            <span class="hs-playbtn" aria-hidden="true">▶</span>
+          </button>
+          <small class="hs-credit">Video: dressing the formal kilt, from hose and flashes to jacket</small>
+        </div>
         <div class="hs-terms"><span class="lbl">Key terms</span><span>Prince Charlie</span><span>Brian Boru jacket</span><span>Fly plaid</span><span>Dress sporran</span><span>Flashes</span></div>
         <p class="hs-fact">☘ <b>Fun fact:</b> The little "flashes" peeking below the fold of the kilt hose began life as garters that kept a marching Gael's hose from sliding down.</p>
         <div class="hs-quiz" data-answer="c">
@@ -204,16 +223,17 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Kilts in the Krewe</h2>
           <div class="by">What we wear on parade day</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <p class="dropcap">In the Krewe of Shamrock, the kilt is the uniform of the day, and both great Gaelic
          traditions are welcome on the route. Some members march Irish, in saffron or solid-color kilts and
          county tartans. Others march Scottish, in clan tartans handed down the family line. Wear whichever
          tradition calls to you; the only requirement is that you wear it proudly.</p>
-      <p>Up top, most of our men pair the kilt with a ghillie shirt, the loose, lace-up shirt of the old
-         Gaelic style that stays comfortable in the Florida sun. Add a sporran, kilt hose, and a good handful
-         of beads, and you're parade-ready. New to kilts? The lesson cards above sort the Irish styles from the
-         Scottish, and any member will happily talk tartan with you.</p>
+      <p>On parade morning you'll see every version of it rolling out together: saffron beside clan plaid,
+         county tartan beside solid green, and ghillie shirts everywhere in the Florida sun. Add a sporran,
+         kilt hose, and a good handful of beads, and you're parade-ready. New to kilts? The lesson cards above
+         sort the styles, and any member will happily talk tartan with you.</p>
             </div>
       </details>
     </article>
@@ -225,6 +245,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Kilt Myths &amp; Legends</h2>
           <div class="by">Sorting fact from folklore</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns" />
@@ -250,9 +271,10 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Did the Irish Invent the Kilt?</h2>
           <div class="by">From the Celtic Fire blog</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
-      <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
+      <img src="assets/img/gallery/krewe-parade-kilts.jpg" alt="Krewe members marching in kilts on the Tampa parade route" />
       <p class="dropcap">Around 432 AD, in the days of Saint Patrick, what did the Irish actually wear? Author
          Erin O'Quinn paints the picture from old manuscripts, Roman accounts, Ireland's earliest legends, and
          garments pulled from the preserving depths of the bog: the linen <i>léine</i> belted at the waist, the
@@ -271,9 +293,87 @@ details[open] > summary .arch-hint{display:none;}
     </article>
 
 
+    <div class="lib-cat"><h3>💚 Krewe Life &amp; Giving Back</h3></div>
+    <article class="article" id="art-morning">
+      <details class="arch">
+        <summary>
+          <div class="cat">Krewe Life</div>
+          <h2>The Morning the Pipes Start</h2>
+          <div class="by">Parade day</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/gallery/krewe-group-parade.jpg" alt="Krewe of Shamrock members in kilts gathered before a parade" />
+      <p class="dropcap">There's a particular kind of magic to parade morning. The kilts come out of their garment
+         bags, the beads get untangled, and somebody's always missing a sporran. Then the pipes start to tune,
+         that first wheezy drone fills the air, and a hundred neighbors suddenly become one krewe.</p>
+      <p>Watch a first-year member on that morning. They arrived early and a little nervous, fussing with an
+         unfamiliar kilt, wondering if they'd fit in. Three hours later they're waving to strangers like old
+         friends, tossing beads to kids riding high on shoulders, and walking taller than they did at dawn.
+         Nobody teaches that. The route does.</p>
+      <p>That's the secret we relearn every season: the parade we give Tampa Bay gives back double. Strangers on
+         the curb wave their little flags, children dash for beads, and for a few green-and-gold hours the whole
+         bay feels like family. We march to bring the joy, and we come home carrying more of it than we brought.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-family">
+      <details class="arch">
+        <summary>
+          <div class="cat">Krewe Life</div>
+          <h2>The Family You Choose</h2>
+          <div class="by">Our welcome</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/gallery/krewe-big-group.jpg" alt="A large group of smiling Krewe of Shamrock members together" />
+      <p class="dropcap">Ask almost anyone in the Krewe what kept them, and they won't say the parades or the
+         party. They'll say the people. Folks arrive knowing one member, or none, and within a season they've got
+         a whole table of friends saving them a seat. Irish or not, kilted or not, everyone's welcome.</p>
+      <p>Then something quietly wonderful happens. The shy one ends up running a committee. The one who swore
+         they'd never sing in public is the one starting the songs. The couple who joined "just for the parade"
+         is hosting the planning dinner. Nobody sets out to become more here; there's simply room to try, and a
+         whole krewe cheering the moment you do.</p>
+      <p>"All for Fun, Fun for All" isn't just our motto; it's how a stranger at their first meeting becomes the
+         one tuning the pipes a few years on. New faces, as we like to say, are simply old friends we haven't met
+         yet. Pull up a chair. Yours is next.</p>
+            </div>
+      </details>
+    </article>
+
+    <article class="article" id="art-giving">
+      <details class="arch">
+        <summary>
+          <div class="cat">Giving Back</div>
+          <h2>More Than a Good Time</h2>
+          <div class="by">Service &amp; charity</div>
+          <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div class="arch-body">
+      <img src="assets/img/gallery/krewe-ladies-group.jpg" alt="Krewe of Shamrock members together at a community gathering" />
+      <p class="dropcap">For all the craic, the Krewe has always believed a good time should do some good. Over the
+         years our members have given thousands of dollars and countless hours to Tampa Bay: unloading delivery
+         trucks for families starting over, standing beside children fighting illness, and filling toy drives,
+         food drives, and every gap in between.</p>
+      <p>It's quiet work, mostly, far from the parade route. No beads, no crowds. Just a Saturday morning, a
+         borrowed truck, and a family stepping into a furnished home for the first time. Ask the members who were
+         there which day of the season they'd never trade, and that's the one they name. It works in a way that's
+         hard to explain and easy to feel: show up to carry someone else's load, and you walk out lighter.</p>
+      <p>Every hour given is a thread, and the threads become the same strong weave that holds a krewe, and a
+         community, together. If that sounds like your kind of morning, our
+         <a href="volunteer.html">Service &amp; Charity</a> page is the place to start. Bring a friend. Come see
+         what a good time can build.</p>
+            </div>
+      </details>
+    </article>
+
     <div class="lib-cat"><h3>🎻 Music &amp; Dance</h3></div>
     <details class="hs-mod" data-mod="pipes">
-      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>🎻 Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -311,7 +411,7 @@ details[open] > summary .arch-hint{display:none;}
     </details>
 
     <details class="hs-mod" data-mod="dance">
-      <summary><span class="hs-num">4</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>👞 Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -349,6 +449,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Pipes, Drums &amp; the Music Session</h2>
           <div class="by">Irish &amp; Scottish tradition</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
@@ -371,6 +472,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Dancing Irish Women</h2>
           <div class="by">Steps through time</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
@@ -393,7 +495,7 @@ details[open] > summary .arch-hint{display:none;}
 
     <div class="lib-cat"><h3>📜 History &amp; Festivals</h3></div>
     <details class="hs-mod" data-mod="patrick">
-      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Real St. Patrick</b><small>History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Real St. Patrick</b><small>📜 History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -431,6 +533,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>High Crosses &amp; the Fields of Clover</h2>
           <div class="by">Irish heritage</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
@@ -450,6 +553,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>The Wheel of the Year</h2>
           <div class="by">Seasons &amp; celebrations</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
@@ -467,7 +571,7 @@ details[open] > summary .arch-hint{display:none;}
 
     <div class="lib-cat"><h3>🏰 Legends &amp; Myth</h3></div>
     <details class="hs-mod" data-mod="legend">
-      <summary><span class="hs-num">6</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">6</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>🏰 Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -494,30 +598,9 @@ details[open] > summary .arch-hint{display:none;}
           </div>
           <p class="hs-verdict" aria-live="polite"></p>
         </div>
-        <a class="hs-goto" href="#art-causeway">☘ Keep learning: read the full tale, then meet the Salmon of Knowledge just below</a>
+        <a class="hs-goto" href="#art-salmon">☘ Keep learning: meet the Salmon of Knowledge just below</a>
       </div>
     </details>
-
-    <article class="article" id="art-causeway">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends &amp; Myth</div>
-          <h2>Finn McCool &amp; the Giant's Causeway</h2>
-          <div class="by">A tale of Éireann</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/irish-folk.jpg" alt="Irish folk gathered together" />
-      <p class="dropcap">They say the giant Fionn mac Cumhaill, better known as Finn McCool, built a causeway of stone columns
-         across the sea to face a Scottish rival. When he saw the size of the other giant, clever Finn's wife
-         disguised him as a baby in a cradle. The Scot took one look at the "child," reckoned the father must be
-         enormous, and fled home, tearing up the causeway behind him.</p>
-      <p>The basalt columns of the Giant's Causeway still stand on the Antrim coast to this day. It's a tale that
-         captures the Irish gift entirely: when in doubt, out-wit rather than out-fight, then tell a grand story about
-         it after.</p>
-            </div>
-      </details>
-    </article>
 
     <article class="article" id="art-salmon">
       <details class="arch">
@@ -526,6 +609,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>The Salmon of Knowledge</h2>
           <div class="by">A tale of Éireann</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
@@ -551,6 +635,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Daughters &amp; Warriors of Éireann</h2>
           <div class="by">Irish legend</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
@@ -567,7 +652,7 @@ details[open] > summary .arch-hint{display:none;}
 
     <div class="lib-cat"><h3>🗣 Language &amp; Symbols</h3></div>
     <details class="hs-mod" data-mod="irish">
-      <summary><span class="hs-num">7</span><span class="hs-t"><b>Speak a Little Irish</b><small>Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+      <summary><span class="hs-num">7</span><span class="hs-t"><b>Speak a Little Irish</b><small>🗣 Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -603,6 +688,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>Sláinte! A Few Words of Irish</h2>
           <div class="by">As Gaeilge, in the Irish language</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
@@ -623,6 +709,7 @@ details[open] > summary .arch-hint{display:none;}
           <h2>The Triquetra: Knot of Three</h2>
           <div class="by">Irish heritage</div>
           <span class="arch-hint">☘ Click to read the story</span>
+          <span class="arch-caret" aria-hidden="true">▾</span>
         </summary>
         <div class="arch-body">
       <img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
@@ -637,80 +724,7 @@ details[open] > summary .arch-hint{display:none;}
     </article>
 
 
-    <div class="lib-cat"><h3>💚 Krewe Life &amp; Giving Back</h3></div>
-    <article class="article" id="art-morning">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe Life</div>
-          <h2>The Morning the Pipes Start</h2>
-          <div class="by">Parade day</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-group-parade.jpg" alt="Krewe of Shamrock members in kilts gathered before a parade" />
-      <p class="dropcap">There's a particular kind of magic to parade morning. The kilts come out of their garment
-         bags, the beads get untangled, and somebody's always missing a sporran. Then the pipes start to tune,
-         that first wheezy drone fills the air, and a hundred neighbors suddenly become one krewe.</p>
-      <p>Watch a first-year member on that morning. They arrived early and a little nervous, fussing with an
-         unfamiliar kilt, wondering if they'd fit in. Three hours later they're waving to strangers like old
-         friends, tossing beads to kids riding high on shoulders, and walking taller than they did at dawn.
-         Nobody teaches that. The route does.</p>
-      <p>That's the secret we relearn every season: the parade we give Tampa Bay gives back double. Strangers on
-         the curb wave their little flags, children dash for beads, and for a few green-and-gold hours the whole
-         bay feels like family. We march to bring the joy, and we come home carrying more of it than we brought.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-family">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe Life</div>
-          <h2>The Family You Choose</h2>
-          <div class="by">Our welcome</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-big-group.jpg" alt="A large group of smiling Krewe of Shamrock members together" />
-      <p class="dropcap">Ask almost anyone in the Krewe what kept them, and they won't say the parades or the
-         party. They'll say the people. Folks arrive knowing one member, or none, and within a season they've got
-         a whole table of friends saving them a seat. Irish or not, kilted or not, everyone's welcome.</p>
-      <p>Then something quietly wonderful happens. The shy one ends up running a committee. The one who swore
-         they'd never sing in public is the one starting the songs. The couple who joined "just for the parade"
-         is hosting the planning dinner. Nobody sets out to become more here; there's simply room to try, and a
-         whole krewe cheering the moment you do.</p>
-      <p>"All for Fun, Fun for All" isn't just our motto; it's how a stranger at their first meeting becomes the
-         one tuning the pipes a few years on. New faces, as we like to say, are simply old friends we haven't met
-         yet. Pull up a chair. Yours is next.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-giving">
-      <details class="arch">
-        <summary>
-          <div class="cat">Giving Back</div>
-          <h2>More Than a Good Time</h2>
-          <div class="by">Service &amp; charity</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-ladies-group.jpg" alt="Krewe of Shamrock members together at a community gathering" />
-      <p class="dropcap">For all the craic, the Krewe has always believed a good time should do some good. Over the
-         years our members have given thousands of dollars and countless hours to Tampa Bay: unloading delivery
-         trucks for families starting over, standing beside children fighting illness, and filling toy drives,
-         food drives, and every gap in between.</p>
-      <p>It's quiet work, mostly, far from the parade route. No beads, no crowds. Just a Saturday morning, a
-         borrowed truck, and a family stepping into a furnished home for the first time. Ask the members who were
-         there which day of the season they'd never trade, and that's the one they name. It works in a way that's
-         hard to explain and easy to feel: show up to carry someone else's load, and you walk out lighter.</p>
-      <p>Every hour given is a thread, and the threads become the same strong weave that holds a krewe, and a
-         community, together. If that sounds like your kind of morning, our
-         <a href="volunteer.html">Service &amp; Charity</a> page is the place to start. Bring a friend. Come see
-         what a good time can build.</p>
-            </div>
-      </details>
-    </article>
+    
 
 
   </main>
@@ -725,7 +739,7 @@ details[open] > summary .arch-hint{display:none;}
 <a href="tartan-ball.html">Tartan Ball</a>
 <a href="learn.html">Heritage</a>
 <a href="krewe-history.html">History</a>
-<a href="poetry.html">Poetry &amp; Art</a>
+<a href="poetry.html">Krewe Creativity</a>
 <a href="gallery.html">Gallery</a>
 <a href="videos.html">Videos</a>
 <a href="volunteer.html">Volunteer</a>
@@ -760,6 +774,8 @@ details[open] > summary .arch-hint{display:none;}
       if(p) p.textContent = n>=mods.length
         ? "🏆 All "+mods.length+" lessons complete. A true scholar of the krewe!"
         : "☘ "+n+" of "+mods.length+" lessons complete";
+      var f=document.getElementById("hsBarFill");
+      if(f) f.style.width = Math.round(n/mods.length*100)+"%";
     }
 
     // Click-to-load video embeds: the page stays light until a lesson is played.
