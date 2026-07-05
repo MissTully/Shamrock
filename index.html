@@ -7,7 +7,7 @@
     <title>Krewe of Shamrock — Tampa Bay</title>
   <meta name="description" content="The Krewe of Shamrock — celebrating Irish heritage and St. Patrick's Day in Tampa Bay. Join us, RSVP to events, and march in the parade." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" hrefh="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/krewe.css" />
   </head>
@@ -238,13 +238,13 @@ simply love good music and a good party, there's a place for you at our table.</
 
 <!-- EVENTS DATA -->
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const supabase = createClient(
   "https://njfzrnqwbnuhmopgpsud.supabase.co",
   "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF"
   );
 const list = document.getElementById("eventList");
-const esc = (s)=> (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
 (async () => {
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
