@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="assets/img/emblem-unicorn.svg" />
+<title>Krewe of Unicorns · Members Only</title>
+<meta name="description" content="Members-only coordination tools for the Krewe of Unicorns: locker rentals, carpools, van pools, and the member directory. (Demo)" />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
+  .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:420px; width:100%; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
+  .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
+  .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
+  .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
+  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
+  .demo-note{ background:#f3e9ff; border:1px solid rgba(76,29,149,.3); color:#4c1d95; border-radius:12px; padding:11px 14px; font-size:13.5px; line-height:1.5; margin:0 0 16px; }
+  .demo-banner{ background:linear-gradient(90deg,#f3e9ff,#fff6e9); border:1px solid rgba(76,29,149,.28); color:#4c1d95;
+    border-radius:14px; padding:12px 16px; font-size:14.5px; line-height:1.5; margin:0 0 18px; text-align:center; }
+  .member-grid{ display:grid; gap:26px; }
+  .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .app-card > .app-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px; }
+  .app-head .ic{ font-size:26px; } .app-head h2{ margin:0; font-family:var(--display); font-size:21px; }
+  .app-head small{ display:block; font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:14px; }
+  .app-body{ padding:20px 22px; }
+  .krewe-form .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .data-list{ list-style:none; padding:0; margin:14px 0 0; display:grid; gap:10px; }
+  .data-row{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; font-size:15px; }
+  .data-row b{ color:var(--green-800); }
+  .badge{ display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.5px; }
+  .badge.requested{ background:#f0e2bd; color:#7a5b00; }
+  .badge.assigned{ background:#e9d8fd; color:#5b21b6; }
+  .badge.paid{ background:#ddd6fe; color:#4c1d95; }
+  .badge.available{ background:#e6e6e6; color:#444; }
+  .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
+  .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
+  .seg button.on{ background:var(--green-700); color:#fff; }
+  .van-card{ border:1px solid rgba(168,128,28,.3); border-radius:14px; padding:16px; margin-top:12px; background:#fbf7ec; }
+  .van-card .seats{ font-family:var(--display); color:var(--green-800); font-weight:700; }
+  .mini-form{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-top:10px; }
+  .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
+  .mini-form button{ white-space:nowrap; }
+  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
+  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; }
+  .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
+  .dir-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .msg{ margin-top:10px; font-size:14px; }
+  .msg.success{ color:#4c1d95; } .msg.error{ color:#a12; }
+  .empty{ color:var(--muted); font-style:italic; }
+
+  /* ---- Reports Dashboard ---- */
+  .dash-card{ cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .dash-card:hover{ transform:translateY(-2px); box-shadow:0 16px 38px rgba(0,0,0,.18); }
+  .dash-card .app-head{ background:linear-gradient(180deg,#6d28d9,var(--green-900)); }
+  .dash-card .dash-go{ margin-left:auto; font-family:var(--display); color:var(--gold-light); font-size:15px; white-space:nowrap; }
+  .dash-body p{ margin:0 0 14px; color:#3a3a2e; }
+  .dash-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .dash-chips span{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); }
+  .dash-chip-link{ background:#f0e8d2; border:1px solid rgba(168,128,28,.3); color:var(--green-800); border-radius:999px; padding:5px 13px; font-size:14px; font-family:var(--display); text-decoration:none; display:inline-block; transition:background .15s,border-color .15s; }
+  .dash-chip-link:hover{ background:#e8ddc0; border-color:var(--green-700); color:var(--green-800); }
+
+  .modal-overlay{ position:fixed; inset:0; z-index:10000; background:rgba(24,14,46,.74); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; overflow-y:auto; }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{ background:#fbf7ec; width:100%; max-width:920px; border-radius:18px; border:1px solid var(--gold); box-shadow:0 30px 80px rgba(0,0,0,.5); overflow:hidden; margin:auto; }
+  .modal-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:16px 22px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:2; }
+  .modal-head h2{ margin:0; font-family:var(--display); font-size:21px; }
+  .modal-x{ margin-left:auto; background:rgba(255,255,255,.16); border:0; color:#fff; width:34px; height:34px; border-radius:9px; font-size:16px; cursor:pointer; }
+  .modal-x:hover{ background:rgba(255,255,255,.3); }
+  .modal-body{ padding:20px 22px 28px; }
+  .rpt-cat{ font-family:var(--display); color:var(--green-800); font-size:15px; letter-spacing:.6px; text-transform:uppercase; margin:20px 0 10px; border-bottom:1px solid rgba(168,128,28,.3); padding-bottom:6px; }
+  .rpt-cat:first-child{ margin-top:0; }
+  .rpt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+  .rpt-card{ text-align:left; background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:12px; padding:14px 15px; cursor:pointer; transition:transform .12s, box-shadow .12s; }
+  .rpt-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.12); }
+  .rpt-card .t{ font-family:var(--display); color:var(--green-800); font-size:16px; display:flex; align-items:center; gap:7px; }
+  .rpt-card .d{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
+  .rpt-card .lock{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#7a5b00; background:#f0e2bd; border-radius:999px; padding:2px 9px; display:inline-block; margin-top:9px; }
+  .rpt-back{ background:none; border:0; color:var(--green-700); font-family:var(--display); font-size:15px; cursor:pointer; padding:0; margin-bottom:10px; }
+  .rpt-back:hover{ text-decoration:underline; }
+  #reportTitle{ font-family:var(--display); color:var(--green-800); margin:0 0 14px; font-size:22px; }
+  .stat-row{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 16px; }
+  .stat{ flex:1 1 120px; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:14px; text-align:center; }
+  .stat .num{ font-family:var(--display); color:var(--green-800); font-size:26px; line-height:1.1; }
+  .stat .lab{ font-size:13px; color:var(--muted); margin-top:4px; }
+  .rpt-tablewrap{ overflow-x:auto; }
+  .rpt-table{ width:100%; border-collapse:collapse; font-size:14px; background:#fff; border-radius:10px; overflow:hidden; }
+  .rpt-table th{ background:var(--green-700); color:#fff; text-align:left; padding:9px 11px; font-family:var(--display); font-weight:600; white-space:nowrap; }
+  .rpt-table td{ padding:8px 11px; border-top:1px solid rgba(168,128,28,.18); }
+  .rpt-table tr:nth-child(even) td{ background:#fbf7ec; }
+  .rpt-note{ font-size:14px; color:var(--muted); margin-top:14px; }
+  .rpt-secure{ background:#fff; border:1px solid rgba(168,128,28,.3); border-left:4px solid var(--gold); border-radius:12px; padding:18px 20px; }
+  .rpt-secure h4{ margin:0 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
+  .rpt-secure p{ margin:0 0 8px; }
+
+  /* ---- Parade Ready ---- */
+  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(76,29,149,.08);border:1px solid rgba(76,29,149,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 12px;}
+  .pr-pill.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+  .pr-gate{padding:5px 2px;font-size:15.5px;}
+  .pr-gate small{color:var(--muted);font-size:13.5px;}
+  .pr-waiver{background:#fffdf4;border:1px dashed rgba(168,128,28,.5);border-radius:12px;padding:12px 14px;margin-top:10px;}
+  .pr-hrs{font-size:15px;margin:0 0 6px;}
+  .rpt-btn{font:inherit;font-size:13.5px;padding:5px 12px;border-radius:14px;border:1px solid rgba(168,128,28,.5);background:#fff;cursor:pointer;}
+  .rpt-btn.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+  .rpt-btn:hover{opacity:.85;}
+
+  /* ---- The Sparkle Cup (gamification) ---- */
+  .game-head .app-head{ background:linear-gradient(180deg,#b8860b,#6f5300); }
+  .game-tabs{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+  .game-tabs button{ border:0; background:#fff; color:var(--green-800); padding:9px 18px; font-family:var(--display); cursor:pointer; }
+  .game-tabs button.on{ background:var(--green-700); color:#fff; }
+  .lb-table .medal{ font-size:18px; white-space:nowrap; }
+  .rank-pill{ display:inline-flex; align-items:center; gap:6px; background:#f0e8d2; border:1px solid rgba(168,128,28,.4); color:var(--green-800); border-radius:999px; padding:3px 12px; font-family:var(--display); font-size:14px; white-space:nowrap; }
+  .badge-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:8px; }
+  .badge-chip{ border:1px solid rgba(168,128,28,.3); border-radius:12px; padding:12px; background:#fff; text-align:center; }
+  .badge-chip .ic{ font-size:30px; line-height:1; }
+  .badge-chip .nm{ font-family:var(--display); color:var(--green-800); font-size:14px; margin-top:6px; }
+  .badge-chip .ds{ font-size:12px; color:var(--muted); margin-top:3px; line-height:1.35; }
+  .prog{ background:#e7e0c8; border-radius:999px; height:14px; overflow:hidden; margin:8px 0; }
+  .prog > i{ display:block; height:100%; background:linear-gradient(90deg,#7c3aed,#4c1d95); }
+  .pt-table td:last-child{ text-align:right; font-family:var(--display); color:var(--green-800); white-space:nowrap; }
+  .find-card{ background:#fff; border:1px solid var(--gold); border-radius:16px; padding:20px; margin-top:14px; box-shadow:var(--shadow-sm); }
+  .find-card .big{ font-family:var(--display); color:var(--green-800); font-size:40px; line-height:1; }
+
+  /* ---- Members Only: auth, tour, raffles ---- */
+  .auth-card .auth-features{ margin-top:18px; text-align:left; display:grid; gap:8px; }
+  .afe{ font-size:14px; color:#3a3a2e; } .afe span{ margin-right:6px; }
+  .tour-grid{ display:grid; gap:12px; }
+  .tour-item{ display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; }
+  .tour-item span{ font-size:26px; line-height:1; }
+  .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f5e,#3f0f30); }
+  .raffle-event{ margin-bottom:22px; }
+
+  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
+</style>
+</head>
+<body>
+
+  <!-- DEMO AUTH GATE -->
+  <div class="gate" id="authStage">
+    <div class="gate-card auth-card">
+      <img src="assets/img/emblem-unicorn.svg" alt="Krewe of Unicorns emblem" />
+      <h1>Members Only</h1>
+      <div class="demo-note">✨ Demo members area — on a live Krewe &amp; Kin site this is protected by a real member login. Step inside to explore the full portal, no password required.</div>
+      <form id="demoForm">
+        <input id="demoEmail" type="email" placeholder="you@example.com (optional)" autocomplete="email" />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">🦄 Enter the Members Area (Demo)</button>
+        <div class="err" id="demoMsg"></div>
+      </form>
+      <div class="auth-features">
+        <div class="afe"><span>✨</span> The Sparkle Cup: earn Sparkles, climb the ranks, collect badges</div>
+        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles: enter and track your tickets</div>
+        <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
+        <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="krewe-nav" aria-label="Primary">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-unicorn.svg" alt="Krewe of Unicorns emblem" />
+      <span class="name"><b>Krewe of Unicorns</b><small>Tampa Bay · Est. 2020</small></span>
+    </a>
+    <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
+      <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div class="krewe-menu" id="kreweMenu">
+      <ul class="krewe-links">
+        <li><a href="index.html" data-nav="index.html">Home</a></li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Events <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="event-signup.html" data-nav="event-signup.html">Upcoming Events</a></li>
+            <li><a href="parades.html" data-nav="parades.html">Parades</a></li>
+            <li><a href="enchanted-ball.html" data-nav="enchanted-ball.html">Enchanted Ball</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="learn.html" data-nav="learn.html">Unicorn Lore</a></li>
+            <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Media <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="gallery.html" data-nav="gallery.html">Photo Gallery</a></li>
+            <li><a href="videos.html" data-nav="videos.html">Videos</a></li>
+            <li><a href="share.html" data-nav="share.html">Share Yours</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Get Involved <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
+            <li><a href="store.html" data-nav="store.html">Shop</a></li>
+            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
+          </ul>
+        </li>
+      </ul>
+      <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">🦄 Join</a>
+    </div>
+  </nav>
+
+  <header class="page-head">
+    <div class="ph-bg" style="background-image:url('assets/img/bg-twilight.svg')"></div>
+    <p class="eyebrow">For the Herd</p>
+    <h1>Members Only</h1>
+    <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow unicorns.</p>
+  </header>
+
+  <main class="wrap" id="memberContent" style="display:none;">
+    <div class="demo-banner">✨ <b>Demo members area.</b> Everything below is populated with sample data and runs entirely in your browser — nothing is sent anywhere. On a live Krewe &amp; Kin site this portal is protected by a real member login.</div>
+    <div id="memberBar" style="display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:6px 2px 10px;">
+      <span id="memberWho" style="font-family:var(--display,serif);color:var(--green-800,#4c1d95);font-size:15px;"></span>
+      <button type="button" onclick="if(window.kosSignOut)window.kosSignOut()"
+              style="cursor:pointer;border:1px solid rgba(168,128,28,.5);background:transparent;color:var(--green-800,#4c1d95);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600;">Sign out</button>
+    </div>
+    <div class="member-grid">
+
+      <!-- PARADE READY -->
+      <section class="app-card" id="prCard">
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; meeting: your wristband eligibility</small></div></div>
+        <div class="app-body">
+          <div id="prStatus"><p class="empty">Loading your status…</p></div>
+          <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
+          <div id="prHours"></div>
+          <form id="vhForm" class="krewe-form" style="margin-top:10px;">
+            <div class="row">
+              <div><label for="vhActivity">Activity</label><input id="vhActivity" required placeholder="e.g. Children's hospital toy drive" /></div>
+              <div><label for="vhHours">Hours</label><input id="vhHours" type="number" min="0.5" max="24" step="0.5" required /></div>
+            </div>
+            <label for="vhDate">Date</label>
+            <input id="vhDate" type="date" />
+            <button class="btn btn-primary" type="submit">🦄 Log volunteer hours</button>
+            <div class="msg" id="vhMsg"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- THE SPARKLE CUP (gamified participation) -->
+      <section class="app-card dash-card game-head" role="button" tabindex="0"
+               onclick="openGame()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGame();}">
+        <div class="app-head">
+          <span class="ic">✨</span>
+          <div><h2>The Sparkle Cup</h2><small>Earn Sparkles for showing up &amp; pitching in, and climb the ranks!</small></div>
+          <span class="dash-go">Play →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>Our friendly participation game. Every event you attend and every shift you volunteer earns
+             <b>Sparkles ✨</b> that build your <b>rank</b> and unlock <b>badges</b>. See who's leading the
+             season, learn how to earn, and look up your own standing.</p>
+          <div class="dash-chips">
+            <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
+            <span>🤝 Volunteer bonuses</span><span>🔎 Your Sparkles</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RAFFLES -->
+      <section class="app-card dash-card raffle-head" role="button" tabindex="0"
+               onclick="openRaffles()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaffles();}">
+        <div class="app-head"><span class="ic">🎟️</span>
+          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50: enter and track your tickets</small></div>
+          <span class="dash-go">Open →</span></div>
+        <div class="app-body dash-body">
+          <p>Try your luck and support the Krewe. Drop tickets in the baskets you love, or buy into the 50/50 pot. Every entry is tied to your account.</p>
+          <div class="dash-chips"><span>🧺 Basket raffles</span><span>💰 50/50</span><span>🎫 My tickets</span></div>
+        </div>
+      </section>
+
+      <!-- REPORTS DASHBOARD -->
+      <section class="app-card dash-card" id="dashCard" role="button" tabindex="0"
+               onclick="openReports()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReports();}">
+        <div class="app-head">
+          <span class="ic">📊</span>
+          <div><h2>Reports Dashboard</h2><small>Coordination reports drawn from the krewe's data</small></div>
+          <span class="dash-go">Open →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>One place for every coordination report the website's data can produce: event headcounts and
+             volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
+             content inventory. Tap a report to run it against the sample data.</p>
+          <div class="dash-chips">
+            <span>📅 Events &amp; Attendance</span><span>👥 Membership</span><span>💜 Dues</span>
+            <span>🚐 Logistics</span><span>📚 Content</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHARE CONTENT -->
+      <section class="app-card dash-card" role="button" tabindex="0"
+               onclick="location.href='share.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();location.href='share.html';}">
+        <div class="app-head">
+          <span class="ic">🦄</span>
+          <div><h2>Share Content</h2><small>Post videos, photos, artwork, poems, stories, essays &amp; recipes</small></div>
+          <span class="dash-go">Open →</span>
+        </div>
+        <div class="app-body dash-body">
+          <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
+             publish a poem, short story, essay, or recipe. Everything you submit is reviewed before it appears
+             on the public pages.</p>
+          <div class="dash-chips" onclick="event.stopPropagation()">
+              <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
+              <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
+              <a href="share.html?type=art" class="dash-chip-link">🎨 Artwork</a>
+              <a href="share.html?type=poem" class="dash-chip-link">✍️ Poems</a>
+              <a href="share.html?type=story" class="dash-chip-link">📖 Stories &amp; essays</a>
+              <a href="share.html?type=recipe" class="dash-chip-link">🍲 Recipes</a>
+            </div>
+        </div>
+      </section>
+
+      <!-- LOCKERS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Request and track your krewe locker</small></div></div>
+        <div class="app-body">
+          <form id="lockerForm" class="krewe-form">
+            <div class="row">
+              <div><label for="lkName">Your name</label><input id="lkName" required /></div>
+              <div><label for="lkEmail">Email</label><input id="lkEmail" type="email" /></div>
+            </div>
+            <label for="lkSize">Locker size</label>
+            <select id="lkSize"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select>
+            <label for="lkNotes">Notes (optional)</label>
+            <input id="lkNotes" placeholder="e.g. prefer near the entrance" />
+            <button class="btn btn-primary" type="submit">🦄 Request a locker</button>
+            <div class="msg" id="lkMsg"></div>
+          </form>
+          <ul class="data-list" id="lockerList"><li class="empty">Loading lockers…</li></ul>
+        </div>
+      </section>
+
+      <!-- CARPOOLS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🚗</span><div><h2>Carpools</h2><small>Offer a ride or ask for one</small></div></div>
+        <div class="app-body">
+          <div class="seg" role="tablist">
+            <button type="button" id="segOffer" class="on" onclick="setCarKind('offer')">I can drive</button>
+            <button type="button" id="segRequest" onclick="setCarKind('request')">I need a ride</button>
+          </div>
+          <form id="carForm" class="krewe-form">
+            <div class="row">
+              <div><label for="cpName">Your name</label><input id="cpName" required /></div>
+              <div><label for="cpEmail">Email</label><input id="cpEmail" type="email" /></div>
+            </div>
+            <div class="row">
+              <div><label for="cpEvent">For which event?</label><input id="cpEvent" placeholder="e.g. Krewe Picnic" /></div>
+              <div><label for="cpPickup">Pickup area</label><input id="cpPickup" placeholder="e.g. South Tampa" /></div>
+            </div>
+            <div class="row">
+              <div id="cpSeatsWrap"><label for="cpSeats">Seats available</label><input id="cpSeats" type="number" min="0" max="20" value="3" /></div>
+              <div><label for="cpPhone">Phone (optional)</label><input id="cpPhone" /></div>
+            </div>
+            <label for="cpNotes">Notes (optional)</label>
+            <input id="cpNotes" placeholder="e.g. leaving at 9am sharp" />
+            <button class="btn btn-primary" type="submit">🦄 Post to the board</button>
+            <div class="msg" id="cpMsg"></div>
+          </form>
+          <h3 style="margin:18px 0 0;color:var(--green-800);font-family:var(--display);">🚙 Drivers offering rides</h3>
+          <ul class="data-list" id="offerList"><li class="empty">Loading…</li></ul>
+          <h3 style="margin:18px 0 0;color:var(--green-800);font-family:var(--display);">🙋 Looking for a ride</h3>
+          <ul class="data-list" id="requestList"><li class="empty">Loading…</li></ul>
+        </div>
+      </section>
+
+      <!-- VAN POOLS -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">🚐</span><div><h2>Van Pools</h2><small>Reserve a seat on a krewe van</small></div></div>
+        <div class="app-body">
+          <div id="vanList"><p class="empty">Loading van pools…</p></div>
+        </div>
+      </section>
+
+      <!-- DIRECTORY -->
+      <section class="app-card">
+        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
+        <div class="app-body">
+          <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
+          <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
+          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:hello@kreweofunicorns.example">email the Krewe</a>.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- RAFFLES MODAL -->
+  <div class="modal-overlay" id="raffleModal" aria-hidden="true" onclick="if(event.target===this) closeRaffles()">
+    <div class="modal-card">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">🎟️</span><h2>Raffles</h2>
+        <button class="modal-x" type="button" onclick="closeRaffles()" aria-label="Close">✕</button></div>
+      <div class="modal-body"><div id="raffleBody"></div></div>
+    </div>
+  </div>
+
+  <!-- WELCOME TOUR -->
+  <div class="modal-overlay" id="tourOverlay" aria-hidden="true">
+    <div class="modal-card" style="max-width:680px;">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">✨</span><h2>Welcome to Members Only</h2></div>
+      <div class="modal-body">
+        <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Sparkle Cup.</p>
+        <div class="tour-grid">
+          <div class="tour-item"><span>✨</span><div><b>The Sparkle Cup</b><br>Earn Sparkles for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
+          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50; your tickets are tracked to you.</div></div>
+          <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Sparkles.</div></div>
+          <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
+          <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
+        </div>
+        <div style="text-align:center;margin-top:18px;"><button class="btn btn-primary" onclick="kosCloseTour()">🦄 Let's go</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE SPARKLE CUP MODAL -->
+  <div class="modal-overlay" id="gameModal" aria-hidden="true"
+       onclick="if(event.target===this) closeGame()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="The Sparkle Cup">
+      <div class="modal-head">
+        <span class="ic" style="font-size:24px;">✨</span>
+        <h2>The Sparkle Cup</h2>
+        <button class="modal-x" type="button" onclick="closeGame()" aria-label="Close the game">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="game-tabs" role="tablist">
+          <button id="gt-standings" class="on" type="button" onclick="gameTab('standings')">🏆 Standings</button>
+          <button id="gt-howto" type="button" onclick="gameTab('howto')">📖 How to Play</button>
+          <button id="gt-find" type="button" onclick="gameTab('find')">🔎 Find My Sparkles</button>
+        </div>
+        <div id="gameBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS DASHBOARD MODAL -->
+  <div class="modal-overlay" id="reportsModal" aria-hidden="true"
+       onclick="if(event.target===this) closeReports()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member Reports Dashboard">
+      <div class="modal-head">
+        <span class="ic" style="font-size:24px;">📊</span>
+        <h2>Member Reports Dashboard</h2>
+        <button class="modal-x" type="button" onclick="closeReports()" aria-label="Close dashboard">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="reportGrid"></div>
+        <div id="reportView" style="display:none;">
+          <button class="rpt-back" type="button" onclick="showReportGrid()">← All reports</button>
+          <h3 id="reportTitle"></h3>
+          <div id="reportBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-unicorn.svg" alt="" />
+    <div class="fname">Krewe of Unicorns</div>
+    <div class="flinks">
+<a href="index.html">Home</a>
+<a href="event-signup.html">Events</a>
+<a href="parades.html">Parades</a>
+<a href="enchanted-ball.html">Enchanted Ball</a>
+<a href="learn.html">Lore</a>
+<a href="krewe-history.html">History</a>
+<a href="poetry.html">Krewe Creativity</a>
+<a href="gallery.html">Gallery</a>
+<a href="videos.html">Videos</a>
+<a href="volunteer.html">Volunteer</a>
+<a href="store.html">Shop</a>
+<a href="membership-application.html">Join</a>
+<a href="members.html">Members</a>
+</div>
+    <div class="slainte">Sparkle on! 🦄🌈 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Unicorns. A Krewe &amp; Kin demo site · celebrating magic all year round.</div>
+  </footer>
+
+  <!-- MUSIC PLAYER -->
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.wav" loop preload="none"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our krewe tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune 🦄</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+
+  <!-- ============== SELF-CONTAINED DEMO (no network, baked-in sample data) ============== -->
+  <script>
+  /* This members portal is a fully self-contained demo. There are no server calls of any
+     kind: every section is populated from the sample data below, and every "save" shows a
+     friendly in-page confirmation instead of posting anywhere. */
+
+  const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+  const show = (el,t,k)=>{ const m=document.getElementById(el); if(m){ m.textContent=t; m.className="msg "+(k||""); } };
+  const DEMO_SAVE = "✨ Thanks! This is a demo site, so nothing was actually submitted — but on a live Krewe & Kin site this would be saved instantly.";
+  const SEASON = new Date().getFullYear();
+  const WINNER_POOL = ["Luna Sparklemane","Star Rainbowdash","Pearl Moonhoof","Ruby Glimmerhoof","Aurora Prism","Comet Silvermane","Willow Stardust","Ivy Shimmertail"];
+  const pickWinner = ()=> WINNER_POOL[Math.floor(Math.random()*WINNER_POOL.length)];
+
+  /* ============================ SAMPLE DATA ============================ */
+  const MEMBERS = [
+    { first_name:"Luna",   last_name:"Sparklemane",  member_role:"captain",             membership_status:"active",   email:"luna@example.com",   phone:"(813) 555-0142", new_this_year:false },
+    { first_name:"Star",   last_name:"Rainbowdash",  member_role:"officer",             membership_status:"active",   email:"star@example.com",   phone:"(813) 555-0173", new_this_year:false },
+    { first_name:"Pearl",  last_name:"Moonhoof",     member_role:"treasurer",           membership_status:"active",   email:"pearl@example.com",  phone:"(813) 555-0188", new_this_year:false },
+    { first_name:"Ruby",   last_name:"Glimmerhoof",  member_role:"social coordinator",  membership_status:"active",   email:"ruby@example.com",   phone:"(813) 555-0119", new_this_year:false },
+    { first_name:"Aurora", last_name:"Prism",        member_role:"parade marshal",      membership_status:"active",   email:"aurora@example.com", phone:"(813) 555-0154", new_this_year:false },
+    { first_name:"Comet",  last_name:"Silvermane",   member_role:"membership chair",    membership_status:"active",   email:"comet@example.com",  phone:"(813) 555-0167", new_this_year:false },
+    { first_name:"Jasper", last_name:"Twinklehoof",  member_role:"officer",             membership_status:"active",   email:"jasper@example.com", phone:"(813) 555-0102", new_this_year:false },
+    { first_name:"Willow", last_name:"Stardust",     member_role:"member",              membership_status:"active",   email:"willow@example.com", phone:"(813) 555-0126", new_this_year:true  },
+    { first_name:"Sage",   last_name:"Cloudleaper",  member_role:"member",              membership_status:"active",   email:"sage@example.com",   phone:"(813) 555-0131", new_this_year:true  },
+    { first_name:"Dahlia", last_name:"Moonbeam",     member_role:"member",              membership_status:"active",   email:"dahlia@example.com", phone:"(813) 555-0148", new_this_year:false },
+    { first_name:"Ivy",    last_name:"Shimmertail",  member_role:"member",              membership_status:"active",   email:"ivy@example.com",    phone:"(813) 555-0159", new_this_year:true  },
+    { first_name:"Coral",  last_name:"Dewdrop",      member_role:"member",              membership_status:"active",   email:"coral@example.com",  phone:"(813) 555-0177", new_this_year:false },
+    { first_name:"Nova",   last_name:"Brighthoof",   member_role:"member",              membership_status:"prospect", email:"nova@example.com",   phone:"(813) 555-0190", new_this_year:true  },
+    { first_name:"Basil",  last_name:"Meadowlight",  member_role:"member",              membership_status:"prospect", email:"basil@example.com",  phone:"(813) 555-0183", new_this_year:true  },
+  ];
+
+  const PARADE_READY = [
+    { member_id:"me", first_name:"Luna",   last_name:"Sparklemane", dues_paid:true,  waiver_signed:false, meeting_attended:true,  membership_status:"active", hours_approved:8,  hours_logged:10 },
+    { member_id:"m2", first_name:"Star",   last_name:"Rainbowdash", dues_paid:true,  waiver_signed:true,  meeting_attended:true,  membership_status:"active", hours_approved:14, hours_logged:14 },
+    { member_id:"m3", first_name:"Pearl",  last_name:"Moonhoof",    dues_paid:true,  waiver_signed:true,  meeting_attended:true,  membership_status:"active", hours_approved:12, hours_logged:12 },
+    { member_id:"m4", first_name:"Ruby",   last_name:"Glimmerhoof", dues_paid:true,  waiver_signed:true,  meeting_attended:false, membership_status:"active", hours_approved:6,  hours_logged:9  },
+    { member_id:"m5", first_name:"Aurora", last_name:"Prism",       dues_paid:true,  waiver_signed:false, meeting_attended:true,  membership_status:"active", hours_approved:10, hours_logged:10 },
+    { member_id:"m6", first_name:"Comet",  last_name:"Silvermane",  dues_paid:false, waiver_signed:true,  meeting_attended:true,  membership_status:"active", hours_approved:4,  hours_logged:4  },
+    { member_id:"m7", first_name:"Willow", last_name:"Stardust",    dues_paid:false, waiver_signed:false, meeting_attended:false, membership_status:"active", hours_approved:0,  hours_logged:2  },
+    { member_id:"m8", first_name:"Sage",   last_name:"Cloudleaper", dues_paid:true,  waiver_signed:true,  meeting_attended:true,  membership_status:"active", hours_approved:12, hours_logged:13 },
+    { member_id:"m9", first_name:"Dahlia", last_name:"Moonbeam",    dues_paid:true,  waiver_signed:true,  meeting_attended:false, membership_status:"active", hours_approved:7,  hours_logged:7  },
+    { member_id:"m10",first_name:"Ivy",    last_name:"Shimmertail", dues_paid:false, waiver_signed:false, meeting_attended:true,  membership_status:"active", hours_approved:3,  hours_logged:5  },
+  ];
+
+  let VOLUNTEER_HOURS = [
+    { id:"vh1", member_id:"m2", activity:"Rainbow Run water station", hours:4, worked_on:"2026-06-14", approved:true  },
+    { id:"vh2", member_id:"m3", activity:"Glitter & Give sorting shift", hours:3, worked_on:"2026-06-20", approved:true  },
+    { id:"vh3", member_id:"me", activity:"Children's hospital toy drive", hours:2, worked_on:"2026-07-05", approved:false },
+    { id:"vh4", member_id:"m4", activity:"Costume workshop setup", hours:3, worked_on:"2026-07-10", approved:false },
+    { id:"vh5", member_id:"m8", activity:"Food bank packing shift", hours:5, worked_on:"2026-07-12", approved:true  },
+  ];
+
+  let MEETINGS = [
+    { id:"mt1", name:"Season Kickoff Briefing", start_time:"2026-08-05T19:00:00", is_mandatory:true  },
+    { id:"mt2", name:"Costume & Cape Workshop", start_time:"2026-08-19T18:30:00", is_mandatory:false },
+  ];
+
+  const EVENTS = [
+    { name:"New Member Mixer: Meet the Herd",          event_type:"social",     start_time:"2026-08-15T18:30:00", location:"The Rainbow Room, Ybor City" },
+    { name:"Full-Moon Members Social",                 event_type:"social",     start_time:"2026-08-29T20:00:00", location:"Moonlight Terrace, South Tampa" },
+    { name:"Rainbow Run 5K for Children's Charities",  event_type:"fundraiser", start_time:"2026-09-19T08:00:00", location:"Bayshore Boulevard, Tampa" },
+    { name:"Glitter & Give Charity Drive",             event_type:"fundraiser", start_time:"2026-10-11T10:00:00", location:"Tampa Community Center" },
+    { name:"The Enchanted Ball",                       event_type:"gala",       start_time:"2026-11-07T19:00:00", location:"Crystal Ballroom, Downtown Tampa" },
+    { name:"Gasparilla Unicorn Parade",               event_type:"parade",     start_time:"2027-01-30T14:00:00", location:"Bayshore Parade Route" },
+  ];
+
+  const HEADCOUNT = [
+    { name:"New Member Mixer: Meet the Herd",         start_time:"2026-08-15T18:30:00", signups:34,  total_guests:12, total_headcount:46,  capacity:60,   spots_remaining:14, waitlisted:0, volunteers:6,  event_type:"social" },
+    { name:"Full-Moon Members Social",                start_time:"2026-08-29T20:00:00", signups:28,  total_guests:9,  total_headcount:37,  capacity:50,   spots_remaining:13, waitlisted:0, volunteers:4,  event_type:"social" },
+    { name:"Rainbow Run 5K for Children's Charities", start_time:"2026-09-19T08:00:00", signups:88,  total_guests:30, total_headcount:118, capacity:150,  spots_remaining:32, waitlisted:0, volunteers:15, event_type:"fundraiser" },
+    { name:"Glitter & Give Charity Drive",            start_time:"2026-10-11T10:00:00", signups:40,  total_guests:5,  total_headcount:45,  capacity:80,   spots_remaining:35, waitlisted:0, volunteers:12, event_type:"fundraiser" },
+    { name:"The Enchanted Ball",                      start_time:"2026-11-07T19:00:00", signups:120, total_guests:40, total_headcount:160, capacity:160,  spots_remaining:0,  waitlisted:8, volunteers:10, event_type:"gala" },
+    { name:"Gasparilla Unicorn Parade",              start_time:"2027-01-30T14:00:00", signups:95,  total_guests:20, total_headcount:115, capacity:null, spots_remaining:null, waitlisted:0, volunteers:22, event_type:"parade" },
+  ];
+
+  const ATTENDEES = [
+    { event_name:"New Member Mixer: Meet the Herd", first_name:"Willow", last_name:"Stardust",   email:"willow@example.com", signup_role:"attendee",  status:"confirmed", guests_count:2 },
+    { event_name:"New Member Mixer: Meet the Herd", first_name:"Sage",   last_name:"Cloudleaper", email:"sage@example.com",   signup_role:"attendee",  status:"confirmed", guests_count:0 },
+    { event_name:"Rainbow Run 5K for Children's Charities", first_name:"Star", last_name:"Rainbowdash", email:"star@example.com", signup_role:"volunteer", status:"confirmed", guests_count:1 },
+    { event_name:"Rainbow Run 5K for Children's Charities", first_name:"Ivy",  last_name:"Shimmertail", email:"ivy@example.com",  signup_role:"attendee",  status:"confirmed", guests_count:3 },
+    { event_name:"The Enchanted Ball", first_name:"Pearl",  last_name:"Moonhoof",    email:"pearl@example.com",  signup_role:"attendee",  status:"confirmed", guests_count:1 },
+    { event_name:"The Enchanted Ball", first_name:"Aurora", last_name:"Prism",       email:"aurora@example.com", signup_role:"attendee",  status:"waitlist",  guests_count:0 },
+    { event_name:"Gasparilla Unicorn Parade", first_name:"Comet", last_name:"Silvermane", email:"comet@example.com", signup_role:"marcher", status:"confirmed", guests_count:2 },
+  ];
+
+  const DUES_SUMMARY = [
+    { membership_year:2026, invoices:60, paid_count:48, unpaid_count:12, members_owing:12, amount_collected:2400, amount_outstanding:600 },
+    { membership_year:2025, invoices:55, paid_count:55, unpaid_count:0,  members_owing:0,  amount_collected:2200, amount_outstanding:0   },
+  ];
+
+  const OUTSTANDING_DUES = [
+    { first_name:"Comet",  last_name:"Silvermane", email:"comet@example.com",  membership_year:2026, amount:50, due_date:"2026-03-01", days_overdue:147, reminders_sent:3 },
+    { first_name:"Willow", last_name:"Stardust",   email:"willow@example.com", membership_year:2026, amount:50, due_date:"2026-05-01", days_overdue:86,  reminders_sent:2 },
+    { first_name:"Ivy",    last_name:"Shimmertail",email:"ivy@example.com",    membership_year:2026, amount:50, due_date:"2026-06-15", days_overdue:41,  reminders_sent:1 },
+  ];
+
+  const PENDING_APPS = [
+    { first_name:"Fern",  last_name:"Whisperwind", email:"fern@example.com",  phone:"(813) 555-0211", notes:"Referred by Aurora Prism; loves the parade.", created_at:"2026-07-08" },
+    { first_name:"Otto",  last_name:"Glowmane",    email:"otto@example.com",  phone:"(813) 555-0224", notes:"Wants to help with the band.", created_at:"2026-07-15" },
+  ];
+
+  let LOCKERS = [
+    { locker_number:"12", size:"medium", holder_name:"Aurora Prism",   status:"assigned"  },
+    { locker_number:"7",  size:"large",  holder_name:"Comet Silvermane",status:"assigned" },
+    { locker_number:null, size:"small",  holder_name:"Willow Stardust", status:"requested" },
+    { locker_number:"3",  size:"medium", holder_name:"—",               status:"available" },
+  ];
+
+  let CARPOOLS = [
+    { kind:"offer",   event:"Gasparilla Unicorn Parade", person_name:"Star Rainbowdash", seats:3, pickup_area:"South Tampa", notes:"Leaving at 12:30 sharp" },
+    { kind:"offer",   event:"The Enchanted Ball",        person_name:"Pearl Moonhoof",   seats:2, pickup_area:"Downtown",    notes:null },
+    { kind:"request", event:"Gasparilla Unicorn Parade", person_name:"Willow Stardust",  seats:null, pickup_area:"Brandon", notes:"Can meet anywhere central" },
+    { kind:"request", event:"Rainbow Run 5K",            person_name:"Sage Cloudleaper", seats:null, pickup_area:"Ybor City", notes:null },
+  ];
+
+  let VANPOOLS = [
+    { id:"v1", van_name:"The Rainbow Express", event:"Gasparilla Unicorn Parade", capacity:12, departure:"Departs 12:00 from the Community Center lot", notes:"Glitter provided!" },
+    { id:"v2", van_name:"Moonbeam Shuttle",    event:"The Enchanted Ball",        capacity:8,  departure:"Departs 6:15 from South Tampa",              notes:null },
+  ];
+  let VAN_RES = [
+    { vanpool_id:"v1", rider_name:"Ivy Shimmertail", seats:2 },
+    { vanpool_id:"v1", rider_name:"Coral Dewdrop",   seats:1 },
+    { vanpool_id:"v2", rider_name:"Dahlia Moonbeam", seats:2 },
+  ];
+
+  const CONTENT_ITEMS = (()=>{
+    const arr=[]; const add=(type,pub,draft)=>{ for(let i=0;i<pub;i++)arr.push({type,is_published:true}); for(let i=0;i<draft;i++)arr.push({type,is_published:false}); };
+    add("poem",6,1); add("gallery_photo",22,3); add("video",4,1); add("artwork",5,0); add("story",3,1); add("recipe",4,0);
+    return arr;
+  })();
+
+  const OUTBOUND_EMAILS = [
+    { to_name:"Willow Stardust", to_email:"willow@example.com", subject:"Your 2026 dues reminder", purpose:"dues_reminder",  status:"sent",   created_at:"2026-07-01", sent_at:"2026-07-01" },
+    { to_name:"Comet Silvermane",to_email:"comet@example.com",  subject:"Final dues reminder",     purpose:"dues_reminder",  status:"sent",   created_at:"2026-07-10", sent_at:"2026-07-10" },
+    { to_name:"All Members",     to_email:"herd@example.com",   subject:"The Enchanted Ball tickets are live!", purpose:"event_announce", status:"sent", created_at:"2026-07-18", sent_at:"2026-07-18" },
+    { to_name:"Nova Brighthoof", to_email:"nova@example.com",   subject:"Welcome to the herd!",     purpose:"welcome",        status:"queued", created_at:"2026-07-24", sent_at:null },
+  ];
+
+  const MEMBERSHIP_OVERVIEW = { total_members:14, active_members:12, prospects:2, officers:3, new_this_year:5 };
+
+  /* ---- Sparkle Cup ---- */
+  const RANKS = [
+    {icon:'🌱',name:'New Foal',min:0},
+    {icon:'✨',name:'Believer',min:100},
+    {icon:'🌈',name:'Rainbow Rider',min:300},
+    {icon:'⭐',name:'Star Guardian',min:700},
+    {icon:'👑',name:'Legendary Alicorn',min:1500}
+  ];
+  const POINTS = [
+    ["RSVP to an event","5"],
+    ["Attend an event (verified)","20"],
+    ["Attend a members' meeting","15"],
+    ["Volunteer at an event","+30"],
+    ["Volunteer for a priority shift (setup / teardown / parade day)","+60"],
+    ["Organize an event","+50"],
+    ["Bring a guest (up to 3)","5 each"],
+    ["Pay your dues on time","25"],
+    ["Pay your dues early (by season kickoff)","+15"],
+    ["Refer a member who joins","40"]
+  ];
+  const REASON = { rsvp:"RSVP", attend:"Attended", attend_meeting:"Attended meeting",
+    volunteer_bonus:"Volunteered", volunteer_priority_bonus:"Priority volunteer shift",
+    organizer_bonus:"Organized", guests:"Brought guests", dues_on_time:"Dues on time",
+    dues_early:"Dues paid early", referral:"Referred a member", quest:"Quest", manual:"Bonus" };
+  const BADGE_DEFS = [
+    { icon:"🌟", name:"First Sparkle",   description:"Attended your first event" },
+    { icon:"🌈", name:"Rainbow Regular", description:"Attended 5+ events in a season" },
+    { icon:"🤝", name:"Helping Hoof",    description:"Logged 10+ volunteer hours" },
+    { icon:"🎉", name:"Party Starter",   description:"Organized a krewe event" },
+    { icon:"🧲", name:"Herd Builder",    description:"Referred a new member" },
+    { icon:"👑", name:"Parade Royalty",  description:"Marched in the annual parade" },
+  ];
+  const LEADERBOARD = [
+    { place:1, first_name:"Luna",   last_name:"Sparklemane", rank_icon:"⭐", rank_name:"Star Guardian", season_sparkles:480, badge_count:5 },
+    { place:2, first_name:"Star",   last_name:"Rainbowdash", rank_icon:"🌈", rank_name:"Rainbow Rider", season_sparkles:355, badge_count:4 },
+    { place:3, first_name:"Comet",  last_name:"Silvermane",  rank_icon:"🌈", rank_name:"Rainbow Rider", season_sparkles:320, badge_count:4 },
+    { place:4, first_name:"Ruby",   last_name:"Glimmerhoof", rank_icon:"✨", rank_name:"Believer",      season_sparkles:210, badge_count:3 },
+    { place:5, first_name:"Aurora", last_name:"Prism",       rank_icon:"✨", rank_name:"Believer",      season_sparkles:180, badge_count:3 },
+    { place:6, first_name:"Willow", last_name:"Stardust",    rank_icon:"✨", rank_name:"Believer",      season_sparkles:140, badge_count:2 },
+    { place:7, first_name:"Sage",   last_name:"Cloudleaper", rank_icon:"🌱", rank_name:"New Foal",      season_sparkles:65,  badge_count:1 },
+    { place:8, first_name:"Ivy",    last_name:"Shimmertail", rank_icon:"🌱", rank_name:"New Foal",      season_sparkles:40,  badge_count:1 },
+  ];
+  const VOL_LEADERBOARD = [
+    { first_name:"Star",  last_name:"Rainbowdash", volunteer_events:6, volunteer_sparkles:240 },
+    { first_name:"Pearl", last_name:"Moonhoof",    volunteer_events:5, volunteer_sparkles:200 },
+    { first_name:"Comet", last_name:"Silvermane",  volunteer_events:4, volunteer_sparkles:150 },
+    { first_name:"Ruby",  last_name:"Glimmerhoof", volunteer_events:3, volunteer_sparkles:110 },
+  ];
+  const MY_GAME_CARD = {
+    found:true, first_name:"Luna", last_name:"Sparklemane",
+    rank_icon:"⭐", rank_name:"Star Guardian", lifetime:980, sparkles_to_next:520,
+    next_rank_name:"Legendary Alicorn", season:480,
+    badges:[ {icon:"🌟",name:"First Sparkle"},{icon:"🌈",name:"Rainbow Regular"},{icon:"🤝",name:"Helping Hoof"},{icon:"🎉",name:"Party Starter"},{icon:"👑",name:"Parade Royalty"} ],
+    recent:[ {sparkles:20,reason:"attend",event:"Full-Moon Members Social"},{sparkles:30,reason:"volunteer_bonus",event:"Glitter & Give Charity Drive"},{sparkles:5,reason:"rsvp",event:"The Enchanted Ball"} ]
+  };
+
+  /* ---- Raffles ---- */
+  let RAFFLE_EVENTS = [
+    { id:"r1", name:"Enchanted Ball Basket Raffle", raffle_type:"basket", description:"Baskets donated by our members and local sponsors. Winners drawn at the Enchanted Ball.", is_active:true, ticket_price:1, event_date:"2026-11-07", pot_tickets:0, drawn_at:null, winner_name:null },
+    { id:"r2", name:"Rainbow Run 50/50", raffle_type:"fifty_fifty", description:"Half the pot goes to one lucky winner; half supports children's charities.", is_active:true, ticket_price:5, event_date:"2026-09-19", pot_tickets:142, drawn_at:null, winner_name:null },
+  ];
+  let RAFFLE_BASKETS = [
+    { id:"b1", raffle_event_id:"r1", name:"Spa & Sparkle Day",    description:"Pamper yourself in style",        estimated_value:150, tickets:28, winner_name:null, display_order:1, image_url:null },
+    { id:"b2", raffle_event_id:"r1", name:"Family Movie Night",   description:"Snacks, blankets & gift cards",    estimated_value:90,  tickets:19, winner_name:null, display_order:2, image_url:null },
+    { id:"b3", raffle_event_id:"r1", name:"Unicorn Gift Hamper",  description:"Glitter galore for the whole herd",estimated_value:120, tickets:33, winner_name:null, display_order:3, image_url:null },
+  ];
+  let MY_RAFFLE = { baskets:[ {basket_id:"b1", tickets:3} ], pot:[ {event_id:"r2", tickets:5} ] };
+  let MY_RAFFLES = [
+    { id:"m1", name:"Glitter & Give Mini-Raffle", raffle_type:"basket", is_active:true, mine:true, drawn_at:null, winner_name:null,
+      baskets:[ {id:"mb1", name:"Cozy Autumn Basket", estimated_value:60, tickets:0, winner_name:null, image_url:null} ] },
+  ];
+  const IS_OFFICER = true; // demo user is shown officer tools so the portal's full breadth is visible
+
+  /* ============================ DEMO AUTH ============================ */
+  window.kosProfile = { member_id:"me", first_name:"Luna", last_name:"Sparklemane", email:"luna@example.com", display_name:"Luna Sparklemane", profile_complete:true };
+
+  function enterDemo(){
+    document.getElementById("authStage").style.display="none";
+    const content=document.getElementById("memberContent");
+    content.style.display="block";
+    const who=document.getElementById("memberWho");
+    if(who) who.textContent = "Signed in as " + (window.kosProfile.display_name||"a member") + " (demo)";
+    if(!window.__kosInit){ window.__kosInit=true; initAll(); }
+    maybeTour();
+  }
+  document.getElementById("demoForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const em=(document.getElementById("demoEmail").value||"").trim();
+    if(em){
+      const nm=em.split("@")[0].replace(/[._\-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase()).trim();
+      if(nm){ window.kosProfile.display_name=nm; }
+      window.kosProfile.email=em;
+    }
+    enterDemo();
+  });
+  window.kosSignOut = ()=>{ location.reload(); };
+
+  function maybeTour(){
+    try{ if(localStorage.getItem("kouTourDone")==="1") return; }catch(_){}
+    const o=document.getElementById("tourOverlay"); if(o){ o.classList.add("open"); document.body.style.overflow="hidden"; }
+  }
+  window.kosCloseTour=()=>{ try{ localStorage.setItem("kouTourDone","1"); }catch(_){} const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
+
+  function kosIdentity(){
+    const p=window.kosProfile||{};
+    const name=(p.display_name || [p.first_name,p.last_name].filter(Boolean).join(" ") || "").toString().trim();
+    const email=(p.email||"").toString().trim();
+    return { name, email };
+  }
+  function prefillIdentity(){
+    const { name, email } = kosIdentity();
+    [["lkName",name],["cpName",name]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+    [["lkEmail",email],["cpEmail",email]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+  }
+
+  function initAll(){ prefillIdentity(); loadParadeReady(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
+
+  /* ---------------- LOCKERS ---------------- */
+  function loadLockers(){
+    const list=document.getElementById("lockerList");
+    if(!LOCKERS.length){ list.innerHTML='<li class="empty">No locker requests yet. Be the first!</li>'; return; }
+    list.innerHTML=LOCKERS.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
+  }
+  document.getElementById("lockerForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const idn=kosIdentity();
+    const name=idn.name || document.getElementById("lkName").value.trim();
+    if(!name){ show("lkMsg","Please enter your name.","error"); return; }
+    LOCKERS.push({ locker_number:null, size:document.getElementById("lkSize").value, holder_name:name, status:"requested" });
+    show("lkMsg",DEMO_SAVE,"success"); loadLockers();
+  });
+
+  /* ---------------- CARPOOLS ---------------- */
+  let carKind="offer";
+  window.setCarKind=(k)=>{ carKind=k;
+    document.getElementById("segOffer").classList.toggle("on",k==="offer");
+    document.getElementById("segRequest").classList.toggle("on",k==="request");
+    document.getElementById("cpSeatsWrap").style.display = k==="offer" ? "block":"none";
+  };
+  function loadCarpools(){
+    const off=document.getElementById("offerList"), req=document.getElementById("requestList");
+    const card=(c)=>`<li class="data-row"><b>${esc(c.person_name)}</b>${c.event?" · "+esc(c.event):""}${c.pickup_area?" · 📍 "+esc(c.pickup_area):""}${(c.kind==="offer"&&c.seats!=null)?` · ${esc(c.seats)} seats`:""}${c.notes?`<br><span class="empty">${esc(c.notes)}</span>`:""}</li>`;
+    const offers=CARPOOLS.filter(c=>c.kind==="offer"), reqs=CARPOOLS.filter(c=>c.kind==="request");
+    off.innerHTML=offers.length?offers.map(card).join(""):'<li class="empty">No rides offered yet.</li>';
+    req.innerHTML=reqs.length?reqs.map(card).join(""):'<li class="empty">No ride requests yet.</li>';
+  }
+  document.getElementById("carForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const idn=kosIdentity();
+    const name=idn.name || document.getElementById("cpName").value.trim();
+    if(!name){ show("cpMsg","Please enter your name.","error"); return; }
+    CARPOOLS.unshift({ kind:carKind, person_name:name,
+      event:document.getElementById("cpEvent").value.trim()||null,
+      pickup_area:document.getElementById("cpPickup").value.trim()||null,
+      notes:document.getElementById("cpNotes").value.trim()||null,
+      seats: carKind==="offer" ? parseInt(document.getElementById("cpSeats").value||"0",10) : null });
+    show("cpMsg",DEMO_SAVE,"success"); loadCarpools();
+  });
+
+  /* ---------------- VAN POOLS ---------------- */
+  function loadVans(){
+    const wrap=document.getElementById("vanList");
+    if(!VANPOOLS.length){ wrap.innerHTML='<p class="empty">No van pools posted yet.</p>'; return; }
+    wrap.innerHTML=VANPOOLS.map(v=>{
+      const rs=VAN_RES.filter(r=>r.vanpool_id===v.id);
+      const taken=rs.reduce((n,r)=>n+(r.seats||0),0);
+      const left=Math.max(0,(v.capacity||0)-taken);
+      const riders=rs.length?rs.map(r=>`${esc(r.rider_name)} (${esc(r.seats)})`).join(", "):"No reservations yet";
+      return `<div class="van-card">
+        <div><b style="font-family:var(--display);color:var(--green-800);font-size:18px;">${esc(v.van_name)}</b>${v.event?" · "+esc(v.event):""}</div>
+        <div style="font-size:14px;color:var(--muted);">${v.departure?esc(v.departure):""}${v.notes?" · "+esc(v.notes):""}</div>
+        <div class="seats" style="margin-top:6px;">${left} of ${esc(v.capacity)} seats open</div>
+        <div style="font-size:14px;margin-top:4px;"><b>Riders:</b> ${riders}</div>
+        <form class="mini-form" data-van="${v.id}">
+          <input name="nm" placeholder="Your name" required value="${esc(kosIdentity().name)}" readonly />
+          <input name="em" type="email" placeholder="Email (optional)" value="${esc(kosIdentity().email)}" readonly />
+          <input name="st" type="number" min="1" max="${Math.max(1,left)}" value="1" title="Seats" style="max-width:80px;" />
+          <button class="btn btn-green" type="submit" ${left<=0?"disabled":""}>${left<=0?"Full":"Reserve"}</button>
+        </form>
+        <div class="msg" id="vanmsg-${v.id}"></div>
+      </div>`;
+    }).join("");
+    wrap.querySelectorAll(".mini-form").forEach(f=>f.addEventListener("submit",(e)=>{
+      e.preventDefault(); const id=f.getAttribute("data-van");
+      const idn=kosIdentity();
+      const name=idn.name || f.nm.value.trim();
+      if(!name){ show("vanmsg-"+id,"Please enter your name.","error"); return; }
+      VAN_RES.push({ vanpool_id:id, rider_name:name, seats:parseInt(f.st.value||"1",10) });
+      loadVans();
+      show("vanmsg-"+id,DEMO_SAVE,"success");
+    }));
+  }
+
+  /* ---------------- DIRECTORY ---------------- */
+  const DIR_DATA = MEMBERS.slice().sort((a,b)=>a.last_name.localeCompare(b.last_name));
+  window.renderDir=()=>{
+    const q=(document.getElementById("dirSearch").value||"").toLowerCase();
+    const grid=document.getElementById("dirGrid");
+    const rows=DIR_DATA.filter(m=>(`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
+    if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
+    grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
+  };
+  function loadDir(){ renderDir(); }
+
+  /* ================= PARADE READY ================= */
+  let _prMe=null;
+  function loadParadeReady(){
+    const el=document.getElementById("prStatus"); if(!el) return;
+    const meId=(window.kosProfile||{}).member_id||null;
+    const me=(meId && PARADE_READY.find(r=>r.member_id===meId)) || PARADE_READY[0];
+    _prMe=me;
+    const gates=[me.dues_paid, me.waiver_signed, me.meeting_attended];
+    const ready=gates.every(Boolean);
+    const gate=(ok,label,hint)=>`<div class="pr-gate">${ok?"✅":"⬜"} <b>${label}</b>${ok?"":` <small>· ${hint}</small>`}</div>`;
+    el.innerHTML =
+      `<div class="pr-pill ${ready?"ok":""}">${ready
+        ? "🎗️ PARADE READY! Pick up your wristband at the next meeting."
+        : "✨ " + gates.filter(Boolean).length + " of 3 requirements complete"}</div>`
+      + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
+      + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
+      + gate(me.meeting_attended, "Mandatory meeting attended", "check in at the next mandatory meeting")
+      + (me.waiver_signed ? "" : waiverForm());
+    renderHoursBar(me);
+  }
+  function waiverForm(){
+    const nm=esc(kosIdentity().name);
+    return `<div class="pr-waiver">
+      <p style="font-size:14px;color:var(--muted);margin:0 0 10px;">I release and hold harmless the Krewe of Unicorns, its officers, and event organizers
+      from liability arising from my voluntary participation in krewe parades and events during the ${SEASON} season,
+      and I agree to follow all parade safety rules.</p>
+      <label for="wvName">Type your full legal name to sign</label>
+      <input id="wvName" value="${nm}" />
+      <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${SEASON} waiver</button>
+      <div class="msg" id="wvMsg"></div>
+    </div>`;
+  }
+  window.kosSignWaiver=function(){
+    const nm=(document.getElementById("wvName").value||"").trim();
+    if(nm.length<2){ show("wvMsg","Please type your full name to sign.","error"); return; }
+    if(_prMe) _prMe.waiver_signed=true;
+    loadParadeReady();
+  };
+  function renderHoursBar(me){
+    const el=document.getElementById("prHours"); if(!el) return;
+    const done=Number(me.hours_approved||0), logged=Number(me.hours_logged||0), goal=12;
+    const pct=Math.min(100,Math.round(done/goal*100));
+    el.innerHTML=`<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
+      <div class="prog"><i style="width:${pct}%"></i></div>`;
+  }
+  document.getElementById("vhForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const activity=(document.getElementById("vhActivity").value||"").trim();
+    const hours=Number(document.getElementById("vhHours").value);
+    if(activity.length<2 || !(hours>0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
+    VOLUNTEER_HOURS.unshift({ id:"vh"+Date.now(), member_id:(window.kosProfile||{}).member_id||"me", activity, hours, worked_on:document.getElementById("vhDate").value||null, approved:false });
+    show("vhMsg","Logged! " + DEMO_SAVE,"success");
+    document.getElementById("vhForm").reset();
+  });
+
+  /* ---- Officer actions used by the Parade Readiness reports ---- */
+  window.kosReviewHours=(id,approved)=>{
+    const row=VOLUNTEER_HOURS.find(r=>r.id===id); if(row) row.approved=approved;
+    runReport("volunteer_review");
+  };
+  window.kosCreateMeeting=()=>{
+    const name=(document.getElementById("mtName").value||"").trim();
+    const when=document.getElementById("mtWhen").value;
+    const mand=document.getElementById("mtMand").checked;
+    if(name.length<3 || !when){ show("mtMsg","Give the meeting a name and a date.","error"); return; }
+    MEETINGS.push({ id:"mt"+Date.now(), name, start_time:new Date(when).toISOString(), is_mandatory:mand });
+    runReport("meeting_checkin");
+  };
+  window.kosShowCheckinQR=(eventId,btn)=>{
+    const slot=btn.parentElement.querySelector(".qr-slot");
+    slot.innerHTML='<div class="rpt-secure" style="margin-top:8px;"><h4>📲 Demo check-in</h4><p>On the live site a scannable QR code appears here so members can check in from their phones, which counts toward Parade Ready. This is a demo, so no live code is generated. ✨</p></div>';
+  };
+
+  /* ================= REPORTS DASHBOARD ================= */
+  const fmtMoney=n=>"$"+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtDate=iso=>{ if(!iso) return "TBA"; const d=new Date(iso); return isNaN(d)?esc(String(iso)):d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"}); };
+  const num=v=>(v==null?0:Number(v));
+  function rTable(headers,rows){
+    if(!rows.length) return '<p class="empty">No data yet.</p>';
+    return `<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+      rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  }
+  function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
+  function isOfficer(){ return IS_OFFICER; }
+  function officerOnlyNotice(){
+    return `<div class="rpt-secure"><h4>🔒 Officers only</h4>
+      <p>This report lists members' personal details (names tied to emails, phone numbers, or amounts owed), so on the live site access is limited to krewe officers.</p></div>`;
+  }
+
+  const REPORTS = [
+    /* ---- Parade Readiness ---- */
+    { id:"wristband_pickup", cat:"Parade Readiness", icon:"🎗️", title:"Wristband Pickup List", secure:true,
+      desc:"Who is Parade Ready (dues + waiver + meeting), and exactly what everyone else is missing.",
+      run:()=>{
+        const rows=PARADE_READY;
+        const isReady=r=>r.dues_paid&&r.waiver_signed&&r.meeting_attended;
+        const ready=rows.filter(isReady), not=rows.filter(r=>!isReady(r));
+        const mark=v=>v?"✅":"—";
+        return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
+          + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
+          + rTable(["Name","Status"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-"]))
+          + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
+          + rTable(["Name","Dues","Waiver","Meeting"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended)]));
+      }},
+    { id:"volunteer_review", cat:"Parade Readiness", icon:"🙌", title:"Volunteer Hours Review", secure:true,
+      desc:"Approve members' logged service hours toward the 12-hour commitment.",
+      run:()=>{
+        const nm={}; PARADE_READY.forEach(p=>{ nm[p.member_id]=`${p.first_name} ${p.last_name}`; });
+        const rows=VOLUNTEER_HOURS;
+        if(!rows.length) return '<p class="empty">No volunteer hours logged yet.</p>';
+        const pending=rows.filter(r=>!r.approved).length;
+        return rStats([{l:"Entries",v:rows.length},{l:"Pending review",v:pending}])
+          + '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Member</th><th>Activity</th><th>Hours</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'
+          + rows.map(r=>`<tr><td>${esc(nm[r.member_id]||"You")}</td><td>${esc(r.activity)}</td><td>${esc(String(r.hours))}</td><td>${fmtDate(r.worked_on)}</td>`
+            + `<td>${r.approved?"✅ approved":"⏳ pending"}</td>`
+            + `<td>${r.approved
+                ? `<button class="rpt-btn" type="button" onclick="kosReviewHours('${r.id}',false)">Undo</button>`
+                : `<button class="rpt-btn ok" type="button" onclick="kosReviewHours('${r.id}',true)">Approve</button>`}</td></tr>`).join("")
+          + '</tbody></table></div>';
+      }},
+    { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In", secure:true,
+      desc:"Schedule meetings and put a check-in code on the screen; check-ins count toward Parade Ready.",
+      run:()=>{
+        const rows=MEETINGS;
+        let html = `<div class="krewe-form" style="padding:0 0 14px;">
+          <h3 class="rpt-cat" style="margin-top:0;">➕ Schedule a meeting</h3>
+          <div class="row">
+            <div><label for="mtName">Meeting name</label><input id="mtName" placeholder="e.g. Parade briefing" /></div>
+            <div><label for="mtWhen">Date &amp; time</label><input id="mtWhen" type="datetime-local" /></div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;"><input type="checkbox" id="mtMand" checked style="width:auto;" /> Mandatory (counts toward Parade Ready)</label>
+          <button type="button" class="btn btn-primary" onclick="kosCreateMeeting()">🦄 Create meeting</button>
+          <div class="msg" id="mtMsg"></div></div>
+          <h3 class="rpt-cat">📲 Upcoming meetings</h3>`;
+        if(!rows.length) html += '<p class="empty">No upcoming meetings yet. Create one above.</p>';
+        else html += rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
+            <b>${esc(r.name)}</b> <span>${fmtDate(r.start_time)}</span> ${r.is_mandatory?'<span class="rank-pill">mandatory</span>':""}
+            <button class="rpt-btn ok" type="button" onclick="kosShowCheckinQR('${r.id}', this)">Show check-in code</button>
+            <div class="qr-slot" style="flex-basis:100%;"></div>
+          </div>`).join("");
+        return html;
+      }},
+
+    /* ---- Events & Attendance ---- */
+    { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
+      desc:"Every scheduled event with date and location.",
+      run:()=> rTable(["Event","Type","When","Location"], EVENTS.map(e=>[e.name, e.event_type||"event", fmtDate(e.start_time), e.location||"-"])) },
+    { id:"event_headcount", cat:"Events & Attendance", icon:"🧮", title:"Event Headcount & Capacity",
+      desc:"RSVPs, guests, total headcount and spots remaining per event.",
+      run:()=>{
+        const rows=HEADCOUNT;
+        const totalHead=rows.reduce((n,r)=>n+num(r.total_headcount),0);
+        return rStats([{l:"Events",v:rows.length},{l:"Total headcount",v:totalHead}]) +
+          rTable(["Event","When","RSVPs","Guests","Headcount","Capacity","Spots left","Waitlist"],
+            rows.map(r=>[r.name,fmtDate(r.start_time),num(r.signups),num(r.total_guests),num(r.total_headcount),
+              r.capacity==null?"-":r.capacity, r.spots_remaining==null?"-":r.spots_remaining, num(r.waitlisted)]));
+      }},
+    { id:"volunteer_coverage", cat:"Events & Attendance", icon:"🙌", title:"Volunteer Coverage",
+      desc:"How many volunteers have signed up for each event.",
+      run:()=>{
+        const rows=HEADCOUNT;
+        const totalVol=rows.reduce((n,r)=>n+num(r.volunteers),0);
+        return rStats([{l:"Total volunteers",v:totalVol},{l:"Events",v:rows.length}]) +
+          rTable(["Event","When","Type","Volunteers"], rows.map(r=>[r.name,fmtDate(r.start_time),r.event_type||"event",num(r.volunteers)]));
+      }},
+    { id:"attendee_contacts", cat:"Events & Attendance", icon:"📇", title:"Event Attendee Contact List", secure:true,
+      desc:"Names and emails of everyone signed up, for direct outreach.",
+      run:()=>{
+        const rows=ATTENDEES;
+        if(!rows.length) return '<p class="empty">No event signups yet.</p>';
+        return rStats([{l:"Signups",v:rows.length}]) +
+          rTable(["Event","Name","Email","Role","Status","Guests"],
+            rows.map(r=>[r.event_name, `${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"-", r.signup_role||"attendee", r.status||"-", num(r.guests_count)]));
+      }},
+
+    /* ---- Membership ---- */
+    { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
+      desc:"Active members, prospects, officers, and new joiners this year.",
+      run:()=>{
+        const m=MEMBERSHIP_OVERVIEW;
+        const byRole={}; MEMBERS.forEach(d=>{ const k=d.member_role||"member"; byRole[k]=(byRole[k]||0)+1; });
+        return rStats([
+          {l:"Total members",v:m.total_members},{l:"Active",v:m.active_members},
+          {l:"Prospects",v:m.prospects},{l:"Officers",v:m.officers},{l:"New this year",v:m.new_this_year}
+        ]) + rTable(["Role","Count"], Object.keys(byRole).sort().map(k=>[k, byRole[k]]));
+      }},
+    { id:"officer_roster", cat:"Membership", icon:"🎖️", title:"Officer & Captain Roster",
+      desc:"Who holds leadership roles in the krewe (names only).",
+      run:()=>{
+        const rows=MEMBERS.filter(m=>["captain","officer"].includes((m.member_role||"").toLowerCase()));
+        return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"-"]));
+      }},
+    { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Year",
+      desc:"Count of members who joined since January 1.",
+      run:()=> rStats([{l:"Joined this year",v:MEMBERSHIP_OVERVIEW.new_this_year},{l:"Total members",v:MEMBERSHIP_OVERVIEW.total_members}]) +
+        rTable(["Name","Role","Status"], MEMBERS.filter(m=>m.new_this_year).map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"-"])) },
+    { id:"member_directory_full", cat:"Membership", icon:"📒", title:"Member Contact Directory", secure:true,
+      desc:"Full roster with email and phone for each member.",
+      run:()=>{
+        const rows=MEMBERS.slice().sort((a,b)=>a.last_name.localeCompare(b.last_name));
+        return rStats([{l:"Members",v:rows.length}]) +
+          rTable(["Name","Email","Phone","Role","Status"],
+            rows.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), m.email||"-", m.phone||"-", m.member_role||"member", m.membership_status||"-"]));
+      }},
+    { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
+      desc:"Prospective members and their contact details.",
+      run:()=>{
+        const rows=PENDING_APPS;
+        if(!rows.length) return '<p class="empty">No pending applications right now. ✨</p>';
+        return rStats([{l:"Pending",v:rows.length}]) +
+          rTable(["Name","Email","Phone","Applied","Notes"],
+            rows.map(a=>[`${a.first_name||""} ${a.last_name||""}`.trim(), a.email||"-", a.phone||"-", fmtDate(a.created_at), a.notes||"-"]));
+      }},
+
+    /* ---- Dues & Finance ---- */
+    { id:"dues_summary", cat:"Dues & Finance", icon:"💜", title:"Dues Summary by Year",
+      desc:"Billed, collected and outstanding totals, with no names.",
+      run:()=>{
+        const rows=DUES_SUMMARY;
+        const outstanding=rows.reduce((n,r)=>n+num(r.amount_outstanding),0);
+        const collected=rows.reduce((n,r)=>n+num(r.amount_collected),0);
+        return rStats([{l:"Collected",v:fmtMoney(collected)},{l:"Outstanding",v:fmtMoney(outstanding)}]) +
+          rTable(["Year","Invoices","Paid","Unpaid","Members owing","Collected","Outstanding"],
+            rows.map(r=>[r.membership_year,num(r.invoices),num(r.paid_count),num(r.unpaid_count),
+              num(r.members_owing),fmtMoney(r.amount_collected),fmtMoney(r.amount_outstanding)]));
+      }},
+    { id:"dues_by_member", cat:"Dues & Finance", icon:"🧾", title:"Outstanding Dues by Member", secure:true,
+      desc:"Who owes what, with days overdue, for follow-up.",
+      run:()=>{
+        const rows=OUTSTANDING_DUES.slice().sort((a,b)=>num(b.days_overdue)-num(a.days_overdue));
+        if(!rows.length) return '<p class="empty">No outstanding dues. Everyone\'s paid up! ✨</p>';
+        const owed=rows.reduce((n,r)=>n+num(r.amount),0);
+        return rStats([{l:"Members owing",v:rows.length},{l:"Total outstanding",v:fmtMoney(owed)}]) +
+          rTable(["Name","Email","Year","Amount","Due","Days overdue","Reminders"],
+            rows.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"-", r.membership_year, fmtMoney(r.amount), fmtDate(r.due_date), num(r.days_overdue), num(r.reminders_sent)]));
+      }},
+
+    /* ---- Logistics & Coordination ---- */
+    { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
+      desc:"Locker status breakdown and current holders.",
+      run:()=>{
+        const rows=LOCKERS; const by={};
+        rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
+        return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
+          rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"-",l.holder_name||"-",l.status]));
+      }},
+    { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
+      desc:"Drivers offering rides vs members needing one.",
+      run:()=>{
+        const rows=CARPOOLS; const offers=rows.filter(c=>c.kind==="offer"), reqs=rows.filter(c=>c.kind==="request");
+        const seats=offers.reduce((n,c)=>n+num(c.seats),0);
+        return rStats([{l:"Drivers",v:offers.length},{l:"Seats offered",v:seats},{l:"Riders needing",v:reqs.length}]) +
+          rTable(["Type","Member","Event","Pickup","Seats"],
+            rows.map(c=>[c.kind==="offer"?"Driver":"Needs ride",c.person_name,c.event||"-",c.pickup_area||"-",c.kind==="offer"?num(c.seats):"-"]));
+      }},
+    { id:"vanpool_manifest", cat:"Logistics & Coordination", icon:"🚐", title:"Van Pool Manifest",
+      desc:"Seats reserved and remaining on each krewe van.",
+      run:()=>{
+        const rows=VANPOOLS.map(v=>{
+          const taken=VAN_RES.filter(r=>r.vanpool_id===v.id).reduce((n,r)=>n+num(r.seats),0);
+          return [v.van_name, v.event||"-", num(v.capacity), taken, Math.max(0,num(v.capacity)-taken)];
+        });
+        const cap=rows.reduce((n,r)=>n+r[2],0), tk=rows.reduce((n,r)=>n+r[3],0);
+        return rStats([{l:"Vans",v:rows.length},{l:"Seats reserved",v:tk},{l:"Seats open",v:Math.max(0,cap-tk)}]) +
+          rTable(["Van","Event","Capacity","Reserved","Open"], rows);
+      }},
+    { id:"ride_coverage", cat:"Logistics & Coordination", icon:"🧭", title:"Ride Coverage Gap",
+      desc:"Total seats available vs members who still need a ride.",
+      run:()=>{
+        const carSeats=CARPOOLS.filter(c=>c.kind==="offer").reduce((n,c)=>n+num(c.seats),0);
+        const riders=CARPOOLS.filter(c=>c.kind==="request").length;
+        const vanCap=VANPOOLS.reduce((n,v)=>n+num(v.capacity),0);
+        const vanTaken=VAN_RES.reduce((n,r)=>n+num(r.seats),0);
+        const vanOpen=Math.max(0,vanCap-vanTaken);
+        const totalOpen=carSeats+vanOpen;
+        return rStats([
+          {l:"Carpool seats",v:carSeats},{l:"Van seats open",v:vanOpen},
+          {l:"Seats available",v:totalOpen},{l:"Riders needing",v:riders}
+        ]) + `<p class="rpt-note">${ totalOpen>=riders
+          ? "✅ There are enough offered seats to cover everyone who has asked for a ride."
+          : "⚠️ More ride requests than offered seats. Consider recruiting another driver or van." }</p>`;
+      }},
+
+    /* ---- Content & Communications ---- */
+    { id:"content_inventory", cat:"Content & Communications", icon:"📚", title:"Published Content Inventory",
+      desc:"Poems, art, gallery and video items on the site.",
+      run:()=>{
+        const rows=CONTENT_ITEMS; const by={};
+        rows.forEach(c=>{ const k=c.type||"other"; by[k]=by[k]||{pub:0,draft:0}; c.is_published?by[k].pub++:by[k].draft++; });
+        return rStats([{l:"Items",v:rows.length},{l:"Published",v:rows.filter(c=>c.is_published).length}]) +
+          rTable(["Type","Published","Draft"], Object.keys(by).sort().map(k=>[k.replace(/_/g," "),by[k].pub,by[k].draft]));
+      }},
+    { id:"comms_log", cat:"Content & Communications", icon:"✉️", title:"Communications Log", secure:true,
+      desc:"Outbound emails and reminders sent to members.",
+      run:()=>{
+        const rows=OUTBOUND_EMAILS;
+        if(!rows.length) return '<p class="empty">No emails queued or sent yet.</p>';
+        return rStats([{l:"Emails",v:rows.length},{l:"Sent",v:rows.filter(r=>r.status==="sent").length}]) +
+          rTable(["To","Subject","Purpose","Status","Queued","Sent"],
+            rows.map(r=>[r.to_name?`${r.to_name} <${r.to_email}>`:(r.to_email||"-"), r.subject||"-", (r.purpose||"-").replace(/_/g," "), r.status||"-", fmtDate(r.created_at), r.sent_at?fmtDate(r.sent_at):"-"]));
+      }},
+  ];
+
+  const CATS=["Parade Readiness","Events & Attendance","Membership","Dues & Finance","Logistics & Coordination","Content & Communications"];
+
+  function buildReportGrid(){
+    const grid=document.getElementById("reportGrid");
+    grid.innerHTML = CATS.map(cat=>{
+      const items=REPORTS.filter(r=>r.cat===cat);
+      return `<div class="rpt-cat">${esc(cat)}</div><div class="rpt-grid">${
+        items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
+          <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
+          <div class="d">${esc(r.desc)}</div>
+          ${r.secure?'<span class="lock">🔒 Officers only</span>':''}
+        </div>`).join("")}</div>`;
+    }).join("");
+    grid.querySelectorAll(".rpt-card").forEach(c=>{
+      const go=()=>runReport(c.getAttribute("data-id"));
+      c.addEventListener("click",go);
+      c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+    });
+  }
+
+  window.openReports=()=>{
+    const m=document.getElementById("reportsModal");
+    if(!document.getElementById("reportGrid").childElementCount) buildReportGrid();
+    showReportGrid();
+    m.classList.add("open"); m.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  };
+  window.closeReports=()=>{
+    const m=document.getElementById("reportsModal");
+    m.classList.remove("open"); m.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  };
+  window.showReportGrid=()=>{
+    document.getElementById("reportView").style.display="none";
+    document.getElementById("reportGrid").style.display="block";
+  };
+  function runReport(id){
+    const def=REPORTS.find(r=>r.id===id); if(!def) return;
+    document.getElementById("reportGrid").style.display="none";
+    const view=document.getElementById("reportView"); view.style.display="block";
+    document.getElementById("reportTitle").textContent=(def.icon?def.icon+" ":"")+def.title;
+    const body=document.getElementById("reportBody");
+    try{ document.querySelector("#reportsModal .modal-card").scrollIntoView({block:"start"}); }catch(_){}
+    if(def.secure && !isOfficer()){ body.innerHTML=officerOnlyNotice(); return; }
+    try { body.innerHTML = def.run(); }
+    catch(err){ body.innerHTML='<p class="msg error">Could not build this report. '+esc(err.message||"")+'</p>'; }
+  }
+  window.runReport=runReport;
+
+  /* ================= THE SPARKLE CUP ================= */
+  const E=esc;
+  const medal=p=>p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
+  let gameLoaded=false;
+  window.openGame=()=>{
+    const m=document.getElementById("gameModal");
+    m.classList.add("open"); m.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+    if(!gameLoaded){ gameTab("standings"); gameLoaded=true; }
+  };
+  window.closeGame=()=>{
+    const m=document.getElementById("gameModal");
+    m.classList.remove("open"); m.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  };
+  window.gameTab=(t)=>{
+    ["standings","howto","find"].forEach(k=>document.getElementById("gt-"+k).classList.toggle("on",k===t));
+    if(t==="standings") renderStandings();
+    else if(t==="howto") renderHowto();
+    else renderFind();
+  };
+  function rtable(headers,rowsHtml){
+    return '<div class="rpt-tablewrap"><table class="rpt-table lb-table"><thead><tr>'+
+      headers.map(h=>`<th>${E(h)}</th>`).join("")+'</tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+  }
+  function renderStandings(){
+    const box=document.getElementById("gameBody");
+    const yr=SEASON;
+    let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most magic. Earn <b>Sparkles ✨</b> by showing up, volunteering, and pitching in. Standings reset each season, so it's always anyone's game.</p>`;
+    html+=`<h3 class="rpt-cat" style="margin-top:6px;">✨ ${yr} Season Standings</h3>`;
+    html+=rtable(["#","Member","Rank","Season ✨","Badges"],
+      LEADERBOARD.map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
+        `<td><span class="rank-pill">${r.rank_icon} ${E(r.rank_name)}</span></td>`+
+        `<td><b>${r.season_sparkles}</b></td><td>${"🏅".repeat(Math.min(r.badge_count,6))||"-"} ${r.badge_count?("("+r.badge_count+")"):""}</td></tr>`).join("")
+        || '<tr><td colspan="5" class="empty">No Sparkles earned yet.</td></tr>');
+    html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">service gets its own podium</small></h3>`;
+    html+=rtable(["Member","Shifts","Volunteer ✨"],
+      VOL_LEADERBOARD.map(r=>`<tr><td>${E(r.first_name)} ${E(r.last_name)}</td><td>${r.volunteer_events}</td><td><b>${r.volunteer_sparkles}</b></td></tr>`).join("")
+        || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet. Be the first!</td></tr>');
+    box.innerHTML=html;
+  }
+  function renderHowto(){
+    const box=document.getElementById("gameBody");
+    let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Sparkles ✨</b>. Sparkles add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun: recognition, bragging rights, and a little friendly rivalry to fill our events and volunteer shifts.</p>`;
+    html+=`<h3 class="rpt-cat">✨ How to earn Sparkles</h3>`;
+    html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
+      POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} ✨</td></tr>`).join("")+'</tbody></table></div>';
+    html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Sparkles; an officer confirms who attended after each event.</p>`;
+    html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
+    html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Sparkles</th></tr></thead><tbody>'+
+      RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" – "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
+    html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><div class="badge-gallery">`+
+      BADGE_DEFS.map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div><div class="ds">${E(b.description||"")}</div></div>`).join("")+'</div>';
+    box.innerHTML=html;
+  }
+  function renderFind(){
+    const box=document.getElementById("gameBody");
+    box.innerHTML=`<p style="margin:0 0 12px;color:#3a3a2e;">Enter your email to see your Sparkles, rank, badges, and how close you are to the next rank.</p>
+      <form id="findForm" class="krewe-form" style="max-width:420px;">
+        <label for="findEmail">Your email</label>
+        <input id="findEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+        <button class="btn btn-primary" type="submit" style="margin-top:10px;">✨ Find my Sparkles</button>
+        <div class="msg" id="findMsg"></div>
+      </form>
+      <div id="findResult"></div>`;
+    document.getElementById("findForm").addEventListener("submit",(e)=>{
+      e.preventDefault();
+      const email=document.getElementById("findEmail").value.trim();
+      const msg=document.getElementById("findMsg"); const res=document.getElementById("findResult");
+      if(!email){ msg.textContent="Please enter your email."; msg.className="msg error"; return; }
+      msg.textContent=""; msg.className="msg";
+      const data=MY_GAME_CARD;
+      const total=data.lifetime + (data.sparkles_to_next||0);
+      const pct=data.sparkles_to_next>0 ? Math.max(6,Math.round(100*data.lifetime/total)) : 100;
+      res.innerHTML=`<div class="find-card">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div class="big">${data.rank_icon}</div>
+          <div><div style="font-family:var(--display);color:var(--green-800);font-size:22px;">${E(data.first_name)} ${E(data.last_name)}</div>
+            <span class="rank-pill">${data.rank_icon} ${E(data.rank_name)}</span></div>
+          <div style="margin-left:auto;text-align:right;"><div class="big" style="font-size:34px;">${data.lifetime}</div><div style="font-size:13px;color:var(--muted);">lifetime Sparkles ✨</div></div>
+        </div>
+        <div style="margin-top:14px;">
+          ${ data.sparkles_to_next>0
+            ? `<div style="font-size:14px;color:#3a3a2e;"><b>${data.sparkles_to_next}</b> ✨ to <b>${E(data.next_rank_name)}</b></div><div class="prog"><i style="width:${pct}%"></i></div>`
+            : `<div style="font-size:14px;color:#3a3a2e;">🏆 You've reached the top rank, a true legend of the krewe!</div>` }
+          <div style="font-size:13px;color:var(--muted);">${data.season} ✨ earned this season</div>
+        </div>
+        <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Your badges</h4>
+        ${ (data.badges&&data.badges.length)
+            ? `<div class="badge-gallery">${data.badges.map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div></div>`).join("")}</div>`
+            : '<p class="empty">No badges yet. Your first event earns one!</p>' }
+        <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Recent Sparkles</h4>
+        <ul class="data-list">${ (data.recent||[]).map(r=>`<li class="data-row"><b>+${r.sparkles} ✨</b> · ${E(REASON[r.reason]||r.reason)}${r.event?(" · "+E(r.event)):""}</li>`).join("") || '<li class="empty">No activity yet.</li>' }</ul>
+        <p class="rpt-note">✨ Demo: on the live site this looks up your real standing by email.</p>
+      </div>`;
+    });
+  }
+
+  /* ================= RAFFLES ================= */
+  window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
+  window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
+
+  function myBasketTickets(id){ const e=MY_RAFFLE.baskets.find(b=>b.basket_id===id); return e?e.tickets:0; }
+  function myPotTickets(id){ const e=MY_RAFFLE.pot.find(p=>p.event_id===id); return e?e.tickets:0; }
+
+  function renderRaffles(){
+    const box=document.getElementById("raffleBody");
+    const events=RAFFLE_EVENTS;
+    if(!events.length){ box.innerHTML='<p class="empty">No raffles are running right now. Check back soon! ✨</p>'; return; }
+    let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🧺 <b>Basket raffle:</b> buy tickets for the specific basket(s) you want — each ticket is one entry in that basket, and one ticket per basket is drawn at the end. 💰 <b>50/50:</b> all tickets share one pot; one ticket wins half the pot. Tickets are paid in person — settle up with a volunteer.</div>';
+    for(const e of events){
+      html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${E(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
+      if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${E(e.description)}</p>`;
+      if(e.raffle_type==='fifty_fifty'){
+        html+=`<div class="van-card"><div class="seats">50/50 Pot</div>
+          <div style="font-size:14px;color:var(--muted);">${e.pot_tickets} tickets in${e.ticket_price?` · $${e.ticket_price} each`:''}</div>`;
+        if(e.drawn_at){ html+=`<div style="margin-top:8px;"><b>🏆 Winner:</b> ${E(e.winner_name||'TBD')}</div>`; }
+        else { html+=`<div style="margin-top:6px;font-size:14px;">You have <b>${myPotTickets(e.id)}</b> tickets</div>
+          <form class="mini-form" data-pot="${e.id}" style="grid-template-columns:1fr auto;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Buy tickets</button></form>`; }
+        html+=`<div class="msg" id="rmsg-${e.id}"></div></div>`;
+      } else {
+        const bs=RAFFLE_BASKETS.filter(b=>b.raffle_event_id===e.id).sort((a,b)=>(a.display_order||0)-(b.display_order||0));
+        html+=`<div class="dir-grid">`;
+        for(const b of bs){
+          html+=`<div class="dir-card"><div class="nm">${E(b.name)}</div>`;
+          if(b.description) html+=`<div class="rl">${E(b.description)}</div>`;
+          if(b.estimated_value) html+=`<div class="rl">~$${b.estimated_value}</div>`;
+          html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets} tickets in · you: <b>${myBasketTickets(b.id)}</b></div>`;
+          if(e.drawn_at){ html+=`<div style="margin-top:6px;"><b>🏆 ${E(b.winner_name||'TBD')}</b></div>`; }
+          else { html+=`<form class="mini-form" data-basket="${b.id}" style="grid-template-columns:1fr auto;margin-top:8px;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Enter</button></form>`; }
+          html+=`</div>`;
+        }
+        if(!bs.length) html+='<p class="empty">No baskets added yet.</p>';
+        html+=`</div>`;
+      }
+      html+=`</div>`;
+    }
+    box.innerHTML=html;
+    box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",(ev)=>{
+      ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
+      const basket=RAFFLE_BASKETS.find(b=>b.id===id); if(basket) basket.tickets+=q;
+      const mine=MY_RAFFLE.baskets.find(b=>b.basket_id===id); if(mine) mine.tickets+=q; else MY_RAFFLE.baskets.push({basket_id:id,tickets:q});
+      renderRaffles();
+    }));
+    box.querySelectorAll("form[data-pot]").forEach(f=>f.addEventListener("submit",(ev)=>{
+      ev.preventDefault(); const id=f.getAttribute("data-pot"); const q=parseInt(f.q.value||"1",10);
+      const evt=RAFFLE_EVENTS.find(e=>e.id===id); if(evt) evt.pot_tickets+=q;
+      const mine=MY_RAFFLE.pot.find(p=>p.event_id===id); if(mine) mine.tickets+=q; else MY_RAFFLE.pot.push({event_id:id,tickets:q});
+      renderRaffles();
+    }));
+    if(isOfficer()){ renderOfficerTools(events); renderManage(); }
+  }
+
+  function renderOfficerTools(events){
+    const box=document.getElementById("raffleBody"); if(!box) return;
+    let h='<div class="raffle-event" style="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;">';
+    h+='<h3 class="rpt-cat" style="margin-top:0;">🔑 Officer tools</h3>';
+    h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Only krewe officers see this. Draw winners (weighted by tickets in the demo, chosen at random).</p>';
+    for(const e of events){
+      h+='<div style="margin:10px 0;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+E(e.name)+'</b>';
+      if(e.raffle_type==='fifty_fifty'){
+        if(e.drawn_at){ h+=' — <span style="color:#4c1d95;font-weight:600;">🏆 '+E(e.winner_name||'TBD')+'</span>'; }
+        else { h+=' <button class="btn btn-green draw5050" data-id="'+e.id+'" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
+      } else {
+        const bs=RAFFLE_BASKETS.filter(b=>b.raffle_event_id===e.id).sort((a,b)=>(a.display_order||0)-(b.display_order||0));
+        h+='<div style="display:grid;gap:6px;margin-top:6px;">';
+        for(const b of bs){
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;"><span>'+E(b.name)+' · '+(b.tickets||0)+' tix</span>';
+          if(b.winner_name){ h+='<span style="color:#4c1d95;font-weight:600;">🏆 '+E(b.winner_name)+'</span>'; }
+          else { h+='<button class="btn btn-green drawbasket" data-id="'+b.id+'" style="padding:4px 10px;">Draw</button>'; }
+          h+='</div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+    const wrap=document.createElement('div'); wrap.innerHTML=h; box.appendChild(wrap);
+    wrap.querySelectorAll('.drawbasket').forEach(btn=>btn.addEventListener('click',()=>{
+      if(!confirm('Draw a winner for this basket now? This is final.')) return;
+      const b=RAFFLE_BASKETS.find(x=>x.id===btn.dataset.id); if(b) b.winner_name=pickWinner();
+      renderRaffles();
+    }));
+    wrap.querySelectorAll('.draw5050').forEach(btn=>btn.addEventListener('click',()=>{
+      if(!confirm('Draw the 50/50 winner now? This is final.')) return;
+      const e=RAFFLE_EVENTS.find(x=>x.id===btn.dataset.id); if(e){ e.winner_name=pickWinner(); e.drawn_at=new Date().toISOString(); }
+      renderRaffles();
+    }));
+  }
+
+  function mrMoney(n){ return '$'+Number(n||0).toFixed(2); }
+  function mrInput(label,html){ return '<label style="display:block;font-size:13px;color:#3a3a2e;margin:8px 0 2px;font-weight:600;">'+label+'</label>'+html; }
+  function makeBasketForm(raffleId,b){
+    var IS='__IS__';
+    var box=document.createElement('div'); box.className='dir-card'; box.style.marginTop='8px';
+    box.innerHTML =
+      mrInput('Basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?E(b.name):'')+'" />')+
+      mrInput('Approximate worth ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
+      mrInput('Details / description','<textarea class="bfDesc" rows="2" '+IS+'>'+(b&&b.description?E(b.description):'')+'</textarea>')+
+      '<div style="margin-top:10px;"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
+      '<div class="msg bfMsg"></div>';
+    box.innerHTML=box.innerHTML.split('__IS__').join('style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"');
+    box.querySelector('.bfCancel').onclick=function(){ box.remove(); };
+    box.querySelector('.bfSave').onclick=function(){
+      var msg=box.querySelector('.bfMsg');
+      var name=box.querySelector('.bfName').value.trim();
+      if(!name){ msg.className='msg error'; msg.textContent='Please enter a basket title.'; return; }
+      var val=box.querySelector('.bfVal').value; var desc=box.querySelector('.bfDesc').value.trim();
+      var raffle=MY_RAFFLES.find(r=>r.id===raffleId);
+      if(b){ b.name=name; b.estimated_value=val?parseFloat(val):null; b.description=desc; }
+      else if(raffle){ raffle.baskets=raffle.baskets||[]; raffle.baskets.push({ id:'mb'+Date.now(), name, estimated_value:val?parseFloat(val):null, description:desc, tickets:0, winner_name:null, image_url:null }); }
+      renderRaffles();
+    };
+    return box;
+  }
+  function renderManage(){
+    var box=document.getElementById("raffleBody"); if(!box) return;
+    var w=document.createElement("div"); w.className="raffle-event";
+    w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
+    w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
+      '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets. You own and manage what you create.</p>'+
+      '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
+      '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
+    box.appendChild(w);
+    document.getElementById("mrNew").onclick=showCreateForm;
+    renderMine(MY_RAFFLES);
+  }
+  function showCreateForm(){
+    var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
+    f.innerHTML='<div class="dir-card">'+
+      mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" />')+
+      mrInput('Type','<select id="crType" '+IS+'><option value="basket">🧺 Basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
+      mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+'></textarea>')+
+      mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
+      '<div style="margin-top:10px;"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
+      '<div class="msg" id="crMsg"></div></div>';
+    document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
+    document.getElementById("crSave").onclick=function(){
+      var msg=document.getElementById("crMsg");
+      var name=document.getElementById("crName").value.trim();
+      if(!name){ msg.className='msg error'; msg.textContent='Please enter a raffle name.'; return; }
+      var type=document.getElementById("crType").value;
+      var price=parseFloat(document.getElementById("crPrice").value||"1");
+      var desc=document.getElementById("crDesc").value.trim();
+      var id='m'+Date.now();
+      MY_RAFFLES.push({ id, name, raffle_type:type, is_active:true, mine:true, drawn_at:null, winner_name:null, baskets:[] });
+      RAFFLE_EVENTS.push({ id, name, raffle_type:type, description:desc||null, is_active:true, ticket_price:price, event_date:null, pot_tickets:0, drawn_at:null, winner_name:null });
+      renderRaffles();
+    };
+  }
+  function renderMine(list){
+    var L=document.getElementById("mrList"); if(!L) return;
+    if(!list.length){ L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; return; }
+    L.innerHTML='';
+    list.forEach(function(e){
+      var card=document.createElement('div'); card.className='dir-card'; card.style.marginBottom='12px';
+      var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+E(e.name)+'</b>'+
+        '<span style="font-size:12px;color:var(--muted);">'+(e.is_active?'live':'hidden')+(e.mine?'':' · (officer)')+'</span></div>';
+      var body='';
+      if(e.raffle_type==='fifty_fifty'){
+        body+='<div style="font-size:14px;margin:6px 0;">'+(e.pot_tickets||0)+' tickets in';
+        if(e.drawn_at){ body+=' · 🏆 '+E(e.winner_name||'TBD'); }
+        body+='</div>';
+        if(!e.drawn_at){ body+='<button class="btn btn-green mrDraw5050" data-id="'+e.id+'" type="button" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
+      } else {
+        body+='<div class="mrBaskets" style="display:grid;gap:8px;margin:8px 0;"></div>';
+        body+='<button class="btn mrAddBasket" data-id="'+e.id+'" type="button">➕ Add a basket</button>';
+      }
+      card.innerHTML=head+body;
+      if(e.raffle_type!=='fifty_fifty'){
+        var bw=card.querySelector('.mrBaskets');
+        (e.baskets||[]).forEach(function(b){
+          var row=document.createElement('div');
+          row.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid rgba(168,128,28,.25);border-radius:10px;padding:8px;';
+          row.innerHTML='<div style="width:54px;height:54px;border-radius:8px;background:#f0e8fb;display:flex;align-items:center;justify-content:center;font-size:24px;">🧺</div>'+
+            '<div style="flex:1;min-width:0;"><div style="font-weight:600;">'+E(b.name)+'</div>'+
+            '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' tix'+(b.winner_name?' · 🏆 '+E(b.winner_name):'')+'</div></div>'+
+            '<div style="display:flex;flex-direction:column;gap:4px;">'+
+              '<button class="btn mrEditB" type="button" style="padding:3px 8px;font-size:12px;">Edit</button>'+
+              (b.winner_name?'':'<button class="btn btn-green mrDrawB" type="button" style="padding:3px 8px;font-size:12px;">Draw</button>')+
+              ((b.tickets||0)>0?'':'<button class="btn mrDelB" type="button" style="padding:3px 8px;font-size:12px;">Delete</button>')+
+            '</div>';
+          row.querySelector('.mrEditB').onclick=function(){ var fm=makeBasketForm(e.id,b); row.parentNode.insertBefore(fm,row.nextSibling); };
+          var dr=row.querySelector('.mrDrawB'); if(dr) dr.onclick=function(){ if(!confirm('Draw a winner for "'+b.name+'" now? This is final.')) return; b.winner_name=pickWinner(); renderRaffles(); };
+          var de=row.querySelector('.mrDelB'); if(de) de.onclick=function(){ if(!confirm('Delete "'+b.name+'"?')) return; e.baskets=e.baskets.filter(x=>x!==b); renderRaffles(); };
+          bw.appendChild(row);
+        });
+        if(!(e.baskets||[]).length){ bw.innerHTML='<p class="empty" style="margin:0;">No baskets yet. Add your first below.</p>'; }
+        card.querySelector('.mrAddBasket').onclick=function(){ var fm=makeBasketForm(e.id,null); card.appendChild(fm); fm.scrollIntoView({behavior:'smooth',block:'center'}); };
+      } else {
+        var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=function(){ if(!confirm('Draw the 50/50 winner now? This is final.')) return; e.winner_name=pickWinner(); e.drawn_at=new Date().toISOString(); renderRaffles(); };
+      }
+      L.appendChild(card);
+    });
+  }
+
+  /* ---- global keyboard: close whichever modal is open ---- */
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){ closeReports(); closeGame(); if(window.closeRaffles) closeRaffles(); }
+  });
+  </script>
+</body>
+</html>
