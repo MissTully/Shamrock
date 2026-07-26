@@ -1,0 +1,15 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+.vercel
+
+# Large raw uploads & archives (optimized assets live under assets/)
+*.zip
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.heic
+*.HEIC

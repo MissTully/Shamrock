@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 54" fill="none">
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe694"/>
+      <stop offset="0.5" stop-color="#f5c542"/>
+      <stop offset="1" stop-color="#c9971a"/>
+    </linearGradient>
+  </defs>
+  <!-- corner sweep -->
+  <path d="M6 48 C 6 24 24 6 48 6" stroke="url(#c)" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M12 48 C 12 30 30 12 48 12" stroke="url(#c)" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <!-- star at the elbow -->
+  <path d="M13 13 l3 7.4 8 .6 -6 5.2 1.9 7.8 -6.9-4.2 -6.9 4.2 1.9-7.8 -6-5.2 8-.6z" fill="url(#c)"/>
+  <!-- accent dots -->
+  <circle cx="48" cy="6" r="2.4" fill="#ec4899"/>
+  <circle cx="6" cy="48" r="2.4" fill="#8b5cf6"/>
+</svg>

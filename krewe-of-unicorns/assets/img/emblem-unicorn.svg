@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Krewe of Unicorns crest">
+  <defs>
+    <radialGradient id="field" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#6d28d9"/>
+      <stop offset="0.55" stop-color="#4c1d95"/>
+      <stop offset="1" stop-color="#2a0a52"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe694"/>
+      <stop offset="0.5" stop-color="#f5c542"/>
+      <stop offset="1" stop-color="#c9971a"/>
+    </linearGradient>
+    <linearGradient id="horn" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c9971a"/>
+      <stop offset="0.5" stop-color="#ffe694"/>
+      <stop offset="1" stop-color="#fff6d8"/>
+    </linearGradient>
+    <linearGradient id="mane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ec4899"/>
+      <stop offset="0.4" stop-color="#8b5cf6"/>
+      <stop offset="0.7" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#5eead4"/>
+    </linearGradient>
+    <linearGradient id="mane2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f9a8d4"/>
+      <stop offset="0.5" stop-color="#c4b5fd"/>
+      <stop offset="1" stop-color="#67e8f9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- roundel -->
+  <circle cx="100" cy="100" r="97" fill="url(#ring)"/>
+  <circle cx="100" cy="100" r="88" fill="url(#field)"/>
+  <circle cx="100" cy="100" r="88" fill="none" stroke="#f5c542" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- scattered stars -->
+  <g fill="#ffe694" opacity="0.9">
+    <path d="M40 58 l2.2 5.4 5.8 .5 -4.4 3.8 1.4 5.7 -5-3.1 -5 3.1 1.4-5.7 -4.4-3.8 5.8-.5z"/>
+    <path d="M158 78 l1.8 4.4 4.7 .4 -3.6 3.1 1.1 4.6 -4-2.5 -4 2.5 1.1-4.6 -3.6-3.1 4.7-.4z" opacity="0.8"/>
+    <path d="M150 140 l1.5 3.7 4 .3 -3 2.6 .9 3.9 -3.4-2.1 -3.4 2.1 .9-3.9 -3-2.6 4-.3z" opacity="0.7"/>
+  </g>
+
+  <!-- flowing mane (behind head) -->
+  <path d="M120 60 C 150 70 156 108 138 150 C 150 120 146 96 128 92
+           C 142 104 138 132 120 150 C 128 124 124 104 110 100 Z" fill="url(#mane)"/>
+  <path d="M112 58 C 132 62 140 92 128 128 C 134 104 128 88 112 88
+           C 122 100 118 122 104 140 C 110 116 106 98 96 96 Z" fill="url(#mane2)" opacity="0.92"/>
+
+  <!-- unicorn head (facing left), white -->
+  <path d="M96 96
+           C 92 84 84 78 74 79
+           C 70 74 66 70 60 70
+           C 63 76 62 82 60 86
+           C 47 92 40 104 42 118
+           C 43 128 50 133 47 140
+           C 46 145 52 149 58 146
+           C 61 152 70 153 76 149
+           C 86 152 98 150 106 142
+           C 118 132 120 112 112 98
+           C 108 92 102 91 96 96 Z"
+        fill="#fdfaff" stroke="#e7d6ff" stroke-width="1"/>
+  <!-- ear inner -->
+  <path d="M64 74 C 62 78 62 82 61 85 C 66 84 69 80 70 76 C 68 74 66 73 64 74 Z" fill="#e9d5ff"/>
+  <!-- nostril + eye -->
+  <circle cx="52" cy="112" r="2.4" fill="#4c1d95"/>
+  <circle cx="70" cy="104" r="3.4" fill="#2a0a52"/>
+  <circle cx="71.2" cy="102.8" r="1.1" fill="#fff"/>
+
+  <!-- golden spiral horn -->
+  <path d="M78 78 L96 26 L86 76 Z" fill="url(#horn)" stroke="#c9971a" stroke-width="1"/>
+  <g stroke="#c9971a" stroke-width="1.1" opacity="0.7" fill="none">
+    <path d="M84 70 L92 66"/>
+    <path d="M85 62 L92 58"/>
+    <path d="M87 52 L93 49"/>
+    <path d="M89 42 L94 40"/>
+  </g>
+  <!-- horn sparkle -->
+  <path d="M96 22 l1.4 3.6 3.8 .3 -2.9 2.4 .9 3.7 -3.2-2 -3.2 2 .9-3.7 -2.9-2.4 3.8-.3z" fill="#fff6d8"/>
+</svg>

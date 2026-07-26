@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a5e8ff"/><stop offset="0.6" stop-color="#d6c3ff"/><stop offset="1" stop-color="#ffe0f4"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#s)"/>
+<circle cx="107.5" cy="355.9" r="2.2" fill="#ffe694" opacity="0.55"/>
+<circle cx="377.8" cy="159.4" r="1.2" fill="#ffe694" opacity="0.69"/>
+<circle cx="609.8" cy="0.9" r="1.6" fill="#ffffff" opacity="0.83"/>
+<circle cx="81.8" cy="133.3" r="0.8" fill="#ffffff" opacity="0.79"/>
+<circle cx="305.0" cy="91.0" r="1.6" fill="#ffffff" opacity="0.42"/>
+<circle cx="751.3" cy="232.2" r="1.4" fill="#ffe694" opacity="0.81"/>
+<path d="M741.2 168.9 L742.9 173.1 L747.1 174.8 L742.9 176.4 L741.2 180.7 L739.6 176.4 L735.3 174.8 L739.6 173.1 Z" fill="#ffffff" opacity="0.95"/>
+<circle cx="794.0" cy="361.2" r="1.0" fill="#f9a8d4" opacity="0.60"/>
+<circle cx="400.6" cy="406.2" r="1.7" fill="#ffffff" opacity="0.95"/>
+<circle cx="470.1" cy="370.6" r="2.3" fill="#f9a8d4" opacity="0.70"/>
+<path d="M180 520 A 320 320 0 0 1 820 520" fill="none" stroke="#ff6b6b" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M193 520 A 307 307 0 0 1 807 520" fill="none" stroke="#ffb84d" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M206 520 A 294 294 0 0 1 794 520" fill="none" stroke="#ffe066" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M219 520 A 281 281 0 0 1 781 520" fill="none" stroke="#5eead4" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M232 520 A 268 268 0 0 1 768 520" fill="none" stroke="#4cc9f0" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M245 520 A 255 255 0 0 1 755 520" fill="none" stroke="#8b5cf6" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+<path d="M258 520 A 242 242 0 0 1 742 520" fill="none" stroke="#ec4899" stroke-width="11" stroke-linecap="round" opacity="0.85"/><path d="M0 600 L0 420 Q 86 384 149 424 Q 297 390 341 430 Q 407 407 463 447 Q 543 420 611 460 Q 753 378 831 418 L800 600 Z" fill="#8bd67a" opacity="0.95"/><path d="M0 600 L0 500 Q 146 490 215 518 Q 287 444 367 472 Q 481 487 543 515 Q 667 459 755 487 Q 891 467 963 495 L800 600 Z" fill="#5cb86b" opacity="1.0"/>
+</svg>
