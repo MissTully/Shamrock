@@ -429,7 +429,7 @@ form.krewe-form{ padding:26px 30px 30px; }
 
 /* ---- Crest medallion accent ---- */
 .crest{ position:relative; width:130px; height:130px; margin:0 auto 14px; display:block; border-radius:50%;
-  background:center/contain no-repeat url("img/emblem-unicorn.svg");
+  background:center/contain no-repeat url("img/logo-unicorn.png");
   filter:drop-shadow(0 10px 16px rgba(0,0,0,.35)); }
 .crest.lg{ width:166px; height:166px; }
 .crest::before{ content:""; position:absolute; inset:-26%; z-index:-1; border-radius:50%;
@@ -666,3 +666,18 @@ body.nav-open{ overflow:hidden; }
 @media (prefers-reduced-motion:reduce){
   .krewe-menu, .nav-dropdown, .nav-toggle-bars i, .caret, .nav-cta, .nav-backdrop{ transition:none !important; }
 }
+
+/* ============================================================
+   BRAND LOGO (rainbow unicorn) — show clean, uncropped, transparent.
+   Overrides the earlier circular-medallion emblem styling.
+   ============================================================ */
+.krewe-nav .brand img{ width:auto; height:46px; border-radius:0; border:0;
+  background:none; box-shadow:none; object-fit:contain; }
+.hero .emblem{ width:auto; height:122px; border-radius:0; border:0; background:none;
+  box-shadow:none; object-fit:contain; filter:drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+.krewe-foot .fimg{ width:auto; height:72px; border-radius:0; border:0; background:none;
+  object-fit:contain; filter:drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+.form-card .fc-head img.em{ width:auto; height:76px; border-radius:0; border:0;
+  background:none; object-fit:contain; }
+.crest{ border-radius:0; }
+@media (max-width:430px){ .krewe-nav .brand img{ height:40px; } }
