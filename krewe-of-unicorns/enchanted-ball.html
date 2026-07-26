@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="assets/img/emblem-unicorn.svg" />
+<title>Enchanted Ball · Krewe of Unicorns</title>
+<meta name="description" content="The Enchanted Ball, presented by the Krewe of Unicorns: a starlit masquerade gala honoring the crowning of our new King & Queen. November 7, 2026 at the Crystal Ballroom, Tampa, FL." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  /* Page-specific touches for the Enchanted Ball */
+  .ball-flyer{ max-width:560px; margin:0 auto; }
+  .ball-flyer img{ width:100%; height:auto; display:block; border-radius:10px; }
+  .ball-facts{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:10px; }
+  .ball-facts .fact{
+    background:rgba(255,255,255,.06); border:1px solid rgba(236,208,126,.45);
+    border-radius:14px; padding:22px 18px; text-align:center;
+  }
+  .ball-facts .fact .ic{ font-size:32px; display:block; margin-bottom:8px; }
+  .ball-facts .fact h3{ margin:0 0 6px; color:var(--gold-light); font-family:var(--display); font-size:18px; letter-spacing:.5px; }
+  .ball-facts .fact p{ margin:0; color:#f1ead4; font-size:16px; }
+  @media (max-width:760px){ .ball-facts{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="krewe-nav" aria-label="Primary">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-unicorn.svg" alt="Krewe of Unicorns emblem" />
+      <span class="name"><b>Krewe of Unicorns</b><small>Tampa Bay · Est. 2020</small></span>
+    </a>
+    <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
+      <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div class="krewe-menu" id="kreweMenu">
+      <ul class="krewe-links">
+        <li><a href="index.html" data-nav="index.html">Home</a></li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Events <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="event-signup.html" data-nav="event-signup.html">Upcoming Events</a></li>
+            <li><a href="parades.html" data-nav="parades.html">Parades</a></li>
+            <li><a href="enchanted-ball.html" data-nav="enchanted-ball.html">Enchanted Ball</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="learn.html" data-nav="learn.html">Unicorn Lore</a></li>
+            <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Media <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="gallery.html" data-nav="gallery.html">Photo Gallery</a></li>
+            <li><a href="videos.html" data-nav="videos.html">Videos</a></li>
+            <li><a href="share.html" data-nav="share.html">Share Yours</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Get Involved <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
+            <li><a href="store.html" data-nav="store.html">Shop</a></li>
+            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
+          </ul>
+        </li>
+      </ul>
+      <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">🦄 Join</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-bg" style="background-image:url('assets/img/bg-twilight.svg')"></div>
+    <img class="emblem" src="assets/img/emblem-unicorn.svg" alt="Ornate unicorn emblem" />
+    <p class="eyebrow">An evening of starlight &amp; magical splendor</p>
+    <h1>The Enchanted Ball</h1>
+    <p class="lede">Masquerade elegance beneath a canopy of stars. Join us as we honor the ceremonial
+       crowning of our new King &amp; Queen.</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="event-signup.html">🦄 RSVP to the Ball</a>
+      <a class="btn btn-outline" href="membership-application.html">Become a Member</a>
+    </div>
+  </header>
+
+  <!-- INVITATION + DETAILS -->
+  <section class="band band-green">
+    <div class="wrap">
+      <div class="section-title">
+        <h2 style="color:#fff;">You Are Cordially Invited</h2>
+        <p class="sub">Presented by the Krewe of Unicorns</p>
+      </div>
+      <div class="knot-divider"><span class="knot"></span></div>
+
+      <div class="feature" style="align-items:center;">
+        <div class="ft-media">
+          <div class="ball-flyer framed ornate">
+            <span class="crn tr"></span><span class="crn bl"></span>
+            <img src="assets/img/scene-ball.svg"
+                 alt="Enchanted Ball invitation: a starlit masquerade, crowning of the new King and Queen, November 7, 2026 at the Crystal Ballroom, Tampa, FL" />
+          </div>
+        </div>
+        <div class="ft-text">
+          <h2 style="color:#fff;">A Starlit Masquerade</h2>
+          <p style="color:#f1ead4;">Join us for an evening of wonder, celebration, and distinction
+             as the Krewe of Unicorns honors the ceremonial crowning of our new King &amp; Queen.
+             Expect candlelight and constellations, whimsical music from the krewe band, and a night of
+             magical splendor with the finest company in Tampa Bay.</p>
+          <p style="color:#f1ead4;">Formal finery and dazzling masks encouraged. A formal invitation will follow.</p>
+          <a class="btn btn-primary" href="event-signup.html">🦄 Reserve Your Place</a>
+        </div>
+      </div>
+
+      <!-- QUICK FACTS -->
+      <div class="ball-facts">
+        <div class="fact">
+          <span class="ic">📅</span>
+          <h3>When</h3>
+          <p>Saturday, November 7, 2026</p>
+        </div>
+        <div class="fact">
+          <span class="ic">📍</span>
+          <h3>Where</h3>
+          <p>Crystal Ballroom<br>Downtown Tampa, Florida</p>
+        </div>
+        <div class="fact">
+          <span class="ic">👑</span>
+          <h3>The Occasion</h3>
+          <p>Crowning of the new<br>King &amp; Queen</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE EVENING -->
+  <section class="wrap">
+    <div class="feature rev">
+      <div class="ft-text">
+        <h2>An Evening of Dancing &amp; Finery</h2>
+        <p>The Enchanted Ball is our most elegant night of the year: a grand ballroom, a turn around the
+           floor, and the warmth of old friends. Think formal attire with a magical touch: a shimmering
+           gown, a glittering cape, a dazzling mask, or your sharpest starlit finery.</p>
+        <p>From the first waltz to the last dance, it&rsquo;s a night to dress up, dance, and celebrate together.</p>
+        <a class="btn btn-green" href="event-signup.html">🦄 Reserve Your Place</a>
+      </div>
+      <div class="ft-media">
+        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+          <img src="assets/img/scene-ball.svg" alt="A couple in a glittering cape and flowing gown dancing at the enchanted ball" />
+        </div>
+      </div>
+    </div>
+
+    <div class="feature" style="margin-top:48px;">
+      <div class="ft-text">
+        <h2>The Setting</h2>
+        <p>An evening of candlelight and constellations in a grand Tampa ballroom: fine dining, whimsical music,
+           and the ceremonial crowning of our new King &amp; Queen.</p>
+        <a class="btn btn-primary" href="membership-application.html">🦄 Become a Member</a>
+      </div>
+      <div class="ft-media">
+        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+          <img src="assets/img/scene-ball.svg" alt="An ornate ballroom set with elegant dining tables beneath a canopy of stars" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTO BAND -->
+  <section class="photo-band">
+    <div class="pb-bg" style="background-image:url('assets/img/bg-twilight.svg')"></div>
+    <div class="pb-inner">
+      <div class="banner-flourish" aria-hidden="true"></div>
+      <h2>Take to the Floor</h2>
+      <p>A night of dancing beneath the stars. Sparkle on to good company and good fun!</p>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="band band-green">
+    <div class="wrap" style="text-align:center;">
+      <span class="crest float" role="img" aria-label="Unicorn crest"></span>
+      <div class="section-title">
+        <h2 style="color:#fff;">Will You Join Us?</h2>
+        <p class="sub">Seats are limited, so reserve early</p>
+      </div>
+      <div class="btns" style="margin-top:22px;">
+        <a class="btn btn-primary" href="event-signup.html">🦄 RSVP to the Enchanted Ball</a>
+        <a class="btn btn-outline" href="index.html">Back to Home</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-unicorn.svg" alt="" />
+    <div class="fname">Krewe of Unicorns</div>
+    <div class="flinks">
+<a href="index.html">Home</a>
+<a href="event-signup.html">Events</a>
+<a href="parades.html">Parades</a>
+<a href="enchanted-ball.html">Enchanted Ball</a>
+<a href="learn.html">Lore</a>
+<a href="krewe-history.html">History</a>
+<a href="poetry.html">Krewe Creativity</a>
+<a href="gallery.html">Gallery</a>
+<a href="videos.html">Videos</a>
+<a href="volunteer.html">Volunteer</a>
+<a href="store.html">Shop</a>
+<a href="membership-application.html">Join</a>
+<a href="members.html">Members</a>
+</div>
+    <div class="slainte">Sparkle on! 🦄🌈 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Unicorns. A Krewe &amp; Kin demo site · celebrating magic all year round.</div>
+  </footer>
+
+  <!-- MUSIC PLAYER -->
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.wav" loop preload="none"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our krewe tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune 🦄</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+</body>
+</html>

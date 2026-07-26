@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="assets/img/emblem-unicorn.svg" />
+<title>Krewe of Unicorns · Service &amp; Charity</title>
+<meta name="description" content="The Krewe of Unicorns gives back to Tampa Bay by supporting children's hospitals, youth programs, food banks, and local shelters through volunteer service and giving. All for Magic, Magic for All, and good for the community." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+<style>
+  .charity-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .charity-grid.two{ grid-template-columns:repeat(2,1fr); max-width:780px; margin:0 auto; }
+  .charity-card{
+    background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px;
+    padding:26px 22px; box-shadow:var(--shadow-sm); text-align:center;
+  }
+  .charity-card .ic{ font-size:38px; display:block; margin-bottom:10px; }
+  .charity-card h3{ color:var(--green-800); font-size:21px; margin:0 0 8px; }
+  .charity-card p{ margin:0 0 12px; color:var(--ink); font-size:16px; }
+  .charity-card a{ font-family:var(--display); font-weight:600; color:var(--green-700); text-decoration:none; }
+  .charity-card a:hover{ color:var(--gold-deep); }
+  .impact{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:26px; }
+  .impact .stat{ text-align:center; color:#f1ead4; }
+  .impact .stat b{ display:block; font-family:var(--display); font-size:34px; color:var(--gold-light); line-height:1; margin-bottom:6px; }
+  .past-list{ list-style:none; padding:0; margin:18px auto 0; max-width:760px; display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
+  .past-list li{ padding-left:24px; position:relative; font-size:16.5px; }
+  .past-list li::before{ content:"🦄"; position:absolute; left:0; color:var(--green-600); }
+  @media (max-width:760px){ .charity-grid,.charity-grid.two,.impact,.past-list{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+  <nav class="krewe-nav" aria-label="Primary">
+    <a class="brand" href="index.html">
+      <img src="assets/img/emblem-unicorn.svg" alt="Krewe of Unicorns emblem" />
+      <span class="name"><b>Krewe of Unicorns</b><small>Tampa Bay · Est. 2020</small></span>
+    </a>
+    <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
+      <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div class="krewe-menu" id="kreweMenu">
+      <ul class="krewe-links">
+        <li><a href="index.html" data-nav="index.html">Home</a></li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Events <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="event-signup.html" data-nav="event-signup.html">Upcoming Events</a></li>
+            <li><a href="parades.html" data-nav="parades.html">Parades</a></li>
+            <li><a href="enchanted-ball.html" data-nav="enchanted-ball.html">Enchanted Ball</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">About <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="learn.html" data-nav="learn.html">Unicorn Lore</a></li>
+            <li><a href="krewe-history.html" data-nav="krewe-history.html">Krewe History</a></li>
+            <li><a href="poetry.html" data-nav="poetry.html">Krewe Creativity</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Media <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="gallery.html" data-nav="gallery.html">Photo Gallery</a></li>
+            <li><a href="videos.html" data-nav="videos.html">Videos</a></li>
+            <li><a href="share.html" data-nav="share.html">Share Yours</a></li>
+          </ul>
+        </li>
+        <li class="nav-group">
+          <button class="nav-group-btn" aria-haspopup="true" aria-expanded="false">Get Involved <span class="caret"></span></button>
+          <ul class="nav-dropdown">
+            <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
+            <li><a href="store.html" data-nav="store.html">Shop</a></li>
+            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
+          </ul>
+        </li>
+      </ul>
+      <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">🦄 Join</a>
+    </div>
+  </nav>
+
+  <header class="page-head">
+    <div class="ph-bg" style="background-image:url('assets/img/bg-twilight.svg')"></div>
+    <p class="eyebrow">All for Magic, Magic for All, and good for the community</p>
+    <h1>Service &amp; Charity</h1>
+    <p class="sub">Giving our time and treasure to Tampa Bay's children and families.</p>
+  </header>
+
+  <!-- INTRO + IMPACT -->
+  <section class="band band-green">
+    <div class="wrap">
+      <div class="feature" style="align-items:center;">
+        <div class="ft-text">
+          <h2 style="color:#fff;">More Than a Parade</h2>
+          <p style="color:#f1ead4;">Since our first ride, the Krewe of Unicorns has been a force for good in
+             Tampa Bay. Our members are compassionate, caring people who give their time and their
+             treasure, donating thousands of dollars and countless volunteer hours to charities
+             across the community.</p>
+          <p style="color:#f1ead4;">Every full member commits to <b style="color:var(--gold-light);">12 volunteer hours a year</b>,
+             and most give far more. Service is woven into who we are.</p>
+        </div>
+        <div class="ft-media">
+          <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+            <img src="assets/img/scene-group.svg" alt="A dazzling herd of Krewe of Unicorns members gathered together at a community event" />
+          </div>
+        </div>
+      </div>
+      <div class="impact">
+        <div class="stat"><b>Every</b>Season we ride for a cause</div>
+        <div class="stat"><b>$3,000+</b>Donated in 2024–25 alone</div>
+        <div class="stat"><b>Countless</b>Volunteer hours each year</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE CHARITIES -->
+  <section class="wrap">
+    <div class="section-title">
+      <h2>This Season's Causes</h2>
+      <p class="sub">Where the herd is lending a hoof in Tampa Bay</p>
+    </div>
+    <div class="knot-divider"><span class="knot"></span></div>
+    <div class="charity-grid">
+      <div class="charity-card">
+        <span class="ic">🧸</span>
+        <h3>Children's Hospital Toy Drives</h3>
+        <p>Each season the herd collects toys, books, and comfort kits to brighten the days of kids in local children's hospitals.</p>
+        <a href="volunteer.html#lend">Join a toy drive →</a>
+      </div>
+      <div class="charity-card">
+        <span class="ic">🌟</span>
+        <h3>Youth Mentorship</h3>
+        <p>Our members mentor young people through local youth programs, sharing time, encouragement, and a little bit of magic.</p>
+        <a href="volunteer.html#lend">Become a mentor →</a>
+      </div>
+      <div class="charity-card">
+        <span class="ic">🥫</span>
+        <h3>Food Bank Shifts</h3>
+        <p>Rain or shine, the herd shows up to sort, pack, and distribute meals for neighbors facing food insecurity.</p>
+        <a href="volunteer.html#lend">Sign up for a shift →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHILDREN'S CHARITIES -->
+  <section class="band band-cream">
+    <div class="wrap">
+      <div class="section-title">
+        <h2>For the Children</h2>
+        <p class="sub">Causes close to the herd's heart</p>
+      </div>
+      <div class="banner-flourish" aria-hidden="true"></div>
+      <div class="charity-grid">
+        <div class="charity-card">
+          <span class="ic">🏥</span>
+          <h3>Children's Hospitals</h3>
+          <p>Supporting local pediatric hospitals with toy drives, comfort items, and cheer for kids and families facing tough days.</p>
+          <a href="volunteer.html#lend">Learn more →</a>
+        </div>
+        <div class="charity-card">
+          <span class="ic">🎓</span>
+          <h3>Youth Programs</h3>
+          <p>Backing after-school and mentorship programs that give kids a safe place, caring adults, and a path forward.</p>
+          <a href="volunteer.html#lend">Learn more →</a>
+        </div>
+        <div class="charity-card">
+          <span class="ic">🏠</span>
+          <h3>Local Shelters</h3>
+          <p>Lending a hand at family and emergency shelters, from meal service to welcome kits for neighbors starting over.</p>
+          <a href="volunteer.html#lend">Learn more →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAST CHARITIES -->
+  <section class="wrap">
+    <div class="section-title">
+      <h2>Causes We've Stood Behind</h2>
+      <p class="sub">A herd that shows up for Tampa Bay</p>
+    </div>
+    <ul class="past-list">
+      <li>Children's hospital toy drives</li>
+      <li>Local food banks</li>
+      <li>Family meal programs</li>
+      <li>Youth mentorship programs</li>
+      <li>Pediatric care funds</li>
+      <li>After-school programs</li>
+      <li>Emergency family shelters</li>
+      <li>Neighbor welcome kits</li>
+    </ul>
+  </section>
+
+  <!-- VOLUNTEER CTA -->
+  <section class="band band-green" id="lend">
+    <div class="wrap" style="text-align:center;">
+      <span class="crest float" role="img" aria-label="Unicorn crest"></span>
+      <div class="section-title">
+        <h2 style="color:#fff;">Lend a Hand</h2>
+        <p class="sub">Roll up your sleeves with the herd</p>
+      </div>
+      <p style="color:#f1ead4;max-width:680px;margin:14px auto 0;">Krewe members log their service hours through the members area.
+         Whether it's a toy drive, a food-bank shift, a mentoring hour, or a hand at one of our events,
+         every hour makes a difference in Tampa Bay.</p>
+      <div class="btns" style="margin-top:22px;">
+        <a class="btn btn-primary" href="members.html">🦄 Log Volunteer Hours</a>
+        <a class="btn btn-outline" href="membership-application.html">Get Involved</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="krewe-foot">
+    <img class="fimg" src="assets/img/emblem-unicorn.svg" alt="" />
+    <div class="fname">Krewe of Unicorns</div>
+    <div class="flinks">
+<a href="index.html">Home</a>
+<a href="event-signup.html">Events</a>
+<a href="parades.html">Parades</a>
+<a href="enchanted-ball.html">Enchanted Ball</a>
+<a href="learn.html">Lore</a>
+<a href="krewe-history.html">History</a>
+<a href="poetry.html">Krewe Creativity</a>
+<a href="gallery.html">Gallery</a>
+<a href="videos.html">Videos</a>
+<a href="volunteer.html">Volunteer</a>
+<a href="store.html">Shop</a>
+<a href="membership-application.html">Join</a>
+<a href="members.html">Members</a>
+</div>
+    <div class="slainte">Sparkle on! 🦄🌈 Tampa Bay, Florida</div>
+    <div class="fine">© Krewe of Unicorns. A Krewe &amp; Kin demo site · celebrating magic all year round.</div>
+  </footer>
+
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.wav" loop preload="none"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our krewe tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune 🦄</span>
+  </div>
+  <script src="assets/krewe.js" defer></script>
+</body>
+</html>
