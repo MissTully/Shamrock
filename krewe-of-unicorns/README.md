@@ -29,7 +29,11 @@ demo self-contained, instant, and safe to share.
 ## Structure
 - `*.html` — the site pages
 - `assets/krewe.css`, `assets/krewe.js` — shared theme + behavior
-- `assets/img/` — the crest and all artwork (original SVG scenes — no stock photos)
+- `assets/img/` — the original SVG crest, star/rainbow ornaments, and generated
+  aurora "scene" SVGs
+- `assets/img/photos/` — web-optimized unicorn artwork used across the site
+  (hero, page headers, gallery, features); full-resolution source files live in
+  `source-images/` and are excluded from the deploy
 - `assets/audio/krewe-theme.wav` — the krewe's theme tune
 
 ## Running locally

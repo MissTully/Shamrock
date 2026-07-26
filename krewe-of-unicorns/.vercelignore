@@ -7,3 +7,6 @@
 *.MOV
 *.heic
 *.HEIC
+
+# Raw source artwork (optimized copies live in assets/img/photos/)
+source-images/
