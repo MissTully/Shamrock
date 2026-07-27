@@ -10,6 +10,14 @@ is grounded in a live product you can point to — not promises.
 a real database with email automations. This is your demo, your case study, and your
 credibility, all in one.
 
+**Your market — say it clearly:** a **Tampa Bay** studio serving **Gasparilla** krewes
+and the wider Tampa Bay krewe / social-club community. This is *not* New Orleans Mardi
+Gras — Gasparilla is Tampa's own pirate-and-parade tradition, with its own krewes,
+captains, balls, and coronations. That local focus is your biggest edge: the Krewe of
+Shamrock is a Tampa krewe, so you're already *inside* the community, you speak the
+language, and Gasparilla krewes talk to each other. Lead with **"By a Tampa Bay krewe,
+for Tampa Bay krewes."**
+
 ---
 
 ## 1. What you actually sell (the offer, in plain terms)
@@ -58,7 +66,7 @@ Grouped by function. Each item lists **what it is**, **why it matters**, and **p
 | Asset | Notes | Priority |
 |-------|-------|----------|
 | **Business name + tagline** | e.g. "Krewe Website Studio — Websites that run your krewe, not just show it off." | 🟢 |
-| **Logo** (primary, icon-only, one-color) | Celtic/Mardi Gras-flexible; must work on dark parade-purple *and* light | 🟢 |
+| **Logo** (primary, icon-only, one-color) | Flexible for Gasparilla/pirate *and* Celtic/heritage krewes; must work on dark *and* light | 🟢 |
 | **Color palette + type system** | 2 brand colors, 1 display font, 1 body font; document as a mini style guide | 🟢 |
 | **Brand one-liner + 3 value props** | "Recruit members · Run the season · Grow engagement" | 🟢 |
 | **Voice & tone guide** | Warm, heritage-proud, plain-English (mirror the Shamrock docs' beginner-friendly tone) | 🟡 |
@@ -111,7 +119,7 @@ Grouped by function. Each item lists **what it is**, **why it matters**, and **p
 | **Ad creative set** | 3–5 static + 1–2 video ads sized for FB/IG feed, stories, reels | 🟡 |
 | **Short-form video hooks** | "Your krewe still runs on a group text? Watch this." 15–30s clips | 🟡 |
 | **Testimonial / quote cards** | From Shamrock officers first; add clients over time | 🟡 |
-| **Flyer / postcard (print)** | For krewe captains' meetings, Mardi Gras vendor events, ball tables | ⚪ |
+| **Flyer / postcard (print)** | For Gasparilla krewe captains' meetings, Tampa Bay krewe events, ball/coronation tables | ⚪ |
 
 ### 2.6 Lead-gen & client-management (the pipeline)
 
@@ -153,26 +161,40 @@ The core of your copy. Translate each real feature into a benefit a krewe captai
 - "The website that *runs* your krewe."
 - "Recruit members. Run the season. Grow the fun."
 - "From spreadsheets and group texts to one home for your whole krewe."
+- "By a Tampa Bay krewe, for Tampa Bay krewes." *(local-credibility line)*
+- "Built for Gasparilla season — and every season after."
 
 ---
 
 ## 4. Who you're selling to & where to reach them
 
-**Ideal clients:** Mardi Gras / Carnival krewes, parade krewes, Celtic/heritage
-societies, and social/charity clubs that run on volunteers, dues, and events —
-especially ones currently living on spreadsheets, Facebook groups, and group texts.
+**Ideal clients:** Tampa Bay **Gasparilla** krewes first and foremost — the parading
+and social krewes that make up Tampa's pirate-festival community — plus adjacent local
+groups that run the same way: Celtic/heritage societies (like Shamrock), civic and
+charity social clubs, and any Tampa Bay membership org that runs on volunteers, dues,
+and events. Especially the ones currently living on spreadsheets, Facebook groups, and
+group texts.
+
+> **This is not Mardi Gras.** Gasparilla is Tampa's own tradition. Use Gasparilla and
+> Tampa Bay language in every asset — krewe names, pirate/parade imagery where it fits,
+> local landmarks — so prospects instantly recognize you as one of their own, not an
+> out-of-town vendor.
 
 **Buying signals:** an outdated or no website, a captain/board that complains about
-dues collection or turnout, an active events calendar, a merch/fundraising need.
+dues collection or turnout, an active events/parade calendar, a ball or coronation to
+promote, a merch/fundraising need.
 
-**Channels:**
-- **Krewe-to-krewe referral** (your strongest channel — captains talk to captains).
-  Ask Shamrock for a testimonial and an intro to two other krewes.
-- **Facebook/Instagram** krewe and Carnival community groups.
-- **In-person:** krewe captains' association meetings, Mardi Gras vendor expos,
-  balls and coronations (that's where the decision-makers are).
-- **Local Celtic/heritage networks** (natural fit given Shamrock).
-- **Cold outreach** to krewes with weak/no sites using your templates (§2.6).
+**Channels (all Tampa Bay-local):**
+- **Krewe-to-krewe referral** — your strongest channel by far. Gasparilla krewes are a
+  tight, interconnected community and captains talk to captains. Ask Shamrock for a
+  testimonial and warm intros to two other krewes to seed it.
+- **The Gasparilla krewe community** — krewe captains' gatherings, inter-krewe events,
+  and the shared calendar of Gasparilla-season parades, balls, and coronations. That's
+  where the decision-makers already are.
+- **Facebook/Instagram** — Tampa Bay krewe pages and local Gasparilla community groups.
+- **Tampa Bay Celtic/heritage & civic networks** — a natural adjacency given Shamrock.
+- **Cold outreach** to specific Tampa Bay krewes with weak/no sites, using your
+  templates (§2.6) and a "fellow Tampa krewe" opener.
 
 ---
 
