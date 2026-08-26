@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../shamrock-logo.png">
+<title>Krewe of Shamrock Website Handout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;0,800;1,500&family=Barlow+Condensed:wght@500;600&family=Karla:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+  :root{
+    --paper:#f1f4ed;
+    --card:#fbfcf8;
+    --ink:#17211a;
+    --muted:#5b6a5f;
+    --rule:#cdd6c9;
+    --bottle:#14452f;
+    --bottle-soft:#e3ece4;
+    --brass:#94711a;
+    --brass-soft:#f0e7cd;
+    --thistle:#6b4a7a;
+    --shadow:0 1px 2px rgba(20,69,47,.07), 0 8px 24px -18px rgba(20,69,47,.5);
+    --thread:#14452f; --thread-dk:#0b2b1d; --thread-gold:#a8801c; --thread-lt:rgba(255,255,255,.75);
+  }
+  :root:not([data-theme="light"]){
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --paper:#101610;
+      --card:#161d16;
+      --ink:#e7eee4;
+      --muted:#9dab9d;
+      --rule:#2c372c;
+      --bottle:#8ecfa8;
+      --bottle-soft:#1b2a20;
+      --brass:#d9b355;
+      --brass-soft:#2a2415;
+      --thistle:#c1a2cf;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --paper:#101610;
+    --card:#161d16;
+    --ink:#e7eee4;
+    --muted:#9dab9d;
+    --rule:#2c372c;
+    --bottle:#8ecfa8;
+    --bottle-soft:#1b2a20;
+    --brass:#d9b355;
+    --brass-soft:#2a2415;
+    --thistle:#c1a2cf;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:830px;
+    margin:0 auto;
+    padding:40px 32px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+  }
+
+  /* --- the tartan sett: a woven rule, drawn from the krewe's own colors --- */
+  .tartan{
+    height:11px;
+    border-radius:1px;
+    background:
+      repeating-linear-gradient(90deg,
+        var(--thread) 0 13px,
+        var(--thread-dk) 13px 17px,
+        var(--thread-gold) 17px 19px,
+        var(--thread-dk) 19px 23px,
+        var(--thread) 23px 34px,
+        var(--thread-lt) 34px 35.5px,
+        var(--thread) 35.5px 38px),
+      linear-gradient(180deg, rgba(255,255,255,.22) 0 2px, transparent 2px 9px, rgba(0,0,0,.22) 9px 11px);
+    background-blend-mode:overlay, normal;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);
+  }
+
+  header.masthead{display:flex;flex-direction:column;gap:14px;}
+  .eyebrow{
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.15em;
+    font-size:13px;
+    color:var(--brass);
+  }
+  h1{
+    font-family:"Alegreya",Georgia,serif;
+    font-weight:800;
+    font-size:clamp(38px,6vw,54px);
+    line-height:1.02;
+    letter-spacing:-.015em;
+    margin:0;
+    text-wrap:balance;
+    color:var(--bottle);
+  }
+  h1 em{font-style:italic;font-weight:500;color:var(--ink);}
+  .standfirst{
+    font-family:"Alegreya",Georgia,serif;
+    font-size:19px;
+    line-height:1.45;
+    color:var(--ink);
+    margin:0;
+    max-width:60ch;
+  }
+
+  /* --- intro + QR --- */
+  .top{display:grid;grid-template-columns:minmax(0,1fr) 232px;gap:28px;align-items:start;}
+  .top p{margin:0 0 12px;max-width:58ch;}
+  .top p:last-child{margin-bottom:0;}
+
+  .scan{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    box-shadow:var(--shadow);
+    padding:16px 16px 14px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    align-items:center;
+  }
+  .scan .label{
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;font-weight:600;
+    color:var(--brass);
+  }
+  .qr{background:#fff;padding:8px;border-radius:2px;border:1px solid rgba(15,46,28,.18);line-height:0;}
+  .scan svg{width:150px;height:150px;display:block;}
+  .scan .url{
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    font-size:14.5px;letter-spacing:.01em;color:var(--ink);white-space:nowrap;line-height:1.2;
+  }
+  .scan .note{font-size:12px;line-height:1.4;color:var(--muted);}
+
+  /* --- sections --- */
+  section{display:flex;flex-direction:column;gap:16px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--bottle);padding-bottom:7px;}
+  .sec-head h2{
+    font-family:"Alegreya",Georgia,serif;
+    font-size:27px;font-weight:700;margin:0;color:var(--bottle);letter-spacing:-.01em;
+  }
+  .sec-head .who{
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    text-transform:uppercase;letter-spacing:.13em;font-size:12.5px;font-weight:600;color:var(--muted);
+    margin-left:auto;white-space:nowrap;
+  }
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 30px;}
+  .item{display:flex;flex-direction:column;gap:2px;break-inside:avoid;}
+  .item h3{
+    font-family:"Karla",sans-serif;font-size:14.5px;font-weight:700;margin:0;color:var(--ink);
+    display:flex;align-items:baseline;gap:7px;
+  }
+  .item h3::before{
+    content:"";width:7px;height:7px;flex:none;transform:translateY(-1px);
+    background:var(--brass);border-radius:1px;
+  }
+  .item p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted);padding-left:14px;}
+  .item p b{color:var(--ink);font-weight:700;}
+
+  .officers{
+    background:var(--bottle-soft);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:22px 24px;
+  }
+  .officers .item h3::before{background:var(--bottle);}
+
+  /* --- the weeks ahead: a real sequence, so it gets a real timeline --- */
+  .stages{
+    display:flex;flex-direction:column;gap:0;
+    border-left:2px solid var(--rule);
+    margin-left:6px;
+  }
+  .stage{
+    position:relative;padding:0 0 18px 26px;break-inside:avoid;
+  }
+  .stage:last-child{padding-bottom:0;}
+  .stage::before{
+    content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;
+    background:var(--paper);border:2px solid var(--brass);border-radius:50%;
+  }
+  .stage.now::before{background:var(--brass);}
+  .stage .when{
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    text-transform:uppercase;letter-spacing:.13em;font-size:12.5px;font-weight:600;color:var(--brass);
+  }
+  .stage h3{font-family:"Alegreya",Georgia,serif;font-size:19px;font-weight:700;margin:1px 0 3px;color:var(--ink);}
+  .stage p{margin:0;font-size:13.5px;color:var(--muted);max-width:64ch;}
+  .stage p b{color:var(--ink);font-weight:700;}
+
+  .asks{
+    display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;
+    background:var(--brass-soft);
+    border:1px solid color-mix(in srgb, var(--brass) 35%, transparent);
+    border-radius:3px;padding:20px 24px;
+  }
+  .asks .ask h3{
+    font-family:"Alegreya",Georgia,serif;font-size:18px;font-weight:700;margin:0 0 3px;color:var(--ink);
+  }
+  .asks .ask p{margin:0;font-size:13.5px;color:var(--muted);}
+  .asks-head{
+    grid-column:1 / -1;
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;font-weight:600;color:var(--brass);
+  }
+
+  footer{
+    display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;
+    border-top:1px solid var(--rule);padding-top:12px;
+    font-family:"Barlow Condensed",Arial Narrow,sans-serif;
+    text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--muted);
+  }
+  footer b{color:var(--bottle);font-weight:600;}
+
+  @media (max-width:640px){
+    .top{grid-template-columns:1fr;}
+    .grid,.asks{grid-template-columns:1fr;}
+    .scan{max-width:260px;}
+    .sheet{padding:28px 20px 44px;}
+  }
+
+  /* --- printed on paper at the meeting --- */
+  @page{ size:letter; margin:0.5in; }
+  @media print{
+    :root{
+      --paper:#fff;--card:#fff;--ink:#000;--muted:#333;--rule:#b9c2b6;
+      --bottle:#14452f;--bottle-soft:#eef3ee;--brass:#7d5f12;--brass-soft:#f6f1e2;
+      --shadow:none;
+    }
+    body{background:#fff;font-size:9.8pt;line-height:1.34;}
+    .sheet{max-width:none;padding:0;gap:8px;}
+    header.masthead{gap:8px;}
+    h1{font-size:26pt;line-height:1;}
+    .eyebrow{font-size:9pt;}
+    .tartan{height:8px;}
+    .standfirst{font-size:11pt;line-height:1.34;}
+    .top{grid-template-columns:minmax(0,1fr) 190px;gap:16px;}
+    .top p{margin-bottom:7px;}
+    .top p[style]{margin-top:9px !important;}
+    .scan{padding:10px 10px 9px;gap:6px;}
+    .scan svg{width:116px;height:116px;}
+    .scan .label{font-size:8pt;letter-spacing:.1em;}
+    .scan .url{font-size:9.6pt;}
+    .scan .note{font-size:7.6pt;line-height:1.32;}
+    section{gap:9px;}
+    .sec-head{padding-bottom:5px;}
+    .sec-head h2{font-size:15.5pt;}
+    .sec-head .who,.stage .when,.asks-head{font-size:8.6pt;}
+    .grid{gap:7px 22px;}
+    section:not(.page-two) .grid{gap:11px 24px;}
+    .top p{margin-bottom:8px;}
+    .item h3{font-size:9.6pt;}
+    .item p,.stage p,.asks .ask p{font-size:8.6pt;line-height:1.33;}
+    .officers{padding:11px 14px;}
+    .stage{padding-bottom:5px;}
+    .stage h3{font-size:11pt;margin:0 0 1px;}
+    .stage .when{line-height:1.2;display:block;}
+    .asks{padding:10px 14px;gap:8px 22px;}
+    .asks .ask h3{font-size:11pt;}
+    footer{font-size:7.6pt;letter-spacing:.05em;padding-top:6px;gap:14px;flex-wrap:nowrap;line-height:1.3;}
+    footer div{white-space:nowrap;}
+    .asks,.stage,.item,.ask,.officers{break-inside:avoid;}
+    .page-two{break-before:page;}
+    .sec-head{break-after:avoid;}
+    .top,header.masthead{break-inside:avoid;}
+    footer{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="eyebrow">Krewe of Shamrock &middot; Est. 1999 &middot; Tampa's original kilted krewe</div>
+    <h1>Our new website,<br><em>and what it does for you</em></h1>
+    <div class="tartan" role="presentation"></div>
+  </header>
+
+  <div class="top">
+    <div>
+      <p class="standfirst">One place for the whole krewe: events, parades, the Tartan Ball, our heritage, and the everyday business of belonging &mdash; dues, waivers, rides, lockers, and volunteering &mdash; all from the phone in your pocket.</p>
+      <p style="margin-top:14px;">The public side of the site is <b>live tonight</b> &mdash; scan the code and have a look. The Members Area is built and locked down; it opens to you by invitation over the next few weeks, in small batches, so nothing breaks on the way in.</p>
+      <p>Until then the site is in transition. Pages will shift, content will keep landing, and a few things from the old site are still being carried across. <b>We will tell you plainly when it has landed.</b></p>
+    </div>
+
+    <aside class="scan">
+      <div class="label">See it for yourself</div>
+      <div class="qr"><svg role="img" aria-label="QR code linking to krewe-of-shamrock.vercel.app" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39 39"><path stroke="#0f2e1c" d="M1 1.5h7m1 0h2m2 0h1m1 0h2m2 0h2m1 0h4m3 0h1m1 0h7m-37 1h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m1 0h3m1 0h2m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h1m2 0h2m2 0h1m1 0h1m6 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h2m3 0h3m1 0h2m3 0h3m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m3 0h2m1 0h5m1 0h3m2 0h1m5 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h4m3 0h3m1 0h6m2 0h2m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h1m2 0h1m1 0h2m2 0h1m2 0h1m1 0h2m2 0h1m1 0h1m-27 1h3m1 0h1m1 0h3m1 0h1m1 0h2m2 0h1m2 0h4m4 0h3m2 0h3m-36 1h1m1 0h2m2 0h2m1 0h2m1 0h1m5 0h1m1 0h1m2 0h5m1 0h1m2 0h1m-31 1h1m2 0h1m1 0h5m1 0h2m2 0h1m2 0h1m3 0h2m3 0h1m4 0h2m-36 1h3m5 0h2m1 0h6m1 0h1m1 0h3m2 0h1m1 0h1m1 0h1m-29 1h1m2 0h2m1 0h5m4 0h2m1 0h1m3 0h3m1 0h3m1 0h1m1 0h1m1 0h1m-35 1h1m4 0h3m1 0h2m2 0h1m2 0h1m4 0h3m2 0h2m3 0h3m-36 1h1m1 0h2m1 0h4m1 0h8m2 0h5m2 0h3m1 0h3m1 0h2m-37 1h2m3 0h1m1 0h1m1 0h3m3 0h1m2 0h1m1 0h1m1 0h1m4 0h3m2 0h1m2 0h2m-37 1h1m3 0h1m1 0h2m1 0h1m2 0h3m1 0h6m3 0h6m1 0h1m1 0h3m-37 1h5m2 0h1m1 0h1m1 0h2m1 0h5m1 0h2m6 0h1m2 0h1m-31 1h1m3 0h2m2 0h2m1 0h6m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1m2 0h3m-36 1h3m1 0h1m1 0h2m1 0h2m1 0h1m1 0h5m2 0h1m1 0h1m1 0h3m2 0h2m3 0h1m-36 1h1m2 0h1m1 0h2m1 0h1m1 0h1m3 0h4m1 0h1m1 0h5m2 0h8m-33 1h2m1 0h2m1 0h2m1 0h1m1 0h1m2 0h2m1 0h1m3 0h1m3 0h1m1 0h1m2 0h1m-35 1h4m1 0h2m1 0h5m2 0h2m2 0h5m1 0h3m1 0h1m4 0h3m-35 1h3m2 0h8m4 0h1m1 0h2m2 0h1m5 0h1m-31 1h1m3 0h3m1 0h1m1 0h1m1 0h2m4 0h3m2 0h1m1 0h1m1 0h2m3 0h3m-36 1h6m1 0h1m2 0h1m1 0h6m1 0h1m1 0h1m3 0h1m1 0h1m2 0h1m2 0h1m1 0h1m-36 1h1m1 0h2m1 0h3m1 0h2m2 0h2m2 0h2m1 0h1m1 0h4m1 0h2m1 0h1m2 0h1m1 0h2m-37 1h1m3 0h1m3 0h4m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m2 0h2m1 0h1m5 0h2m-37 1h1m1 0h1m1 0h4m1 0h1m4 0h2m2 0h1m3 0h11m1 0h2m-28 1h3m1 0h3m2 0h3m3 0h2m1 0h3m3 0h1m-33 1h7m2 0h1m1 0h1m1 0h3m3 0h1m2 0h1m1 0h1m3 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m5 0h1m3 0h4m1 0h1m2 0h5m3 0h1m1 0h1m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m2 0h1m2 0h3m5 0h1m1 0h8m1 0h1m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m3 0h1m2 0h5m1 0h2m1 0h1m2 0h2m1 0h1m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m2 0h2m1 0h3m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1m4 0h1m-37 1h1m5 0h1m4 0h1m1 0h2m1 0h1m3 0h1m3 0h1m1 0h8m2 0h1m-37 1h7m2 0h2m1 0h2m1 0h1m2 0h2m4 0h4m5 0h4"/></svg></div>
+      <div class="url">krewe-of-shamrock.vercel.app</div>
+      <div class="note">Point your phone camera at the code. No app, no sign&#8209;in needed for the public pages.</div>
+    </aside>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>What you get</h2>
+      <div class="who">Every member</div>
+    </div>
+    <div class="grid">
+      <div class="item">
+        <h3>Everything in one place</h3>
+        <p>Events, parades, the Tartan Ball, our heritage and history, the photo gallery, videos, Krewe Creativity, and the shop &mdash; no more hunting through email threads.</p>
+      </div>
+      <div class="item">
+        <h3>RSVP in a few taps</h3>
+        <p>Say you're coming, add your guests, done. Your officers see the count immediately.</p>
+      </div>
+      <div class="item">
+        <h3>Parade Ready &mdash; know where you stand</h3>
+        <p>One screen shows your <b>dues</b>, your <b>season waiver</b>, and your <b>mandatory meeting</b>, and tells you whether you're clear for a wristband. Sign the waiver right there.</p>
+      </div>
+      <div class="item">
+        <h3>Log your own volunteer hours</h3>
+        <p>Put in the hours you worked and they're on your record &mdash; no need to catch an officer after a parade.</p>
+      </div>
+      <div class="item">
+        <h3>The Craic Cup</h3>
+        <p>Earn <b>Clovers</b> for showing up and pitching in, climb the ranks, collect badges, and watch the season standings and top-volunteer board. Recognition and bragging rights, nothing more serious than that.</p>
+      </div>
+      <div class="item">
+        <h3>Rides, van pools &amp; lockers</h3>
+        <p>Offer a ride or ask for one, reserve a van pool seat, and rent a locker &mdash; all without a single group text.</p>
+      </div>
+      <div class="item">
+        <h3>Raffles</h3>
+        <p>50/50 and basket raffles run from the Members Area, with the baskets and winners posted where everyone can see them.</p>
+      </div>
+      <div class="item">
+        <h3>Member directory</h3>
+        <p>Names and roles of active members. Your phone number, email, and personal details stay private &mdash; the directory does not show them.</p>
+      </div>
+      <div class="item">
+        <h3>Share what you've made</h3>
+        <p>Send in your photos, videos, poems, and artwork. Once published they appear on the site for the whole krewe.</p>
+      </div>
+      <div class="item">
+        <h3>No password to remember</h3>
+        <p>You sign in with a one-time link emailed to you. Nothing to invent, nothing to forget, nothing to have stolen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-two">
+    <div class="sec-head">
+      <h2>What it saves your officers</h2>
+      <div class="who">Board &amp; committee chairs</div>
+    </div>
+    <div class="officers">
+      <div class="grid">
+        <div class="item">
+          <h3>One roster, one source of truth</h3>
+          <p>Members, dues, events, and signups live together instead of across three spreadsheets and someone's inbox.</p>
+        </div>
+        <div class="item">
+          <h3>Dues reminders that send themselves</h3>
+          <p>A weekly check finds who is unpaid, sends a polite first notice and firmer ones after, and <b>logs every nudge</b> so nobody gets asked twice in a week.</p>
+        </div>
+        <div class="item">
+          <h3>A reports dashboard</h3>
+          <p>Who is ready for wristbands, and who is missing what &mdash; at a glance, on parade morning, instead of a clipboard.</p>
+        </div>
+        <div class="item">
+          <h3>Meetings with QR check&#8209;in</h3>
+          <p>Schedule a meeting, mark it mandatory, and check members in by scanning. Attendance flows straight into Parade Ready.</p>
+        </div>
+        <div class="item">
+          <h3>Applications that process themselves</h3>
+          <p>A prospect applies online; approving them creates their first-year dues record and sends the welcome email automatically.</p>
+        </div>
+        <div class="item">
+          <h3>Raffle tools, officer&#8209;only</h3>
+          <p>Create and manage baskets, run the 50/50, and draw winners &mdash; with the controls locked to officers.</p>
+        </div>
+        <div class="item">
+          <h3>New content without a developer</h3>
+          <p>Add a photo, a video, or a heritage lesson and it shows on the live site in seconds. No code, no waiting on anyone.</p>
+        </div>
+        <div class="item">
+          <h3>Privacy built into the plumbing</h3>
+          <p>Only officers can see the full roster and dues. A member sees their own record and the directory &mdash; that rule is enforced by the database itself, not by hiding a button.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>The weeks ahead</h2>
+      <div class="who">What to expect, in order</div>
+    </div>
+    <div class="stages">
+      <div class="stage now">
+        <div class="when">Now &mdash; tonight</div>
+        <h3>Browse the public site</h3>
+        <p>Everything outside the Members Area is open. Look around, and expect it to keep changing week to week as content lands and a few remaining pages from the old site &mdash; Charities, Leaders &amp; Board, and Contact &mdash; are carried across.</p>
+      </div>
+      <div class="stage">
+        <div class="when">Next &mdash; behind the scenes</div>
+        <h3>Getting the plumbing ready</h3>
+        <p>Turning on email delivery, moving the database onto its own paid plan, clearing out the test data, and setting up a proper web address of our own. None of this is visible to you, and all of it has to be right before we let 80 people in.</p>
+      </div>
+      <div class="stage">
+        <div class="when">Then</div>
+        <h3>Invitations, in small batches</h3>
+        <p>Officers and a handful of members first, then the rest of the krewe in waves &mdash; deliberately staggered so the email doesn't get throttled and so we catch any problem on a few people instead of everyone. <b>Your invitation comes to the email address the krewe has on file for you.</b></p>
+      </div>
+      <div class="stage">
+        <div class="when">Your turn</div>
+        <h3>Your first sign&#8209;in</h3>
+        <p>Request your one-time link, set up your profile, and take the short welcome tour. Five minutes, once.</p>
+      </div>
+      <div class="stage">
+        <div class="when">Landing</div>
+        <h3>We'll say when it's done</h3>
+        <p>You'll get a clear announcement when the site is fully live and the Members Area is open to everyone. Until you hear that, treat what you see as work in progress.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="asks">
+    <div class="asks-head">Two things we need from you tonight</div>
+    <div class="ask">
+      <h3>Confirm your email address</h3>
+      <p>Check the roster sheet before you leave. If we have the wrong address, or an old one, your invitation goes nowhere &mdash; and that is the single most common reason a member gets left behind.</p>
+    </div>
+    <div class="ask">
+      <h3>Tell us what's missing</h3>
+      <p>Scan the code, poke at the site, and tell an officer what's wrong, what's confusing, or what you'd like to see. It is far easier to fix now than after launch.</p>
+    </div>
+  </div>
+
+  <div class="tartan" role="presentation"></div>
+
+  <footer>
+    <div><b>Krewe of Shamrock</b> &mdash; Members' Meeting, Aug 26, 2026</div>
+    <div>krewe&#8209;of&#8209;shamrock.vercel.app</div>
+    <div>Questions? Ask any officer.</div>
+  </footer>
+
+</div>
+</body>
+</html>
