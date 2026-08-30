@@ -672,6 +672,13 @@ document.getElementById('formRecipe').addEventListener('submit', async (e) => {
   setLoading(btn, false);
 });
 </script>
+  <div class="krewe-music" id="krewePlayer">
+    <audio id="kreweAudio" src="assets/audio/krewe-theme.mp3" loop preload="none"></audio>
+    <button id="kreweMusicBtn" aria-label="Play background music" aria-pressed="false" title="Play our Irish tune">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
+  </div>
   <script src="assets/krewe.js" defer></script>
 </body>
 </html>
