@@ -1,0 +1,13 @@
+{
+  "name": "krewe-of-shamrock-tests",
+  "private": true,
+  "description": "Regression test suite for the Krewe of Shamrock website",
+  "scripts": {
+    "test": "npm run test:static && npm run test:browser",
+    "test:static": "node static-check.mjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}
