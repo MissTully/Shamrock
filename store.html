@@ -16,6 +16,9 @@
 .product{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; transition:transform .15s, box-shadow .15s; }
 .product:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,59,33,.25); }
 .product .pimg{ aspect-ratio:1/1; background:#f3ead3 center/contain no-repeat; }
+.product .pimg.pimg-ph{ background:#f3ead3 url('assets/img/kos-emblem.png') center/42% no-repeat; position:relative; }
+.product .pimg.pimg-ph .ph-label{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); background:rgba(255,255,255,.88); border:1px solid var(--gold); border-radius:999px; padding:4px 12px; font-size:12px; color:var(--green-800); white-space:nowrap; }
+.product .soon{ margin-top:4px; background:rgba(236,208,126,.2); color:var(--gold-deep); border:1px dashed var(--gold-deep); border-radius:9px; padding:10px; text-align:center; font-family:var(--display); font-weight:700; }
 .product .pbody{ padding:16px 18px 20px; display:flex; flex-direction:column; gap:8px; flex:1; }
 .product h3{ margin:0; color:var(--green-800); font-family:var(--display); font-size:19px; }
 .product .desc{ font-size:14px; color:var(--muted); flex:1; }
@@ -144,7 +147,11 @@ var PRODUCTS=[
   {id:"kilt",         name:"Krewe Green Tartan Kilt",  price:189, img:"assets/img/store/kilt.jpg",         desc:"8-yard pleated kilt in our green tartan - the heart of our kilted krewe.",   sizes:["28in","30in","32in","34in","36in","38in","40in","42in"]},
   {id:"tam",          name:"Tam o Shanter Bonnet",     price:35,  img:"assets/img/store/tam-green.png",    desc:"Classic Scottish wool bonnet with a gold toorie and crest badge.",          sizes:["One size"]},
   {id:"blazer",       name:"Heritage Tweed Blazer",    price:165, img:"assets/img/store/jacket.jpg",       desc:"Tweed jacket with a green shamrock lapel - sharp for the Tartan Ball.",     sizes:["36","38","40","42","44","46"]},
-  {id:"tophat",       name:"Tartan Top Hat",           price:45,  img:"assets/img/top-hat.png",      desc:"Show-stopping parade topper for the Tartan Ball and beyond.",              sizes:["One size"]}
+  {id:"tophat",       name:"Tartan Top Hat",           price:45,  img:"assets/img/top-hat.png",      desc:"Show-stopping parade topper for the Tartan Ball and beyond.",              sizes:["One size"]},
+  /* Announced at the August 2026 general meeting - placeholders until the
+     order arrives and photos + prices are confirmed. */
+  {id:"pin",          name:"Krewe of Shamrock Pin",    price:null, img:"",                           desc:"New Krewe pins are on order! A collectible crest pin for sashes, hats, and lapels.", sizes:["One size"], comingSoon:true},
+  {id:"badge",        name:"Member Name Badge",        price:null, img:"",                           desc:"Personalized name badges for our newest members are being ordered now.",   sizes:["One size"], comingSoon:true}
 ];
 var cart={};
 function buildGrid(){
@@ -154,16 +161,24 @@ function buildGrid(){
     var p=PRODUCTS[i];
     var opts="";for(var j=0;j<p.sizes.length;j++){opts+='<option>'+p.sizes[j]+'<\/option>';}
     html+='<div class="product">';
-    html+='<div class="pimg" style="background-image:url(\''+p.img+'\')"><\/div>';
+    if(p.img){
+      html+='<div class="pimg" style="background-image:url(\''+p.img+'\')"><\/div>';
+    }else{
+      html+='<div class="pimg pimg-ph"><span class="ph-label">Photo coming soon<\/span><\/div>';
+    }
     html+='<div class="pbody">';
     html+='<h3>'+p.name+'<\/h3>';
     html+='<div class="desc">'+p.desc+'<\/div>';
-    html+='<div class="price">$'+p.price.toFixed(2)+'<\/div>';
-    html+='<select id="sz-'+p.id+'">'+opts+'<\/select>';
-    if(p.buy){
-      html+='<a class="btn btn-primary add" href="'+p.buy+'" target="_blank" rel="noopener">&#x1F340; Buy now<\/a>';
+    html+='<div class="price">'+(p.price==null?"Price TBA":"$"+p.price.toFixed(2))+'<\/div>';
+    if(p.comingSoon){
+      html+='<div class="soon">&#x23F3; Coming soon<\/div>';
     }else{
-      html+='<button class="btn btn-primary add" onclick="addToCart(\''+p.id+'\')">&#x1F340; Add to Cart<\/button>';
+      html+='<select id="sz-'+p.id+'">'+opts+'<\/select>';
+      if(p.buy){
+        html+='<a class="btn btn-primary add" href="'+p.buy+'" target="_blank" rel="noopener">&#x1F340; Buy now<\/a>';
+      }else{
+        html+='<button class="btn btn-primary add" onclick="addToCart(\''+p.id+'\')">&#x1F340; Add to Cart<\/button>';
+      }
     }
     html+='<\/div><\/div>';
   }

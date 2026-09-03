@@ -41,6 +41,21 @@
 - Optional later add-on: a heads-up email ("something is waiting — sign in to
   review", no action links) via database webhook + Edge Function + Resend.
 
+## Public events + RSVP (fixed 2026-09-03)
+- The new Supabase project was created without the public-events plumbing, so
+  every page showed "Could not load events." Applied migrations
+  `kos_public_events_and_rsvp` and `kos_event_types_and_fall_2026_seed`
+  (mirrored in `sql/kos_public_events_and_rsvp.sql` and
+  `sql/kos_seed_fall_2026_events.sql`): the `events.is_public` / `events.notes`
+  columns, an anonymous read policy for public events, the `rsvp_to_event`
+  RPC with its `enqueue_email` helper and `outbound_emails` queue, the
+  'social' / 'ball' event types, and the fall 2026 event dates from the
+  August general meeting.
+- Public events now live: Mini Golf and Lunch (Sep 19), Tartan Ball
+  Basket-Making Happy Hour (Oct 17), Tartan Ball (Oct 24, Higgins Hall).
+  King and Queen Breakfast is seeded with `is_public = false` until a date
+  is announced — flip that flag in the Table Editor to publish it.
+
 ## Enable Email + Password provider
 - Supabase Dashboard → Authentication → Providers → Email: enable Email, disable “magic link only” if still forced.
 - Confirm email confirmations policy matches board preference (invite-only vs open create-password).
