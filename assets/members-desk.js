@@ -1,1 +1,1 @@
-file:///workspace/shamrock-hub/assets/members-desk.js
+@/workspace/push-batches/desk_raw.js
