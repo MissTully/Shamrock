@@ -250,16 +250,17 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("events")
-    .select("id, name, event_type, start_time, location")
+    .select("id, name, event_type, start_time, location, source, external_url")
     .eq("is_public", true)
     .or(`start_time.gte.${nowIso},start_time.is.null`)
     .order("start_time", { ascending: true });
-  
+
  if (error) { list.innerHTML = '<p class="empty">Could not load events right now.</p>'; return; }
   if (!data || data.length === 0) { list.innerHTML = '<p class="empty">No upcoming events yet. Check back soon, or RSVP to be the first to know!</p>'; return; }
-  
+
   list.innerHTML = "";
-  for (const ev of data) {
+  const shown = data.slice(0, 6);
+  for (const ev of shown) {
     const when = (() => {
       if (!ev.start_time) return "Date to be announced";
       const d = new Date(ev.start_time);
@@ -268,14 +269,26 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
         ? dateStr + " · Time TBA"
         : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     })();
+    const isIkc = ev.source === "ikc";
     const card = document.createElement("div");
-    card.className = "event-card";
+    card.className = isIkc ? "event-card ikc" : "event-card";
     card.innerHTML =
-      `<div class="type">${esc(ev.event_type ?? "event")}</div>` +
+      `<div class="type">${isIkc ? "Inter-Krewe Council" : esc(ev.event_type ?? "event")}</div>` +
       `<h3>${esc(ev.name)}</h3>` +
       `<div class="meta">${when}${ev.location ? " · " + esc(ev.location) : ""}</div>` +
-      `<a class="rsvp" href="event-signup.html">RSVP &#8594;</a>`;
+      (isIkc
+        ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
+        : `<a class="rsvp" href="event-signup.html">RSVP &#8594;</a>`);
     list.appendChild(card);
+  }
+  if (data.length > shown.length) {
+    const more = document.createElement("p");
+    more.className = "empty";
+    more.style.gridColumn = "1/-1";
+    more.style.textAlign = "center";
+    more.innerHTML = `Plus ${data.length - shown.length} more on the <a href="event-signup.html" style="color:var(--green-700);font-weight:600;">full Krewe calendar &#8594;</a>` +
+      ` &mdash; gold events are ours, purple events are our friends across the Inter-Krewe Council.`;
+    list.appendChild(more);
   }
 })();
 </script>

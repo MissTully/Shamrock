@@ -147,6 +147,10 @@
       <p style="margin:6px 0 0;font-family:var(--fancy);font-style:italic;font-size:18px;color:var(--gold-deep);">
         Our perpetual season at a glance: <span id="kcal-year">2026</span>
       </p>
+      <div id="kcal-legend" style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:12px;font-size:14px;color:var(--ink);">
+        <span style="display:inline-flex;align-items:center;gap:7px;"><i style="width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px rgba(169,128,28,.35);"></i> Krewe of Shamrock events</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;"><i style="width:14px;height:14px;border-radius:50%;background:#7c5cae;box-shadow:0 0 0 2px rgba(124,92,174,.35);"></i> Inter-Krewe Council events</span>
+      </div>
     </div>
 
     <div id="kcal-grids" style="display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));"></div>
@@ -180,7 +184,8 @@
                style="display:block;width:100%;height:auto;" />
         </a>
         <p style="margin:14px 4px 0;text-align:center;font-size:15px;color:#f1ead4;">
-          For the most up-to-date schedule,
+          IKC events also sync automatically onto our Krewe calendar above — look for the
+          <b style="color:#cdb9ec;">purple</b> dates. For the most up-to-date schedule,
           <a href="https://interkrewe.com/Calendar" target="_blank" rel="noopener" style="color:var(--gold-light);font-weight:600;">open the live IKC Calendar ↗</a>
         </p>
       </div>
@@ -240,7 +245,7 @@
 
     async function loadEvents() {
       const { data, error } = await supabase
-        .from("events").select("id, name, start_time, location")
+        .from("events").select("id, name, start_time, location, source, external_url")
         .eq("is_public", true).order("start_time", { ascending: true });
       if (error) {
         eventSelect.innerHTML = '<option value="">Could not load events</option>';
@@ -254,7 +259,11 @@
         return;
       }
       eventSelect.innerHTML = '<option value="">Select an event…</option>';
-      for (const ev of data) {
+      // IKC events show on the calendar below, but you RSVP to those on the
+      // host krewe's own site — keep them out of our RSVP dropdown.
+      const ours = data.filter((ev)=> ev.source !== "ikc");
+      if (ours.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; }
+      for (const ev of ours) {
         let when;
         if (!ev.start_time) { when = "Date TBD"; }
         else {
@@ -284,8 +293,18 @@
       for (let d = 1; d <= days; d++) {
         const evs = daysMap[d];
         if (evs) {
-          const tip = evs.map((e)=> (hasTime(e.date) ? timeStr(e.date) + " · " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
-          html += '<div title="' + esc(tip) + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);cursor:default;">' + d + '</div>';
+          const tip = evs.map((e)=> (e.ikc ? "[IKC] " : "") + (hasTime(e.date) ? timeStr(e.date) + " · " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
+          // Gold = our events, purple = Inter-Krewe Council, split = both that day
+          const hasOurs = evs.some((e)=> !e.ikc), hasIkc = evs.some((e)=> e.ikc);
+          let look;
+          if (hasOurs && hasIkc) {
+            look = 'background:linear-gradient(135deg,var(--gold) 0 50%,#7c5cae 50% 100%);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);box-shadow:0 0 0 2px rgba(124,92,174,.35);';
+          } else if (hasIkc) {
+            look = 'background:#7c5cae;color:#fff;box-shadow:0 0 0 2px rgba(124,92,174,.35);';
+          } else {
+            look = 'background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);';
+          }
+          html += '<div title="' + esc(tip) + '" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;cursor:default;' + look + '">' + d + '</div>';
         } else {
           html += '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;">' + d + '</div>';
         }
@@ -300,7 +319,7 @@
       const yearEl = document.getElementById("kcal-year");
       const dated = (events || [])
         .filter((e)=> e.start_time)
-        .map((e)=> ({ date: new Date(e.start_time), name: e.name, location: e.location || "" }))
+        .map((e)=> ({ date: new Date(e.start_time), name: e.name, location: e.location || "", ikc: e.source === "ikc", url: e.external_url || "" }))
         .filter((e)=> !isNaN(e.date))
         .sort((a, b)=> a.date - b.date);
       if (!dated.length) {
@@ -324,9 +343,13 @@
           const dateStr = MONTH_NAMES[ev.date.getMonth()] + " " + ev.date.getDate() + ", " + ev.date.getFullYear();
           const when = hasTime(ev.date) ? dateStr + " · " + timeStr(ev.date) : dateStr;
           const loc = ev.location ? ' <span style="color:var(--gold-light);">@ ' + esc(ev.location) + '</span>' : "";
+          const chip = ev.ikc ? '<span style="background:#7c5cae;color:#fff;border-radius:6px;padding:1px 8px;margin-right:8px;font-size:11px;font-family:var(--display);letter-spacing:.5px;vertical-align:1px;">IKC</span>' : "";
+          const name = ev.ikc && ev.url
+            ? '<a href="' + esc(ev.url) + '" target="_blank" rel="noopener" style="color:#cdb9ec;text-decoration:none;">' + esc(ev.name) + ' &#8599;</a>'
+            : esc(ev.name);
           return '<li style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
                  '<span style="flex:0 0 150px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
-                 '<span style="flex:1;">' + esc(ev.name) + loc + '</span></li>';
+                 '<span style="flex:1;">' + chip + name + loc + '</span></li>';
         }).join("");
       }
     }

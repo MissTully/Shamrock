@@ -238,6 +238,10 @@ h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
 .event-card .meta{ color:var(--muted); font-size:15px; margin-bottom:14px; font-family:var(--fancy); font-style:italic; }
 .event-card a.rsvp{ font-family:var(--display); font-weight:600; text-decoration:none; color:var(--green-700); }
 .event-card a.rsvp:hover{ color:var(--gold-deep); }
+/* Events synced from the Inter-Krewe Council calendar render in purple so
+   they read as friends' events, not ours */
+.event-card.ikc{ border-left-color:#7c5cae; }
+.event-card.ikc .type{ color:#7c5cae; }
 .empty{ color:var(--muted); font-style:italic; font-family:var(--fancy); font-size:18px; }
 
 /* ---------- Article / lessons ---------- */
