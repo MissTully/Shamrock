@@ -12,20 +12,20 @@
   - Vercel preview/production app URL(s), e.g. `https://<project>.vercel.app/members.html` and `https://<project>.vercel.app/**`
 - Password recovery uses `resetPasswordForEmail` with `redirectTo` = current origin + `/members.html`.
 
-## Public contact, website issues, and Auth admin mailbox
-- **`kreweofshamrocktampa@gmail.com`** is used for:
+## Public contact and website issues
+- **`kreweofshamrocktampa@gmail.com`** is the PUBLIC address only:
   - Public website Contact / mailto links
   - **Report a website problem** / support issue reports
-  - Role-approval and Auth-related admin notifications (templates / SMTP / Edge Function)
-  - First board/officer bootstrap account (no invented password — set via Create password or Forgot password)
 
-## Board / officer bootstrap account
-- Public contact **and** Auth admin notify address: **`kreweofshamrocktampa@gmail.com`**
-- Treat this email as the first board/officer account when importing members / assigning roles (`is_krewe_officer` / board role).
-- **Do not invent a password.** Melissa or Tim must set the password via:
-  - Member Hub → **Create password** (sign up) for that email, or
-  - **Forgot password** / invite reset link from Supabase Auth
-- Same address is the public website contact (`mailto:` / Contact Us).
+## Board / officer bootstrap (administrator) account
+- The site administrator account is **`melissajotully@gmail.com`** (board
+  pivot — this replaces the shared mailbox as the admin account).
+- A database trigger auto-grants that account **board + officer** the moment
+  it is created, and Melissa's roster record carries `member_role = 'board'`,
+  so `is_krewe_officer()` recognizes her by either path.
+- **Do not invent a password for anyone else.** Melissa sets her own password
+  (dashboard invite / direct create / Forgot password); other members set
+  theirs through their own email links.
 
 ## Role approvals happen ON THE WEBSITE (board decision)
 - Role requests and duplicate-record merges are decided by officers **inside
@@ -34,9 +34,10 @@
   for the full design, database objects, and test checklist.
 - Email is used only where it must be: members proving their own address for
   password create / reset (Supabase Auth sends these automatically).
-- `kreweofshamrocktampa@gmail.com` remains the public contact and the
-  bootstrap board/officer account — it is auto-granted board + officer roles
-  by a database trigger the moment the account is created.
+- `kreweofshamrocktampa@gmail.com` remains the public contact address;
+  the bootstrap board/officer (administrator) account is
+  `melissajotully@gmail.com`, auto-granted board + officer roles by a
+  database trigger the moment the account is created.
 - Optional later add-on: a heads-up email ("something is waiting — sign in to
   review", no action links) via database webhook + Edge Function + Resend.
 

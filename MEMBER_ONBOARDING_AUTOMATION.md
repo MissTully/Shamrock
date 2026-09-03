@@ -80,11 +80,15 @@ and has been applied to the project as migrations
 
 ## 5. Bootstrap (first officer)
 
-`kreweofshamrocktampa@gmail.com` is automatically granted **board + officer**
-the moment that account is created (database trigger, with a backfill in the
-migration). So: create that account first via **Create password** on
-`members.html`, and the Approvals queue is immediately usable. No invented
-passwords anywhere.
+The site administrator is **`melissajotully@gmail.com`**: that account is
+automatically granted **board + officer** the moment it is created (database
+trigger, with a backfill in the migration; her roster record also carries
+`member_role = 'board'`). Create that account first and the Approvals queue is
+immediately usable. No invented passwords anywhere.
+
+The shared `kreweofshamrocktampa@gmail.com` mailbox remains the **public
+contact address** (Contact / Report a website problem links) only — it is not
+the administrator account.
 
 ## 6. Database objects added
 
@@ -124,7 +128,9 @@ These are Supabase Dashboard settings that cannot be set from code — see
 3. Attach a real mail sender (custom SMTP — Resend recommended). The built-in
    mailer is rate-limited to a few emails per hour and is for testing only.
 4. Import the roster into `public.members` (email per member), then create the
-   `kreweofshamrocktampa@gmail.com` account via **Create password**.
+   administrator account (`melissajotully@gmail.com`) — by dashboard invite,
+   or directly via Authentication → Users → Add user while no mail sender is
+   configured.
 
 ## 9. Test checklist
 

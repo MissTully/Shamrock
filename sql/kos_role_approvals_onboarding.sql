@@ -375,11 +375,15 @@ returns jsonb language sql stable security definer set search_path to 'public' a
   else null end;
 $$;
 
--- 12) Bootstrap: the admin mailbox account is always board + officer ----------
+-- 12) Bootstrap: the site administrator's account is always board + officer ---
+-- (Administrator account: melissajotully@gmail.com, per board pivot. The
+-- shared kreweofshamrocktampa@gmail.com mailbox stays the PUBLIC contact
+-- address only. Applied to the live project as migration
+-- admin_bootstrap_email_to_melissa.)
 create or replace function public.kos_bootstrap_admin()
 returns trigger language plpgsql security definer set search_path to 'public' as $$
 begin
-  if lower(new.email) = 'kreweofshamrocktampa@gmail.com' then
+  if lower(new.email) = 'melissajotully@gmail.com' then
     insert into public.member_roles (user_id, role)
     values (new.id, 'board'), (new.id, 'officer')
     on conflict (user_id, role) do nothing;
@@ -397,7 +401,7 @@ insert into public.member_roles (user_id, role)
 select u.id, roles.r
 from auth.users u
 cross join (values ('board'), ('officer')) as roles(r)
-where lower(u.email) = 'kreweofshamrocktampa@gmail.com'
+where lower(u.email) = 'melissajotully@gmail.com'
 on conflict (user_id, role) do nothing;
 
 -- 13) Defense in depth: no anonymous execute; internal helpers are not part
@@ -418,3 +422,27 @@ revoke execute on function public.kos_current_member_id() from anon;
 revoke execute on function public.kos_flag_duplicates(uuid) from anon, authenticated;
 revoke execute on function public.kos_bootstrap_admin() from anon, authenticated;
 revoke execute on function public.handle_new_user() from anon, authenticated;
+
+-- 14) Duplicate detection also runs at account creation --------------------
+-- Roster-named members skip the profile form (the roster already knows
+-- them), so flagging only at profile completion would miss them. Applied
+-- to the live project as migration flag_duplicates_on_signup_and_backfill,
+-- which also ran a one-time backfill across the existing roster.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path to 'public' as $$
+declare
+  mid uuid;
+begin
+  select id into mid from public.members
+  where lower(email) = lower(new.email) and merged_into is null
+  limit 1;
+  insert into public.profiles (id, member_id, full_name)
+  values (new.id, mid, coalesce(new.raw_user_meta_data->>'full_name', new.email))
+  on conflict (id) do update
+    set member_id = coalesce(public.profiles.member_id, excluded.member_id),
+        updated_at = now();
+  if mid is not null then
+    perform public.kos_flag_duplicates(mid);
+  end if;
+  return new;
+end $$;
