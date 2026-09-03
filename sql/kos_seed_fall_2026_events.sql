@@ -1,5 +1,8 @@
 -- Fall 2026 dates from the 26 August 2026 general meeting summary.
 -- Safe to run more than once.
+-- Applied to the Krewe of Shamrock project (oazwkwflgbthojvnclfc) on 2026-09-03.
+-- Requires the 'social' and 'ball' event types plus the is_public/notes
+-- columns from sql/kos_public_events_and_rsvp.sql.
 
 INSERT INTO public.events (name, event_type, start_time, location, is_public, notes)
 SELECT
@@ -32,9 +35,9 @@ SELECT
   'Tartan Ball',
   'ball',
   '2026-10-24 18:00:00-04',
-  'TBA',
+  'Higgins Hall, Tampa, FL',
   true,
-  'Season ball. Venue and exact hour still to be confirmed on the site.'
+  'Season ball. Crowning of the new King and Queen. 6-10 PM per the published program.'
 WHERE NOT EXISTS (
   SELECT 1 FROM public.events
   WHERE name = 'Tartan Ball' AND start_time::date = DATE '2026-10-24'
