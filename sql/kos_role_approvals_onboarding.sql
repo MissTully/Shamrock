@@ -422,3 +422,27 @@ revoke execute on function public.kos_current_member_id() from anon;
 revoke execute on function public.kos_flag_duplicates(uuid) from anon, authenticated;
 revoke execute on function public.kos_bootstrap_admin() from anon, authenticated;
 revoke execute on function public.handle_new_user() from anon, authenticated;
+
+-- 14) Duplicate detection also runs at account creation --------------------
+-- Roster-named members skip the profile form (the roster already knows
+-- them), so flagging only at profile completion would miss them. Applied
+-- to the live project as migration flag_duplicates_on_signup_and_backfill,
+-- which also ran a one-time backfill across the existing roster.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path to 'public' as $$
+declare
+  mid uuid;
+begin
+  select id into mid from public.members
+  where lower(email) = lower(new.email) and merged_into is null
+  limit 1;
+  insert into public.profiles (id, member_id, full_name)
+  values (new.id, mid, coalesce(new.raw_user_meta_data->>'full_name', new.email))
+  on conflict (id) do update
+    set member_id = coalesce(public.profiles.member_id, excluded.member_id),
+        updated_at = now();
+  if mid is not null then
+    perform public.kos_flag_duplicates(mid);
+  end if;
+  return new;
+end $$;
