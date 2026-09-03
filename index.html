@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-    <title>Krewe of Shamrock · Tampa Bay</title>
-  <meta name="description" content="The Krewe of Shamrock celebrates Irish heritage and St. Patrick's Day in Tampa Bay. Join us, RSVP to events, and march in the parade." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/krewe.css" />
-  </head>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
+<title>Krewe of Shamrock · Tampa Bay</title>
+<meta name="description" content="The Krewe of Shamrock celebrates Irish heritage and St. Patrick's Day in Tampa Bay. Join us, RSVP to events, and march in the parade." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/krewe.css" />
+</head>
 <body>
 
   <!-- NAV -->
@@ -54,9 +54,9 @@
           <ul class="nav-dropdown">
             <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
             <li><a href="store.html" data-nav="store.html">Shop</a></li>
-            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
           </ul>
         </li>
+        <li><a href="members.html" data-nav="members.html">Member Login</a></li>
       </ul>
       <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">☘ Join</a>
     </div>
@@ -222,7 +222,8 @@ simply love good music and a good party, there's a place for you at our table.</
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
 </div>
-<div class="slainte">Sláinte! &#127808; Tampa Bay, Florida</div>
+<div class="flinks" style="margin-bottom:8px;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com">Contact: kreweofshamrocktampa@gmail.com</a></div>
+    <div class="slainte">Sláinte! &#127808; Tampa Bay, Florida</div>
 <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
 </footer>
 
@@ -240,8 +241,8 @@ simply love good music and a good party, there's a place for you at our table.</
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const supabase = createClient(
-  "https://njfzrnqwbnuhmopgpsud.supabase.co",
-  "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF"
+  "https://oazwkwflgbthojvnclfc.supabase.co",
+  "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS"
   );
 const list = document.getElementById("eventList");
 const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
