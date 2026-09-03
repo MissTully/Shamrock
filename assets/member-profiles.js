@@ -3,8 +3,8 @@
 (function () {
   "use strict";
 
-  var SB_URL = "https://njfzrnqwbnuhmopgpsud.supabase.co";
-  var SB_KEY = "sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF";
+  var SB_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
+  var SB_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
 
   /* Display titles the krewe can assign. Access still comes from member_role. */
   /* Titles taken from the 26 August 2026 general meeting committees. */
@@ -124,7 +124,7 @@
     } else {
       var plain = await sb.from("member_directory")
         .select("first_name,last_name,member_role")
-        .order("last_name", { ascending: true });
+      .order("last_name", { ascending: true });
       rows = plain.data || [];
     }
     window.__kosDirRows = rows;
