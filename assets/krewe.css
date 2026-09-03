@@ -660,3 +660,26 @@ body.nav-open{ overflow:hidden; }
 @media (prefers-reduced-motion:reduce){
   .krewe-menu, .nav-dropdown, .nav-toggle-bars i, .caret, .nav-cta, .nav-backdrop{ transition:none !important; }
 }
+
+/* ============================================================
+   OFFICIAL KREWE CREST (shield artwork — must not be cropped
+   into a circle like the round emblems, so these override the
+   border-radius / border the emblem slots normally apply)
+   ============================================================ */
+.hero .emblem.crest-img,
+.krewe-foot .fimg.crest-img,
+.form-card .fc-head img.em.crest-img{
+  border-radius:0; border:none; box-shadow:none;
+  width:auto; background:transparent; object-fit:contain;
+}
+.hero .emblem.crest-img{ height:100px; filter:drop-shadow(0 4px 14px rgba(0,0,0,.55)); }
+.krewe-foot .fimg.crest-img{ height:70px; filter:drop-shadow(0 2px 8px rgba(0,0,0,.45)); }
+.form-card .fc-head img.em.crest-img{ height:64px; }
+
+/* Featured crest block (used on the Krewe History page) */
+.crest-feature{ text-align:center; margin:30px auto 4px; }
+.crest-feature img{ display:block; margin:0 auto; height:110px; width:auto; filter:drop-shadow(0 3px 10px rgba(0,0,0,.25)); }
+.crest-feature .cap{
+  font-family:var(--fancy); font-style:italic; color:var(--muted);
+  font-size:16px; margin-top:10px;
+}
