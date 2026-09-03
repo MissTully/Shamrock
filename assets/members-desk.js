@@ -33,6 +33,15 @@
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-profile h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
     ".hub-badge{display:inline-block;margin-left:6px;min-width:20px;padding:1px 6px;border-radius:999px;background:#b3261e;color:#fff;font-size:12px;text-align:center;}",
+    ".hub-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex:none;}",
+    ".hub-avatar-blank{display:flex;align-items:center;justify-content:center;background:var(--green-800);color:#f6efdc;font-family:var(--display);font-size:24px;}",
+    ".hub-prof-head{display:flex;gap:14px;align-items:center;margin:6px 0 10px;}",
+    ".hub-prof-line{margin:6px 0;font-size:14px;}",
+    ".hub-prof-form label{display:block;font-size:13px;color:var(--muted);margin:10px 0 3px;}",
+    ".hub-prof-form input,.hub-prof-form textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-prof-form textarea{min-height:70px;resize:vertical;}",
+    ".hub-prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}",
+    "@media (max-width:520px){.hub-prof-grid{grid-template-columns:1fr;}}",
     ".hub-appr{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fffdf4;flex-wrap:wrap;}",
     ".hub-appr .muted{color:var(--muted);font-size:13px;}",
     ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
@@ -245,18 +254,7 @@
       officerCard +
       "</div>";
 
-    var p = window.kosProfile || {};
-    var pc = document.getElementById("hubProfileCard");
-    if (pc) {
-      var nm = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Member").toString();
-      pc.innerHTML =
-        "<h3>Your profile</h3>" +
-        '<p style="margin:0;"><b>' + esc(nm) + "</b>" +
-        (p.email ? "<br>" + esc(p.email) : "") +
-        (p.member_role ? "<br>Role: " + esc(p.member_role) : "") +
-        (state.membershipStatus ? "<br>Status: " + esc(state.membershipStatus) : "") +
-        "</p>";
-    }
+    renderProfileCard();
 
     home.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
@@ -332,6 +330,185 @@
     if (saved === "officer" && !state.officer) saved = TAB_HOME;
     showTab(saved);
     renderHome();
+  }
+
+  // ---- My profile: photo, birthday, anniversary, and friendly questions ----
+  // View mode shows what the directory sees; Edit mode saves through the
+  // update_my_member_profile function, which can never change role or status.
+  var profileEditing = false;
+  var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  function fmtMonthDay(d) {
+    var parts = String(d || "").split("-");
+    if (parts.length < 3) return String(d || "");
+    var m = MONTH_NAMES[Number(parts[1]) - 1];
+    return m ? m + " " + Number(parts[2]) : String(d);
+  }
+
+  function profileAvatarHtml(p) {
+    if (p.photo_url) return '<img class="hub-avatar" src="' + esc(p.photo_url) + '" alt="Profile photo" id="hubProfAvatar" />';
+    var initials = (((p.first_name || " ")[0] || "") + ((p.last_name || " ")[0] || "")).toUpperCase();
+    return '<div class="hub-avatar hub-avatar-blank" id="hubProfAvatar">' + esc(initials || "☘") + "</div>";
+  }
+
+  function renderProfileCard() {
+    var pc = document.getElementById("hubProfileCard");
+    if (!pc) return;
+    var p = window.kosProfile || {};
+    if (profileEditing) { renderProfileEdit(pc, p); return; }
+    var nm = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Member").toString();
+    var facts = [];
+    if (p.officer_title) facts.push("🎖 " + esc(p.officer_title));
+    else if (p.member_role) facts.push("Role: " + esc(p.member_role));
+    if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(p.membership_status || state.membershipStatus));
+    if (p.hometown) facts.push("🏠 " + esc(p.hometown));
+    if (p.parade_since) facts.push("🥁 Marching since " + esc(p.parade_since));
+    if (p.birthday) facts.push("🎂 " + esc(fmtMonthDay(p.birthday)));
+    if (p.anniversary) facts.push("💍 " + esc(fmtMonthDay(p.anniversary)));
+    var longs = "";
+    if (p.bio) longs += '<p class="hub-prof-line"><b>About me:</b> ' + esc(p.bio) + "</p>";
+    if (p.hobbies) longs += '<p class="hub-prof-line"><b>Hobbies:</b> ' + esc(p.hobbies) + "</p>";
+    if (p.interests) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(p.interests) + "</p>";
+    if (p.favorite_memory) longs += '<p class="hub-prof-line"><b>Favorite krewe memory:</b> ' + esc(p.favorite_memory) + "</p>";
+    if (p.fun_fact) longs += '<p class="hub-prof-line"><b>Fun fact:</b> ' + esc(p.fun_fact) + "</p>";
+    pc.innerHTML =
+      "<h3>Your profile</h3>" +
+      '<div class="hub-prof-head">' + profileAvatarHtml(p) +
+      "<div><b>" + esc(nm) + "</b>" +
+      (p.email ? '<div style="color:var(--muted);font-size:14px;">' + esc(p.email) + "</div>" : "") +
+      (facts.length ? '<div style="color:var(--muted);font-size:14px;">' + facts.join(" · ") + "</div>" : "") +
+      "</div></div>" + longs +
+      '<button class="btn btn-primary" id="hubProfEditBtn" type="button" style="margin-top:10px;">✏️ Edit my profile</button>' +
+      (p.profile_visible === false ? '<p style="color:var(--muted);font-size:13px;">Your profile is hidden from the member directory.</p>' : "") +
+      '<p style="color:var(--muted);font-size:12px;margin:8px 0 0;">Fellow members see your birthday and anniversary as month and day only — never the year.</p>';
+    var btn = document.getElementById("hubProfEditBtn");
+    if (btn) btn.addEventListener("click", function () { profileEditing = true; renderProfileCard(); });
+  }
+
+  function renderProfileEdit(pc, p) {
+    function attr(v) { return esc(v == null ? "" : String(v)); }
+    pc.innerHTML =
+      "<h3>Edit my profile</h3>" +
+      '<div class="hub-prof-form">' +
+      '<div class="hub-prof-head">' + profileAvatarHtml(p) +
+      '<div><label for="hubPfPhoto">Profile picture (JPG or PNG)</label>' +
+      '<input type="file" id="hubPfPhoto" accept="image/*" /></div></div>' +
+      '<div class="hub-prof-grid">' +
+      '<div><label for="hubPfFirst">First name</label><input id="hubPfFirst" value="' + attr(p.first_name) + '" required /></div>' +
+      '<div><label for="hubPfLast">Last name</label><input id="hubPfLast" value="' + attr(p.last_name) + '" required /></div>' +
+      '<div><label for="hubPfPhone">Phone</label><input id="hubPfPhone" type="tel" value="' + attr(p.phone) + '" /></div>' +
+      '<div><label for="hubPfHometown">Hometown</label><input id="hubPfHometown" value="' + attr(p.hometown) + '" /></div>' +
+      '<div><label for="hubPfBirthday">Birthday (members see month + day only)</label><input id="hubPfBirthday" type="date" value="' + attr(p.birthday) + '" /></div>' +
+      '<div><label for="hubPfAnniversary">Anniversary (month + day shown)</label><input id="hubPfAnniversary" type="date" value="' + attr(p.anniversary) + '" /></div>' +
+      '<div><label for="hubPfSince">Marching with the krewe since (year)</label><input id="hubPfSince" type="number" min="1998" max="2100" value="' + attr(p.parade_since) + '" /></div>' +
+      "</div>" +
+      '<label for="hubPfBio">About me</label><textarea id="hubPfBio">' + esc(p.bio || "") + "</textarea>" +
+      '<label for="hubPfHobbies">Hobbies (what do you love doing?)</label><input id="hubPfHobbies" value="' + attr(p.hobbies) + '" placeholder="e.g. Gardening, bagpipes, beach days" />' +
+      '<label for="hubPfInterests">Interests (what would you chat about all night?)</label><input id="hubPfInterests" value="' + attr(p.interests) + '" placeholder="e.g. Irish history, cooking, live music" />' +
+      '<label for="hubPfMemory">Favorite krewe or parade memory</label><textarea id="hubPfMemory">' + esc(p.favorite_memory || "") + "</textarea>" +
+      '<label for="hubPfFact">A fun fact about you</label><input id="hubPfFact" value="' + attr(p.fun_fact) + '" placeholder="e.g. I once caught 47 strands of beads in one parade" />' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer;">' +
+      '<input type="checkbox" id="hubPfVisible" style="width:auto;"' + (p.profile_visible === false ? "" : " checked") + " /> Show my profile in the member directory</label>" +
+      '<div style="display:flex;gap:10px;margin-top:14px;">' +
+      '<button class="btn btn-primary" id="hubPfSave" type="button">☘ Save profile</button>' +
+      '<button class="btn" id="hubPfCancel" type="button">Cancel</button></div>' +
+      '<div class="err" id="hubPfMsg" style="margin-top:8px;"></div>' +
+      "</div>";
+    document.getElementById("hubPfCancel").addEventListener("click", function () {
+      profileEditing = false; renderProfileCard();
+    });
+    document.getElementById("hubPfPhoto").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var av = document.getElementById("hubProfAvatar");
+      if (av) {
+        var img = document.createElement("img");
+        img.className = "hub-avatar";
+        img.id = "hubProfAvatar";
+        img.alt = "Profile photo preview";
+        img.src = URL.createObjectURL(f);
+        av.replaceWith(img);
+      }
+    });
+    document.getElementById("hubPfSave").addEventListener("click", function () { saveMyProfile(); });
+  }
+
+  function uploadAvatar(client, file) {
+    return new Promise(function (resolve, reject) {
+      var objUrl = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var max = 512;
+        var scale = Math.min(1, max / Math.max(img.width, img.height));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          URL.revokeObjectURL(objUrl);
+          if (!blob) { reject(new Error("Could not read that image.")); return; }
+          (async function () {
+            var uid = (window.kosProfile || {}).user_id;
+            if (!uid) {
+              var u = await client.auth.getUser();
+              uid = u.data && u.data.user && u.data.user.id;
+            }
+            if (!uid) throw new Error("Please sign in again.");
+            var path = uid + "/avatar.jpg";
+            var up = await client.storage.from("avatars").upload(path, blob, {
+              upsert: true, contentType: "image/jpeg", cacheControl: "3600"
+            });
+            if (up.error) throw up.error;
+            var pub = client.storage.from("avatars").getPublicUrl(path);
+            return pub.data.publicUrl + "?v=" + Date.now();
+          })().then(resolve, reject);
+        }, "image/jpeg", 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(objUrl); reject(new Error("That file does not look like an image.")); };
+      img.src = objUrl;
+    });
+  }
+
+  async function saveMyProfile() {
+    var client = window.__kosSb;
+    var msg = document.getElementById("hubPfMsg");
+    function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+    if (!client) { if (msg) msg.textContent = "Still connecting — try again in a moment."; return; }
+    if (msg) { msg.style.color = ""; msg.textContent = "Saving…"; }
+    try {
+      var photoUrl = null;
+      var fileInput = document.getElementById("hubPfPhoto");
+      var f = fileInput && fileInput.files && fileInput.files[0];
+      if (f) {
+        if (msg) msg.textContent = "Uploading photo…";
+        photoUrl = await uploadAvatar(client, f);
+        if (msg) msg.textContent = "Saving…";
+      }
+      var since = parseInt(val("hubPfSince"), 10);
+      var res = await client.rpc("update_my_member_profile", {
+        p_first: val("hubPfFirst"),
+        p_last: val("hubPfLast"),
+        p_phone: val("hubPfPhone") || null,
+        p_bio: val("hubPfBio") || null,
+        p_hometown: val("hubPfHometown") || null,
+        p_parade_since: isNaN(since) ? null : since,
+        p_interests: val("hubPfInterests") || null,
+        p_photo_url: photoUrl,
+        p_birthday: val("hubPfBirthday") || null,
+        p_anniversary: val("hubPfAnniversary") || null,
+        p_hobbies: val("hubPfHobbies") || null,
+        p_favorite_memory: val("hubPfMemory") || null,
+        p_fun_fact: val("hubPfFact") || null,
+        p_profile_visible: !!(document.getElementById("hubPfVisible") || {}).checked
+      });
+      if (res.error) throw res.error;
+      if (res.data) window.kosProfile = res.data;
+      profileEditing = false;
+      renderProfileCard();
+      renderHome();
+    } catch (e) {
+      if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e);
+    }
   }
 
   // ---- Officer Approvals queue: role requests + duplicate-record merges ----
