@@ -27,12 +27,18 @@
   - **Forgot password** / invite reset link from Supabase Auth
 - Same address is the public website contact (`mailto:` / Contact Us).
 
-## Role-approval and Auth admin notifications
-- Route **signup / role-approval / officer invite confirmation / Auth-related admin alerts** to **`kreweofshamrocktampa@gmail.com`**.
-- Configure in Supabase:
-  - Auth email templates / custom SMTP, and/or
-  - an Edge Function or database webhook that emails `kreweofshamrocktampa@gmail.com` when a member requests elevated role, completes first signup, or needs officer review
-- Member Hub UX still gates Officer desk with `is_krewe_officer()`; email notify is operational, not a substitute for that RPC.
+## Role approvals happen ON THE WEBSITE (board decision)
+- Role requests and duplicate-record merges are decided by officers **inside
+  the Member Hub** (Officer desk tab → **Approvals** card, with a count badge).
+  No approval links travel by email. See `MEMBER_ONBOARDING_AUTOMATION.md`
+  for the full design, database objects, and test checklist.
+- Email is used only where it must be: members proving their own address for
+  password create / reset (Supabase Auth sends these automatically).
+- `kreweofshamrocktampa@gmail.com` remains the public contact and the
+  bootstrap board/officer account — it is auto-granted board + officer roles
+  by a database trigger the moment the account is created.
+- Optional later add-on: a heads-up email ("something is waiting — sign in to
+  review", no action links) via database webhook + Edge Function + Resend.
 
 ## Enable Email + Password provider
 - Supabase Dashboard → Authentication → Providers → Email: enable Email, disable “magic link only” if still forced.
