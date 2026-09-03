@@ -32,7 +32,7 @@
     ".hub-docs a:hover{background:#e8ddc0;}",
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-profile h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
-    "#memberContent .member-grid{display:none !important;}",
+    "#memberContent > .member-grid{display:none !important;}",
   ].join("");
 
   var state = { officer: false, parade: null, hoursApproved: 0, membershipStatus: null };
