@@ -20,6 +20,3 @@
 
 ## Supabase dashboard (Melissa)
 See `MEMBER_HUB_SETUP.md` — Site URL, redirect URLs, Email+password provider, and route role-approval / Auth admin notifies to **kreweofshamrocktampa@gmail.com** (templates / SMTP / Edge Function).
-
-## GitHub write failure
-MCP `create_branch` returned **403 Resource not accessible by personal access token**. Full updated tree is at `/workspace/shamrock-hub/` for manual branch/PR or token with `contents:write`.
