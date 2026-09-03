@@ -225,6 +225,28 @@
         </div>
         <label for="pfPhone">Phone (optional)</label><input id="pfPhone" type="tel" />
         <label for="pfBio">A line about you (optional)</label><input id="pfBio" placeholder="e.g. Marching since 2015, love the parade" />
+
+        <div style="margin-top:14px;padding:12px 14px;border:1px dashed rgba(168,128,28,.5);border-radius:12px;background:#fffdf4;">
+          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+            <input type="checkbox" id="pfIsMember" checked style="margin-top:4px;" />
+            <span>I am a current Krewe of Shamrock member</span>
+          </label>
+          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:10px;">
+            <input type="checkbox" id="pfHasRole" style="margin-top:4px;" />
+            <span>I hold a krewe role (officer, treasurer, committee&hellip;)</span>
+          </label>
+          <div id="pfRolePanel" style="display:none;margin-top:10px;">
+            <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">Check what applies. An officer confirms role access &mdash; you can use the hub as a member right away.</p>
+            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="board" /> Board / Officer</label>
+            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
+            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
+            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
+            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
+            <input id="pfCommittee" placeholder="Which committee? (if committee member)" style="margin-top:8px;" />
+            <input id="pfRoleNote" placeholder="Anything that helps the board verify (optional)" style="margin-top:8px;" />
+          </div>
+        </div>
+
         <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Finish &amp; enter</button>
         <div class="err" id="pfMsg"></div>
       </form>
@@ -1337,6 +1359,15 @@
     const profileStage=document.getElementById("profileStage");
     const setPasswordStage=document.getElementById("setPasswordStage");
     let awaitingNewPassword=false;
+    // Invite and recovery links from the Supabase dashboard land here with a
+    // type marker in the URL; both should open the set-password screen. The
+    // PASSWORD_RECOVERY auth event below covers reset links as well — this
+    // catches dashboard invites, which sign in without emitting that event.
+    try{
+      const hashParams=new URLSearchParams((location.hash||"").replace(/^#/,""));
+      const linkType=hashParams.get("type")||new URLSearchParams(location.search).get("type");
+      if(linkType==="invite"||linkType==="recovery"||linkType==="signup"){ awaitingNewPassword=true; }
+    }catch(e){}
     function showStage(which){
       authStage.style.display = which==="auth" ? "flex":"none";
       profileStage.style.display = which==="profile" ? "flex":"none";
@@ -1407,6 +1438,9 @@
     document.getElementById("showCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("create"); });
     document.getElementById("backFromForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("backFromCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
+    document.getElementById("pfHasRole").addEventListener("change", (e)=>{
+      document.getElementById("pfRolePanel").style.display = e.target.checked ? "block" : "none";
+    });
     document.getElementById("profileForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const msg=document.getElementById("pfMsg"); msg.style.color=""; msg.textContent="Saving…";
@@ -1417,6 +1451,24 @@
         p_bio: document.getElementById("pfBio").value.trim() || null
       });
       if(error){ msg.textContent="Couldn't save: "+error.message; return; }
+      // Role claims go to the officers' in-hub Approvals queue; membership with
+      // a roster email match needs no approval at all.
+      const roles=[...document.querySelectorAll(".pfRole:checked")].map(c=>c.value);
+      if(roles.length){
+        try{
+          const { data:req } = await sb.rpc("submit_role_request", {
+            p_claimed_member: document.getElementById("pfIsMember").checked,
+            p_roles: roles,
+            p_answers: {
+              committee: document.getElementById("pfCommittee").value.trim() || null,
+              note: document.getElementById("pfRoleNote").value.trim() || null
+            }
+          });
+          if(req && req.needs_approval){
+            alert("Thanks! Your role request was sent to the officers for approval. You can use the Member Hub right away — role tools unlock once an officer confirms.");
+          }
+        }catch(err){ /* the profile is saved; a failed role request can be retried from the hub */ }
+      }
       localStorage.removeItem("kosTourDone");
       await route();
     });

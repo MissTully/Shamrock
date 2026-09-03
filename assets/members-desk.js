@@ -32,6 +32,11 @@
     ".hub-docs a:hover{background:#e8ddc0;}",
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-profile h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
+    ".hub-badge{display:inline-block;margin-left:6px;min-width:20px;padding:1px 6px;border-radius:999px;background:#b3261e;color:#fff;font-size:12px;text-align:center;}",
+    ".hub-appr{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fffdf4;flex-wrap:wrap;}",
+    ".hub-appr .muted{color:var(--muted);font-size:13px;}",
+    ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
+    ".hub-appr-h{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:17px;}",
     "#memberContent > .member-grid{display:none !important;}",
   ].join("");
 
@@ -290,6 +295,7 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
+    if (state.officer) loadApprovals(client);
 
     try {
       var meId = (window.kosProfile || {}).member_id || null;
@@ -326,6 +332,114 @@
     if (saved === "officer" && !state.officer) saved = TAB_HOME;
     showTab(saved);
     renderHome();
+  }
+
+  // ---- Officer Approvals queue: role requests + duplicate-record merges ----
+  // Officers decide on the website; every decision is recorded with who/when.
+  function setOfficerBadge(n) {
+    var btn = document.querySelector('[data-hub-tab="officer"]');
+    if (!btn) return;
+    var b = btn.querySelector(".hub-badge");
+    if (!n) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("span"); b.className = "hub-badge"; btn.appendChild(b); }
+    b.textContent = String(n);
+  }
+
+  async function decideApproval(client, fn, args, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var res = await client.rpc(fn, args);
+      if (res.error) throw res.error;
+    } catch (e) {
+      alert("Couldn't complete that: " + ((e && e.message) || e));
+    }
+    loadApprovals(client);
+  }
+
+  async function loadApprovals(client) {
+    if (!state.officer) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = document.getElementById("hubApprovals");
+    if (!card) {
+      card = document.createElement("section");
+      card.className = "app-card";
+      card.id = "hubApprovals";
+      panel.insertBefore(card, panel.firstChild);
+    }
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>Role requests and record merges waiting on an officer</small></div></div>' +
+      '<div class="app-body" id="hubApprovalsBody"><p class="empty">Loading approvals…</p></div>';
+    var body = card.querySelector("#hubApprovalsBody");
+    var data = null;
+    try {
+      var res = await client.rpc("list_officer_approvals");
+      data = res.data || null;
+    } catch (e) {}
+    if (!data) { body.innerHTML = '<p class="empty">Couldn&rsquo;t load the approvals queue. Try again in a moment.</p>'; return; }
+    var reqs = data.role_requests || [];
+    var dups = data.duplicates || [];
+    setOfficerBadge(reqs.length + dups.length);
+    if (!reqs.length && !dups.length) {
+      body.innerHTML = '<p class="empty">Nothing waiting — all caught up. ☘</p>';
+      return;
+    }
+    var html = "";
+    if (reqs.length) {
+      html += '<h3 class="hub-appr-h">Role requests</h3>';
+      reqs.forEach(function (q) {
+        var roles = (q.requested_roles || []).join(", ");
+        var extra = [];
+        if (q.answers && q.answers.committee) extra.push("Committee: " + esc(q.answers.committee));
+        if (q.answers && q.answers.note) extra.push("Note: " + esc(q.answers.note));
+        html += '<div class="hub-appr">' +
+          '<div><b>' + esc(q.full_name || q.email) + '</b> <span class="muted">' + esc(q.email) + '</span>' +
+          '<div class="muted">Requests: <b>' + esc(roles) + '</b>' + (q.linked ? " · matches the roster" : " · <b>no roster match</b>") + '</div>' +
+          (extra.length ? '<div class="muted">' + extra.join(" · ") + '</div>' : "") +
+          '</div><div class="hub-appr-btns">' +
+          '<button class="btn btn-primary" data-appr-approve="' + esc(q.id) + '">Approve</button>' +
+          '<button class="btn" data-appr-deny="' + esc(q.id) + '">Deny</button>' +
+          '</div></div>';
+      });
+    }
+    if (dups.length) {
+      html += '<h3 class="hub-appr-h">Possible duplicate records</h3>';
+      dups.forEach(function (d) {
+        html += '<div class="hub-appr">' +
+          '<div><div class="muted">' + esc(d.reason) + '</div>' +
+          '<div><b>A:</b> ' + esc(d.a.name) + ' · ' + esc(d.a.email || "no email") + (d.a.joined ? " · joined " + esc(d.a.joined) : "") + '</div>' +
+          '<div><b>B:</b> ' + esc(d.b.name) + ' · ' + esc(d.b.email || "no email") + (d.b.joined ? " · joined " + esc(d.b.joined) : "") + '</div>' +
+          '</div><div class="hub-appr-btns">' +
+          '<button class="btn btn-primary" data-appr-merge data-keep="' + esc(d.a.id) + '" data-dupe="' + esc(d.b.id) + '">Keep A, fold B in</button>' +
+          '<button class="btn btn-primary" data-appr-merge data-keep="' + esc(d.b.id) + '" data-dupe="' + esc(d.a.id) + '">Keep B, fold A in</button>' +
+          '<button class="btn" data-appr-dismiss="' + esc(d.id) + '">Not duplicates</button>' +
+          '</div></div>';
+      });
+    }
+    body.innerHTML = html;
+    body.querySelectorAll("[data-appr-approve]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        decideApproval(client, "approve_role_request", { p_id: b.getAttribute("data-appr-approve") }, b);
+      });
+    });
+    body.querySelectorAll("[data-appr-deny]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var note = prompt("Optional note for the record (why deny?)");
+        if (note === null) return;
+        decideApproval(client, "deny_role_request", { p_id: b.getAttribute("data-appr-deny"), p_note: note || null }, b);
+      });
+    });
+    body.querySelectorAll("[data-appr-merge]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (!confirm("Merge these two records? Dues and event history move to the kept record, and the other is retired (not deleted).")) return;
+        decideApproval(client, "merge_members", { p_keep: b.getAttribute("data-keep"), p_duplicate: b.getAttribute("data-dupe") }, b);
+      });
+    });
+    body.querySelectorAll("[data-appr-dismiss]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        decideApproval(client, "dismiss_duplicate", { p_id: b.getAttribute("data-appr-dismiss") }, b);
+      });
+    });
   }
 
   function bindTabs() {
