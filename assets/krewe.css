@@ -683,3 +683,12 @@ body.nav-open{ overflow:hidden; }
   font-family:var(--fancy); font-style:italic; color:var(--muted);
   font-size:16px; margin-top:10px;
 }
+
+/* Homepage hero: pull the background leftward so the fiddler's face
+   sits to the left of the crest instead of directly behind it */
+.hero .hero-bg.bg-shift-left{ inset:0 0 0 -28%; }
+@media (max-width:700px){
+  /* Narrow screens crop the image by height, so slide it with
+     background-position instead of widening the layer */
+  .hero .hero-bg.bg-shift-left{ inset:0; background-position:63% center; }
+}
