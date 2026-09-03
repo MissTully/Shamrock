@@ -56,6 +56,20 @@
   King and Queen Breakfast is seeded with `is_public = false` until a date
   is announced — flip that flag in the Table Editor to publish it.
 
+## Inter-Krewe Council calendar sync (added 2026-09-03)
+- The IKC calendar (interkrewe.com/Calendar) is hosted on Tockify and
+  publishes an iCalendar feed. The database function `sync_ikc_calendar()`
+  imports it into `events` with `source = 'ikc'` and pg_cron re-runs it every
+  morning at 3:30 AM Eastern; cancelled events disappear on the next run.
+  See `sql/kos_ikc_calendar_sync.sql`.
+- On the website, our events stay **gold** and IKC events render **purple**
+  (calendar dots, an IKC tag in "Dates to Remember", purple-edged homepage
+  cards). A day with both kinds shows a split gold/purple dot.
+- IKC events never appear in the RSVP dropdown — each one links to its page
+  on the host krewe's calendar instead, and `rsvp_to_event` refuses them
+  server-side as well.
+- To run a sync by hand: SQL Editor → `select public.sync_ikc_calendar();`
+
 ## Enable Email + Password provider
 - Supabase Dashboard → Authentication → Providers → Email: enable Email, disable “magic link only” if still forced.
 - Confirm email confirmations policy matches board preference (invite-only vs open create-password).
