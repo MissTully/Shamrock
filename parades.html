@@ -18,6 +18,20 @@
   .parade-card p{ font-size:15px; margin:0 0 12px; color:var(--ink); }
   .parade-card a{ font-family:var(--display); font-weight:600; color:var(--green-700); text-decoration:none; font-size:14px; }
   .parade-card a:hover{ color:var(--gold-deep); }
+  .parade-card .dt{ font-weight:600; color:var(--green-800); font-size:15px; margin:-2px 0 10px; }
+  .season-wrap{ overflow-x:auto; margin-top:34px; }
+  table.season{ width:100%; min-width:560px; border-collapse:collapse; background:#fff;
+    border:1px solid rgba(168,128,28,.28); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm); }
+  table.season th{ background:linear-gradient(180deg,var(--green-800),var(--green-900)); color:var(--gold-light);
+    font-family:var(--display); font-size:13px; letter-spacing:.8px; text-transform:uppercase; padding:12px 16px; text-align:left; }
+  table.season td{ padding:11px 16px; border-top:1px solid rgba(168,128,28,.18); font-size:15.5px; }
+  table.season td.mo{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-deep); white-space:nowrap; }
+  table.season td.dt{ white-space:nowrap; font-weight:600; color:var(--green-800); }
+  table.season a{ color:var(--green-700); font-weight:600; text-decoration:none; }
+  table.season a:hover{ color:var(--gold-deep); }
+  table.season tr.ours td{ background:rgba(212,175,55,.12); }
+  .season-key{ text-align:center; margin-top:14px; font-size:14.5px; color:var(--muted); }
+  .season-key .swatch{ display:inline-block; width:14px; height:14px; border-radius:4px; background:rgba(212,175,55,.35); border:1px solid var(--gold-deep); vertical-align:-2px; margin-right:6px; }
   .rules-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   .rule{ display:flex; gap:14px; align-items:flex-start; background:rgba(255,255,255,.06); border:1px solid rgba(236,208,126,.4); border-radius:14px; padding:16px 18px; }
   .rule .ic{ font-size:26px; line-height:1; }
@@ -106,38 +120,74 @@
       <div class="parade-grid">
         <div class="parade-card">
           <div class="mo">December</div><h3>SantaFest</h3>
+          <p class="dt">Saturday, December 5, 2026</p>
           <p>Tampa's downtown holiday kickoff parade, a festive start to the krewe's marching season.</p>
           <a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info →</a>
         </div>
         <div class="parade-card">
           <div class="mo">January</div><h3>Children's Gasparilla</h3>
+          <p class="dt">Saturday, January 23, 2027</p>
           <p>The family-friendly, alcohol-free daytime parade along Bayshore: beads, pirates, and big smiles for the little ones.</p>
           <a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
         </div>
         <div class="parade-card">
           <div class="mo">January</div><h3>Gasparilla Parade of Pirates</h3>
+          <p class="dt">Saturday, January 30, 2027</p>
           <p>The crown jewel: the legendary invasion and grand pirate parade down Bayshore Boulevard.</p>
           <a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
         </div>
         <div class="parade-card">
           <div class="mo">February</div><h3>Sant'Yago Knight Parade</h3>
+          <p class="dt">Saturday, February 13, 2027</p>
           <p>The dazzling night parade through historic Ybor City: lights, floats, and Latin-quarter energy.</p>
           <a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info →</a>
         </div>
         <div class="parade-card">
           <div class="mo">Spring</div><h3>Tampa Pride</h3>
+          <p class="dt">Date to be announced</p>
           <p>Ybor City's joyful celebration of Tampa's LGBTQ+ community; the krewe rolls with pride.</p>
           <a href="https://tampapride.org/" target="_blank" rel="noopener">Parade info →</a>
         </div>
         <div class="parade-card">
           <div class="mo">March</div><h3>Rough Riders' St. Patrick's Day</h3>
+          <p class="dt">March 2027 · date to be announced</p>
           <p>Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.</p>
           <a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info →</a>
         </div>
       </div>
-      <p style="text-align:center;margin-top:20px;font-family:var(--fancy);font-style:italic;color:var(--muted);">
-        Krewes across the bay march in many more; see the full
-        <a href="https://interkrewe.com/Parades" target="_blank" rel="noopener" style="color:var(--green-700);">Inter-Krewe Council parade list</a>.
+      <!-- FULL IKC PARADE SEASON -->
+      <div class="section-title" style="margin-top:48px;">
+        <h2>The Full Parade Season, Around the Bay</h2>
+        <p class="sub">Every parade on the Inter-Krewe Council calendar · 2026&ndash;27 season</p>
+      </div>
+      <div class="knot-divider"><span class="knot"></span></div>
+      <div class="season-wrap">
+        <table class="season">
+          <thead>
+            <tr><th scope="col">Month</th><th scope="col">Parade</th><th scope="col">Date</th><th scope="col">Details</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mo">October</td><td>Fantasy Fest (Key West)</td><td class="dt">October 16&ndash;25, 2026</td><td><a href="https://www.fantasyfest.com/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">October</td><td>USF Homecoming Parade</td><td class="dt">Friday, October 16, 2026</td><td><a href="https://www.usf.edu/student-affairs/homecoming/information/paradeinformation.aspx" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">November</td><td>Tampa Veterans Parade</td><td class="dt">Cancelled for 2026</td><td><a href="https://www.veteransparade.org/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">November</td><td>Ruskin Veterans Parade</td><td class="dt">Date TBA</td><td><a href="https://vfw6287.org/di/vfw/v2/default.asp" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">December</td><td>SantaFest</td><td class="dt">Saturday, December 5, 2026</td><td><a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">December</td><td>Anna Maria Island Christmas Parade</td><td class="dt">Date TBA</td><td><a href="https://www.annamaria.com/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">December</td><td>ReliaQuest Bowl Parade</td><td class="dt">Date TBA</td><td><a href="https://www.visittampabay.com/tampa-events/details/reliaquest-bowl-parade-%26-pep-rally/93644/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">January</td><td>Martin Luther King, Jr. Parade</td><td class="dt">Monday, January 18, 2027</td><td><a href="https://mlkjrparade.com/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">January</td><td>Children's Gasparilla</td><td class="dt">Saturday, January 23, 2027</td><td><a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">January</td><td>Gasparilla Parade of Pirates</td><td class="dt">Saturday, January 30, 2027</td><td><a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">February</td><td>Sant'Yago Knight Parade</td><td class="dt">Saturday, February 13, 2027</td><td><a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr><td class="mo">February</td><td>Krewe of St. Andrews Mardi Gras</td><td class="dt">Date TBA</td><td><a href="https://standrewsmardigras.com/festival-info/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">March</td><td>Rough Riders' St. Patrick's Day Parade</td><td class="dt">Date TBA</td><td><a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="season-key"><span class="swatch" aria-hidden="true"></span>Gold rows are parades the Krewe of Shamrock marches in.</p>
+      <p style="text-align:center;margin-top:16px;font-family:var(--fancy);font-style:italic;color:var(--muted);">
+        Dates come from the
+        <a href="https://interkrewe.com/Parades" target="_blank" rel="noopener" style="color:var(--green-700);">Inter-Krewe Council parade list</a>
+        and can change; always check the official parade page before heading out.
       </p>
     </div>
   </section>
