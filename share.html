@@ -134,9 +134,9 @@
           <ul class="nav-dropdown">
             <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
             <li><a href="store.html" data-nav="store.html">Shop</a></li>
-            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
           </ul>
         </li>
+        <li><a href="members.html" data-nav="members.html">Member Login</a></li>
       </ul>
       <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">☘ Join</a>
     </div>
@@ -153,7 +153,7 @@
 
   <div class="wrap" style="padding-top:16px;padding-bottom:60px;">
 
-    <a href="members.html" class="back-link">&#8592; Back to Members Area</a>
+    <a href="members.html" class="back-link">&#8592; Back to Member Hub</a>
 
     <p style="color:var(--muted);font-size:15px;margin:0 0 20px;">
       Choose the type of content you&rsquo;d like to share. Everything you submit is reviewed by the krewe before appearing on the public pages.
@@ -392,14 +392,15 @@
 </main>
 
 <footer class="site-footer" style="background:var(--green-900);color:#c8d9c0;text-align:center;padding:24px;font-size:14px;margin-top:0;">
-  <p style="margin:0;">&copy; Krewe of Shamrock · Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Members Area</a></p>
+  <p style="margin:0;">&copy; Krewe of Shamrock · Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Member Hub</a></p>
+  <p style="margin:8px 0 0;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report" style="color:var(--gold-light);">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com" style="color:var(--gold-light);">Contact</a></p>
 </footer>
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPA_URL = 'https://njfzrnqwbnuhmopgpsud.supabase.co';
-const SUPA_KEY = 'sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF';
+const SUPA_URL = 'https://oazwkwflgbthojvnclfc.supabase.co';
+const SUPA_KEY = 'sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS';
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
 // ---- Auth gate ----

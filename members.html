@@ -146,23 +146,69 @@
 </head>
 <body>
 
-  <!-- AUTH STAGE (magic-link sign in) -->
+  <!-- AUTH STAGE (email + password sign in) -->
   <div class="gate" id="authStage">
     <div class="gate-card auth-card">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Members Only</h1>
-      <p>Sign in with your email and we'll send you a secure magic link, so there's no password to remember.</p>
-      <form id="magicForm">
-        <input id="magicEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a sign-in link</button>
-        <div class="err" id="magicMsg"></div>
-      </form>
+
+      <!-- Sign in -->
+      <div id="authPanelSignin">
+        <p>Sign in with your email and password.</p>
+        <form id="signinForm">
+          <input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
+          <input id="siPassword" type="password" placeholder="Password" autocomplete="current-password" required style="margin-top:10px;" />
+          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Sign in</button>
+          <div class="err" id="signinMsg"></div>
+        </form>
+        <p style="margin-top:14px;font-size:14px;">
+          <a href="#" id="showForgot">Forgot your password?</a> ·
+          <a href="#" id="showCreate">Create your password</a>
+        </p>
+      </div>
+
+      <!-- Create password (first-time / invited members) -->
+      <div id="authPanelCreate" style="display:none;">
+        <p>New to the Member Hub, or never set a password? Enter your email and we'll send you a link to create one.</p>
+        <form id="createForm">
+          <input id="cpEmail2" type="email" placeholder="you@example.com" autocomplete="email" required />
+          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a link to create a password</button>
+          <div class="err" id="createMsg"></div>
+        </form>
+        <p style="margin-top:14px;font-size:14px;"><a href="#" id="backFromCreate">← Back to sign in</a></p>
+      </div>
+
+      <!-- Forgot password -->
+      <div id="authPanelForgot" style="display:none;">
+        <p>Enter your email and we'll send you a password reset link.</p>
+        <form id="forgotForm">
+          <input id="fpEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
+          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a reset link</button>
+          <div class="err" id="forgotMsg"></div>
+        </form>
+        <p style="margin-top:14px;font-size:14px;"><a href="#" id="backFromForgot">← Back to sign in</a></p>
+      </div>
+
       <div class="auth-features">
         <div class="afe"><span>🍀</span> The Craic Cup: earn Clovers, climb the ranks, collect badges</div>
         <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles: enter and track your tickets</div>
         <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
       </div>
+    </div>
+  </div>
+
+  <!-- SET PASSWORD STAGE (after clicking a create/reset link) -->
+  <div class="gate" id="setPasswordStage" style="display:none;">
+    <div class="gate-card" style="max-width:400px;">
+      <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
+      <h1>Choose your password</h1>
+      <p>Set a password for your account. You'll use it to sign in next time.</p>
+      <form id="setPasswordForm">
+        <input id="newPassword" type="password" placeholder="New password" autocomplete="new-password" minlength="8" required />
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Save password &amp; continue</button>
+        <div class="err" id="setPasswordMsg"></div>
+      </form>
     </div>
   </div>
 
@@ -225,9 +271,9 @@
           <ul class="nav-dropdown">
             <li><a href="volunteer.html" data-nav="volunteer.html">Volunteer</a></li>
             <li><a href="store.html" data-nav="store.html">Shop</a></li>
-            <li><a href="members.html" data-nav="members.html">Members Area</a></li>
           </ul>
         </li>
+        <li><a href="members.html" data-nav="members.html">Member Login</a></li>
       </ul>
       <a class="nav-cta" href="membership-application.html" data-nav="membership-application.html">☘ Join</a>
     </div>
@@ -500,6 +546,7 @@
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
 </div>
+    <div class="flinks" style="margin-bottom:8px;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com">Contact</a></div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
     <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
@@ -515,7 +562,7 @@
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const supabase = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
 
 
     // ---- Members area reveals once auth + profile are confirmed (see auth module below) ----
@@ -1142,7 +1189,7 @@
   <!-- ================= THE CRAIC CUP (gamification) ================= -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const sb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const medal = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
 
@@ -1284,14 +1331,24 @@
   <!-- ============== MEMBERS ONLY: AUTH + PROFILE + TOUR ============== -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const sb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const sb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
+    window.__kosSb = sb;
     const authStage=document.getElementById("authStage");
     const profileStage=document.getElementById("profileStage");
+    const setPasswordStage=document.getElementById("setPasswordStage");
+    let awaitingNewPassword=false;
     function showStage(which){
       authStage.style.display = which==="auth" ? "flex":"none";
       profileStage.style.display = which==="profile" ? "flex":"none";
+      setPasswordStage.style.display = which==="setpassword" ? "flex":"none";
+    }
+    function showAuthPanel(which){
+      document.getElementById("authPanelSignin").style.display = which==="signin" ? "block":"none";
+      document.getElementById("authPanelCreate").style.display = which==="create" ? "block":"none";
+      document.getElementById("authPanelForgot").style.display = which==="forgot" ? "block":"none";
     }
     async function route(){
+      if(awaitingNewPassword){ showStage("setpassword"); return; }
       const { data:{ session } } = await sb.auth.getSession();
       if(!session){ showStage("auth"); return; }
       let prof=null;
@@ -1302,17 +1359,54 @@
       if(window.kosUnlock) window.kosUnlock();
       maybeTour();
     }
-    document.getElementById("magicForm").addEventListener("submit", async (e)=>{
+    document.getElementById("signinForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const email=document.getElementById("magicEmail").value.trim();
-      const msg=document.getElementById("magicMsg");
+      const email=document.getElementById("siEmail").value.trim();
+      const password=document.getElementById("siPassword").value;
+      const msg=document.getElementById("signinMsg");
+      if(!email || !password){ msg.style.color=""; msg.textContent="Please enter your email and password."; return; }
+      msg.style.color=""; msg.textContent="Signing in…";
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ msg.textContent="Couldn't sign in: "+error.message; return; }
+      msg.textContent="";
+    });
+    document.getElementById("createForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById("cpEmail2").value.trim();
+      const msg=document.getElementById("createMsg");
       if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
       msg.style.color=""; msg.textContent="Sending…";
-      const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:false, emailRedirectTo: location.origin + location.pathname } });
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
-      msg.textContent="✓ Check your email for a sign-in link, then click it on this device.";
+      msg.textContent="✓ Check your email for a link to create your password, then click it on this device.";
     });
+    document.getElementById("forgotForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById("fpEmail").value.trim();
+      const msg=document.getElementById("forgotMsg");
+      if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
+      msg.style.color=""; msg.textContent="Sending…";
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+      msg.style.color="#14532d";
+      msg.textContent="✓ Check your email for a password reset link, then click it on this device.";
+    });
+    document.getElementById("setPasswordForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const msg=document.getElementById("setPasswordMsg");
+      const newPassword=document.getElementById("newPassword").value;
+      if(!newPassword || newPassword.length<8){ msg.style.color=""; msg.textContent="Please choose a password of at least 8 characters."; return; }
+      msg.style.color=""; msg.textContent="Saving…";
+      const { error } = await sb.auth.updateUser({ password:newPassword });
+      if(error){ msg.textContent="Couldn't save: "+error.message; return; }
+      awaitingNewPassword=false;
+      await route();
+    });
+    document.getElementById("showForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("forgot"); });
+    document.getElementById("showCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("create"); });
+    document.getElementById("backFromForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
+    document.getElementById("backFromCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("profileForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const msg=document.getElementById("pfMsg"); msg.style.color=""; msg.textContent="Saving…";
@@ -1332,14 +1426,17 @@
     }
     window.kosCloseTour=()=>{ localStorage.setItem("kosTourDone","1"); const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
     window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
-    sb.auth.onAuthStateChange(()=>route());
+    sb.auth.onAuthStateChange((event)=>{
+      if(event==="PASSWORD_RECOVERY"){ awaitingNewPassword=true; }
+      route();
+    });
     route();
   </script>
 
   <!-- ============== RAFFLES ============== -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const rb = createClient("https://njfzrnqwbnuhmopgpsud.supabase.co","sb_publishable_uZB6_Cix3nh7Bl4AC1TUFA_nUbWHwzF");
+    const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const RE=(s)=>(s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
     window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
@@ -1565,5 +1662,7 @@
     }
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
+
+  <script src="assets/members-desk.js" defer></script>
 </body>
 </html>
