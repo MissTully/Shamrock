@@ -375,11 +375,15 @@ returns jsonb language sql stable security definer set search_path to 'public' a
   else null end;
 $$;
 
--- 12) Bootstrap: the admin mailbox account is always board + officer ----------
+-- 12) Bootstrap: the site administrator's account is always board + officer ---
+-- (Administrator account: melissajotully@gmail.com, per board pivot. The
+-- shared kreweofshamrocktampa@gmail.com mailbox stays the PUBLIC contact
+-- address only. Applied to the live project as migration
+-- admin_bootstrap_email_to_melissa.)
 create or replace function public.kos_bootstrap_admin()
 returns trigger language plpgsql security definer set search_path to 'public' as $$
 begin
-  if lower(new.email) = 'kreweofshamrocktampa@gmail.com' then
+  if lower(new.email) = 'melissajotully@gmail.com' then
     insert into public.member_roles (user_id, role)
     values (new.id, 'board'), (new.id, 'officer')
     on conflict (user_id, role) do nothing;
@@ -397,7 +401,7 @@ insert into public.member_roles (user_id, role)
 select u.id, roles.r
 from auth.users u
 cross join (values ('board'), ('officer')) as roles(r)
-where lower(u.email) = 'kreweofshamrocktampa@gmail.com'
+where lower(u.email) = 'melissajotully@gmail.com'
 on conflict (user_id, role) do nothing;
 
 -- 13) Defense in depth: no anonymous execute; internal helpers are not part
