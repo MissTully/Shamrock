@@ -1359,6 +1359,15 @@
     const profileStage=document.getElementById("profileStage");
     const setPasswordStage=document.getElementById("setPasswordStage");
     let awaitingNewPassword=false;
+    // Invite and recovery links from the Supabase dashboard land here with a
+    // type marker in the URL; both should open the set-password screen. The
+    // PASSWORD_RECOVERY auth event below covers reset links as well — this
+    // catches dashboard invites, which sign in without emitting that event.
+    try{
+      const hashParams=new URLSearchParams((location.hash||"").replace(/^#/,""));
+      const linkType=hashParams.get("type")||new URLSearchParams(location.search).get("type");
+      if(linkType==="invite"||linkType==="recovery"||linkType==="signup"){ awaitingNewPassword=true; }
+    }catch(e){}
     function showStage(which){
       authStage.style.display = which==="auth" ? "flex":"none";
       profileStage.style.display = which==="profile" ? "flex":"none";
