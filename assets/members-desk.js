@@ -293,7 +293,7 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
-    if (state.officer) loadApprovals(client);
+    if (state.officer) { loadApprovals(client); loadPaymentsCard(client); }
 
     try {
       var meId = (window.kosProfile || {}).member_id || null;
@@ -617,6 +617,47 @@
         decideApproval(client, "dismiss_duplicate", { p_id: b.getAttribute("data-appr-dismiss") }, b);
       });
     });
+  }
+
+  // ---- Officer payments feed: what Stripe recorded, straight from the ledger ----
+  async function loadPaymentsCard(client) {
+    if (!state.officer) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = document.getElementById("hubPayments");
+    if (!card) {
+      card = document.createElement("section");
+      card.className = "app-card";
+      card.id = "hubPayments";
+      var approvals = document.getElementById("hubApprovals");
+      if (approvals && approvals.nextSibling) panel.insertBefore(card, approvals.nextSibling);
+      else panel.appendChild(card);
+    }
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Online payments recorded automatically</small></div></div>' +
+      '<div class="app-body" id="hubPaymentsBody"><p class="empty">Loading payments…</p></div>';
+    var body = card.querySelector("#hubPaymentsBody");
+    var data = null;
+    try {
+      var res = await client.rpc("list_recent_payments", { p_limit: 50 });
+      data = res.data;
+    } catch (e) {}
+    if (!data || !data.length) {
+      body.innerHTML = '<p class="empty">No online payments yet. They appear here automatically once the payment system is connected (see PAYMENTS_SETUP.md).</p>';
+      return;
+    }
+    var html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:14px;">' +
+      '<tr style="text-align:left;color:var(--muted);"><th style="padding:4px 8px;">When</th><th style="padding:4px 8px;">Who</th><th style="padding:4px 8px;">What</th><th style="padding:4px 8px;">Amount</th></tr>';
+    data.forEach(function (r) {
+      var when = String(r.when || "").slice(0, 10);
+      html += '<tr style="border-top:1px solid rgba(168,128,28,.25);">' +
+        '<td style="padding:6px 8px;white-space:nowrap;">' + esc(when) + "</td>" +
+        '<td style="padding:6px 8px;">' + esc(r.payer || "?") + (r.matched ? "" : ' <span style="color:#b3261e;">(no roster match)</span>') + "</td>" +
+        '<td style="padding:6px 8px;">' + esc(r.description || r.kind || "") + "</td>" +
+        '<td style="padding:6px 8px;white-space:nowrap;">$' + (Number(r.amount_cents || 0) / 100).toFixed(2) + "</td></tr>";
+    });
+    html += "</table></div>";
+    body.innerHTML = html;
   }
 
   function bindTabs() {

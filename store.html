@@ -133,6 +133,10 @@
 </div>
 <script src="assets/krewe.js" defer></script>
 <script>
+/* To turn on real checkout for an item: create the product in the Stripe
+   Dashboard, copy its Payment Link (https://buy.stripe.com/...), and add it
+   here as  buy:"https://buy.stripe.com/..."  — the card then shows a Buy now
+   button that opens Stripe's secure checkout. See PAYMENTS_SETUP.md. */
 var PRODUCTS=[
   {id:"tee-lucky",    name:"Lucky Leprechaun Tee",     price:25,  img:"assets/img/store/tee-lucky.jpg",    desc:"Soft green tee with a dancing leprechaun - pure parade-day fun.",           sizes:["S","M","L","XL","2XL"]},
   {id:"tee-mischief", name:"Leprechaun Mischief Tee",  price:25,  img:"assets/img/store/tee-mischief.jpg", desc:"A cheeky, mischievous leprechaun graphic for the craic-lovers of the krewe.",sizes:["S","M","L","XL","2XL"]},
@@ -156,7 +160,11 @@ function buildGrid(){
     html+='<div class="desc">'+p.desc+'<\/div>';
     html+='<div class="price">$'+p.price.toFixed(2)+'<\/div>';
     html+='<select id="sz-'+p.id+'">'+opts+'<\/select>';
-    html+='<button class="btn btn-primary add" onclick="addToCart(\''+p.id+'\')">&#x1F340; Add to Cart<\/button>';
+    if(p.buy){
+      html+='<a class="btn btn-primary add" href="'+p.buy+'" target="_blank" rel="noopener">&#x1F340; Buy now<\/a>';
+    }else{
+      html+='<button class="btn btn-primary add" onclick="addToCart(\''+p.id+'\')">&#x1F340; Add to Cart<\/button>';
+    }
     html+='<\/div><\/div>';
   }
   g.innerHTML=html;
