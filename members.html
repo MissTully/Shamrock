@@ -220,10 +220,18 @@
 </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
   <script>
-  /* A meeting QR lands here as ?checkin=CODE; stash it so it survives the magic-link sign-in. */
+  /* A meeting QR lands here as ?checkin=CODE; stash it so it survives the sign-in.
+     A members-only page (e.g. share.html) lands here as ?next=PAGE; stash it (15-minute
+     shelf life) so the member is sent back there after signing in at the door. */
   try{
-    var _kosCk = new URLSearchParams(location.search).get("checkin");
-    if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); history.replaceState(null, "", location.pathname); }
+    var _kosQs = new URLSearchParams(location.search);
+    var _kosCk = _kosQs.get("checkin");
+    if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); }
+    var _kosNx = _kosQs.get("next");
+    if(_kosNx && /^[a-z0-9-]+\.html$/.test(_kosNx)){
+      localStorage.setItem("kos_next", JSON.stringify({ p:_kosNx, t:Date.now() }));
+    }
+    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname); }
   }catch(_){}
   </script>
 </head>
@@ -1507,6 +1515,18 @@
       try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
       window.kosProfile = prof || {};
       if(!prof || !prof.profile_complete){ showStage("profile"); return; }
+      /* A members-only page sent this visitor to the door with ?next=; now that
+         they're signed in, send them back there (the stash expires after 15 minutes). */
+      try{
+        var nxRaw = localStorage.getItem("kos_next");
+        if(nxRaw){
+          localStorage.removeItem("kos_next");
+          var nx = JSON.parse(nxRaw);
+          if(nx && /^[a-z0-9-]+\.html$/.test(nx.p) && Date.now() - nx.t < 15*60*1000){
+            location.href = nx.p; return;
+          }
+        }
+      }catch(e){}
       showStage("none");
       if(window.kosUnlock) window.kosUnlock();
       maybeTour();
