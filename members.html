@@ -65,12 +65,36 @@
   .auth-card img{
     border-radius:50%; box-shadow:0 0 0 5px #3a2712, 0 0 0 8px #8a8d80; background:#fff;
   }
-  .castle-guide{ margin-top:16px; text-align:left; background:#fbf5e4; border:1px dashed rgba(168,128,28,.55);
-    border-radius:12px; padding:10px 14px; }
-  .castle-guide summary{ cursor:pointer; font-family:var(--display); color:var(--green-800); font-size:15px; }
-  .castle-guide ol{ padding-left:20px; margin:10px 0; }
-  .castle-guide li{ font-size:14px; color:#3d3a33; margin:6px 0; line-height:1.45; }
-  .castle-guide p{ font-size:13px; color:var(--muted); margin:8px 0 4px; }
+  .castle-guide{ margin-top:18px; text-align:left; background:linear-gradient(180deg,#fdf8e8,#f5ebd0);
+    border:1.5px solid rgba(168,128,28,.55); border-radius:14px; overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 2px 8px rgba(90,60,10,.10); }
+  .castle-guide summary{ list-style:none; display:flex; align-items:center; gap:10px; cursor:pointer;
+    padding:13px 16px; font-family:var(--display); color:var(--green-800); font-size:15.5px; letter-spacing:.3px;
+    background:linear-gradient(180deg, rgba(212,180,90,.30), rgba(212,180,90,.10)); }
+  .castle-guide summary::-webkit-details-marker{ display:none; }
+  .castle-guide summary .key{ font-size:20px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .castle-guide summary .chev{ margin-left:auto; font-size:12px; color:#8a6d1f; transition:transform .25s ease; }
+  .castle-guide[open] summary .chev{ transform:rotate(90deg); }
+  .castle-guide[open] summary{ border-bottom:1px dashed rgba(168,128,28,.45); }
+  .castle-guide .guide-body{ padding:16px; }
+  .castle-guide .guide-step{ display:flex; gap:12px; align-items:flex-start; margin:0 0 16px; }
+  .castle-guide .guide-step:last-of-type{ margin-bottom:0; }
+  .castle-guide .guide-step .num{ flex:0 0 30px; width:30px; height:30px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #e9c96a, #b8860b 78%);
+    color:#fff; font-family:var(--display); font-size:15px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 2px #fffdf4, 0 0 0 3.5px rgba(168,128,28,.5), 0 2px 4px rgba(0,0,0,.25); }
+  .castle-guide .guide-step h3{ margin:3px 0 4px; font-family:var(--display); font-size:15px; color:var(--green-800); }
+  .castle-guide .guide-step p{ margin:0; font-size:13.5px; color:#3d3a33; line-height:1.5; }
+  .castle-guide .guide-step a{ color:var(--green-800); }
+  .castle-guide .guide-cta{ display:block; width:100%; margin:10px 0 2px; padding:11px 14px; border-radius:12px;
+    border:1.5px solid #8a6d1f; background:linear-gradient(180deg,#e9c96a,#caa53d); color:#3a2a05;
+    font-family:var(--display); font-size:14.5px; cursor:pointer;
+    box-shadow:0 2px 6px rgba(90,60,10,.25), inset 0 1px 0 rgba(255,255,255,.55); }
+  .castle-guide .guide-cta:hover{ filter:brightness(1.05); }
+  .castle-guide .guide-inside{ margin-top:16px; padding:10px 12px; background:rgba(255,255,255,.55);
+    border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:13px; color:#57513f; line-height:1.5; }
+  .castle-guide .guide-inside b{ color:var(--green-800); }
+  .castle-guide .guide-help{ margin:10px 0 0; font-size:13px; color:var(--muted); text-align:center; }
   @media (max-width:480px){ .gate-card.auth-card{ border-radius:110px 110px 12px 12px; } .castle-torch{ display:none; } }
   .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
@@ -254,15 +278,34 @@
         <p style="margin-top:14px;font-size:14px;"><a href="#" id="backFromForgot">← Back to sign in</a></p>
       </div>
 
-      <details class="castle-guide">
-        <summary>🗝️ First time at the castle door? Start here</summary>
-        <ol>
-          <li><b>The door knows members by email.</b> Your key works when the email you use here is the one the krewe has on the member roster. Not sure which email that is? Ask at <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</li>
-          <li><b>Forge your key (set a password).</b> If you received an invitation email from the krewe, click its link and choose a password &mdash; at least 8 characters. No invitation? Click <b>Create your password</b> above and we&rsquo;ll email you a link (peek in your spam folder if it hides).</li>
-          <li><b>Open the door.</b> Come back here and sign in with your email and new password. Your browser can remember it for next time.</li>
-        </ol>
-        <p><b>What to expect inside:</b> if the roster already knows your name you walk straight in; otherwise a one-minute welcome asks your name and whether you hold a krewe role. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b> (your profile, photo, and the member directory), <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</p>
-        <p>Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
+      <details class="castle-guide" id="castleGuide">
+        <summary><span class="key">🗝️</span> First time at the castle door? Start here <span class="chev">▶</span></summary>
+        <div class="guide-body">
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">1</span>
+            <div>
+              <h3>The door knows you by email</h3>
+              <p>Use the email address the krewe has on the member roster. Not sure which one that is? Ask at <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">2</span>
+            <div>
+              <h3>Forge your key (set a password)</h3>
+              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. No invitation? Use the gold button below and we&rsquo;ll email you a link (peek in your spam folder if it hides).</p>
+              <button type="button" class="guide-cta" id="guideCreateBtn">☘ Email me a link to create my password</button>
+            </div>
+          </div>
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">3</span>
+            <div>
+              <h3>Open the door</h3>
+              <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
+            </div>
+          </div>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> if the roster already knows your name you walk straight in; otherwise a one-minute welcome asks your name and whether you hold a krewe role. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
+        </div>
       </details>
 
       <div class="auth-features">
@@ -1514,6 +1557,11 @@
     });
     document.getElementById("showForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("forgot"); });
     document.getElementById("showCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("create"); });
+    document.getElementById("guideCreateBtn").addEventListener("click",()=>{
+      showAuthPanel("create");
+      var cg=document.getElementById("castleGuide"); if(cg) cg.removeAttribute("open");
+      var em=document.getElementById("cpEmail2"); if(em){ em.focus(); em.scrollIntoView({behavior:"smooth",block:"center"}); }
+    });
     document.getElementById("backFromForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("backFromCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("pfHasRole").addEventListener("change", (e)=>{
