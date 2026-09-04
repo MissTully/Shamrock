@@ -230,6 +230,7 @@
       if (!me.meeting_attended) acts.push({ tab: "events", title: "Attend the mandatory meeting", hint: "Scan the check-in QR at the next required meeting." });
     }
     if ((state.hoursApproved || 0) < 12) acts.push({ tab: "give", title: "Log volunteer hours", hint: "Work toward 12 approved hours this season." });
+    acts.push({ tab: "krewe", title: "Watch the orientation video", hint: "What new Krewe of Shamrock members must know." });
     acts.push({ tab: "events", title: "RSVP to the next event", hint: "Open the events calendar and RSVP." });
     acts.push({ tab: "krewe", title: "Read governing docs", hint: "Code of Conduct, bylaws, and parade rules." });
     var html = '<div class="hub-actions"><h3>My next actions</h3><div class="hub-action-grid">';
