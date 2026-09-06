@@ -41,6 +41,7 @@
       btn.style.display = "";
     });
     var home = document.querySelector("[data-hub-panel='hub']") || document.getElementById("hubHome");
+    // Ensure officer card exists on home if desk already rendered without it
     var wrap = document.querySelector(".hub-welcome");
     if (wrap && !document.querySelector("[data-hub-action='officer']")) {
       var card = document.createElement("div");
@@ -54,6 +55,8 @@
     }
   }
 
+
+  // ---- Event Studio: authorized event creation and editing ----
   function eventLocalInput(value) {
     if (!value) return "";
     var d = new Date(value);
