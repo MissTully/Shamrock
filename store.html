@@ -136,10 +136,10 @@
 </div>
 <script src="assets/krewe.js" defer></script>
 <script>
-/* To turn on real checkout for an item: create the product in the Stripe
-   Dashboard, copy its Payment Link (https://buy.stripe.com/...), and add it
-   here as  buy:"https://buy.stripe.com/..."  — the card then shows a Buy now
-   button that opens Stripe's secure checkout. See PAYMENTS_SETUP.md. */
+/* To turn on real checkout for an item: create the product/campaign in Zeffy,
+   copy its share link (https://www.zeffy.com/...), and add it here as
+   buy:"https://www.zeffy.com/..."  — the card then shows a Buy now button.
+   See PAYMENTS_SETUP.md. */
 var PRODUCTS=[
   {id:"tee-lucky",    name:"Lucky Leprechaun Tee",     price:25,  img:"assets/img/store/tee-lucky.jpg",    desc:"Soft green tee with a dancing leprechaun - pure parade-day fun.",           sizes:["S","M","L","XL","2XL"]},
   {id:"tee-mischief", name:"Leprechaun Mischief Tee",  price:25,  img:"assets/img/store/tee-mischief.jpg", desc:"A cheeky, mischievous leprechaun graphic for the craic-lovers of the krewe.",sizes:["S","M","L","XL","2XL"]},
@@ -148,6 +148,7 @@ var PRODUCTS=[
   {id:"tam",          name:"Tam o Shanter Bonnet",     price:35,  img:"assets/img/store/tam-green.png",    desc:"Classic Scottish wool bonnet with a gold toorie and crest badge.",          sizes:["One size"]},
   {id:"blazer",       name:"Heritage Tweed Blazer",    price:165, img:"assets/img/store/jacket.jpg",       desc:"Tweed jacket with a green shamrock lapel - sharp for the Tartan Ball.",     sizes:["36","38","40","42","44","46"]},
   {id:"tophat",       name:"Tartan Top Hat",           price:45,  img:"assets/img/top-hat.png",      desc:"Show-stopping parade topper for the Tartan Ball and beyond.",              sizes:["One size"]},
+  {id:"pencil",       name:"Krewe Pencil (shop test)", price:1,   img:"",                           desc:"$1 test item to verify Zeffy shop checkout and the Member Hub payments ledger.", sizes:["One size"], buy:"https://www.zeffy.com/en-US/ticketing/krewe-pencil-shop-test"},
   /* Announced at the August 2026 general meeting - placeholders until the
      order arrives and photos + prices are confirmed. */
   {id:"pin",          name:"Krewe of Shamrock Pin",    price:null, img:"",                           desc:"New Krewe pins are on order! A collectible crest pin for sashes, hats, and lapels.", sizes:["One size"], comingSoon:true},
