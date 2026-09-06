@@ -311,7 +311,7 @@
               <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
             </div>
           </div>
-          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> if the roster already knows your name you walk straight in; otherwise a one-minute welcome asks your name and whether you hold a krewe role. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a one-minute welcome asks your name and whether you hold a board or committee role (even if the roster already knows you). Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
           <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
         </div>
       </details>
@@ -346,7 +346,7 @@
     <div class="gate-card" style="max-width:440px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Welcome! Set up your profile</h1>
-      <p>Just a couple details to wire you into the Krewe and the Craic Cup.</p>
+      <p>Confirm your name, then tell us if you serve on the board or a committee &mdash; even if you&rsquo;re already on the roster.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
         <div class="row">
           <div><label for="pfFirst">First name</label><input id="pfFirst" required /></div>
@@ -1514,7 +1514,26 @@
       let prof=null;
       try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
       window.kosProfile = prof || {};
-      if(!prof || !prof.profile_complete){ showStage("profile"); return; }
+      if(!prof || !prof.profile_complete){
+        showStage("profile");
+        try{
+          var pf=prof||{};
+          var f=document.getElementById("pfFirst");
+          var l=document.getElementById("pfLast");
+          var ph=document.getElementById("pfPhone");
+          if(f && !f.value && pf.first_name) f.value = pf.first_name;
+          if(l && !l.value && pf.last_name) l.value = pf.last_name;
+          if(ph && !ph.value && pf.phone) ph.value = pf.phone;
+          // Roster-matched members: expand role section so board/committee is obvious
+          if(pf.roster_matched || pf.member_id){
+            var hr=document.getElementById("pfHasRole");
+            var panel=document.getElementById("pfRolePanel");
+            if(hr){ hr.checked = true; }
+            if(panel){ panel.style.display = "block"; }
+          }
+        }catch(e){}
+        return;
+      }
       /* A members-only page sent this visitor to the door with ?next=; now that
          they're signed in, send them back there (the stash expires after 15 minutes). */
       try{
