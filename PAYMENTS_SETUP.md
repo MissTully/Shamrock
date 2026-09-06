@@ -1,79 +1,83 @@
-# Payments — Stripe setup for the Krewe of Shamrock (501(c)(3))
+# Payments — Zeffy setup for the Krewe of Shamrock (501(c)(3))
 
-The wiring is already live: a `payments` ledger in the database, a
-`stripe-webhook` Edge Function that records every successful checkout
-automatically, a Payments report in the Officer desk, and store "Buy now"
-support. What remains are the account-owner steps below.
+The payments ledger and `kos_record_payment` RPC are already live. This runbook
+connects Zeffy payment notifications to the `zeffy-webhook` Supabase Edge Function,
+which records payments and can auto-mark matching membership dues as paid.
 
-## What's built (no action needed)
+## What's built
 
 | Piece | What it does |
 |---|---|
-| `payments` table | Ledger of every online payment; officers read it in the hub. |
-| `kos_record_payment(...)` | Records a payment (idempotent — the same Stripe event never records twice), matches the payer to the roster by email, and **auto-marks dues paid** when the payment is a dues payment. |
-| `stripe-webhook` Edge Function | Stripe calls it the instant a checkout completes; it verifies the signature and calls the recorder. URL: `https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/stripe-webhook` |
-| Officer desk → Payments card | Live list of recent payments, flagging any payer with no roster match. |
-| Store "Buy now" | Any product in `store.html` with a `buy:"https://buy.stripe.com/..."` link shows a Buy now button. |
+| `payments` table | Ledger of online payments; officers read it in the hub. |
+| `kos_record_payment(...)` | Idempotently records a payment, matches the payer to the roster by email, and auto-marks matching dues payments. |
+| `zeffy-webhook` Edge Function | Authenticates Zeffy with a shared token, maps the payment, and calls the recorder. |
+| Officer desk → Payments card | Shows recent payments and flags payers with no roster match. |
 
-## Step 1 — Create the Stripe account (an officer, ~15 minutes)
+## Step 1 — Create Zeffy campaigns and payment forms (Patrick)
 
-1. [dashboard.stripe.com/register](https://dashboard.stripe.com/register) — register as the krewe (legal name, EIN, treasurer's bank account for payouts).
-2. As a 501(c)(3), apply for the **nonprofit rate** (about 2.2% + 30¢ instead of 2.9% + 30¢): search "nonprofit" in Stripe support and submit the form with your determination letter.
+1. Go to [zeffy.com](https://zeffy.com), sign in or create the Krewe account, and
+   complete the nonprofit verification and payout setup.
+2. Create the needed donation, membership, raffle, event-ticket, and merchandise
+   campaigns/forms. Use clear campaign names so the webhook can classify them.
+3. If Zeffy provides a metadata/custom-field value for a campaign, set `kind` to
+   `dues`, `raffle`, `donation`, `event`, or `store`. For dues, also provide
+   `membership_year` (for example `2027`). Metadata takes precedence over name
+   matching.
+4. Copy the public form links into the appropriate site buttons or store products.
 
-## Step 2 — Create products and Payment Links
+## Step 2 — Add the webhook in Zeffy (Patrick)
 
-Dashboard → Product catalog → **Add product** for each item (tees, kilt, tam,
-blazer, top hat, event tickets like "Mini Golf — golf only $20" and "Mini Golf
-— golf + lunch $40"). For each product: **Create payment link**.
+In Zeffy's integrations/developer/webhooks area, add a webhook for the
+`payment.completed` event. Use this URL template (replace the placeholder with
+the secret supplied separately):
 
-- For apparel, add a **custom field** on the link for size, and allow quantity.
-- **Important — metadata** makes the automation smart. On each Payment Link
-  (Advanced → metadata) set `kind` to one of: `store`, `event`, `dues`,
-  `donation`. Dues links should also set `membership_year` (e.g. `2027`) —
-  that's what lets the webhook auto-mark the member's dues row paid.
+```text
+https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/zeffy-webhook?token=YOUR_ZEFFY_WEBHOOK_TOKEN
+```
 
-Paste each link into the site: store items get `buy:"..."` in the `PRODUCTS`
-list in `store.html` (see the comment there); event pages get a normal button
-link.
+If Zeffy supports custom headers, prefer sending the token as
+`x-zeffy-token: YOUR_ZEFFY_WEBHOOK_TOKEN` instead of putting it in the URL. Send
+the complete JSON payment envelope, including the event `type` and payment id.
 
-## Step 3 — Connect the webhook (one time)
+## Step 3 — Configure Supabase secrets (one time)
 
-1. Stripe Dashboard → Developers → **Webhooks** → Add endpoint.
-   - Endpoint URL: `https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/stripe-webhook`
-   - Events: select **checkout.session.completed**.
-   - Copy the **signing secret** (`whsec_...`).
-2. Supabase Dashboard → **Edge Functions** → `stripe-webhook` → Secrets:
-   - `STRIPE_WEBHOOK_SECRET` = the `whsec_...` value
-   - `STRIPE_SECRET_KEY` = your Stripe secret key (`sk_live_...`) — optional
-     but recommended; it lets receipts show real line-item descriptions.
-3. Same screen: turn **OFF "Enforce JWT verification"** for this function —
-   Stripe is an outside caller and cannot present a login token; the function
-   verifies Stripe's own cryptographic signature instead.
+In Supabase Dashboard → **Edge Functions** → `zeffy-webhook` → **Secrets**, set:
 
-## Step 4 — Test before going live
+- `ZEFFY_WEBHOOK_TOKEN` = the generated shared token (set this exact value; never
+  commit it or place the real value in this document).
+- `ZEFFY_API_KEY` = optional Zeffy API key. If present, the function verifies the
+  payment with `GET https://api.zeffy.com/api/v1/payments/{id}` before recording.
 
-Stripe has a **test mode** switch. Create a test payment link, pay with card
-number `4242 4242 4242 4242` (any future date, any CVC), and check that the
-payment appears in the Officer desk → Payments card within seconds. Then flip
-to live mode and repeat once with a real card for $1.
+**JWT verification must stay OFF** for `zeffy-webhook`. Zeffy is an external
+webhook sender and cannot provide a Supabase login JWT; the function uses the
+shared `ZEFFY_WEBHOOK_TOKEN` instead.
 
-## Raffles — read before selling tickets online
+## Kind mapping
 
-Keep raffles on the current model (**reserve online, pay a volunteer in
-person**) until the board reviews two constraints:
-- Florida Statute 849.0935 lets 501(c)(3) organizations run drawings by
-  chance, but with disclosure rules (including no-purchase-necessary
-  language).
-- Stripe restricts raffle/lottery sales; approval may be needed.
+The function first uses `metadata.kind` (or `product_kind`). Otherwise it checks
+campaign/product text in this order:
 
-As a (c)(3), also consider [Zeffy](https://zeffy.com) for raffles and event
-ticketing — genuinely 0% fees for charities, with raffle tooling built in.
-Zeffy payments would not flow into the automatic ledger (it has no webhook
-into our database), so weigh free processing against manual reconciliation.
+- `dues` — dues, membership, member
+- `raffle` — raffle, drawing, lottery
+- `donation` — donation, donor, gift
+- `event` — event, ticket, admission, gala, ball, parade
+- `store` — store, merch, merchandise, shirt, tee, hat, kilt, apparel
+- `other` — no match
 
-## Where the money data lives
+A payer email matching a roster member is linked automatically. Dues payments with
+a matching member and year update that member's unpaid dues row.
 
-Every recorded payment is in the `payments` table (officers only). A payer
-whose email matches the roster is linked automatically; "no roster match" in
-the Payments card means someone paid with an email the krewe doesn't have —
-worth a follow-up so their history attaches to their record.
+## Step 4 — Test and monitor
+
+1. Send a Zeffy test `payment.completed` notification or make a small test payment.
+2. Confirm Zeffy receives a 2xx response (`{\"received\":true}`).
+3. Confirm the payment appears in Officer desk → Payments and that the member/year
+   is marked paid when applicable.
+4. If the payer is not matched, verify the email in the Zeffy receipt and roster.
+5. Rotate the shared token in Zeffy and Supabase if it is ever exposed.
+
+## Data and security notes
+
+The Edge Function uses the Supabase service role only server-side to call the RPC;
+it does not expose that key. The webhook URL is not a substitute for the shared
+token. Keep the token out of GitHub, chat transcripts, and this runbook.
