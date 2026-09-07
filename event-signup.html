@@ -112,29 +112,18 @@
     </div>
   </div>
 
-  <!-- FEATURED EVENT: Mini Golf & Lunch -->
+  <!-- FEATURED EVENT: earliest published public flyer -->
   <section class="wrap" id="featured-event" style="padding-top:28px;">
     <div class="section-title">
-      <h2>Featured Event: Mini Golf &amp; Lunch!</h2>
-      <p class="sub">Fun, friends, fairways &amp; food at The Grove Mini-Golf</p>
+      <h2 id="featured-event-title">Featured Event</h2>
+      <p class="sub" id="featured-event-sub">The next Krewe event with a flyer</p>
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
-    <div class="feature" style="align-items:center;">
-      <div class="ft-media">
-        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
-          <img src="assets/img/mini-golf-flyer.jpg"
-               alt="Krewe of Shamrock Mini Golf and Lunch flyer: Saturday September 19, 2026, 10 AM to 1 PM at The Grove Mini-Golf, 6202 Wesley Chapel Blvd, Wesley Chapel, FL. $20 golf alone or $40 golf plus lunch. Supporting No More Umbrellas and New Life Warehouse, with a 50/50 raffle." />
-        </div>
-      </div>
+    <div class="feature" id="featured-event-content" style="align-items:center;">
       <div class="ft-text">
-        <h2>Saturday, September 19 &middot; 10:00 AM &ndash; 1:00 PM</h2>
-        <p><b>The Grove Mini-Golf</b> &middot; 6202 Wesley Chapel Blvd, Wesley Chapel, FL 33544<br>
-           18 holes of miniature golf with your favorite kilted krewe!</p>
-        <p><b>$20</b> golf alone &middot; <b>$40</b> golf + lunch (pick one: chicken sandwich, fries &amp; soda,
-           or hot dog, fries &amp; soda)</p>
-        <p>Proceeds support the <b>No More Umbrellas Foundation</b> (supporting families of pediatric
-           cancer patients) and <b>New Life Warehouse</b>. Plus a chance to win big with our 50/50 raffle!</p>
-        <a class="btn btn-primary" href="#rsvpForm">☘ Sign Up Today</a>
+        <h2>Event flyers are coming soon</h2>
+        <p>We’ll feature the next public Krewe event here as soon as its flyer is ready.</p>
+        <a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a>
       </div>
     </div>
   </section>
@@ -243,19 +232,47 @@
 
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
 
+    function renderFeaturedEvent(event) {
+      const title = document.getElementById("featured-event-title");
+      const sub = document.getElementById("featured-event-sub");
+      const content = document.getElementById("featured-event-content");
+      if (!title || !sub || !content) return;
+      if (!event || !event.flyer_url) {
+        title.textContent = "Featured Event";
+        sub.textContent = "The next Krewe event with a flyer";
+        content.innerHTML = '<div class="ft-text"><h2>Event flyers are coming soon</h2><p>We’ll feature the next public Krewe event here as soon as its flyer is ready.</p><a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a></div>';
+        return;
+      }
+      const date = event.start_time ? new Date(event.start_time) : null;
+      const when = date && !isNaN(date) ? date.toLocaleString([], { dateStyle:"full", timeStyle:"short" }) : "Date to be announced";
+      const isPdf = /\\.pdf(?:$|[?#])/i.test(event.flyer_url);
+      const flyer = isPdf
+        ? '<embed src="' + esc(event.flyer_url) + '" type="application/pdf" style="width:100%;min-height:420px;border:0;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
+        : '<img src="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer ↗</a></p>';
+      title.textContent = "Featured Event: " + (event.name || "Upcoming Krewe event");
+      sub.textContent = event.description || "Join the Krewe of Shamrock at our next public event";
+      content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + flyer + '</div></div>' +
+        '<div class="ft-text"><h2>' + esc(when) + '</h2>' +
+        (event.location ? '<p><b>' + esc(event.location) + '</b></p>' : '') +
+        (event.description ? '<p>' + esc(event.description) + '</p>' : '') +
+        '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">☘ Sign Up Today</a></div>';
+    }
+
     async function loadEvents() {
       const { data, error } = await supabase
-        .from("events").select("id, name, start_time, location, source, external_url")
+        .from("events").select("id, name, description, start_time, end_time, location, source, external_url, ticket_payment_url, flyer_url, status")
         .eq("is_public", true).order("start_time", { ascending: true });
       if (error) {
         eventSelect.innerHTML = '<option value="">Could not load events</option>';
         showMessage("Sorry, we couldn't load the events list. Please try again later.", "error");
         buildCalendar([]);
+        renderFeaturedEvent(null);
         return;
       }
       if (!data || data.length === 0) {
         eventSelect.innerHTML = '<option value="">No upcoming events</option>';
         buildCalendar([]);
+        renderFeaturedEvent(null);
         return;
       }
       eventSelect.innerHTML = '<option value="">Select an event…</option>';
@@ -263,6 +280,14 @@
       // host krewe's own site — keep them out of our RSVP dropdown.
       const ours = data.filter((ev)=> ev.source !== "ikc");
       if (ours.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; }
+      const TARTAN_BALL_TICKETS = "http://www.tampabaytartanball.com/home.html";
+      function tartanBallTicketUrl(ev) {
+        const n = (ev.name || "").toLowerCase();
+        // Main Tartan Ball only — not basket-making / happy hour helpers
+        if (!n.includes("tartan ball")) return "";
+        if (n.includes("basket") || n.includes("happy hour")) return "";
+        return ev.ticket_payment_url || ev.external_url || TARTAN_BALL_TICKETS;
+      }
       for (const ev of ours) {
         let when;
         if (!ev.start_time) { when = "Date TBD"; }
@@ -274,8 +299,26 @@
         const loc = ev.location ? " · " + ev.location : "";
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc})`;
+        const redirect = tartanBallTicketUrl(ev);
+        if (redirect) opt.dataset.redirect = redirect;
         eventSelect.appendChild(opt);
       }
+      function syncSignupButton() {
+        const opt = eventSelect.selectedOptions[0];
+        if (opt && opt.dataset.redirect) {
+          btn.textContent = "☘ Buy Tickets";
+          showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
+        } else {
+          btn.textContent = "☘ Sign me up";
+          if (message.textContent.includes("Tampa Bay Tartan Ball")) {
+            message.className = "msg"; message.textContent = "";
+          }
+        }
+      }
+      eventSelect.addEventListener("change", syncSignupButton);
+      syncSignupButton();
+      const featured = (data || []).filter((ev) => ev.status === "published" && ev.flyer_url && ev.start_time && new Date(ev.start_time) >= new Date()).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0];
+      renderFeaturedEvent(featured);
       buildCalendar(data);
     }
 
@@ -356,6 +399,12 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const selected = eventSelect.selectedOptions[0];
+      if (selected && selected.dataset.redirect) {
+        window.open(selected.dataset.redirect, "_blank", "noopener,noreferrer");
+        showMessage("Opening Tampa Bay Tartan Ball tickets in a new tab…", "success");
+        return;
+      }
       message.className = "msg"; btn.disabled = true; btn.textContent = "Submitting…";
       const { data, error } = await supabase.rpc("rsvp_to_event", {
         p_event_id: eventSelect.value,
