@@ -25,6 +25,15 @@ which records payments and can auto-mark matching membership dues as paid.
    matching.
 4. Copy the public form links into the appropriate site buttons or store products.
 
+## Live dues / membership campaigns (2026-09-07)
+
+| Level | Amount | Public Zeffy link |
+|---|---:|---|
+| Full Krewe Membership | $375 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership |
+| Leave of Absence (non-voting) | $100 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2 |
+
+Both are valid until June 30. Reminder emails must use the matching link by level and **must never** email members whose `dues_payments.paid` is true. Zeffy `payment.completed` via `zeffy-webhook` should auto-mark matching unpaid dues.
+
 ## Step 2 — Add the webhook in Zeffy (Patrick)
 
 In Zeffy's integrations/developer/webhooks area, add a webhook for the
@@ -70,7 +79,7 @@ a matching member and year update that member's unpaid dues row.
 ## Step 4 — Test and monitor
 
 1. Send a Zeffy test `payment.completed` notification or make a small test payment.
-2. Confirm Zeffy receives a 2xx response (`{\"received\":true}`).
+2. Confirm Zeffy receives a 2xx response (`{"received":true}`).
 3. Confirm the payment appears in Officer desk → Payments and that the member/year
    is marked paid when applicable.
 4. If the payer is not matched, verify the email in the Zeffy receipt and roster.
