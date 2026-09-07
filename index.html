@@ -250,7 +250,7 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("events")
-    .select("id, name, event_type, start_time, location, source, external_url")
+    .select("id, name, event_type, start_time, location, source, external_url, ticket_payment_url")
     .eq("is_public", true)
     .or(`start_time.gte.${nowIso},start_time.is.null`)
     .order("start_time", { ascending: true });
@@ -270,15 +270,23 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
         : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     })();
     const isIkc = ev.source === "ikc";
+    const n = (ev.name || "").toLowerCase();
+    const isBall = n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
+    const pay = ev.ticket_payment_url
+      || (isBall ? "http://www.tampabaytartanball.com/home.html" : "")
+      || ((ev.external_url || "").toLowerCase().includes("zeffy.com") ? ev.external_url : "");
+    const rsvp = isIkc
+      ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
+      : (pay
+          ? `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets &#8594;</a>`
+          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`);
     const card = document.createElement("div");
     card.className = isIkc ? "event-card ikc" : "event-card";
     card.innerHTML =
       `<div class="type">${isIkc ? "Inter-Krewe Council" : esc(ev.event_type ?? "event")}</div>` +
       `<h3>${esc(ev.name)}</h3>` +
       `<div class="meta">${when}${ev.location ? " · " + esc(ev.location) : ""}</div>` +
-      (isIkc
-        ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
-        : `<a class="rsvp" href="event-signup.html">RSVP &#8594;</a>`);
+      rsvp;
     list.appendChild(card);
   }
   if (data.length > shown.length) {
