@@ -243,7 +243,10 @@
     const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
     const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const hasTime = (d)=> !(d.getHours() === 0 && d.getMinutes() === 0);
-    const timeStr = (d)=> d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const TZ = "America/New_York";
+    const timeStr = (d)=> d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: TZ });
+    const dateStrFull = (d)=> d.toLocaleString([], { dateStyle:"full", timeStyle:"short", timeZone: TZ });
+    const dateStrShort = (d)=> d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric", timeZone: TZ });
 
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
 
@@ -259,7 +262,7 @@
         return;
       }
       const date = event.start_time ? new Date(event.start_time) : null;
-      const when = date && !isNaN(date) ? date.toLocaleString([], { dateStyle:"full", timeStyle:"short" }) : "Date to be announced";
+      const when = date && !isNaN(date) ? dateStrFull(date) : "Date to be announced";
       const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
       const flyer = isPdf
         ? '<object data="' + esc(event.flyer_url) + '" type="application/pdf" style="display:block;width:100%;min-height:520px;border:0;">' +
@@ -326,7 +329,7 @@
         if (!ev.start_time) { when = "Date TBD"; }
         else {
           const d = new Date(ev.start_time);
-          const ds = d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
+          const ds = dateStrShort(d);
           when = hasTime(d) ? ds + ", " + timeStr(d) : ds + ", Time TBA";
         }
         const loc = ev.location ? " · " + ev.location : "";
