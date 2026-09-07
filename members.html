@@ -130,9 +130,18 @@
   .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
   .mini-form button{ white-space:nowrap; }
   .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
-  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; }
+  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; text-align:left; width:100%; font:inherit; cursor:pointer; display:flex; gap:12px; align-items:center; transition:background .15s, transform .15s; }
+  .dir-card:hover{ background:#f3ebd2; transform:translateY(-1px); }
   .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
   .dir-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .dir-card .dir-av{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(168,128,28,.45); flex:none; background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; }
+  .dir-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .dir-card .dir-go{ margin-left:auto; color:var(--gold); font-family:var(--display); opacity:.7; }
+  #memberProfileModal .mp-body{ display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  #memberProfileModal .mp-av{ width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--gold); background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:28px; flex:none; overflow:hidden; }
+  #memberProfileModal .mp-av img{ width:100%; height:100%; object-fit:cover; }
+  #memberProfileModal .mp-line{ margin:6px 0; font-size:15px; color:#3a3a2e; }
+  #memberProfileModal .mp-muted{ color:var(--muted); font-size:14px; }
   .msg{ margin-top:10px; font-size:14px; }
   .msg.success{ color:#14532d; } .msg.error{ color:#a12; }
   .empty{ color:var(--muted); font-style:italic; }
@@ -630,7 +639,7 @@
         <div class="app-body">
           <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
           <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
-          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
+          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Tap a card to open their My Krewe profile. Contact details stay private — reach people through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
         </div>
       </section>
 
@@ -860,19 +869,89 @@
       }));
     }
 
-    /* ---------------- DIRECTORY ---------------- */
+    /* ---------------- DIRECTORY (clickable profiles) ---------------- */
     let dirData=[];
+    function dirInitials(m){
+      return (((m.first_name||" ")[0]||"") + ((m.last_name||" ")[0]||"")).toUpperCase() || "☘";
+    }
+    function dirAvatar(m){
+      if(m.photo_url) return `<span class="dir-av"><img src="${esc(m.photo_url)}" alt="" /></span>`;
+      return `<span class="dir-av" aria-hidden="true">${esc(dirInitials(m))}</span>`;
+    }
+    function dirRole(m){
+      return (m.officer_title && String(m.officer_title).trim()) || m.member_role || "Member";
+    }
     async function loadDir(){
-      const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
-      if (error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
-      dirData=data||[]; renderDir();
+      const grid=document.getElementById("dirGrid");
+      let rows=null, error=null;
+      const rich = await supabase.from("v_member_profiles")
+        .select("member_id,first_name,last_name,member_role,officer_title,bio,hometown,parade_since,interests,hobbies,favorite_memory,fun_fact,photo_url,join_date,birthday_md,anniversary_md")
+        .order("last_name",{ascending:true});
+      if(!rich.error && rich.data){ rows = rich.data; }
+      else {
+        const plain = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
+        rows = plain.data; error = plain.error || rich.error;
+      }
+      if(error && !rows){ grid.innerHTML='<p class="empty">Could not load directory.</p>'; return; }
+      dirData=rows||[]; renderDir();
     }
     window.renderDir=()=>{
       const q=(document.getElementById("dirSearch").value||"").toLowerCase();
       const grid=document.getElementById("dirGrid");
-      const rows=dirData.filter(m=>(`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
+      const rows=dirData.filter(m=>{
+        const name=`${m.first_name||""} ${m.last_name||""}`.toLowerCase();
+        const title=(m.officer_title||"").toLowerCase();
+        return !q || name.includes(q) || title.includes(q);
+      });
       if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
-      grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
+      grid.innerHTML=rows.map(m=>{
+        const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
+        return `<button type="button" class="dir-card"${mid}>${dirAvatar(m)}<div><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(dirRole(m))}</div></div><span class="dir-go">View →</span></button>`;
+      }).join("");
+      grid.querySelectorAll(".dir-card[data-mid]").forEach(btn=>{
+        btn.addEventListener("click", ()=> openMemberProfile(btn.getAttribute("data-mid")));
+      });
+    };
+    window.openMemberProfile = function(memberId){
+      const m = dirData.find(r => String(r.member_id) === String(memberId));
+      const modal = document.getElementById("memberProfileModal");
+      const body = document.getElementById("mpBody");
+      const title = document.getElementById("mpTitle");
+      if(!modal || !body) return;
+      if(!m){ body.innerHTML='<p class="empty">Could not find that member.</p>'; modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); return; }
+      title.textContent = `${m.first_name||""} ${m.last_name||""}`.trim() || "Member profile";
+      const av = m.photo_url
+        ? `<div class="mp-av"><img src="${esc(m.photo_url)}" alt="" /></div>`
+        : `<div class="mp-av" aria-hidden="true">${esc(dirInitials(m))}</div>`;
+      const bits = [];
+      if(m.hometown) bits.push(`🏠 ${esc(m.hometown)}`);
+      if(m.parade_since) bits.push(`🥁 Marching since ${esc(m.parade_since)}`);
+      if(m.birthday_md) bits.push(`🎂 ${esc(m.birthday_md)}`);
+      if(m.anniversary_md) bits.push(`💍 ${esc(m.anniversary_md)}`);
+      let longs = "";
+      if(m.bio) longs += `<p class="mp-line"><b>About:</b> ${esc(m.bio)}</p>`;
+      if(m.hobbies) longs += `<p class="mp-line"><b>Hobbies:</b> ${esc(m.hobbies)}</p>`;
+      if(m.interests) longs += `<p class="mp-line"><b>Interests:</b> ${esc(m.interests)}</p>`;
+      if(m.favorite_memory) longs += `<p class="mp-line"><b>Favorite krewe memory:</b> ${esc(m.favorite_memory)}</p>`;
+      if(m.fun_fact) longs += `<p class="mp-line"><b>Fun fact:</b> ${esc(m.fun_fact)}</p>`;
+      if(!longs) longs = `<p class="mp-muted">They haven't filled in their story yet — nudge them at the next event.</p>`;
+      body.innerHTML = `<div class="mp-body">${av}<div style="flex:1;min-width:180px;">
+        <div style="font-family:var(--display);font-size:22px;color:var(--green-800);">${esc(m.first_name)} ${esc(m.last_name)}</div>
+        <div class="mp-muted" style="margin:4px 0 10px;">${esc(dirRole(m))}</div>
+        ${bits.length ? `<div class="mp-muted">${bits.join(" · ")}</div>` : ""}
+        ${longs}
+        <p class="mp-muted" style="margin-top:14px;">Contact stays private — reach them through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
+      </div></div>`;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";
+    };
+    window.closeMemberProfile = function(){
+      const modal = document.getElementById("memberProfileModal");
+      if(!modal) return;
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+      document.body.style.overflow = "";
     };
 
 
