@@ -447,7 +447,7 @@
 
       <!-- PARADE READY -->
       <section class="app-card" id="prCard">
-        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; meeting: your wristband eligibility</small></div></div>
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; 12 volunteer hours (Jun–May)</small></div></div>
         <div class="app-body">
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
@@ -853,6 +853,12 @@
 
     /* ================= PARADE READY ================= */
     const SEASON = new Date().getFullYear();
+    // Bylaws volunteer season is Jun–May; season_year is the ending calendar year (e.g. Jun 2026–may 2027 → 2027).
+    function kreweVolunteerSeasonYear(d = new Date()){
+      const mo = d.getMonth() + 1;
+      return mo >= 6 ? d.getFullYear() + 1 : d.getFullYear();
+    }
+    const VH_SEASON = kreweVolunteerSeasonYear();
     let _prMe = null;
     async function loadParadeReady(){
       const el = document.getElementById("prStatus");
@@ -901,10 +907,14 @@
     };
     function renderHoursBar(me){
       const el = document.getElementById("prHours"); if(!el) return;
-      const done = Number(me.hours_approved||0), logged = Number(me.hours_logged||0), goal = 12;
+      const done = Number(me.hours_approved ?? me.volunteer_hours_approved ?? 0);
+      const logged = Number(me.hours_logged ?? me.volunteer_hours_logged ?? 0);
+      const goal = 12;
       const pct = Math.min(100, Math.round(done/goal*100));
-      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
-        <div class="prog"><i style="width:${pct}%"></i></div>`;
+      const buyout = Math.max(0, goal - done) * 12;
+      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved (season ending ${VH_SEASON})${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
+        <div class="prog"><i style="width:${pct}%"></i></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0;">Event volunteer hours count after an officer confirms attendance. Manual logs below still need review. Shortfall buyout is $12/hr (about $${buyout} if you stop here).</p>`;
     }
     document.getElementById("vhForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -913,7 +923,7 @@
       const hours = Number(document.getElementById("vhHours").value);
       const d = document.getElementById("vhDate").value;
       if(activity.length < 2 || !(hours > 0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
-      const row = { member_id:_prMe.member_id, season_year:SEASON, activity, hours };
+      const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours };
       if(d) row.worked_on = d;
       const { error } = await supabase.from("volunteer_hours").insert(row);
       if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
@@ -947,6 +957,23 @@
       const { error } = await supabase.rpc("officer_review_hours", { p_id:id, p_approved:approved });
       if(error){ alert("Could not update: " + (error.message||"")); return; }
       runReport("volunteer_review");
+    };
+    window.kosConfirmAttendance = async (signupId, attended)=>{
+      let hours = null;
+      if(attended){
+        const inp = document.getElementById("attHrs-" + signupId);
+        const raw = inp ? inp.value : "";
+        hours = raw === "" ? null : Number(raw);
+        if(hours != null && (!(hours > 0) || hours > 24)){ alert("Enter hours between 0.5 and 24, or leave blank to use their planned hours."); return; }
+      }
+      const { data, error } = await supabase.rpc("officer_confirm_attendance", {
+        p_signup_id: signupId,
+        p_hours: hours,
+        p_attended: !!attended
+      });
+      if(error){ alert("Could not update attendance: " + (error.message||"")); return; }
+      if(data && data.ok === false){ alert(data.message || "Could not update attendance."); return; }
+      runReport("event_attendance");
     };
     window.kosCreateMeeting = async ()=>{
       const name = (document.getElementById("mtName").value||"").trim();
@@ -1007,12 +1034,12 @@
           const mark=v=>v?"✅":"—";
           return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
             + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
-            + rTable(["Name","Status"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-"]))
+            + rTable(["Name","Status","Volunteer hrs"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-", `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]))
             + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
-            + rTable(["Name","Dues","Waiver","Meeting"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended)]));
+            + rTable(["Name","Dues","Waiver","Meeting","Volunteer hrs"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended), `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]));
         }},
       { id:"volunteer_review", cat:"Parade Readiness", icon:"🙌", title:"Volunteer Hours Review", secure:true,
-        desc:"Approve members' logged service hours toward the 12-hour commitment.",
+        desc:"Approve manually logged service hours. Event volunteer hours are approved via Confirm Event Attendance & Hours.",
         run: async()=>{
           const [{data:vh,error:e1},{data:pr,error:e2}] = await Promise.all([
             supabase.from("volunteer_hours").select("*").order("created_at",{ascending:false}),
@@ -1031,6 +1058,43 @@
                   ? `<button class="rpt-btn" type="button" onclick="kosReviewHours('${r.id}',false)">Undo</button>`
                   : `<button class="rpt-btn ok" type="button" onclick="kosReviewHours('${r.id}',true)">Approve</button>`}</td></tr>`).join("")
             + '</tbody></table></div>';
+        }},
+      { id:"event_attendance", cat:"Events & Attendance", icon:"✅", title:"Confirm Event Attendance & Hours", secure:true,
+        desc:"Mark who showed up. Volunteers/organizers get approved hours toward the 12-hour season goal when confirmed.",
+        run: async()=>{
+          const since = new Date(Date.now() - 120*86400000).toISOString();
+          const [{data:evs,error:e1},{data:sigs,error:e2},{data:mems,error:e3}] = await Promise.all([
+            supabase.from("events").select("id,name,start_time").neq("source","ikc").gte("start_time", since).order("start_time",{ascending:false}),
+            supabase.from("event_signups").select("id,event_id,member_id,signup_role,status,guests_count,volunteer_hours_planned").in("status",["registered","confirmed","attended","waitlisted"]).order("created_at",{ascending:false}),
+            supabase.from("v_parade_ready").select("member_id,first_name,last_name")
+          ]);
+          if(e1) throw e1; if(e2) throw e2; if(e3) throw e3;
+          const nm={}; (mems||[]).forEach(p=>{ nm[p.member_id]=`${p.first_name} ${p.last_name}`; });
+          const byEv={}; (sigs||[]).forEach(s=>{ (byEv[s.event_id]=byEv[s.event_id]||[]).push(s); });
+          const events=evs||[];
+          if(!events.length) return '<p class="empty">No recent events to confirm.</p>';
+          const attended=(sigs||[]).filter(s=>s.status==="attended").length;
+          const vols=(sigs||[]).filter(s=>s.signup_role==="volunteer"||s.signup_role==="organizer").length;
+          let html = rStats([{l:"Events",v:events.length},{l:"Signups",v:(sigs||[]).length},{l:"Attended",v:attended},{l:"Volunteer roles",v:vols}]);
+          for(const ev of events){
+            const rows = byEv[ev.id]||[];
+            html += `<h3 class="rpt-cat">${esc(ev.name)} · ${fmtDate(ev.start_time)}</h3>`;
+            if(!rows.length){ html += '<p class="empty">No signups yet.</p>'; continue; }
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Planned hrs</th><th>Confirm hrs</th><th></th></tr></thead><tbody>';
+            html += rows.map(r=>{
+              const isVol = r.signup_role==="volunteer"||r.signup_role==="organizer";
+              const planned = r.volunteer_hours_planned != null ? String(r.volunteer_hours_planned) : (isVol ? "2" : "—");
+              const hrsCell = isVol
+                ? `<input id="attHrs-${r.id}" type="number" min="0.5" max="24" step="0.5" value="${esc(r.volunteer_hours_planned != null ? String(r.volunteer_hours_planned) : "2")}" style="width:72px;" />`
+                : "—";
+              const actions = r.status==="attended"
+                ? `<button class="rpt-btn" type="button" onclick="kosConfirmAttendance('${r.id}',false)">Undo</button>`
+                : `<button class="rpt-btn ok" type="button" onclick="kosConfirmAttendance('${r.id}',true)">${isVol?"Confirm + hours":"Confirm attended"}</button>`;
+              return `<tr><td>${esc(nm[r.member_id]||"?")}</td><td>${esc(r.signup_role||"attendee")}</td><td>${esc(r.status||"-")}</td><td>${esc(planned)}</td><td>${hrsCell}</td><td>${actions}</td></tr>`;
+            }).join("");
+            html += '</tbody></table></div>';
+          }
+          return html;
         }},
       { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
         desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
