@@ -646,6 +646,15 @@
     </div>
   </main>
 
+    <!-- MEMBER PROFILE MODAL -->
+  <div class="modal-overlay" id="memberProfileModal" aria-hidden="true" onclick="if(event.target===this) closeMemberProfile()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member profile" style="max-width:560px;">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">👥</span><h2 id="mpTitle">Member profile</h2>
+        <button class="modal-x" type="button" onclick="closeMemberProfile()" aria-label="Close">✕</button></div>
+      <div class="modal-body" id="mpBody"><p class="empty">Loading…</p></div>
+    </div>
+  </div>
+
   <!-- RAFFLES MODAL -->
   <div class="modal-overlay" id="raffleModal" aria-hidden="true" onclick="if(event.target===this) closeRaffles()">
     <div class="modal-card">
