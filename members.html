@@ -953,6 +953,31 @@
     }
 
     /* ---- Officer actions used by the Parade Readiness reports ---- */
+
+    window.kosSetTartanTable = async (guestId)=>{
+      const inp = document.getElementById("tbTable-" + guestId);
+      const raw = inp ? inp.value.trim() : "";
+      const n = raw === "" ? null : Number(raw);
+      if(raw !== "" && (!(Number.isInteger(n) && n > 0))){ alert("Enter a positive whole table number, or clear the field for TBA."); return; }
+      const { error } = await supabase.from("tartan_ball_guests").update({ table_number: n }).eq("id", guestId);
+      if(error){ alert("Could not save table: " + (error.message||"")); return; }
+      runReport("tartan_ball");
+    };
+    window.kosDownloadTartanCsv = async ()=>{
+      const { data, error } = await supabase.from("v_tartan_ball_avery_18660").select("*");
+      if(error){ alert("Could not export: " + (error.message||"")); return; }
+      const rows = data||[];
+      const headers = ["guest_name","table_number","meal_label","jewel_color","jewel_code","label_line1","label_line2","label_line3","krewe_names","seating_request","primary_email"];
+      const cell = v => '"' + String(v??"").replace(/"/g,'""') + '"';
+      const lines = [headers.join(",")].concat(rows.map(r => headers.map(h => cell(r[h])).join(",")));
+      const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "tartan-ball-avery-18660.csv";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+    };
+
     window.kosReviewHours = async (id, approved)=>{
       const { error } = await supabase.rpc("officer_review_hours", { p_id:id, p_approved:approved });
       if(error){ alert("Could not update: " + (error.message||"")); return; }
@@ -1096,6 +1121,58 @@
           }
           return html;
         }},
+
+      { id:"tartan_ball", cat:"Events & Attendance", icon:"💎", title:"Tartan Ball seating & meals", secure:true,
+        desc:"Caterer meal counts, table numbers, and Avery #18660 table-card labels (jewel = meal).",
+        run: async()=>{
+          const [{data:counts,error:e1},{data:guests,error:e2}] = await Promise.all([
+            supabase.from("v_tartan_ball_caterer_counts").select("*"),
+            supabase.from("v_tartan_ball_avery_18660").select("*")
+          ]);
+          if(e1) throw e1; if(e2) throw e2;
+          const c = counts||[];
+          const g = (guests||[]).slice().sort((a,b)=>{
+            const ta=a.table_number==null?9999:a.table_number, tb=b.table_number==null?9999:b.table_number;
+            if(ta!==tb) return ta-tb;
+            return String(a.guest_name||"").localeCompare(String(b.guest_name||""));
+          });
+          const total = g.length;
+          const assigned = g.filter(r=>r.table_number!=null).length;
+          const jewelDot = (color, code)=>{
+            const c0 = String(color||code||"").toLowerCase();
+            const bg = c0.includes("emerald")||c0==="green" ? "#059669"
+              : c0.includes("sapphire")||c0==="blue" ? "#2563eb"
+              : c0.includes("amethyst")||c0==="purple" ? "#7c3aed" : "#999";
+            return `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${bg};border:1px solid rgba(0,0,0,.25);vertical-align:middle;margin-right:6px;"></span>`;
+          };
+          let html = rStats([{l:"Guests",v:total},{l:"Tables assigned",v:assigned},{l:"TBA",v:total-assigned}]);
+          html += '<h3 class="rpt-cat">🍽 Caterer counts</h3>';
+          if(!c.length) html += '<p class="empty">No meals yet.</p>';
+          else {
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Meal</th><th>Jewel</th><th>Covers</th></tr></thead><tbody>';
+            html += c.map(r=>`<tr><td>${esc(r.meal_label||r.meal_code)}</td><td>${jewelDot(r.jewel_color,r.jewel_code)}${esc(r.jewel_color||r.jewel_code||"-")}</td><td>${esc(String(r.covers||0))}</td></tr>`).join("");
+            html += '</tbody></table></div>';
+          }
+          html += '<h3 class="rpt-cat">🪑 Guests &amp; table numbers</h3>';
+          html += `<p class="rpt-note">Assign tables, then print Avery <b>#18660</b> (1&Prime; × 2-5/8&Prime;, 30/sheet). <a href="tartan-ball-labels.html" target="_blank" rel="noopener">Open print sheet</a> · <button type="button" class="rpt-btn ok" onclick="kosDownloadTartanCsv()">Download CSV</button></p>`;
+          if(!g.length) html += '<p class="empty">No guests imported yet.</p>';
+          else {
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Guest</th><th>Meal</th><th>Jewel</th><th>Seating note</th><th>Table #</th><th></th></tr></thead><tbody>';
+            html += g.map(r=>{
+              const meal = String(r.meal_label||"").replace(/^\d+\.\s*/,"");
+              const val = r.table_number==null ? "" : String(r.table_number);
+              return `<tr><td>${esc(r.guest_name||"")}${r.is_vip?' <span class="rank-pill">VIP</span>':""}</td>`
+                + `<td>${esc(meal||"-")}</td>`
+                + `<td>${jewelDot(r.jewel_color,r.jewel_code)}${esc(r.jewel_color||r.jewel_code||"-")}</td>`
+                + `<td>${esc(r.seating_request||"—")}</td>`
+                + `<td><input id="tbTable-${r.guest_id}" type="number" min="1" step="1" value="${esc(val)}" style="width:72px;" placeholder="TBA" /></td>`
+                + `<td><button class="rpt-btn ok" type="button" onclick="kosSetTartanTable('${r.guest_id}')">Save</button></td></tr>`;
+            }).join("");
+            html += '</tbody></table></div>';
+          }
+          return html;
+        }},
+
       { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
         desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
         run: async()=>{
