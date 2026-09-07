@@ -457,7 +457,7 @@
         p_signup_role: document.getElementById("role").value
       });
       btn.disabled = false; btn.textContent = "☘ Sign me up";
-      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again later.", "error"); return; }
+      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again.", "error"); return; }
       if (data && data.ok) {
         if (data.status === "waitlisted") { showMessage(data.message, "waitlist"); }
         else { showMessage(data.message, "success"); form.reset(); document.getElementById("guests").value = "0"; }
