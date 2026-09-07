@@ -101,7 +101,10 @@
   .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
   .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
   .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
-  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card input, .gate-card textarea{ width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:left; font:inherit; background:#fff; }
+  .gate-card textarea{ min-height:64px; resize:vertical; }
+  #authStage .gate-card input{ text-align:center; }
+  #profileStage .gate-card{ max-height:92vh; overflow:auto; }
   .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
   .member-grid{ display:grid; gap:26px; }
   .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
