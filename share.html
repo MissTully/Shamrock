@@ -155,7 +155,7 @@
     <a href="members.html" class="back-link">&#8592; Back to Member Hub</a>
 
     <p style="color:var(--muted);font-size:15px;margin:0 0 20px;">
-      Choose the type of content you&rsquo;d like to share. Everything you submit is reviewed by the krewe before appearing on the public pages.
+      Choose the type of content you&rsquo;d like to share. Signed-in members: your posts go live on the site right away. Photos and videos need a signed media consent (faces/likeness).
     </p>
 
     <!-- Type selector tabs -->
@@ -191,8 +191,8 @@
               <textarea id="vDesc" placeholder="Tell the krewe what this video is about..."></textarea>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Your submission goes to the krewe admins for review before publishing.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live on the site as soon as you submit.</span>
             </div>
             <div class="msg" id="msgVideo"></div>
           </form>
@@ -228,8 +228,8 @@
               <textarea id="pDesc" placeholder="Where was this taken? Any story behind it?"></textarea>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Photos are reviewed before appearing in the gallery.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live in the gallery after you submit (media consent required).</span>
             </div>
             <div class="msg" id="msgPhoto"></div>
           </form>
@@ -265,8 +265,8 @@
               <textarea id="aDesc" placeholder="Tell us about this piece: medium, inspiration, technique..."></textarea>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Artwork is reviewed before appearing on the Krewe Creativity page.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live on the Krewe Creativity page as soon as you submit.</span>
             </div>
             <div class="msg" id="msgArt"></div>
           </form>
@@ -298,8 +298,8 @@
               <textarea id="pmBody" style="min-height:220px;font-family:var(--fancy);font-size:16px;line-height:1.8;" placeholder="Write or paste your poem here..." required></textarea>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Poems are reviewed before appearing on the Krewe Creativity page.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live on the Krewe Creativity page as soon as you submit.</span>
             </div>
             <div class="msg" id="msgPoem"></div>
           </form>
@@ -331,8 +331,8 @@
               <textarea id="stBody" style="min-height:280px;" placeholder="Write or paste your story here..." required></textarea>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Stories are reviewed by the krewe before publishing.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live as soon as you submit.</span>
             </div>
             <div class="msg" id="msgStory"></div>
           </form>
@@ -378,8 +378,8 @@
               <div class="file-chosen" id="fileRecipeName"></div>
             </div>
             <div class="submit-area">
-              <button type="submit" class="btn btn-primary">Submit for Review</button>
-              <span class="submit-note">&#x1f512; Recipes are reviewed before publishing to the krewe.</span>
+              <button type="submit" class="btn btn-primary">Post to the site</button>
+              <span class="submit-note">&#x1f512; Goes live as soon as you submit.</span>
             </div>
             <div class="msg" id="msgRecipe"></div>
           </form>
@@ -485,6 +485,19 @@ async function uploadFile(bucket, file) {
   return data.publicUrl;
 }
 
+
+async function requireMediaConsent() {
+  const { data, error } = await sb.rpc('has_media_consent');
+  if (error) { console.warn(error); return false; }
+  return !!data;
+}
+async function gatePhotoVideo(msgId) {
+  const ok = await requireMediaConsent();
+  if (ok) return true;
+  showMsg(msgId, 'error', 'Please sign the media consent in the Member Hub (Parade Ready) before posting photos or videos that may include faces.');
+  return false;
+}
+
 // ---- Insert content_items row ----
 async function insertItem(fields) {
   const row = {
@@ -495,7 +508,7 @@ async function insertItem(fields) {
     media_url: fields.media_url || null,
     author: window._authorName || 'Krewe Member',
     submitted_by: currentUser?.id || null,
-    is_published: false,
+    is_published: true,
     sort_order: 999,
   };
   const { error } = await sb.from('content_items').insert(row);
@@ -512,7 +525,7 @@ function showMsg(id, type, text) {
 
 function setLoading(btn, loading) {
   btn.disabled = loading;
-  btn.textContent = loading ? 'Submitting...' : 'Submit for Review';
+  btn.textContent = loading ? 'Submitting...' : 'Post to the site';
 }
 
 // ---- VIDEO form ----
@@ -522,13 +535,14 @@ document.getElementById('formVideo').addEventListener('submit', async (e) => {
   const btn = e.target.querySelector('button[type=submit]');
   setLoading(btn, true);
   try {
+    if (!(await gatePhotoVideo('msgVideo'))) { setLoading(btn, false); return; }
     await insertItem({
       type: 'video',
       title: document.getElementById('vTitle').value.trim(),
       body: document.getElementById('vDesc').value.trim() || null,
       media_url: document.getElementById('vUrl').value.trim(),
     });
-    showMsg('msgVideo', 'success', 'Thanks! Your video has been submitted and will appear after review.');
+    showMsg('msgVideo', 'success', 'Thanks! Your video is live on the site.');
     e.target.reset();
   } catch(err) {
     showMsg('msgVideo', 'error', 'Something went wrong: ' + err.message);
@@ -545,6 +559,7 @@ document.getElementById('formPhoto').addEventListener('submit', async (e) => {
   if (!file) { showMsg('msgPhoto','error','Please choose a photo to upload.'); return; }
   setLoading(btn, true);
   try {
+    if (!(await gatePhotoVideo('msgPhoto'))) { setLoading(btn, false); return; }
     const url = await uploadFile('gallery-photos', file);
     await insertItem({
       type: 'photo',
@@ -552,7 +567,7 @@ document.getElementById('formPhoto').addEventListener('submit', async (e) => {
       body: document.getElementById('pDesc').value.trim() || null,
       media_url: url,
     });
-    showMsg('msgPhoto', 'success', 'Photo submitted! It will appear in the gallery after review.');
+    showMsg('msgPhoto', 'success', 'Photo submitted — it’s live in the gallery.');
     e.target.reset();
     document.getElementById('filePhotoName').textContent = '';
   } catch(err) {
@@ -577,7 +592,7 @@ document.getElementById('formArt').addEventListener('submit', async (e) => {
       body: document.getElementById('aDesc').value.trim() || null,
       media_url: url,
     });
-    showMsg('msgArt', 'success', 'Artwork submitted! It will appear on the Krewe Creativity page after review.');
+    showMsg('msgArt', 'success', 'Artwork submitted — it’s live on the Krewe Creativity page.');
     e.target.reset();
     document.getElementById('fileArtName').textContent = '';
   } catch(err) {
@@ -599,7 +614,7 @@ document.getElementById('formPoem').addEventListener('submit', async (e) => {
       subtitle: document.getElementById('pmSubtitle').value.trim(),
       body: document.getElementById('pmBody').value.trim(),
     });
-    showMsg('msgPoem', 'success', 'Poem submitted! It will appear on the Krewe Creativity page after review.');
+    showMsg('msgPoem', 'success', 'Poem submitted — it’s live on the Krewe Creativity page.');
     e.target.reset();
   } catch(err) {
     showMsg('msgPoem', 'error', 'Something went wrong: ' + err.message);
@@ -620,7 +635,7 @@ document.getElementById('formStory').addEventListener('submit', async (e) => {
       subtitle: document.getElementById('stSubtitle').value.trim(),
       body: document.getElementById('stBody').value.trim(),
     });
-    showMsg('msgStory', 'success', 'Story submitted! It will appear after the krewe reviews it.');
+    showMsg('msgStory', 'success', 'Story submitted — it’s live on the site.');
     e.target.reset();
   } catch(err) {
     showMsg('msgStory', 'error', 'Something went wrong: ' + err.message);
@@ -648,7 +663,7 @@ document.getElementById('formRecipe').addEventListener('submit', async (e) => {
       body,
       media_url: mediaUrl,
     });
-    showMsg('msgRecipe', 'success', 'Recipe submitted! It will be published after review.');
+    showMsg('msgRecipe', 'success', 'Recipe submitted — it’s live on the site.');
     e.target.reset();
     document.getElementById('fileRecipeName').textContent = '';
   } catch(err) {
