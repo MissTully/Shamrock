@@ -314,7 +314,7 @@
               <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
             </div>
           </div>
-          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a welcome walkthrough builds your My Krewe directory profile (photo and a few details) and optionally notes any board or committee role. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game — role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
           <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
         </div>
       </details>
@@ -344,66 +344,64 @@
     </div>
   </div>
 
-  <!-- PROFILE STAGE (first-time My Krewe directory profile) -->
+  <!-- PROFILE STAGE (light Craic welcome) -->
   <div class="gate" id="profileStage" style="display:none;">
-    <div class="gate-card" style="max-width:560px;">
+    <div class="gate-card" style="max-width:480px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-      <h1>Welcome! Create your My Krewe profile</h1>
-      <p>This is how you show up in the member directory. Add a photo and a few details now &mdash; you can edit anytime in <b>My Krewe</b>.</p>
+      <h1>Welcome to our Krewe Digital Home</h1>
+      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — earn Clovers for showing up, climb the ranks, unlock badges. First, let’s get your face in the game.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
-        <div style="display:flex;gap:14px;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;gap:14px;align-items:center;margin:12px 0 8px;">
           <div id="pfAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:#e8f0e4;border:2px solid rgba(168,128,28,.45);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:0 0 auto;">☘</div>
           <div style="flex:1;">
-            <label for="pfPhoto">Profile photo (optional)</label>
+            <label for="pfPhoto">Your photo *</label>
             <input id="pfPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
-            <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">Fellow members see this in My Krewe.</p>
+            <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">So My Krewe feels like people, not a spreadsheet.</p>
           </div>
         </div>
         <div class="row">
           <div><label for="pfFirst">First name *</label><input id="pfFirst" required /></div>
           <div><label for="pfLast">Last name *</label><input id="pfLast" required /></div>
         </div>
-        <label for="pfPhone">Phone (optional)</label><input id="pfPhone" type="tel" />
-        <label for="pfBio">About me (optional)</label><input id="pfBio" placeholder="e.g. Marching since 2015, love the parade" />
-        <div class="row">
-          <div><label for="pfHometown">Hometown</label><input id="pfHometown" placeholder="e.g. Tampa" /></div>
-          <div><label for="pfSince">Marching with the krewe since (year)</label><input id="pfSince" type="number" min="1998" max="2100" placeholder="e.g. 2019" /></div>
-        </div>
-        <div class="row">
-          <div><label for="pfBirthday">Birthday (month + day shown)</label><input id="pfBirthday" type="date" /></div>
-          <div><label for="pfAnniversary">Anniversary (month + day shown)</label><input id="pfAnniversary" type="date" /></div>
-        </div>
-        <label for="pfHobbies">Hobbies (what do you love doing?)</label><input id="pfHobbies" placeholder="e.g. Gardening, bagpipes, beach days" />
-        <label for="pfInterests">Interests (what would you chat about all night?)</label><input id="pfInterests" placeholder="e.g. Irish history, cooking, live music" />
-        <label for="pfMemory">Favorite krewe or parade memory</label><textarea id="pfMemory" rows="2" placeholder="Optional"></textarea>
-        <label for="pfFact">A fun fact about you</label><input id="pfFact" placeholder="e.g. I once caught 47 strands of beads in one parade" />
-        <label style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer;font-weight:400;">
-          <input type="checkbox" id="pfVisible" checked style="width:auto;" /> Show my profile in the member directory
-        </label>
-        <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Birthday and anniversary show as month and day only — never the year.</p>
+        <label for="pfFact">A fun fact about you</label>
+        <input id="pfFact" placeholder="e.g. I once caught 47 strands of beads in one parade" />
+        <label for="pfMemory">Favorite krewe or parade memory</label>
+        <textarea id="pfMemory" rows="2" placeholder="Optional — the story you’d tell at the pub"></textarea>
 
-        <div style="margin-top:16px;padding:12px 14px;border:1px dashed rgba(168,128,28,.5);border-radius:12px;background:#fffdf4;">
-          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
-            <input type="checkbox" id="pfIsMember" checked style="margin-top:4px;" />
-            <span>I am a current Krewe of Shamrock member</span>
-          </label>
-          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:10px;">
-            <input type="checkbox" id="pfHasRole" style="margin-top:4px;" />
-            <span>I hold a krewe role (officer, treasurer, committee&hellip;) — optional</span>
-          </label>
-          <div id="pfRolePanel" style="display:none;margin-top:10px;">
-            <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">Check what applies. An officer confirms role access &mdash; you can use the hub as a member right away.</p>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="board" /> Board / Officer</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
-            <input id="pfCommittee" placeholder="Which committee? (if committee member)" style="margin-top:8px;" />
-            <input id="pfRoleNote" placeholder="Anything that helps the board verify (optional)" style="margin-top:8px;" />
+        <details id="pfMoreDetails" style="margin-top:14px;border:1px dashed rgba(168,128,28,.45);border-radius:12px;padding:10px 12px;background:#fffdf4;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--green-800);">More for your directory (optional)</summary>
+          <div style="margin-top:10px;">
+            <label for="pfPhone">Phone</label><input id="pfPhone" type="tel" />
+            <label for="pfHometown">Hometown</label><input id="pfHometown" />
+            <label for="pfHobbies">Hobbies</label><input id="pfHobbies" placeholder="e.g. Gardening, bagpipes, beach days" />
+            <label style="display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer;font-weight:400;">
+              <input type="checkbox" id="pfVisible" checked style="width:auto;" /> Show my profile in the member directory
+            </label>
           </div>
-        </div>
+        </details>
 
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Save profile &amp; enter</button>
+        <details style="margin-top:12px;border:1px dashed rgba(168,128,28,.45);border-radius:12px;padding:10px 12px;background:#fffdf4;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--green-800);">I hold a krewe role (optional)</summary>
+          <div style="margin-top:10px;">
+            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+              <input type="checkbox" id="pfIsMember" checked style="margin-top:4px;" />
+              <span>I am a current Krewe of Shamrock member</span>
+            </label>
+            <input type="checkbox" id="pfHasRole" style="display:none;" />
+            <div id="pfRolePanel" style="margin-top:10px;">
+              <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">An officer confirms role access — you can use the hub right away.</p>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="board" /> Board / Officer</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
+              <input id="pfCommittee" placeholder="Which committee?" style="margin-top:8px;" />
+              <input id="pfRoleNote" placeholder="Anything that helps verify (optional)" style="margin-top:8px;" />
+            </div>
+          </div>
+        </details>
+
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">🍀 Start earning Clovers</button>
         <div class="err" id="pfMsg"></div>
       </form>
     </div>
@@ -1909,29 +1907,34 @@
       const msg=document.getElementById("pfMsg"); msg.style.color=""; msg.textContent="Saving…";
       const v = (id)=> (document.getElementById(id)?.value || "").trim();
       let photoUrl = null;
+      const existingPhoto = (window.kosProfile && window.kosProfile.photo_url) || null;
       try{
         const file = document.getElementById("pfPhoto")?.files?.[0];
         if(file){
           msg.textContent = "Uploading photo…";
           photoUrl = await uploadWelcomeAvatar(file);
           msg.textContent = "Saving…";
+        } else if(existingPhoto){
+          photoUrl = existingPhoto;
+        } else {
+          msg.textContent = "Add a photo so My Krewe can see your face — then you're in the game.";
+          return;
         }
       }catch(err){
         msg.textContent = "Couldn't upload photo: " + (err.message || err);
         return;
       }
-      const sinceRaw = parseInt(v("pfSince"), 10);
       const { error } = await sb.rpc("complete_krewe_profile", {
         p_first: v("pfFirst"),
         p_last: v("pfLast"),
         p_phone: v("pfPhone") || null,
-        p_bio: v("pfBio") || null,
+        p_bio: null,
         p_hometown: v("pfHometown") || null,
-        p_parade_since: Number.isFinite(sinceRaw) ? sinceRaw : null,
-        p_interests: v("pfInterests") || null,
+        p_parade_since: null,
+        p_interests: null,
         p_photo_url: photoUrl,
-        p_birthday: v("pfBirthday") || null,
-        p_anniversary: v("pfAnniversary") || null,
+        p_birthday: null,
+        p_anniversary: null,
         p_hobbies: v("pfHobbies") || null,
         p_favorite_memory: v("pfMemory") || null,
         p_fun_fact: v("pfFact") || null,
