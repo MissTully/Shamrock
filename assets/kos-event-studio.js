@@ -1,5 +1,5 @@
 /* Event Studio — companion to members-desk.js
-   Lets board/officers/chairs create & edit events (optional Stripe ticket links). */
+   Lets board/officers/chairs create & edit events (optional Zeffy ticket links). */
 (function () {
   "use strict";
 
@@ -93,9 +93,9 @@
       '<div><label for="hubEventStatus">Status</label><select id="hubEventStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></div>' +
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
       '<div><label for="hubEventTicketPrice">Ticket price (dollars)</label><input id="hubEventTicketPrice" type="number" min="0" step="0.01" placeholder="0.00" /></div>' +
-      '<div><label for="hubEventPaymentUrl">Ticket payment URL</label><input id="hubEventPaymentUrl" type="url" placeholder="https://buy.stripe.com/..." /></div>' +
+      '<div><label for="hubEventPaymentUrl">Ticket payment URL</label><input id="hubEventPaymentUrl" type="url" placeholder="https://www.zeffy.com/en-US/ticketing/..." /></div>' +
       '<div class="wide"><label for="hubEventFlyerUrl">Flyer URL</label><input id="hubEventFlyerUrl" type="url" /></div></div>' +
-      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Stripe Payment Link (metadata <code>kind=event</code>) and paste it here. See PAYMENTS_SETUP.md.</p>' +
+      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Zeffy ticketing campaign and paste the public share link here. Sign me up / RSVP will open that checkout. See PAYMENTS_SETUP.md.</p>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
       '<button class="btn" type="button" id="hubEventNew">New / clear</button></div><p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form></div>';
   }
