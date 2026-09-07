@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
 <title>Krewe of Shamrock · Event Sign-Up</title>
-<meta name="description" content="RSVP to Krewe of Shamrock events in Tampa Bay." />
+<meta name="description" content="RSVP to Krewe of Shamrock events in Tampa Bay: mini golf and charity fundraisers, Gasparilla parade rides, the Tartan Ball, and more. Reserve your spot today." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
@@ -245,9 +245,11 @@
       }
       const date = event.start_time ? new Date(event.start_time) : null;
       const when = date && !isNaN(date) ? date.toLocaleString([], { dateStyle:"full", timeStyle:"short" }) : "Date to be announced";
-      const isPdf = /\\.pdf(?:$|[?#])/i.test(event.flyer_url);
+      const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
       const flyer = isPdf
-        ? '<embed src="' + esc(event.flyer_url) + '" type="application/pdf" style="width:100%;min-height:420px;border:0;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
+        ? '<object data="' + esc(event.flyer_url) + '" type="application/pdf" style="display:block;width:100%;min-height:520px;border:0;">' +
+          '<p style="padding:26px 18px;text-align:center;margin:0;">The flyer for this event is a PDF — tap below to view it.</p>' +
+          '</object><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
         : '<img src="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer ↗</a></p>';
       title.textContent = "Featured Event: " + (event.name || "Upcoming Krewe event");
       sub.textContent = event.description || "Join the Krewe of Shamrock at our next public event";
@@ -355,7 +357,45 @@
       syncSignupButton();
       const featured = (data || []).filter((ev) => ev.status === "published" && ev.flyer_url && ev.start_time && new Date(ev.start_time) >= new Date()).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0];
       renderFeaturedEvent(featured);
+      injectEventSchema(ours);
       buildCalendar(data);
+    }
+
+    // Event structured data (schema.org JSON-LD) generated from the live
+    // events list, so search engines can show rich results with dates,
+    // locations, and ticket links — and it can never go stale.
+    function injectEventSchema(events) {
+      const upcoming = (events || []).filter((ev) =>
+        ev.start_time && new Date(ev.start_time) >= new Date() && ev.status !== "cancelled");
+      if (!upcoming.length) return;
+      const items = upcoming.map((ev) => {
+        const item = {
+          "@context": "https://schema.org",
+          "@type": "Event",
+          "name": ev.name,
+          "startDate": ev.start_time,
+          "eventStatus": "https://schema.org/EventScheduled",
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "organizer": { "@type": "Organization", "name": "Krewe of Shamrock", "url": "https://krewe-of-shamrock.vercel.app/" },
+          "url": "https://krewe-of-shamrock.vercel.app/event-signup.html?event=" + encodeURIComponent(ev.id)
+        };
+        if (ev.end_time) item.endDate = ev.end_time;
+        if (ev.description) item.description = ev.description;
+        if (ev.location) {
+          item.location = { "@type": "Place", "name": ev.location,
+            "address": { "@type": "PostalAddress", "addressRegion": "FL", "addressCountry": "US" } };
+        }
+        if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) item.image = ev.flyer_url;
+        if (ev.ticket_payment_url) {
+          item.offers = { "@type": "Offer", "url": ev.ticket_payment_url,
+            "availability": "https://schema.org/InStock", "priceCurrency": "USD" };
+        }
+        return item;
+      });
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.textContent = JSON.stringify(items);
+      document.head.appendChild(s);
     }
 
     // Render the "Krewe of Shamrock Calendar" from the very same events list.

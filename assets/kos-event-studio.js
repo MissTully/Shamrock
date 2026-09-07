@@ -19,6 +19,7 @@
     ".hub-event-row .hub-appr-btns{flex:none;}",
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
+    ".hub-flyer-note{font-size:12px;color:var(--muted);margin:4px 0 0;}",
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
@@ -94,10 +95,34 @@
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
       '<div><label for="hubEventTicketPrice">Ticket price (dollars)</label><input id="hubEventTicketPrice" type="number" min="0" step="0.01" placeholder="0.00" /></div>' +
       '<div><label for="hubEventPaymentUrl">Ticket payment URL</label><input id="hubEventPaymentUrl" type="url" placeholder="https://www.zeffy.com/en-US/ticketing/..." /></div>' +
-      '<div class="wide"><label for="hubEventFlyerUrl">Flyer URL</label><input id="hubEventFlyerUrl" type="url" /></div></div>' +
+      '<div class="wide"><label for="hubEventFlyerUrl">Flyer URL</label><input id="hubEventFlyerUrl" type="url" placeholder="https://… or upload a file below" /></div>' +
+      '<div class="wide"><label for="hubEventFlyerFile">Upload flyer (PDF or image)</label>' +
+      '<input id="hubEventFlyerFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />' +
+      '<p class="hub-flyer-note" id="hubEventFlyerNote" aria-live="polite">' + FLYER_NOTE_DEFAULT + '</p></div></div>' +
       '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Zeffy ticketing campaign and paste the public share link here. Sign me up / RSVP will open that checkout. See PAYMENTS_SETUP.md.</p>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
       '<button class="btn" type="button" id="hubEventNew">New / clear</button></div><p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form></div>';
+  }
+
+  // Uploads a flyer file to the public "event-flyers" storage bucket and
+  // returns its public URL. Storage RLS only lets can_manage_events() write.
+  var FLYER_NOTE_DEFAULT = "Uploading fills the Flyer URL above. A published public event with a flyer becomes the Featured Event on the sign-up page.";
+  var FLYER_MAX_BYTES = 10 * 1024 * 1024;
+  var FLYER_TYPES = {
+    "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"
+  };
+  async function uploadEventFlyer(client, file) {
+    var ext = FLYER_TYPES[file.type];
+    if (!ext) throw new Error("Please choose a PDF, JPG, PNG, or WEBP file.");
+    if (file.size > FLYER_MAX_BYTES) throw new Error("Flyer files must be 10 MB or smaller.");
+    var base = (file.name || "flyer").replace(/\.[^.]*$/, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "flyer";
+    var path = Date.now() + "-" + base + "." + ext;
+    var up = await client.storage.from("event-flyers").upload(path, file, {
+      upsert: false, contentType: file.type, cacheControl: "3600"
+    });
+    if (up.error) throw up.error;
+    return client.storage.from("event-flyers").getPublicUrl(path).data.publicUrl;
   }
 
   function clearEventForm() {
@@ -111,6 +136,8 @@
     document.getElementById("hubEventType").value = "social";
     document.getElementById("hubEventFormTitle").textContent = "New event";
     document.getElementById("hubEventMsg").textContent = "";
+    var note = document.getElementById("hubEventFlyerNote");
+    if (note) note.textContent = FLYER_NOTE_DEFAULT;
   }
 
   function fillEventForm(event) {
@@ -243,6 +270,23 @@
       e.preventDefault(); saveEventStudio(client);
     });
     document.getElementById("hubEventNew").addEventListener("click", clearEventForm);
+    var flyerFile = document.getElementById("hubEventFlyerFile");
+    flyerFile.addEventListener("change", async function () {
+      var note = document.getElementById("hubEventFlyerNote");
+      var file = flyerFile.files && flyerFile.files[0];
+      if (!file) return;
+      if (note) note.textContent = "Uploading flyer…";
+      flyerFile.disabled = true;
+      try {
+        var url = await uploadEventFlyer(client, file);
+        document.getElementById("hubEventFlyerUrl").value = url;
+        if (note) note.textContent = "Flyer uploaded. Now press ☘ Save event to attach it.";
+      } catch (e) {
+        if (note) note.textContent = "Upload failed: " + ((e && e.message) || e);
+      }
+      flyerFile.disabled = false;
+      flyerFile.value = "";
+    });
     clearEventForm();
     await refreshEventStudio(client);
   }
