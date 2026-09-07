@@ -245,7 +245,7 @@
       }
       const date = event.start_time ? new Date(event.start_time) : null;
       const when = date && !isNaN(date) ? date.toLocaleString([], { dateStyle:"full", timeStyle:"short" }) : "Date to be announced";
-      const isPdf = /\\.pdf(?:$|[?#])/i.test(event.flyer_url);
+      const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
       const flyer = isPdf
         ? '<embed src="' + esc(event.flyer_url) + '" type="application/pdf" style="width:100%;min-height:420px;border:0;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
         : '<img src="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer ↗</a></p>';
