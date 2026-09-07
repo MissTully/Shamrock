@@ -1254,6 +1254,47 @@
         }},
 
       /* ---- Membership ---- */
+
+      { id:"secretary_engagement", cat:"Membership", icon:"📣", title:"Secretary engagement (board)", secure:true,
+        desc:"Who is active, light, or quiet — RSVPs, attendance, and volunteer hours for the board secretary. Craic Cup Clovers will roll in here when that ledger is live.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_secretary_engagement").select("*");
+          if(error) throw error;
+          const rows = data||[];
+          const quiet = rows.filter(r=>r.engagement_band==="quiet");
+          const light = rows.filter(r=>r.engagement_band==="light");
+          const active = rows.filter(r=>r.engagement_band==="active");
+          const fmtLast = iso => {
+            if(!iso) return "—";
+            const d=new Date(iso);
+            return isNaN(d)?"—":d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric",timeZone:"America/New_York"});
+          };
+          const bandLabel = b => b==="quiet"?"Quiet":b==="light"?"Light":"Active";
+          let html = rStats([
+            {l:"Roster in view",v:rows.length},
+            {l:"Active",v:active.length},
+            {l:"Light",v:light.length},
+            {l:"Quiet",v:quiet.length}
+          ]);
+          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP and no approved volunteer hours this calendar year (Krewe events only). Craic Cup Clovers are the member-facing game; this report is the officer snapshot.</p>';
+          html += '<h3 class="rpt-cat">😴 Quiet (reach out)</h3>';
+          html += quiet.length
+            ? rTable(["Name","Email","Status","Last RSVP","Vol hrs"],
+                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_status||"—", fmtLast(r.last_rsvp_at), String(r.volunteer_hours_approved||0)]))
+            : '<p class="empty">Nobody is fully quiet — nice.</p>';
+          html += '<h3 class="rpt-cat">🌤️ Light engagement</h3>';
+          html += light.length
+            ? rTable(["Name","RSVPs YTD","Attended","Vol hrs","Last RSVP"],
+                light.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.rsvps_ytd, r.attended_ytd, String(r.volunteer_hours_approved||0), fmtLast(r.last_rsvp_at)]))
+            : '<p class="empty">No light-engagement members.</p>';
+          html += '<h3 class="rpt-cat">🔥 Active</h3>';
+          html += active.length
+            ? rTable(["Name","RSVPs YTD","Attended","Vol hrs","Last RSVP"],
+                active.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.rsvps_ytd, r.attended_ytd, String(r.volunteer_hours_approved||0), fmtLast(r.last_rsvp_at)]))
+            : '<p class="empty">No active members yet this year.</p>';
+          return html;
+        }},
+
       { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
         desc:"Active members, prospects, officers, and new joiners this year.",
         run: async()=>{
