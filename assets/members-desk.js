@@ -7,6 +7,21 @@
     ".hub-wrap{margin:0 0 18px;}",
     ".hub-welcome{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow-sm);}",
     ".hub-welcome h2{font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:26px;}",
+    ".hub-craic{background:linear-gradient(165deg,#1d6b3e 0%,#14532d 55%,#0f3d22 100%);color:#f6efdc;border-radius:20px;padding:22px 22px 18px;box-shadow:var(--shadow-sm);border:1px solid rgba(212,175,55,.45);}",
+    ".hub-craic h2{font-family:var(--display);margin:0 0 4px;font-size:28px;color:#fff;}",
+    ".hub-craic .tag{opacity:.9;font-size:14px;margin:0 0 14px;}",
+    ".hub-craic-grid{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;}",
+    ".hub-craic .rank-big{font-size:52px;line-height:1;}",
+    ".hub-craic .clovers{font-size:34px;font-family:var(--display);font-weight:700;}",
+    ".hub-craic .meta{font-size:14px;opacity:.92;}",
+    ".hub-craic .prog{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:8px;}",
+    ".hub-craic .prog>i{display:block;height:100%;background:linear-gradient(90deg,#f0d78c,#d4af37);}",
+    ".hub-quest{margin-top:14px;background:rgba(255,255,255,.12);border:1px solid rgba(240,215,140,.35);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;}",
+    ".hub-quest b{font-family:var(--display);font-size:16px;}",
+    ".hub-quest .btn{background:#f0d78c;color:#14532d;border:0;text-decoration:none;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;}",
+    ".hub-soft-desk{margin-top:14px;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:14px 16px;color:var(--green-800);}",
+    ".hub-soft-desk h3{font-family:var(--display);margin:0 0 8px;font-size:18px;}",
+    ".hub-soft-desk .hub-chips{margin:0 0 8px;}",
     ".hub-chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 4px;}",
     ".hub-chip{display:inline-flex;align-items:center;gap:8px;background:#fbf7ec;border:1px solid rgba(168,128,28,.35);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:14px;color:var(--green-800);}",
     ".hub-chip.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
@@ -65,7 +80,7 @@
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
-  var state = { officer: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null };
+  var state = { officer: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null };
 
   function injectCss() {
     if (document.getElementById("kosHubCss")) return;
@@ -107,9 +122,10 @@
         else if (h.indexOf("raffle") !== -1) sec.setAttribute("data-hub", "fun");
         else if (h.indexOf("report") !== -1) sec.setAttribute("data-hub", "officer");
         else if (h.indexOf("share") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("locker") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("carpool") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("van") !== -1) sec.setAttribute("data-hub", "fun");
+        else if (h.indexOf("locker") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("carpool") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("van") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("volunteer") !== -1 || h.indexOf("hours") !== -1) sec.setAttribute("data-hub", "parade");
         else if (h.indexOf("directory") !== -1) sec.setAttribute("data-hub", "krewe");
       }
     });
@@ -149,8 +165,7 @@
       ["hub", "Home"],
       ["krewe", "My Krewe"],
       ["events", "Events"],
-      ["parade", "Parade Day"],
-      ["give", "Give Back"],
+      ["parade", "Member desk"],
       ["fun", "Fun"],
       ["officer", "Officer desk"]
     ];
@@ -165,7 +180,7 @@
       '<div class="hub-panel" data-hub-panel="krewe"><div class="member-grid" id="hubKrewe"></div></div>' +
       '<div class="hub-panel" data-hub-panel="events"><div class="member-grid" id="hubEvents"></div></div>' +
       '<div class="hub-panel" data-hub-panel="parade"><div class="member-grid" id="hubParade"></div></div>' +
-      '<div class="hub-panel" data-hub-panel="give"><div class="member-grid" id="hubGive"></div></div>' +
+      '<div class="hub-panel" data-hub-panel="give" style="display:none"><div class="member-grid" id="hubGive"></div></div>' +
       '<div class="hub-panel" data-hub-panel="fun"><div class="member-grid" id="hubFun"></div></div>' +
       '<div class="hub-panel" data-hub-panel="officer"><div class="member-grid" id="hubOfficer"></div></div>' +
       tabHtml;
@@ -194,7 +209,7 @@
       '<p style="font-size:14px;color:var(--muted);margin-top:12px;">Attendance feeds Parade Ready and the Craic Cup.</p></div></section>';
 
     var give = document.getElementById("hubGive");
-    give.innerHTML =
+    if (give) give.innerHTML =
       '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Log hours toward your season goal</small></div></div>' +
       '<div class="app-body" id="hubHoursBody"><p class="empty">Loading hours…</p></div></section>';
 
@@ -203,12 +218,14 @@
     var officer = document.getElementById("hubOfficer");
     Array.prototype.slice.call(oldGrid.children).forEach(function (sec) {
       var hub = sec.getAttribute("data-hub");
-      if (hub === "parade") parade.appendChild(sec);
+      if (hub === "parade" || hub === "give") parade.appendChild(sec);
       else if (hub === "fun") fun.appendChild(sec);
       else if (hub === "officer") officer.appendChild(sec);
       else if (hub === "krewe") krewe.appendChild(sec);
       else fun.appendChild(sec);
     });
+    // Member desk = Parade Ready + volunteer hours
+    if (give && give.firstChild) parade.appendChild(give.firstChild);
     oldGrid.remove();
     relocateHours();
   }
@@ -237,43 +254,81 @@
     return '<span class="hub-chip ' + cls + '">🤝 ' + n + "/12 volunteer hours</span>";
   }
 
-  function nextActionsHtml() {
-    var acts = [];
-    var me = state.parade;
-    if (me) {
-      if (!me.dues_paid) acts.push({ tab: "parade", title: "View / pay dues", hint: "Settle season dues with the treasurer." });
-      if (!me.waiver_signed) acts.push({ tab: "parade", title: "Sign the liability waiver", hint: "Required for your parade wristband." });
-      if (!me.meeting_attended) acts.push({ tab: "events", title: "Attend the mandatory meeting", hint: "Scan the check-in QR at the next required meeting." });
+  function craicHeroHtml() {
+    var g = state.game || {};
+    var found = !!g.found;
+    var life = found ? Number(g.lifetime || 0) : 0;
+    var season = found ? Number(g.season || 0) : 0;
+    var rank = found ? (g.rank_name || "Newcomer") : "Newcomer";
+    var icon = found ? (g.rank_icon || "🌱") : "🌱";
+    var next = g.next_rank_name || null;
+    var need = Number(g.clovers_to_next || 0);
+    var total = life + need;
+    var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
+    return '<div class="hub-craic">' +
+      '<div class="tag">Welcome to our Krewe Digital Home</div>' +
+      '<h2>This is the Craic Cup</h2>' +
+      '<div class="hub-craic-grid">' +
+      '<div class="rank-big">' + esc(icon) + '</div>' +
+      '<div><div style="font-size:15px;opacity:.9;">Hey ' + esc(firstName()) + " — you're a</div>" +
+      '<div style="font-family:var(--display);font-size:24px;margin:2px 0 6px;">' + esc(icon) + ' ' + esc(rank) + '</div>' +
+      '<div class="clovers">' + life + ' 🍀</div>' +
+      '<div class="meta">Season Clovers: <b>' + season + '</b>' +
+      (next ? (' · <b>' + need + '</b> to ' + esc(next)) : ' · top rank!') + '</div>' +
+      (next ? ('<div class="prog"><i style="width:' + pct + '%"></i></div>') : '') +
+      '</div></div>' +
+      nextQuestHtml() +
+      '<div style="margin-top:12px;"><button type="button" class="btn" id="hubOpenCraic" style="background:transparent;border:1px solid rgba(240,215,140,.55);color:#f6efdc;">Open full Craic Cup →</button></div>' +
+      '</div>';
+  }
+
+  function nextQuestHtml() {
+    var ev = state.nextEvent;
+    if (ev && ev.name) {
+      return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to ' + esc(ev.name) + ' → +Clovers</div></div>' +
+        '<a class="btn" href="event-signup.html">RSVP</a></div>';
     }
-    if ((state.hoursApproved || 0) < 12) acts.push({ tab: "give", title: "Log volunteer hours", hint: "Work toward 12 approved hours this season." });
-    acts.push({ tab: "events", title: "RSVP to the next event", hint: "Open the events calendar and RSVP." });
-    acts.push({ tab: "krewe", title: "Read governing docs", hint: "Code of Conduct, bylaws, and parade rules." });
-    var html = '<div class="hub-actions"><h3>My next actions</h3><div class="hub-action-grid">';
-    acts.slice(0, 5).forEach(function (a) {
-      html += '<button type="button" class="hub-action" data-hub-action="' + a.tab + '"><b>' + esc(a.title) + "</b><span>" + esc(a.hint) + "</span></button>";
-    });
-    html += "</div></div>";
-    return html;
+    return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to an upcoming event → +Clovers when you show up</div></div>' +
+      '<a class="btn" href="event-signup.html">Find an event</a></div>';
+  }
+
+  function softMemberDeskHtml() {
+    var me = state.parade;
+    var bits = [];
+    if (me) {
+      if (!me.dues_paid) bits.push("dues");
+      if (!me.waiver_signed) bits.push("waiver");
+      if (!me.meeting_attended) bits.push("mandatory meeting");
+    }
+    if ((state.hoursApproved || 0) < 12) bits.push((state.hoursApproved || 0) + "/12 hours");
+    var ready = !!(me && me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var line = ready
+      ? "Parade Ready looks good — wristband territory."
+      : (bits.length ? ("Still open on Member desk: " + bits.join(", ") + ".") : "Open Member desk for dues, waiver, and hours.");
+    return '<div class="hub-soft-desk">' +
+      '<h3>Member desk</h3>' +
+      '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + '</div>' +
+      '<p style="margin:0 0 10px;font-size:14px;color:var(--muted);">' + esc(line) + '</p>' +
+      '<button type="button" class="btn btn-primary" data-hub-action="parade">Open Member desk</button>' +
+      '</div>';
   }
 
   function renderHome() {
     var home = document.getElementById("hubHome");
     if (!home) return;
     var officerCard = (state.officer || state.canManageEvents)
-      ? '<div class="hub-officer-card" data-hub-action="officer"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Reports dashboard and event tools</div></div><div class="go">Open →</div></div>'
+      ? '<div class="hub-officer-card" data-hub-action="officer" style="margin-top:14px;"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Reports dashboard and event tools</div></div><div class="go">Open →</div></div>'
       : "";
-    home.innerHTML =
-      '<div class="hub-welcome">' +
-      "<h2>Welcome, " + esc(firstName()) + "</h2>" +
-      '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + "</div>" +
-      nextActionsHtml() +
-      officerCard +
-      "</div>";
+    home.innerHTML = craicHeroHtml() + softMemberDeskHtml() + officerCard;
 
     renderProfileCard();
 
     home.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
+    });
+    var openC = document.getElementById("hubOpenCraic");
+    if (openC) openC.addEventListener("click", function () {
+      if (typeof window.openGame === "function") window.openGame();
     });
   }
 
@@ -318,6 +373,21 @@
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
 
+    try {
+      var email = (window.kosProfile || {}).email || null;
+      if (email) {
+        var gc = await client.rpc("get_member_game_card", { p_email: email });
+        state.game = gc.data || null;
+      }
+    } catch (e) { state.game = null; }
+    try {
+      var evs = await client.from("events").select("id,name,start_time,status").gte("start_time", new Date().toISOString()).order("start_time", { ascending: true }).limit(5);
+      var list = (evs.data || []).filter(function (e) {
+        var st = String(e.status || "published").toLowerCase();
+        return st === "published" || st === "live";
+      });
+      state.nextEvent = list[0] || null;
+    } catch (e) { state.nextEvent = null; }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
       var pr = await client.from("v_parade_ready").select("*");
