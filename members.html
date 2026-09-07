@@ -525,8 +525,8 @@
         </div>
         <div class="app-body dash-body">
           <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
-             publish a poem, short story, essay, or recipe. Everything you submit is reviewed before it appears
-             on the public pages.</p>
+             publish a poem, short story, essay, or recipe. Posts go live right away. Photos and videos need a
+             signed media consent (faces/likeness) in Parade Ready first.</p>
           <div class="dash-chips" onclick="event.stopPropagation()">
               <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
               <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
@@ -883,8 +883,10 @@
         + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
         + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
         + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
-        + (me.waiver_signed ? "" : waiverForm());
+        + (me.waiver_signed ? "" : waiverForm())
+        + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
       renderHoursBar(me);
+      loadMediaConsent();
     }
     function waiverForm(){
       const nm = esc(kosIdentity().name);
@@ -904,6 +906,38 @@
       const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:SEASON, signed_name:nm });
       if(error){ show("wvMsg","Could not record your signature. "+(error.message||""),"error"); return; }
       loadParadeReady();
+    };
+    async function loadMediaConsent(){
+      const el = document.getElementById("mediaConsentBlock");
+      if(!el || !_prMe) return;
+      let ok = false;
+      try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
+      if(ok){
+        el.innerHTML = `<div class="pr-gate">✅ <b>Media / likeness consent signed</b> <small>· photos &amp; videos you post may appear on the site</small></div>`;
+        return;
+      }
+      const nm = esc(kosIdentity().name);
+      el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
+        <div class="pr-gate">⬜ <b>Media / likeness consent</b> <small>· required before posting photos or videos</small></div>
+        <p style="font-size:14px;color:var(--muted);margin:10px 0;">I grant the Krewe of Shamrock permission to display photos and videos I upload, and my likeness in krewe media on kreweofshamrock.com and related krewe channels, for nonprofit krewe purposes. I understand I can ask an officer to remove a specific post.</p>
+        <label for="mcName">Type your full legal name to sign</label>
+        <input id="mcName" value="${nm}" />
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign media consent</button>
+        <div class="msg" id="mcMsg"></div>
+      </div>`;
+    }
+    window.kosSignMediaConsent = async function(){
+      const nm = (document.getElementById("mcName").value||"").trim();
+      if(nm.length < 2){ show("mcMsg","Please type your full name to sign.","error"); return; }
+      if(!_prMe){ show("mcMsg","Your account is not linked to a member record yet.","error"); return; }
+      const { error } = await supabase.from("media_consents").insert({
+        member_id: _prMe.member_id,
+        signed_name: nm,
+        consent_version: "2026.1"
+      });
+      if(error){ show("mcMsg","Could not record your consent. "+(error.message||""),"error"); return; }
+      show("mcMsg","Signed — you can post photos and videos.","success");
+      loadMediaConsent();
     };
     function renderHoursBar(me){
       const el = document.getElementById("prHours"); if(!el) return;
