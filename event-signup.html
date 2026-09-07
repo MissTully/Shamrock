@@ -251,11 +251,19 @@
         : '<img src="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer ↗</a></p>';
       title.textContent = "Featured Event: " + (event.name || "Upcoming Krewe event");
       sub.textContent = event.description || "Join the Krewe of Shamrock at our next public event";
+      const nFeat = (event.name || "").toLowerCase();
+      const isBallFeat = nFeat.includes("tartan ball") && !nFeat.includes("basket") && !nFeat.includes("happy hour");
+      const payFeat = event.ticket_payment_url
+        || (isBallFeat ? "http://www.tampabaytartanball.com/home.html" : "")
+        || ((event.external_url || "").toLowerCase().includes("zeffy.com") ? event.external_url : "");
+      const ctaFeat = payFeat
+        ? '<a class="btn btn-primary" href="' + esc(payFeat) + '" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>'
+        : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">☘ Sign Up Today</a>';
       content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + flyer + '</div></div>' +
         '<div class="ft-text"><h2>' + esc(when) + '</h2>' +
         (event.location ? '<p><b>' + esc(event.location) + '</b></p>' : '') +
         (event.description ? '<p>' + esc(event.description) + '</p>' : '') +
-        '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">☘ Sign Up Today</a></div>';
+        ctaFeat + '</div>';
     }
 
     async function loadEvents() {
@@ -281,12 +289,20 @@
       const ours = data.filter((ev)=> ev.source !== "ikc");
       if (ours.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; }
       const TARTAN_BALL_TICKETS = "http://www.tampabaytartanball.com/home.html";
-      function tartanBallTicketUrl(ev) {
+      function isMainTartanBall(ev) {
         const n = (ev.name || "").toLowerCase();
-        // Main Tartan Ball only — not basket-making / happy hour helpers
-        if (!n.includes("tartan ball")) return "";
-        if (n.includes("basket") || n.includes("happy hour")) return "";
-        return ev.ticket_payment_url || ev.external_url || TARTAN_BALL_TICKETS;
+        return n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
+      }
+      // Paid checkout: Zeffy ticket_payment_url (or Tartan Ball's external site).
+      function ticketCheckoutUrl(ev) {
+        if (isMainTartanBall(ev)) return ev.ticket_payment_url || ev.external_url || TARTAN_BALL_TICKETS;
+        if (ev.ticket_payment_url) return ev.ticket_payment_url;
+        const ext = (ev.external_url || "").toLowerCase();
+        if (ext.includes("zeffy.com")) return ev.external_url;
+        return "";
+      }
+      function isPaidWithoutLink(ev) {
+        return !ticketCheckoutUrl(ev) && Number(ev.ticket_price_cents || 0) > 0;
       }
       for (const ev of ours) {
         let when;
@@ -299,23 +315,43 @@
         const loc = ev.location ? " · " + ev.location : "";
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc})`;
-        const redirect = tartanBallTicketUrl(ev);
-        if (redirect) opt.dataset.redirect = redirect;
+        const redirect = ticketCheckoutUrl(ev);
+        if (redirect) {
+          opt.dataset.redirect = redirect;
+          opt.dataset.checkoutKind = isMainTartanBall(ev) ? "tartan" : "zeffy";
+        } else if (isPaidWithoutLink(ev)) {
+          opt.dataset.needsTickets = "1";
+        }
         eventSelect.appendChild(opt);
       }
       function syncSignupButton() {
         const opt = eventSelect.selectedOptions[0];
+        btn.disabled = false;
         if (opt && opt.dataset.redirect) {
           btn.textContent = "☘ Buy Tickets";
-          showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
+          if (opt.dataset.checkoutKind === "tartan") {
+            showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
+          } else {
+            showMessage("Tickets for this event are sold on Zeffy. Tap Buy Tickets to continue checkout.", "success");
+          }
+        } else if (opt && opt.dataset.needsTickets) {
+          btn.textContent = "☘ Tickets coming soon";
+          btn.disabled = true;
+          showMessage("Paid tickets for this event aren’t linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
         } else {
           btn.textContent = "☘ Sign me up";
-          if (message.textContent.includes("Tampa Bay Tartan Ball")) {
+          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets/i.test(message.textContent || "")) {
             message.className = "msg"; message.textContent = "";
           }
         }
       }
       eventSelect.addEventListener("change", syncSignupButton);
+      // Deep-link: ?event=<uuid> preselects and syncs the button
+      const params = new URLSearchParams(location.search);
+      const pre = params.get("event");
+      if (pre) {
+        eventSelect.value = pre;
+      }
       syncSignupButton();
       const featured = (data || []).filter((ev) => ev.status === "published" && ev.flyer_url && ev.start_time && new Date(ev.start_time) >= new Date()).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0];
       renderFeaturedEvent(featured);
@@ -402,7 +438,13 @@
       const selected = eventSelect.selectedOptions[0];
       if (selected && selected.dataset.redirect) {
         window.open(selected.dataset.redirect, "_blank", "noopener,noreferrer");
-        showMessage("Opening Tampa Bay Tartan Ball tickets in a new tab…", "success");
+        showMessage(selected.dataset.checkoutKind === "tartan"
+          ? "Opening Tampa Bay Tartan Ball tickets in a new tab…"
+          : "Opening Zeffy ticket checkout in a new tab…", "success");
+        return;
+      }
+      if (selected && selected.dataset.needsTickets) {
+        showMessage("Paid tickets for this event aren’t linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
         return;
       }
       message.className = "msg"; btn.disabled = true; btn.textContent = "Submitting…";
@@ -415,7 +457,7 @@
         p_signup_role: document.getElementById("role").value
       });
       btn.disabled = false; btn.textContent = "☘ Sign me up";
-      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again.", "error"); return; }
+      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again later.", "error"); return; }
       if (data && data.ok) {
         if (data.status === "waitlisted") { showMessage(data.message, "waitlist"); }
         else { showMessage(data.message, "success"); form.reset(); document.getElementById("guests").value = "0"; }
