@@ -279,10 +279,10 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
     const when = (() => {
       if (!ev.start_time) return "Date to be announced";
       const d = new Date(ev.start_time);
-      const dateStr = d.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+      const dateStr = d.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "America/New_York" });
       return (d.getHours() === 0 && d.getMinutes() === 0)
         ? dateStr + " · Time TBA"
-        : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     })();
     const isIkc = ev.source === "ikc";
     const n = (ev.name || "").toLowerCase();
