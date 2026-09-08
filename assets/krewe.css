@@ -381,7 +381,7 @@ form.krewe-form{ padding:26px 30px 30px; }
   .wrap{ padding:40px 16px; }
   .hero{ padding:56px 16px 64px; }
   .page-head{ padding:44px 16px 40px; }
-  .form-stage{ padding:28px 14px 70px; }
+  .form-stage{ padding:28px 14px 110px; } /* leave room for music FAB */
   form.krewe-form{ padding:20px 16px 24px; }
   .krewe-form .row{ flex-direction:column; gap:0; }
   .article,.poem{ padding:18px 16px; }
@@ -392,6 +392,8 @@ form.krewe-form{ padding:26px 30px 30px; }
   .krewe-foot .flinks{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 16px; }
   .krewe-foot .flinks a{ margin:0; }
   .krewe-music{ left:12px; bottom:12px; }
+  .wrap, .band, .form-card{ scroll-margin-bottom:80px; }
+  body{ padding-bottom:72px; } /* music FAB clearance */
   .krewe-music button{ width:54px; height:54px; }
   .dropcap::first-letter{ font-size:48px; padding-right:8px; }
   .form-card .fc-head{ padding:26px 18px 20px; }
