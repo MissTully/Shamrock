@@ -564,7 +564,7 @@
         <div class="app-body dash-body">
           <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
              publish a poem, short story, essay, or recipe. Posts go live right away. Photos and videos need a
-             signed media consent (faces/likeness) in Parade Ready first.</p>
+             signed Photo &amp; Image Release (faces/likeness) in Parade Ready first.</p>
           <div class="dash-chips" onclick="event.stopPropagation()">
               <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
               <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
@@ -1036,16 +1036,26 @@
       let ok = false;
       try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
       if(ok){
-        el.innerHTML = `<div class="pr-gate">✅ <b>Media / likeness consent signed</b> <small>· photos &amp; videos you post may appear on the site</small></div>`;
+        el.innerHTML = `<div class="pr-gate">✅ <b>Photo &amp; Image Release signed</b> <small>· version 2026.1 · photos &amp; videos you post may appear on the site</small></div>`;
         return;
       }
       const nm = esc(kosIdentity().name);
       el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
-        <div class="pr-gate">⬜ <b>Media / likeness consent</b> <small>· required before posting photos or videos</small></div>
-        <p style="font-size:14px;color:var(--muted);margin:10px 0;">I grant the Krewe of Shamrock permission to display photos and videos I upload, and my likeness in krewe media on kreweofshamrock.com and related krewe channels, for nonprofit krewe purposes. I understand I can ask an officer to remove a specific post.</p>
+        <div class="pr-gate">⬜ <b>Photo &amp; Image Release</b> <small>· required before posting photos or videos · version 2026.1</small></div>
+        <div class="media-release-scroll" style="max-height:220px;overflow:auto;margin:10px 0;padding:10px 12px;background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.45;">
+          <p style="margin:0 0 10px;"><b>I grant the Krewe of Shamrock permission</b> to create, use, reproduce, display, and distribute photographs, video, audio, and other images or recordings that include me (and, if applicable, my minor child) for Krewe purposes.</p>
+          <p style="margin:0 0 8px;"><b>1. What this covers.</b> Media from Krewe activities including Gasparilla and other parades; St. Patrick’s Day and Irish heritage events; Tartan Ball and formal events; meetings, volunteer service, fundraisers, and social gatherings; and member-uploaded content to the Krewe website / member hub.</p>
+          <p style="margin:0 0 8px;"><b>2. How the Krewe may use the media.</b> Nonprofit krewe purposes only: kreweofshamrock.com (Photo Gallery, events, member features); official email/newsletters/social; print programs, flyers, posters, and banners; Inter-Krewe Council (IKC) and community listings; historical archives. The Krewe will <b>not</b> sell member likeness rights to unrelated third parties for commercial advertising without a separate written agreement.</p>
+          <p style="margin:0 0 8px;"><b>3. Ownership.</b> Media created by or for the Krewe may be retained as krewe records and promo materials. Member-uploaded photos and videos remain subject to this consent when posted to Krewe channels.</p>
+          <p style="margin:0 0 8px;"><b>4. No payment.</b> I will not receive payment for this consent or for the Krewe’s use of my likeness under this release.</p>
+          <p style="margin:0 0 8px;"><b>5. Removal requests.</b> I may ask Digital or the Secretary to remove a <b>specific</b> post or image from the public website or official social channels when reasonably practical. Printed materials already distributed, third-party shares, or archival backups may not always be removable.</p>
+          <p style="margin:0 0 8px;"><b>6. Duration.</b> This consent remains in effect for my membership and for reasonable archival use afterward, unless I revoke it in writing to digital@kreweofshamrock.com or secretary@kreweofshamrock.com. Revocation applies going forward.</p>
+          <p style="margin:0 0 8px;"><b>7. Minors.</b> If signing for a minor, I am the parent or legal guardian and grant the same permissions on their behalf.</p>
+          <p style="margin:0;">I have read this Photo &amp; Image Release, understand it, and sign it voluntarily. <a href="photo-image-release.html" target="_blank" rel="noopener">Open printable version</a>.</p>
+        </div>
         <label for="mcName">Type your full legal name to sign</label>
         <input id="mcName" value="${nm}" />
-        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign media consent</button>
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign Photo &amp; Image Release</button>
         <div class="msg" id="mcMsg"></div>
       </div>`;
     }
