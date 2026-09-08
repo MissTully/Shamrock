@@ -64,6 +64,9 @@
     ".hub-docs a:hover{background:#e8ddc0;}",
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-profile h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
+    ".hub-fb-members{margin-top:12px;padding:12px 14px;background:#fbf7ec;border:1px solid rgba(168,128,28,.35);border-radius:12px;}",
+    ".hub-fb-members a{color:var(--green-800);font-weight:700;text-decoration:none;}",
+    ".hub-fb-members a:hover{text-decoration:underline;}",
     ".hub-badge{display:inline-block;margin-left:6px;min-width:20px;padding:1px 6px;border-radius:999px;background:#b3261e;color:#fff;font-size:12px;text-align:center;}",
     ".hub-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex:none;}",
     ".hub-avatar-blank{display:flex;align-items:center;justify-content:center;background:var(--green-800);color:#f6efdc;font-family:var(--display);font-size:24px;}",
@@ -526,6 +529,10 @@
       (p.email ? '<div style="color:var(--muted);font-size:14px;">' + esc(p.email) + "</div>" : "") +
       (facts.length ? '<div style="color:var(--muted);font-size:14px;">' + facts.join(" · ") + "</div>" : "") +
       "</div></div>" + longs +
+'<div class="hub-fb-members">' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Members only</div>' +
+      '<a href="https://www.facebook.com/share/g/1Dnc4qaxW2/" target="_blank" rel="noopener noreferrer">📘 Join the Krewe members Facebook group →</a>' +
+      '</div>' +
       '<button class="btn btn-primary" id="hubProfEditBtn" type="button" style="margin-top:10px;">✏️ Edit my profile</button>' +
       (p.profile_visible === false ? '<p style="color:var(--muted);font-size:13px;">Your profile is hidden from the member directory.</p>' : "") +
       '<p style="color:var(--muted);font-size:12px;margin:8px 0 0;">Fellow members see your birthday and anniversary as month and day only — never the year.</p>';
