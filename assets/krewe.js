@@ -175,3 +175,37 @@
   s.defer = true;
   document.head.appendChild(s);
 })();
+
+(function () {
+  var GROUP_URL = "https://www.facebook.com/share/g/1Dnc4qaxW2/";
+  var FACEBOOK_URL = "https://www.facebook.com/groups/1790675004521855";
+  function injectSocial() {
+    var foots = document.querySelectorAll("footer.krewe-foot, footer.site-footer");
+    for (var i = 0; i < foots.length; i++) {
+      var foot = foots[i];
+      if (foot.querySelector("[data-kos-social]")) continue;
+      var row = document.createElement("div");
+      row.className = "flinks";
+      row.setAttribute("data-kos-social", "1");
+      row.style.marginBottom = "8px";
+      row.innerHTML =
+        '<a href="' + GROUP_URL + '" target="_blank" rel="noopener noreferrer">Facebook Group</a>' +
+        " · " +
+        '<a href="' + FACEBOOK_URL + '" target="_blank" rel="noopener noreferrer">Facebook</a>';
+      var slainte = foot.querySelector(".slainte");
+      var contact = null;
+      var links = foot.querySelectorAll(".flinks");
+      for (var j = 0; j < links.length; j++) {
+        if ((links[j].textContent || "").indexOf("Contact") !== -1 || (links[j].textContent || "").indexOf("Report") !== -1) {
+          contact = links[j];
+          break;
+        }
+      }
+      var before = contact || slainte;
+      if (before) foot.insertBefore(row, before);
+      else foot.appendChild(row);
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectSocial);
+  else injectSocial();
+})();
