@@ -32,10 +32,16 @@
 
 *{ box-sizing:border-box; }
 
-html{ scroll-behavior:smooth; }
+html{
+  scroll-behavior:smooth;
+  overflow-x:clip;
+  max-width:100%;
+}
 
 body{
   margin:0;
+  overflow-x:clip;
+  max-width:100%;
   font-family:var(--body);
   color:var(--ink);
   line-height:1.72;
@@ -372,7 +378,26 @@ form.krewe-form{ padding:26px 30px 30px; }
   .krewe-links a{ font-size:13px; padding:7px 9px; margin-left:2px; }
   .krewe-nav .brand .name small{ display:none; }
   .krewe-music .label{ display:none; }
-  .wrap{ padding:48px 18px; }
+  .wrap{ padding:40px 16px; }
+  .hero{ padding:56px 16px 64px; }
+  .page-head{ padding:44px 16px 40px; }
+  .form-stage{ padding:28px 14px 70px; }
+  form.krewe-form{ padding:20px 16px 24px; }
+  .krewe-form .row{ flex-direction:column; gap:0; }
+  .article,.poem{ padding:18px 16px; }
+  .grid-auto{ grid-template-columns:1fr; }
+  .btns{ gap:12px; }
+  .btns .btn{ width:100%; max-width:340px; justify-content:center; }
+  .krewe-foot{ padding:36px 16px 32px; }
+  .krewe-foot .flinks{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 16px; }
+  .krewe-foot .flinks a{ margin:0; }
+  .krewe-music{ left:12px; bottom:12px; }
+  .krewe-music button{ width:54px; height:54px; }
+  .dropcap::first-letter{ font-size:48px; padding-right:8px; }
+  .form-card .fc-head{ padding:26px 18px 20px; }
+  .photo-band .pb-inner{ padding:48px 16px; }
+  .banner-flourish{ height:48px; margin:12px auto 4px; }
+  .section-title .sub{ font-size:17px; }
 }
 @media (prefers-reduced-motion:reduce){
   *{ animation:none !important; scroll-behavior:auto; }
@@ -691,4 +716,45 @@ body.nav-open{ overflow:hidden; }
   /* Narrow screens crop the image by height, so slide it with
      background-position instead of widening the layer */
   .hero .hero-bg.bg-shift-left{ inset:0; background-position:63% center; }
+}
+
+
+/* ===== MOBILE POLISH 2026-09 ===== */
+/* Guardrails + tighter phone layout. Complements existing 680/860/980 rules. */
+img, video, iframe, svg{ max-width:100%; height:auto; }
+table{ max-width:100%; }
+.table-scroll, .rpt-tablewrap{ display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+@media (max-width:980px){
+  /* Keep decorative corners from pushing past the viewport */
+  .ornate::before,.ornate::after,.ornate .crn{ width:40px; height:40px; }
+  .ornate::before,.ornate .crn.tr{ top:-6px; }
+  .ornate::before,.ornate .crn.bl{ left:-6px; }
+  .ornate::after,.ornate .crn.tr{ right:-6px; }
+  .ornate::after,.ornate .crn.bl{ bottom:-6px; }
+}
+
+@media (max-width:768px){
+  .hero h1{ font-size:clamp(32px,10vw,48px); }
+  .page-head h1{ font-size:clamp(26px,8vw,40px); }
+  #failteDefBtn{ font-size:clamp(26px,7vw,40px) !important; }
+  .pillars{ grid-template-columns:1fr; }
+  .feature{ grid-template-columns:1fr; gap:22px; }
+  .mosaic .wide,.mosaic .big{ grid-column:span 2; }
+  .mosaic .tall,.mosaic .big{ grid-row:span 1; }
+  /* Comfortable tap targets for primary CTAs outside .btns */
+  .btn{ min-height:44px; }
+  .wrap > .btn, .band .btn, .app-body > .btn{ display:inline-flex; }
+}
+
+@media (max-width:480px){
+  .wrap{ padding:32px 14px; }
+  .hero{ padding:48px 14px 56px; }
+  .page-head{ padding:36px 14px 34px; }
+  .krewe-nav .brand img{ width:36px; height:36px; }
+  .krewe-nav .brand .name b{ font-size:15px; }
+  .hero .emblem.crest-img{ height:84px; }
+  .crest.lg{ width:130px; height:130px; }
+  .tile img{ height:180px; }
+  .event-card{ padding:16px 14px; }
 }

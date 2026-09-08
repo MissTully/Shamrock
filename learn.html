@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m" />
 <style>
 /* ---- The Heritage School (learning modules) ---- */
 .hs-progress{text-align:center;font-family:var(--display);color:var(--green-800);font-size:18px;margin:0 0 18px;}
@@ -50,7 +50,20 @@
 .ph-w{min-width:230px;}
 .ph-w i{color:var(--muted);font-size:14px;}
 .ph-m{color:#3a3a2e;}
-@media(max-width:640px){ .hs-ph{flex-wrap:wrap;} .ph-w{min-width:0;} }
+@media(max-width:640px){
+  .hs-ph{flex-wrap:wrap;}
+  .ph-w{min-width:0;}
+  .hs-mod summary{flex-wrap:wrap; gap:10px; padding:14px 12px; align-items:flex-start;}
+  .hs-more{display:none;} /* nowrap "Click to learn" was forcing horizontal scroll */
+  .hs-badge{display:none;}
+  .hs-t b{font-size:17px; letter-spacing:0;}
+  .hs-t small{font-size:13.5px;}
+  .hs-num{flex:0 0 34px; height:34px; font-size:16px;}
+  .hs-body{padding:4px 14px 16px;}
+  .hs-opts button{width:100%; text-align:left;}
+  .lib-cat{gap:8px; margin:28px 0 12px;}
+  .lib-cat h3{white-space:normal; font-size:18px;}
+}
 .hs-more{margin-left:auto;flex:0 0 auto;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:15px;white-space:nowrap;}
 details[open] > summary .hs-more{display:none;}
 .hs-terms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 4px;}
