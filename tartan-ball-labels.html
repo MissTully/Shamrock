@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tartan Ball • Avery 18660 table cards</title>
+<style>
+  :root { --emerald: #059669; --sapphire: #2563eb; --amethyst: #7c3aed; --ink: #14532d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: #f4f0e6; }
+  .toolbar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px; background: #14532d; color: #fff; font-family: system-ui, sans-serif; }
+  .toolbar button, .toolbar a.btn { appearance: none; border: 0; border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; background: #f5d76e; color: #14532d; font-weight: 600; text-decoration: none; }
+  .toolbar .msg { flex: 1; font-size: 14px; opacity: .95; }
+  .sheet { width: 8.5in; min-height: 11in; margin: 16px auto; padding: 0.5in 0.1875in; background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,.12); display: grid; grid-template-columns: repeat(3, 2.625in); grid-auto-rows: 1in; column-gap: 0.125in; row-gap: 0; }
+  .label { width: 2.625in; height: 1in; padding: 0.08in 0.12in; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+  .label.empty { visibility: hidden; }
+  .name { font-size: 15px; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .table { font-size: 13px; margin-top: 2px; }
+  .meal { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 3px; color: #333; }
+  .jewel { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; border: 1p solid rgba(0,0,0,.25); }
+  .jewel.emerald,.juwel.green { background: var(--emerald); }
+  .jewel.sapphire,.juwel.blue { background: var(--sapphire); }
+  .jewel.amethyst,.juwel.purple { background: var(--amethyst); }
+  .jewel.unknown { background: #999; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .sheet { margin: 0; box-shadow: none; page-break-after: always; }
+    @page { size: letter; margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="btnPrint">Print / Save PDF</button>
+    <button type="button" id="btnCsv">Download CSV</button>
+    <a class="btn" href="members.html">▒ Member Hub</a>
+    <span class="msg" id="msg">Loading guests….</span>
+  </div>
+  <div id="sheets"></div>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const SB_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
+const SB_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
+const sb = createClient(SB_URL, SB_KEY);
+const msg = document.getElementById("msg");
+const sheetsEl = document.getElementById("sheets");
+function jewelClass(row) {
+  const c = (row.jewel_color || row.jewel_code || "").toLowerCase();
+  if (c.includes("emerald") || c === "green") return "emerald";
+  if (c.includes("sapphire") || c === "blue") return "sapphire";
+  if (c.includes("amethyst") || c === "purple") return "amethyst";
+  return "unknown";
+}
+function mealShort(label) {
+  if (!label) return "Meal TBA";
+  return String(label).replace/^(\d+)\.\s*/, "");
+}
+function esc(s) {
+  return String(s ?? "").replace(/[&<m>="']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\":"&quot;","'":"&#39;"}[c]));
+}
+function render(rows) {
+  const per = 30;
+  sheetsEl.innerHTML = "";
+  if (!rows.length) { msg.textContent = "No guests yet."; return; }
+  for (let i = 0; i < rows.length; i += per) {
+    const chunk = rows.slice(i, i + per);
+    const sheet = document.createElement("div");
+    sheet.className = "sheet";
+    for (let n = 0; n < per; n++) {
+      const r = chunk[n];
+      const cell = document.createElement("div");
+      cell.className = "label" + (r ? "" : " empty");
+      if (r) {
+        const jc = jewelClass(r);
+        cell.innerHTML =
+          `<div class="name">${esc(r.label_line1 || r.guest_name)}</div>` +
+          `<div class="table">${esc(r.label_line2 || (r.table_number != null ? "Table " + r.table_number : "Table TBA"))}</div>` +
+          `<div class="meal"><span class="jewel ${jc}"></span><span>${esc(mealShort(r.meal_label))}</span></div>`;
+      }
+      sheet.appendChild(cell);
+    }
+    sheetsEl.appendChild(sheet);
+  }
+  msg.textContent = rows.length + " guests • " + Math.ceil(rows.length / per) + " sheet(s) • Avery #18660";
+  window.__tbRows = rows;
+}
+async function load() {
+  const { data: sess } = await sb.auth.getSession();
+  if (!sess ?.session) {
+    msg.textContent = "Sign in on the Member Hub first, then reopen this page.";
+    return;
+  }
+  const { data, error } = await sb.from("v_tartan_ball_avery_18660").select("*");
+  if (error) {
+    msg.textContent = "Could not load labels: " + (error.message || error);
+    return;
+  }
+  const rows = (data || []).slice().sort((a, b) => {
+    const ta = a.table_number == null ? 9999 : a.table_number;
+    const tb = b.table_number == null ? 9999 : b.table_number;
+   if (ta !== tb) return ta - tb;
+    return String(a.guest_name || "").localeCompare(String(b.guest_name || ""));
+  });
+  render(rows);
+}
+document.getElementById("btnPrint").addEventListener("click", () => window.print());
+document.getElementById("btnCsv").addEventListener("click", () => {
+  const rows = window.__tbRows || [];
+  const headers = ["guest_name","table_number","meal_label","jewel_color","jewel_code","label_line1","label_line2","label_line3","krewe_names","seating_request","primary_email"];
+  const cell = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [headers.join(",")].concat(rows.map(r => headers.map(h => cell(r[h])).join(",")));
+  const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "tartan-ball-avery-18660.csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+});
+load();
+</script>
+</body>
+</html>

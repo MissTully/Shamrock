@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -65,19 +65,46 @@
   .auth-card img{
     border-radius:50%; box-shadow:0 0 0 5px #3a2712, 0 0 0 8px #8a8d80; background:#fff;
   }
-  .castle-guide{ margin-top:16px; text-align:left; background:#fbf5e4; border:1px dashed rgba(168,128,28,.55);
-    border-radius:12px; padding:10px 14px; }
-  .castle-guide summary{ cursor:pointer; font-family:var(--display); color:var(--green-800); font-size:15px; }
-  .castle-guide ol{ padding-left:20px; margin:10px 0; }
-  .castle-guide li{ font-size:14px; color:#3d3a33; margin:6px 0; line-height:1.45; }
-  .castle-guide p{ font-size:13px; color:var(--muted); margin:8px 0 4px; }
+  .castle-guide{ margin-top:18px; text-align:left; background:linear-gradient(180deg,#fdf8e8,#f5ebd0);
+    border:1.5px solid rgba(168,128,28,.55); border-radius:14px; overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 2px 8px rgba(90,60,10,.10); }
+  .castle-guide summary{ list-style:none; display:flex; align-items:center; gap:10px; cursor:pointer;
+    padding:13px 16px; font-family:var(--display); color:var(--green-800); font-size:15.5px; letter-spacing:.3px;
+    background:linear-gradient(180deg, rgba(212,180,90,.30), rgba(212,180,90,.10)); }
+  .castle-guide summary::-webkit-details-marker{ display:none; }
+  .castle-guide summary .key{ font-size:20px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .castle-guide summary .chev{ margin-left:auto; font-size:12px; color:#8a6d1f; transition:transform .25s ease; }
+  .castle-guide[open] summary .chev{ transform:rotate(90deg); }
+  .castle-guide[open] summary{ border-bottom:1px dashed rgba(168,128,28,.45); }
+  .castle-guide .guide-body{ padding:16px; }
+  .castle-guide .guide-step{ display:flex; gap:12px; align-items:flex-start; margin:0 0 16px; }
+  .castle-guide .guide-step:last-of-type{ margin-bottom:0; }
+  .castle-guide .guide-step .num{ flex:0 0 30px; width:30px; height:30px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #e9c96a, #b8860b 78%);
+    color:#fff; font-family:var(--display); font-size:15px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 2px #fffdf4, 0 0 0 3.5px rgba(168,128,28,.5), 0 2px 4px rgba(0,0,0,.25); }
+  .castle-guide .guide-step h3{ margin:3px 0 4px; font-family:var(--display); font-size:15px; color:var(--green-800); }
+  .castle-guide .guide-step p{ margin:0; font-size:13.5px; color:#3d3a33; line-height:1.5; }
+  .castle-guide .guide-step a{ color:var(--green-800); }
+  .castle-guide .guide-cta{ display:block; width:100%; margin:10px 0 2px; padding:11px 14px; border-radius:12px;
+    border:1.5px solid #8a6d1f; background:linear-gradient(180deg,#e9c96a,#caa53d); color:#3a2a05;
+    font-family:var(--display); font-size:14.5px; cursor:pointer;
+    box-shadow:0 2px 6px rgba(90,60,10,.25), inset 0 1px 0 rgba(255,255,255,.55); }
+  .castle-guide .guide-cta:hover{ filter:brightness(1.05); }
+  .castle-guide .guide-inside{ margin-top:16px; padding:10px 12px; background:rgba(255,255,255,.55);
+    border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:13px; color:#57513f; line-height:1.5; }
+  .castle-guide .guide-inside b{ color:var(--green-800); }
+  .castle-guide .guide-help{ margin:10px 0 0; font-size:13px; color:var(--muted); text-align:center; }
   @media (max-width:480px){ .gate-card.auth-card{ border-radius:110px 110px 12px 12px; } .castle-torch{ display:none; } }
   .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
   .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
   .gate-card h1{ font-family:var(--display); color:var(--green-800); font-size:24px; margin:0 0 6px; }
   .gate-card p{ color:var(--muted); font-size:15px; margin:0 0 18px; }
-  .gate-card input{ width:100%; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:center; }
+  .gate-card input, .gate-card textarea{ width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid rgba(168,128,28,.5); border-radius:10px; font-size:16px; text-align:left; font:inherit; background:#fff; }
+  .gate-card textarea{ min-height:64px; resize:vertical; }
+  #authStage .gate-card input{ text-align:center; }
+  #profileStage .gate-card{ max-height:92vh; overflow:auto; }
   .gate-card .err{ color:#a12; font-size:14px; min-height:18px; margin-top:8px; }
   .member-grid{ display:grid; gap:26px; }
   .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
@@ -103,9 +130,22 @@
   .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
   .mini-form button{ white-space:nowrap; }
   .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
-  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; }
+  .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; text-align:left; width:100%; font:inherit; cursor:pointer; display:flex; gap:12px; align-items:center; transition:background .15s, transform .15s; }
+  .dir-card:hover{ background:#f3ebd2; transform:translateY(-1px); }
   .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
   .dir-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .dir-card .dir-av{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(168,128,28,.45); flex:none; background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; }
+  .dir-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .dir-card .dir-go{ margin-left:auto; color:var(--gold); font-family:var(--display); opacity:.7; }
+  #memberProfileModal .modal-card{ background:#fbf7ec; }
+  #memberProfileModal .mp-sheet{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:16px 18px; }
+  #memberProfileModal .mp-head{ display:flex; gap:14px; align-items:center; margin:0 0 12px; }
+  #memberProfileModal .mp-av{ width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--gold); background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:24px; flex:none; overflow:hidden; }
+  #memberProfileModal .mp-av img{ width:100%; height:100%; object-fit:cover; }
+  #memberProfileModal .mp-name{ font-family:var(--display); font-size:22px; color:var(--green-800); font-weight:700; }
+  #memberProfileModal .mp-facts{ display:flex; flex-wrap:wrap; gap:8px 14px; margin:8px 0 12px; font-size:14px; color:#3a3a2e; }
+  #memberProfileModal .mp-line{ margin:8px 0; font-size:15px; color:#3a3a2e; line-height:1.45; }
+  #memberProfileModal .mp-muted{ color:var(--muted); font-size:13px; }
   .msg{ margin-top:10px; font-size:14px; }
   .msg.success{ color:#14532d; } .msg.error{ color:#a12; }
   .empty{ color:var(--muted); font-style:italic; }
@@ -196,10 +236,18 @@
 </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
   <script>
-  /* A meeting QR lands here as ?checkin=CODE; stash it so it survives the magic-link sign-in. */
+  /* A meeting QR lands here as ?checkin=CODE; stash it so it survives the sign-in.
+     A members-only page (e.g. share.html) lands here as ?next=PAGE; stash it (15-minute
+     shelf life) so the member is sent back there after signing in at the door. */
   try{
-    var _kosCk = new URLSearchParams(location.search).get("checkin");
-    if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); history.replaceState(null, "", location.pathname); }
+    var _kosQs = new URLSearchParams(location.search);
+    var _kosCk = _kosQs.get("checkin");
+    if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); }
+    var _kosNx = _kosQs.get("next");
+    if(_kosNx && /^[a-z0-9-]+\.html$/.test(_kosNx)){
+      localStorage.setItem("kos_next", JSON.stringify({ p:_kosNx, t:Date.now() }));
+    }
+    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname); }
   }catch(_){}
   </script>
 </head>
@@ -254,15 +302,34 @@
         <p style="margin-top:14px;font-size:14px;"><a href="#" id="backFromForgot">← Back to sign in</a></p>
       </div>
 
-      <details class="castle-guide">
-        <summary>🗝️ First time at the castle door? Start here</summary>
-        <ol>
-          <li><b>The door knows members by email.</b> Your key works when the email you use here is the one the krewe has on the member roster. Not sure which email that is? Ask at <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</li>
-          <li><b>Forge your key (set a password).</b> If you received an invitation email from the krewe, click its link and choose a password &mdash; at least 8 characters. No invitation? Click <b>Create your password</b> above and we&rsquo;ll email you a link (peek in your spam folder if it hides).</li>
-          <li><b>Open the door.</b> Come back here and sign in with your email and new password. Your browser can remember it for next time.</li>
-        </ol>
-        <p><b>What to expect inside:</b> if the roster already knows your name you walk straight in; otherwise a one-minute welcome asks your name and whether you hold a krewe role. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b> (your profile, photo, and the member directory), <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</p>
-        <p>Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
+      <details class="castle-guide" id="castleGuide">
+        <summary><span class="key">🗝️</span> First time at the castle door? Start here <span class="chev">▶</span></summary>
+        <div class="guide-body">
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">1</span>
+            <div>
+              <h3>The door knows you by email</h3>
+              <p>Use the email address the krewe has on the member roster. Not sure which one that is? Ask at <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">2</span>
+            <div>
+              <h3>Forge your key (set a password)</h3>
+              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. No invitation? Use the gold button below and we&rsquo;ll email you a link (peek in your spam folder if it hides).</p>
+              <button type="button" class="guide-cta" id="guideCreateBtn">☘ Email me a link to create my password</button>
+            </div>
+          </div>
+          <div class="guide-step">
+            <span class="num" aria-hidden="true">3</span>
+            <div>
+              <h3>Open the door</h3>
+              <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
+            </div>
+          </div>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game — role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
+        </div>
       </details>
 
       <div class="auth-features">
@@ -290,42 +357,64 @@
     </div>
   </div>
 
-  <!-- PROFILE STAGE (first-time setup) -->
+  <!-- PROFILE STAGE (light Craic welcome) -->
   <div class="gate" id="profileStage" style="display:none;">
-    <div class="gate-card" style="max-width:440px;">
+    <div class="gate-card" style="max-width:480px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
-      <h1>Welcome! Set up your profile</h1>
-      <p>Just a couple details to wire you into the Krewe and the Craic Cup.</p>
+      <h1>Welcome to our Krewe Digital Home</h1>
+      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — earn Clovers for showing up, climb the ranks, unlock badges. First, let’s get your face in the game.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
-        <div class="row">
-          <div><label for="pfFirst">First name</label><input id="pfFirst" required /></div>
-          <div><label for="pfLast">Last name</label><input id="pfLast" required /></div>
-        </div>
-        <label for="pfPhone">Phone (optional)</label><input id="pfPhone" type="tel" />
-        <label for="pfBio">A line about you (optional)</label><input id="pfBio" placeholder="e.g. Marching since 2015, love the parade" />
-
-        <div style="margin-top:14px;padding:12px 14px;border:1px dashed rgba(168,128,28,.5);border-radius:12px;background:#fffdf4;">
-          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
-            <input type="checkbox" id="pfIsMember" checked style="margin-top:4px;" />
-            <span>I am a current Krewe of Shamrock member</span>
-          </label>
-          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-top:10px;">
-            <input type="checkbox" id="pfHasRole" style="margin-top:4px;" />
-            <span>I hold a krewe role (officer, treasurer, committee&hellip;)</span>
-          </label>
-          <div id="pfRolePanel" style="display:none;margin-top:10px;">
-            <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">Check what applies. An officer confirms role access &mdash; you can use the hub as a member right away.</p>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="board" /> Board / Officer</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
-            <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
-            <input id="pfCommittee" placeholder="Which committee? (if committee member)" style="margin-top:8px;" />
-            <input id="pfRoleNote" placeholder="Anything that helps the board verify (optional)" style="margin-top:8px;" />
+        <div style="display:flex;gap:14px;align-items:center;margin:12px 0 8px;">
+          <div id="pfAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:#e8f0e4;border:2px solid rgba(168,128,28,.45);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:0 0 auto;">☘</div>
+          <div style="flex:1;">
+            <label for="pfPhoto">Your photo *</label>
+            <input id="pfPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+            <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">So My Krewe feels like people, not a spreadsheet.</p>
           </div>
         </div>
+        <div class="row">
+          <div><label for="pfFirst">First name *</label><input id="pfFirst" required /></div>
+          <div><label for="pfLast">Last name *</label><input id="pfLast" required /></div>
+        </div>
+        <label for="pfFact">A fun fact about you</label>
+        <input id="pfFact" placeholder="e.g. I once caught 47 strands of beads in one parade" />
+        <label for="pfMemory">Favorite krewe or parade memory</label>
+        <textarea id="pfMemory" rows="2" placeholder="Optional — the story you’d tell at the pub"></textarea>
 
-        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Finish &amp; enter</button>
+        <details id="pfMoreDetails" style="margin-top:14px;border:1px dashed rgba(168,128,28,.45);border-radius:12px;padding:10px 12px;background:#fffdf4;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--green-800);">More for your directory (optional)</summary>
+          <div style="margin-top:10px;">
+            <label for="pfPhone">Phone</label><input id="pfPhone" type="tel" />
+            <label for="pfHometown">Hometown</label><input id="pfHometown" />
+            <label for="pfHobbies">Hobbies</label><input id="pfHobbies" placeholder="e.g. Gardening, bagpipes, beach days" />
+            <label style="display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer;font-weight:400;">
+              <input type="checkbox" id="pfVisible" checked style="width:auto;" /> Show my profile in the member directory
+            </label>
+          </div>
+        </details>
+
+        <details style="margin-top:12px;border:1px dashed rgba(168,128,28,.45);border-radius:12px;padding:10px 12px;background:#fffdf4;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--green-800);">I hold a krewe role (optional)</summary>
+          <div style="margin-top:10px;">
+            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+              <input type="checkbox" id="pfIsMember" checked style="margin-top:4px;" />
+              <span>I am a current Krewe of Shamrock member</span>
+            </label>
+            <input type="checkbox" id="pfHasRole" style="display:none;" />
+            <div id="pfRolePanel" style="margin-top:10px;">
+              <p style="font-size:13px;color:var(--muted);margin:0 0 8px;">An officer confirms role access — you can use the hub right away.</p>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="board" /> Board / Officer</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
+              <input id="pfCommittee" placeholder="Which committee?" style="margin-top:8px;" />
+              <input id="pfRoleNote" placeholder="Anything that helps verify (optional)" style="margin-top:8px;" />
+            </div>
+          </div>
+        </details>
+
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">🍀 Start earning Clovers</button>
         <div class="err" id="pfMsg"></div>
       </form>
     </div>
@@ -414,7 +503,7 @@
 
       <!-- PARADE READY -->
       <section class="app-card" id="prCard">
-        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; meeting: your wristband eligibility</small></div></div>
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; 12 volunteer hours (Jun–May)</small></div></div>
         <div class="app-body">
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
@@ -492,8 +581,8 @@
         </div>
         <div class="app-body dash-body">
           <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
-             publish a poem, short story, essay, or recipe. Everything you submit is reviewed before it appears
-             on the public pages.</p>
+             publish a poem, short story, essay, or recipe. Posts go live right away. Photos and videos need a
+             signed media consent (faces/likeness) in Parade Ready first.</p>
           <div class="dash-chips" onclick="event.stopPropagation()">
               <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
               <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
@@ -572,12 +661,21 @@
         <div class="app-body">
           <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
           <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
-          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Contact details are kept private. Reach members through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
+          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Tap a card to open their My Krewe profile. Contact details stay private — reach people through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
         </div>
       </section>
 
     </div>
   </main>
+
+    <!-- MEMBER PROFILE MODAL -->
+  <div class="modal-overlay" id="memberProfileModal" aria-hidden="true" onclick="if(event.target===this) closeMemberProfile()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member profile" style="max-width:560px;">
+      <div class="modal-head"><span class="ic" style="font-size:24px;">👥</span><h2 id="mpTitle">Member profile</h2>
+        <button class="modal-x" type="button" onclick="closeMemberProfile()" aria-label="Close">✕</button></div>
+      <div class="modal-body" id="mpBody"><p class="empty">Loading…</p></div>
+    </div>
+  </div>
 
   <!-- RAFFLES MODAL -->
   <div class="modal-overlay" id="raffleModal" aria-hidden="true" onclick="if(event.target===this) closeRaffles()">
@@ -802,24 +900,106 @@
       }));
     }
 
-    /* ---------------- DIRECTORY ---------------- */
+    /* ---------------- DIRECTORY (clickable profiles) ---------------- */
     let dirData=[];
+    function dirInitials(m){
+      return (((m.first_name||" ")[0]||"") + ((m.last_name||" ")[0]||"")).toUpperCase() || "☘";
+    }
+    function dirAvatar(m){
+      if(m.photo_url) return `<span class="dir-av"><img src="${esc(m.photo_url)}" alt="" /></span>`;
+      return `<span class="dir-av" aria-hidden="true">${esc(dirInitials(m))}</span>`;
+    }
+    function dirRole(m){
+      return (m.officer_title && String(m.officer_title).trim()) || m.member_role || "Member";
+    }
     async function loadDir(){
-      const { data, error } = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
-      if (error){ document.getElementById("dirGrid").innerHTML='<p class="empty">Could not load directory.</p>'; return; }
-      dirData=data||[]; renderDir();
+      const grid=document.getElementById("dirGrid");
+      let rows=null, error=null;
+      const rich = await supabase.from("v_member_profiles")
+        .select("member_id,first_name,last_name,member_role,officer_title,bio,hometown,parade_since,interests,hobbies,favorite_memory,fun_fact,photo_url,join_date,birthday_md,anniversary_md")
+        .order("last_name",{ascending:true});
+      if(!rich.error && rich.data){ rows = rich.data; }
+      else {
+        const plain = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
+        rows = plain.data; error = plain.error || rich.error;
+      }
+      if(error && !rows){ grid.innerHTML='<p class="empty">Could not load directory.</p>'; return; }
+      dirData=rows||[]; renderDir();
     }
     window.renderDir=()=>{
       const q=(document.getElementById("dirSearch").value||"").toLowerCase();
       const grid=document.getElementById("dirGrid");
-      const rows=dirData.filter(m=>(`${m.first_name} ${m.last_name}`).toLowerCase().includes(q));
+      const rows=dirData.filter(m=>{
+        const name=`${m.first_name||""} ${m.last_name||""}`.toLowerCase();
+        const title=(m.officer_title||"").toLowerCase();
+        return !q || name.includes(q) || title.includes(q);
+      });
       if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
-      grid.innerHTML=rows.map(m=>`<div class="dir-card"><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(m.member_role)}</div></div>`).join("");
+      grid.innerHTML=rows.map(m=>{
+        const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
+        return `<button type="button" class="dir-card"${mid}>${dirAvatar(m)}<div><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(dirRole(m))}</div></div><span class="dir-go">View →</span></button>`;
+      }).join("");
+      grid.querySelectorAll(".dir-card[data-mid]").forEach(btn=>{
+        btn.addEventListener("click", ()=> openMemberProfile(btn.getAttribute("data-mid")));
+      });
+    };
+    window.openMemberProfile = function(memberId){
+      const m = dirData.find(r => String(r.member_id) === String(memberId));
+      const modal = document.getElementById("memberProfileModal");
+      const body = document.getElementById("mpBody");
+      const title = document.getElementById("mpTitle");
+      if(!modal || !body) return;
+      if(!m){ body.innerHTML='<p class="empty">Could not find that member.</p>'; modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; return; }
+      const nm = `${m.first_name||""} ${m.last_name||""}`.trim() || "Member";
+      title.textContent = "My Krewe profile";
+      const av = m.photo_url
+        ? `<div class="mp-av"><img src="${esc(m.photo_url)}" alt="" /></div>`
+        : `<div class="mp-av" aria-hidden="true">${esc(dirInitials(m))}</div>`;
+      const facts = [];
+      facts.push(`👤 ${esc(dirRole(m))}`);
+      if(m.hometown) facts.push(`🏠 ${esc(m.hometown)}`);
+      if(m.parade_since) facts.push(`🥁 Marching since ${esc(m.parade_since)}`);
+      if(m.birthday_md) facts.push(`🎂 ${esc(m.birthday_md)}`);
+      if(m.anniversary_md) facts.push(`💍 ${esc(m.anniversary_md)}`);
+      let longs = "";
+      if(m.bio) longs += `<p class="mp-line"><b>About me:</b> ${esc(m.bio)}</p>`;
+      if(m.hobbies) longs += `<p class="mp-line"><b>Hobbies:</b> ${esc(m.hobbies)}</p>`;
+      if(m.interests) longs += `<p class="mp-line"><b>Interests:</b> ${esc(m.interests)}</p>`;
+      if(m.favorite_memory) longs += `<p class="mp-line"><b>Favorite krewe memory:</b> ${esc(m.favorite_memory)}</p>`;
+      if(m.fun_fact) longs += `<p class="mp-line"><b>Fun fact:</b> ${esc(m.fun_fact)}</p>`;
+      if(!longs) longs = `<p class="mp-muted">They haven\'t filled in their story yet — nudge them at the next event.</p>`;
+      const meId = (window.kosProfile||{}).member_id;
+      const isMe = meId && String(meId) === String(m.member_id);
+      body.innerHTML = `<div class="mp-sheet">
+        <div class="mp-head">${av}<div>
+          <div class="mp-name">${esc(nm)}</div>
+          <div class="mp-muted">${isMe ? "That\'s you" : "Fellow krewe member"}</div>
+        </div></div>
+        <div class="mp-facts">${facts.map(f=>`<span>${f}</span>`).join("")}</div>
+        ${longs}
+        <p class="mp-muted" style="margin-top:12px;">Birthday and anniversary show as month and day only — never the year. Contact stays private.</p>
+      </div>`;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";
+    };
+    window.closeMemberProfile = function(){
+      const modal = document.getElementById("memberProfileModal");
+      if(!modal) return;
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+      document.body.style.overflow = "";
     };
 
 
     /* ================= PARADE READY ================= */
     const SEASON = new Date().getFullYear();
+    // Bylaws volunteer season is Jun–May; season_year is the ending calendar year (e.g. Jun 2026–may 2027 → 2027).
+    function kreweVolunteerSeasonYear(d = new Date()){
+      const mo = d.getMonth() + 1;
+      return mo >= 6 ? d.getFullYear() + 1 : d.getFullYear();
+    }
+    const VH_SEASON = kreweVolunteerSeasonYear();
     let _prMe = null;
     async function loadParadeReady(){
       const el = document.getElementById("prStatus");
@@ -844,8 +1024,10 @@
         + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
         + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
         + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
-        + (me.waiver_signed ? "" : waiverForm());
+        + (me.waiver_signed ? "" : waiverForm())
+        + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
       renderHoursBar(me);
+      loadMediaConsent();
     }
     function waiverForm(){
       const nm = esc(kosIdentity().name);
@@ -866,12 +1048,48 @@
       if(error){ show("wvMsg","Could not record your signature. "+(error.message||""),"error"); return; }
       loadParadeReady();
     };
+    async function loadMediaConsent(){
+      const el = document.getElementById("mediaConsentBlock");
+      if(!el || !_prMe) return;
+      let ok = false;
+      try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
+      if(ok){
+        el.innerHTML = `<div class="pr-gate">✅ <b>Media / likeness consent signed</b> <small>· photos &amp; videos you post may appear on the site</small></div>`;
+        return;
+      }
+      const nm = esc(kosIdentity().name);
+      el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
+        <div class="pr-gate">⬜ <b>Media / likeness consent</b> <small>· required before posting photos or videos</small></div>
+        <p style="font-size:14px;color:var(--muted);margin:10px 0;">I grant the Krewe of Shamrock permission to display photos and videos I upload, and my likeness in krewe media on kreweofshamrock.com and related krewe channels, for nonprofit krewe purposes. I understand I can ask an officer to remove a specific post.</p>
+        <label for="mcName">Type your full legal name to sign</label>
+        <input id="mcName" value="${nm}" />
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign media consent</button>
+        <div class="msg" id="mcMsg"></div>
+      </div>`;
+    }
+    window.kosSignMediaConsent = async function(){
+      const nm = (document.getElementById("mcName").value||"").trim();
+      if(nm.length < 2){ show("mcMsg","Please type your full name to sign.","error"); return; }
+      if(!_prMe){ show("mcMsg","Your account is not linked to a member record yet.","error"); return; }
+      const { error } = await supabase.from("media_consents").insert({
+        member_id: _prMe.member_id,
+        signed_name: nm,
+        consent_version: "2026.1"
+      });
+      if(error){ show("mcMsg","Could not record your consent. "+(error.message||""),"error"); return; }
+      show("mcMsg","Signed — you can post photos and videos.","success");
+      loadMediaConsent();
+    };
     function renderHoursBar(me){
       const el = document.getElementById("prHours"); if(!el) return;
-      const done = Number(me.hours_approved||0), logged = Number(me.hours_logged||0), goal = 12;
+      const done = Number(me.hours_approved ?? me.volunteer_hours_approved ?? 0);
+      const logged = Number(me.hours_logged ?? me.volunteer_hours_logged ?? 0);
+      const goal = 12;
       const pct = Math.min(100, Math.round(done/goal*100));
-      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
-        <div class="prog"><i style="width:${pct}%"></i></div>`;
+      const buyout = Math.max(0, goal - done) * 12;
+      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved (season ending ${VH_SEASON})${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
+        <div class="prog"><i style="width:${pct}%"></i></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0;">Event volunteer hours count after an officer confirms attendance. Manual logs below still need review. Shortfall buyout is $12/hr (about $${buyout} if you stop here).</p>`;
     }
     document.getElementById("vhForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -880,7 +1098,7 @@
       const hours = Number(document.getElementById("vhHours").value);
       const d = document.getElementById("vhDate").value;
       if(activity.length < 2 || !(hours > 0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
-      const row = { member_id:_prMe.member_id, season_year:SEASON, activity, hours };
+      const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours };
       if(d) row.worked_on = d;
       const { error } = await supabase.from("volunteer_hours").insert(row);
       if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
@@ -910,10 +1128,52 @@
     }
 
     /* ---- Officer actions used by the Parade Readiness reports ---- */
+
+    window.kosSetTartanTable = async (guestId)=>{
+      const inp = document.getElementById("tbTable-" + guestId);
+      const raw = inp ? inp.value.trim() : "";
+      const n = raw === "" ? null : Number(raw);
+      if(raw !== "" && (!(Number.isInteger(n) && n > 0))){ alert("Enter a positive whole table number, or clear the field for TBA."); return; }
+      const { error } = await supabase.from("tartan_ball_guests").update({ table_number: n }).eq("id", guestId);
+      if(error){ alert("Could not save table: " + (error.message||"")); return; }
+      runReport("tartan_ball");
+    };
+    window.kosDownloadTartanCsv = async ()=>{
+      const { data, error } = await supabase.from("v_tartan_ball_avery_18660").select("*");
+      if(error){ alert("Could not export: " + (error.message||"")); return; }
+      const rows = data||[];
+      const headers = ["guest_name","table_number","meal_label","jewel_color","jewel_code","label_line1","label_line2","label_line3","krewe_names","seating_request","primary_email"];
+      const cell = v => '"' + String(v??"").replace(/"/g,'""') + '"';
+      const lines = [headers.join(",")].concat(rows.map(r => headers.map(h => cell(r[h])).join(",")));
+      const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "tartan-ball-avery-18660.csv";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+    };
+
     window.kosReviewHours = async (id, approved)=>{
       const { error } = await supabase.rpc("officer_review_hours", { p_id:id, p_approved:approved });
       if(error){ alert("Could not update: " + (error.message||"")); return; }
       runReport("volunteer_review");
+    };
+    window.kosConfirmAttendance = async (signupId, attended)=>{
+      let hours = null;
+      if(attended){
+        const inp = document.getElementById("attHrs-" + signupId);
+        const raw = inp ? inp.value : "";
+        hours = raw === "" ? null : Number(raw);
+        if(hours != null && (!(hours > 0) || hours > 24)){ alert("Enter hours between 0.5 and 24, or leave blank to use their planned hours."); return; }
+      }
+      const { data, error } = await supabase.rpc("officer_confirm_attendance", {
+        p_signup_id: signupId,
+        p_hours: hours,
+        p_attended: !!attended
+      });
+      if(error){ alert("Could not update attendance: " + (error.message||"")); return; }
+      if(data && data.ok === false){ alert(data.message || "Could not update attendance."); return; }
+      runReport("event_attendance");
     };
     window.kosCreateMeeting = async ()=>{
       const name = (document.getElementById("mtName").value||"").trim();
@@ -974,12 +1234,12 @@
           const mark=v=>v?"✅":"—";
           return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
             + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
-            + rTable(["Name","Status"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-"]))
+            + rTable(["Name","Status","Volunteer hrs"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-", `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]))
             + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
-            + rTable(["Name","Dues","Waiver","Meeting"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended)]));
+            + rTable(["Name","Dues","Waiver","Meeting","Volunteer hrs"], not.map(r=>[`${r.first_name} ${r.last_name}`, mark(r.dues_paid), mark(r.waiver_signed), mark(r.meeting_attended), `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]));
         }},
       { id:"volunteer_review", cat:"Parade Readiness", icon:"🙌", title:"Volunteer Hours Review", secure:true,
-        desc:"Approve members' logged service hours toward the 12-hour commitment.",
+        desc:"Approve manually logged service hours. Event volunteer hours are approved via Confirm Event Attendance & Hours.",
         run: async()=>{
           const [{data:vh,error:e1},{data:pr,error:e2}] = await Promise.all([
             supabase.from("volunteer_hours").select("*").order("created_at",{ascending:false}),
@@ -999,6 +1259,95 @@
                   : `<button class="rpt-btn ok" type="button" onclick="kosReviewHours('${r.id}',true)">Approve</button>`}</td></tr>`).join("")
             + '</tbody></table></div>';
         }},
+      { id:"event_attendance", cat:"Events & Attendance", icon:"✅", title:"Confirm Event Attendance & Hours", secure:true,
+        desc:"Mark who showed up. Volunteers/organizers get approved hours toward the 12-hour season goal when confirmed.",
+        run: async()=>{
+          const since = new Date(Date.now() - 120*86400000).toISOString();
+          const [{data:evs,error:e1},{data:sigs,error:e2},{data:mems,error:e3}] = await Promise.all([
+            supabase.from("events").select("id,name,start_time").neq("source","ikc").gte("start_time", since).order("start_time",{ascending:false}),
+            supabase.from("event_signups").select("id,event_id,member_id,signup_role,status,guests_count,volunteer_hours_planned").in("status",["registered","confirmed","attended","waitlisted"]).order("created_at",{ascending:false}),
+            supabase.from("v_parade_ready").select("member_id,first_name,last_name")
+          ]);
+          if(e1) throw e1; if(e2) throw e2; if(e3) throw e3;
+          const nm={}; (mems||[]).forEach(p=>{ nm[p.member_id]=`${p.first_name} ${p.last_name}`; });
+          const byEv={}; (sigs||[]).forEach(s=>{ (byEv[s.event_id]=byEv[s.event_id]||[]).push(s); });
+          const events=evs||[];
+          if(!events.length) return '<p class="empty">No recent events to confirm.</p>';
+          const attended=(sigs||[]).filter(s=>s.status==="attended").length;
+          const vols=(sigs||[]).filter(s=>s.signup_role==="volunteer"||s.signup_role==="organizer").length;
+          let html = rStats([{l:"Events",v:events.length},{l:"Signups",v:(sigs||[]).length},{l:"Attended",v:attended},{l:"Volunteer roles",v:vols}]);
+          for(const ev of events){
+            const rows = byEv[ev.id]||[];
+            html += `<h3 class="rpt-cat">${esc(ev.name)} · ${fmtDate(ev.start_time)}</h3>`;
+            if(!rows.length){ html += '<p class="empty">No signups yet.</p>'; continue; }
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Planned hrs</th><th>Confirm hrs</th><th></th></tr></thead><tbody>';
+            html += rows.map(r=>{
+              const isVol = r.signup_role==="volunteer"||r.signup_role==="organizer";
+              const planned = r.volunteer_hours_planned != null ? String(r.volunteer_hours_planned) : (isVol ? "2" : "—");
+              const hrsCell = isVol
+                ? `<input id="attHrs-${r.id}" type="number" min="0.5" max="24" step="0.5" value="${esc(r.volunteer_hours_planned != null ? String(r.volunteer_hours_planned) : "2")}" style="width:72px;" />`
+                : "—";
+              const actions = r.status==="attended"
+                ? `<button class="rpt-btn" type="button" onclick="kosConfirmAttendance('${r.id}',false)">Undo</button>`
+                : `<button class="rpt-btn ok" type="button" onclick="kosConfirmAttendance('${r.id}',true)">${isVol?"Confirm + hours":"Confirm attended"}</button>`;
+              return `<tr><td>${esc(nm[r.member_id]||"?")}</td><td>${esc(r.signup_role||"attendee")}</td><td>${esc(r.status||"-")}</td><td>${esc(planned)}</td><td>${hrsCell}</td><td>${actions}</td></tr>`;
+            }).join("");
+            html += '</tbody></table></div>';
+          }
+          return html;
+        }},
+
+      { id:"tartan_ball", cat:"Events & Attendance", icon:"💎", title:"Tartan Ball seating & meals", secure:true,
+        desc:"Caterer meal counts, table numbers, and Avery #18660 table-card labels (jewel = meal).",
+        run: async()=>{
+          const [{data:counts,error:e1},{data:guests,error:e2}] = await Promise.all([
+            supabase.from("v_tartan_ball_caterer_counts").select("*"),
+            supabase.from("v_tartan_ball_avery_18660").select("*")
+          ]);
+          if(e1) throw e1; if(e2) throw e2;
+          const c = counts||[];
+          const g = (guests||[]).slice().sort((a,b)=>{
+            const ta=a.table_number==null?9999:a.table_number, tb=b.table_number==null?9999:b.table_number;
+            if(ta!==tb) return ta-tb;
+            return String(a.guest_name||"").localeCompare(String(b.guest_name||""));
+          });
+          const total = g.length;
+          const assigned = g.filter(r=>r.table_number!=null).length;
+          const jewelDot = (color, code)=>{
+            const c0 = String(color||code||"").toLowerCase();
+            const bg = c0.includes("emerald")||c0==="green" ? "#059669"
+              : c0.includes("sapphire")||c0==="blue" ? "#2563eb"
+              : c0.includes("amethyst")||c0==="purple" ? "#7c3aed" : "#999";
+            return `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${bg};border:1px solid rgba(0,0,0,.25);vertical-align:middle;margin-right:6px;"></span>`;
+          };
+          let html = rStats([{l:"Guests",v:total},{l:"Tables assigned",v:assigned},{l:"TBA",v:total-assigned}]);
+          html += '<h3 class="rpt-cat">🍽 Caterer counts</h3>';
+          if(!c.length) html += '<p class="empty">No meals yet.</p>';
+          else {
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Meal</th><th>Jewel</th><th>Covers</th></tr></thead><tbody>';
+            html += c.map(r=>`<tr><td>${esc(r.meal_label||r.meal_code)}</td><td>${jewelDot(r.jewel_color,r.jewel_code)}${esc(r.jewel_color||r.jewel_code||"-")}</td><td>${esc(String(r.covers||0))}</td></tr>`).join("");
+            html += '</tbody></table></div>';
+          }
+          html += '<h3 class="rpt-cat">🪑 Guests &amp; table numbers</h3>';
+          html += `<p class="rpt-note">Assign tables, then print Avery <b>#18660</b> (1&Prime; × 2-5/8&Prime;, 30/sheet). <a href="tartan-ball-labels.html" target="_blank" rel="noopener">Open print sheet</a> · <button type="button" class="rpt-btn ok" onclick="kosDownloadTartanCsv()">Download CSV</button></p>`;
+          if(!g.length) html += '<p class="empty">No guests imported yet.</p>';
+          else {
+            html += '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Guest</th><th>Meal</th><th>Jewel</th><th>Seating note</th><th>Table #</th><th></th></tr></thead><tbody>';
+            html += g.map(r=>{
+              const meal = String(r.meal_label||"").replace(/^\d+\.\s*/,"");
+              const val = r.table_number==null ? "" : String(r.table_number);
+              return `<tr><td>${esc(r.guest_name||"")}${r.is_vip?' <span class="rank-pill">VIP</span>':""}</td>`
+                + `<td>${esc(meal||"-")}</td>`
+                + `<td>${jewelDot(r.jewel_color,r.jewel_code)}${esc(r.jewel_color||r.jewel_code||"-")}</td>`
+                + `<td>${esc(r.seating_request||"—")}</td>`
+                + `<td><input id="tbTable-${r.guest_id}" type="number" min="1" step="1" value="${esc(val)}" style="width:72px;" placeholder="TBA" /></td>`
+                + `<td><button class="rpt-btn ok" type="button" onclick="kosSetTartanTable('${r.guest_id}')">Save</button></td></tr>`;
+            }).join("");
+            html += '</tbody></table></div>';
+          }
+          return html;
+        }},
+
       { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
         desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
         run: async()=>{
@@ -1080,6 +1429,57 @@
         }},
 
       /* ---- Membership ---- */
+
+      { id:"secretary_engagement", cat:"Membership", icon:"📣", title:"Secretary engagement (board)", secure:true,
+        desc:"Who is active, light, or quiet — RSVPs, attendance, volunteer hours, season/lifetime Clovers, rank, and badges for the board secretary.",
+        run: async()=>{
+          const { data, error } = await supabase.from("v_secretary_engagement").select("*");
+          if(error) throw error;
+          const rows = data||[];
+          const quiet = rows.filter(r=>r.engagement_band==="quiet");
+          const light = rows.filter(r=>r.engagement_band==="light");
+          const active = rows.filter(r=>r.engagement_band==="active");
+          const fmtLast = iso => {
+            if(!iso) return "—";
+            const d=new Date(iso);
+            return isNaN(d)?"—":d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric",timeZone:"America/New_York"});
+          };
+          const bandLabel = b => b==="quiet"?"Quiet":b==="light"?"Light":"Active";
+          let html = rStats([
+            {l:"Roster in view",v:rows.length},
+            {l:"Active",v:active.length},
+            {l:"Light",v:light.length},
+            {l:"Quiet",v:quiet.length}
+          ]);
+          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP, no approved volunteer hours, and no Clovers this year. Columns for <b>season Clovers</b>, <b>lifetime</b>, <b>badges</b>, and <b>rank</b> are ready — they fill as the Craic Cup ledger records activity.</p>';
+          html += '<h3 class="rpt-cat">😴 Quiet (reach out)</h3>';
+          const rowCols = r => [
+            `${r.first_name||""} ${r.last_name||""}`.trim(),
+            r.rsvps_ytd,
+            r.attended_ytd,
+            String(r.volunteer_hours_approved||0),
+            String(r.season_clovers||0),
+            String(r.lifetime_clovers||0),
+            `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`,
+            String(r.badge_count||0),
+            fmtLast(r.last_rsvp_at)
+          ];
+          const headers = ["Name","RSVPs","Attended","Vol hrs","Season 🍀","Lifetime 🍀","Rank","Badges","Last RSVP"];
+          html += quiet.length
+            ? rTable(["Name","Email","Status","Season 🍀","Lifetime 🍀","Rank","Last RSVP"],
+                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_status||"—", String(r.season_clovers||0), String(r.lifetime_clovers||0), `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`, fmtLast(r.last_rsvp_at)]))
+            : '<p class="empty">Nobody is fully quiet — nice.</p>';
+          html += '<h3 class="rpt-cat">🌤️ Light engagement</h3>';
+          html += light.length
+            ? rTable(headers, light.map(rowCols))
+            : '<p class="empty">No light-engagement members.</p>';
+          html += '<h3 class="rpt-cat">🔥 Active</h3>';
+          html += active.length
+            ? rTable(headers, active.map(rowCols))
+            : '<p class="empty">No active members yet this year.</p>';
+          return html;
+        }},
+
       { id:"membership_overview", cat:"Membership", icon:"👥", title:"Membership Overview",
         desc:"Active members, prospects, officers, and new joiners this year.",
         run: async()=>{
@@ -1481,7 +1881,49 @@
       let prof=null;
       try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
       window.kosProfile = prof || {};
-      if(!prof || !prof.profile_complete){ showStage("profile"); return; }
+      if(!prof || !prof.profile_complete){
+        showStage("profile");
+        try{
+          var pf=prof||{};
+          function setIf(id, v){ var el=document.getElementById(id); if(el && !el.value && v!=null && v!=="") el.value = v; }
+          setIf("pfFirst", pf.first_name);
+          setIf("pfLast", pf.last_name);
+          setIf("pfPhone", pf.phone);
+          setIf("pfBio", pf.bio);
+          setIf("pfHometown", pf.hometown);
+          setIf("pfSince", pf.parade_since);
+          setIf("pfBirthday", pf.birthday);
+          setIf("pfAnniversary", pf.anniversary);
+          setIf("pfHobbies", pf.hobbies);
+          setIf("pfInterests", pf.interests);
+          setIf("pfMemory", pf.favorite_memory);
+          setIf("pfFact", pf.fun_fact);
+          if(pf.photo_url){
+            var av=document.getElementById("pfAvatarPreview");
+            if(av) av.innerHTML = '<img src="'+String(pf.photo_url).replace(/"/g,'&quot;')+'" alt="" style="width:100%;height:100%;object-fit:cover;" />';
+          }
+          // Roster-matched members: expand role section so board/committee is obvious
+          if(pf.roster_matched || pf.member_id){
+            var hr=document.getElementById("pfHasRole");
+            var panel=document.getElementById("pfRolePanel");
+            if(hr){ hr.checked = true; }
+            if(panel){ panel.style.display = "block"; }
+          }
+        }catch(e){}
+        return;
+      }
+      /* A members-only page sent this visitor to the door with ?next=; now that
+         they're signed in, send them back there (the stash expires after 15 minutes). */
+      try{
+        var nxRaw = localStorage.getItem("kos_next");
+        if(nxRaw){
+          localStorage.removeItem("kos_next");
+          var nx = JSON.parse(nxRaw);
+          if(nx && /^[a-z0-9-]+\.html$/.test(nx.p) && Date.now() - nx.t < 15*60*1000){
+            location.href = nx.p; return;
+          }
+        }
+      }catch(e){}
       showStage("none");
       if(window.kosUnlock) window.kosUnlock();
       maybeTour();
@@ -1532,19 +1974,87 @@
     });
     document.getElementById("showForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("forgot"); });
     document.getElementById("showCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("create"); });
+    document.getElementById("guideCreateBtn").addEventListener("click",()=>{
+      showAuthPanel("create");
+      var cg=document.getElementById("castleGuide"); if(cg) cg.removeAttribute("open");
+      var em=document.getElementById("cpEmail2"); if(em){ em.focus(); em.scrollIntoView({behavior:"smooth",block:"center"}); }
+    });
     document.getElementById("backFromForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("backFromCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("signin"); });
     document.getElementById("pfHasRole").addEventListener("change", (e)=>{
       document.getElementById("pfRolePanel").style.display = e.target.checked ? "block" : "none";
     });
+    document.getElementById("pfPhoto").addEventListener("change", (e)=>{
+      const f = e.target.files && e.target.files[0];
+      const av = document.getElementById("pfAvatarPreview");
+      if(!f || !av) return;
+      av.innerHTML = '<img src="'+URL.createObjectURL(f)+'" alt="" style="width:100%;height:100%;object-fit:cover;" />';
+    });
+    async function uploadWelcomeAvatar(file){
+      const objUrl = URL.createObjectURL(file);
+      try{
+        const img = await new Promise((resolve, reject)=>{
+          const i = new Image();
+          i.onload = ()=>resolve(i);
+          i.onerror = ()=>reject(new Error("That file does not look like an image."));
+          i.src = objUrl;
+        });
+        const max = 512;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((resolve)=>canvas.toBlob(resolve, "image/jpeg", 0.85));
+        if(!blob) throw new Error("Could not read that image.");
+        const { data:{ user } } = await sb.auth.getUser();
+        if(!user) throw new Error("Please sign in again.");
+        const path = user.id + "/avatar.jpg";
+        const up = await sb.storage.from("avatars").upload(path, blob, { upsert:true, contentType:"image/jpeg", cacheControl:"3600" });
+        if(up.error) throw up.error;
+        const pub = sb.storage.from("avatars").getPublicUrl(path);
+        return pub.data.publicUrl + "?v=" + Date.now();
+      } finally {
+        URL.revokeObjectURL(objUrl);
+      }
+    }
     document.getElementById("profileForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const msg=document.getElementById("pfMsg"); msg.style.color=""; msg.textContent="Saving…";
+      const v = (id)=> (document.getElementById(id)?.value || "").trim();
+      let photoUrl = null;
+      const existingPhoto = (window.kosProfile && window.kosProfile.photo_url) || null;
+      try{
+        const file = document.getElementById("pfPhoto")?.files?.[0];
+        if(file){
+          msg.textContent = "Uploading photo…";
+          photoUrl = await uploadWelcomeAvatar(file);
+          msg.textContent = "Saving…";
+        } else if(existingPhoto){
+          photoUrl = existingPhoto;
+        } else {
+          msg.textContent = "Add a photo so My Krewe can see your face — then you're in the game.";
+          return;
+        }
+      }catch(err){
+        msg.textContent = "Couldn't upload photo: " + (err.message || err);
+        return;
+      }
       const { error } = await sb.rpc("complete_krewe_profile", {
-        p_first: document.getElementById("pfFirst").value.trim(),
-        p_last: document.getElementById("pfLast").value.trim(),
-        p_phone: document.getElementById("pfPhone").value.trim() || null,
-        p_bio: document.getElementById("pfBio").value.trim() || null
+        p_first: v("pfFirst"),
+        p_last: v("pfLast"),
+        p_phone: v("pfPhone") || null,
+        p_bio: null,
+        p_hometown: v("pfHometown") || null,
+        p_parade_since: null,
+        p_interests: null,
+        p_photo_url: photoUrl,
+        p_birthday: null,
+        p_anniversary: null,
+        p_hobbies: v("pfHobbies") || null,
+        p_favorite_memory: v("pfMemory") || null,
+        p_fun_fact: v("pfFact") || null,
+        p_profile_visible: !!(document.getElementById("pfVisible")||{}).checked
       });
       if(error){ msg.textContent="Couldn't save: "+error.message; return; }
       // Role claims go to the officers' in-hub Approvals queue; membership with
@@ -1811,6 +2321,9 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-  <script src="assets/members-desk.js" defer></script>
+<script src="assets/members-desk.js" defer></script>
+  <script src="assets/kos-event-studio.js" defer></script>
+  <script src="assets/kos-shop-studio.js" defer></script>
+  <script src="assets/kos-reports.js" defer></script>
 </body>
 </html>

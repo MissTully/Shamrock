@@ -7,6 +7,21 @@
     ".hub-wrap{margin:0 0 18px;}",
     ".hub-welcome{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow-sm);}",
     ".hub-welcome h2{font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:26px;}",
+    ".hub-craic{background:linear-gradient(165deg,#1d6b3e 0%,#14532d 55%,#0f3d22 100%);color:#f6efdc;border-radius:20px;padding:22px 22px 18px;box-shadow:var(--shadow-sm);border:1px solid rgba(212,175,55,.45);}",
+    ".hub-craic h2{font-family:var(--display);margin:0 0 4px;font-size:28px;color:#fff;}",
+    ".hub-craic .tag{opacity:.9;font-size:14px;margin:0 0 14px;}",
+    ".hub-craic-grid{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;}",
+    ".hub-craic .rank-big{font-size:52px;line-height:1;}",
+    ".hub-craic .clovers{font-size:34px;font-family:var(--display);font-weight:700;}",
+    ".hub-craic .meta{font-size:14px;opacity:.92;}",
+    ".hub-craic .prog{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:8px;}",
+    ".hub-craic .prog>i{display:block;height:100%;background:linear-gradient(90deg,#f0d78c,#d4af37);}",
+    ".hub-quest{margin-top:14px;background:rgba(255,255,255,.12);border:1px solid rgba(240,215,140,.35);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;}",
+    ".hub-quest b{font-family:var(--display);font-size:16px;}",
+    ".hub-quest .btn{background:#f0d78c;color:#14532d;border:0;text-decoration:none;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;}",
+    ".hub-soft-desk{margin-top:14px;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:14px 16px;color:var(--green-800);}",
+    ".hub-soft-desk h3{font-family:var(--display);margin:0 0 8px;font-size:18px;}",
+    ".hub-soft-desk .hub-chips{margin:0 0 8px;}",
     ".hub-chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 4px;}",
     ".hub-chip{display:inline-flex;align-items:center;gap:8px;background:#fbf7ec;border:1px solid rgba(168,128,28,.35);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:14px;color:var(--green-800);}",
     ".hub-chip.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
@@ -47,9 +62,25 @@
     ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
     ".hub-appr-h{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:17px;}",
     "#memberContent > .member-grid{display:none !important;}",
+    ".hub-event-form h3,.hub-event-list h3{font-family:var(--display);color:var(--green-800);margin:0 0 10px;font-size:18px;}",
+    ".hub-event-form label{display:block;font-size:13px;color:var(--muted);margin:10px 0 3px;}",
+    ".hub-event-form input,.hub-event-form textarea,.hub-event-form select{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-event-form textarea{min-height:76px;resize:vertical;}",
+    ".hub-event-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}",
+    ".hub-event-grid .wide{grid-column:1 / -1;}",
+    ".hub-event-checks{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;}",
+    ".hub-event-checks label{display:flex;align-items:center;gap:7px;margin:0;color:var(--green-800);cursor:pointer;}",
+    ".hub-event-checks input{width:auto;}",
+    ".hub-event-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:11px 12px;margin:8px 0;background:#fffdf4;}",
+    ".hub-event-row b{font-family:var(--display);color:var(--green-800);}",
+    ".hub-event-row .muted{color:var(--muted);font-size:13px;line-height:1.45;}",
+    ".hub-event-row .hub-appr-btns{flex:none;}",
+    ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
+    ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
+    "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
-  var state = { officer: false, parade: null, hoursApproved: 0, membershipStatus: null };
+  var state = { officer: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null };
 
   function injectCss() {
     if (document.getElementById("kosHubCss")) return;
@@ -91,9 +122,10 @@
         else if (h.indexOf("raffle") !== -1) sec.setAttribute("data-hub", "fun");
         else if (h.indexOf("report") !== -1) sec.setAttribute("data-hub", "officer");
         else if (h.indexOf("share") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("locker") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("carpool") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("van") !== -1) sec.setAttribute("data-hub", "fun");
+        else if (h.indexOf("locker") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("carpool") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("van") !== -1) sec.setAttribute("data-hub", "parade");
+        else if (h.indexOf("volunteer") !== -1 || h.indexOf("hours") !== -1) sec.setAttribute("data-hub", "parade");
         else if (h.indexOf("directory") !== -1) sec.setAttribute("data-hub", "krewe");
       }
     });
@@ -133,8 +165,7 @@
       ["hub", "Home"],
       ["krewe", "My Krewe"],
       ["events", "Events"],
-      ["parade", "Parade Day"],
-      ["give", "Give Back"],
+      ["parade", "Member desk"],
       ["fun", "Fun"],
       ["officer", "Officer desk"]
     ];
@@ -149,7 +180,7 @@
       '<div class="hub-panel" data-hub-panel="krewe"><div class="member-grid" id="hubKrewe"></div></div>' +
       '<div class="hub-panel" data-hub-panel="events"><div class="member-grid" id="hubEvents"></div></div>' +
       '<div class="hub-panel" data-hub-panel="parade"><div class="member-grid" id="hubParade"></div></div>' +
-      '<div class="hub-panel" data-hub-panel="give"><div class="member-grid" id="hubGive"></div></div>' +
+      '<div class="hub-panel" data-hub-panel="give" style="display:none"><div class="member-grid" id="hubGive"></div></div>' +
       '<div class="hub-panel" data-hub-panel="fun"><div class="member-grid" id="hubFun"></div></div>' +
       '<div class="hub-panel" data-hub-panel="officer"><div class="member-grid" id="hubOfficer"></div></div>' +
       tabHtml;
@@ -178,7 +209,7 @@
       '<p style="font-size:14px;color:var(--muted);margin-top:12px;">Attendance feeds Parade Ready and the Craic Cup.</p></div></section>';
 
     var give = document.getElementById("hubGive");
-    give.innerHTML =
+    if (give) give.innerHTML =
       '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Log hours toward your season goal</small></div></div>' +
       '<div class="app-body" id="hubHoursBody"><p class="empty">Loading hours…</p></div></section>';
 
@@ -187,12 +218,14 @@
     var officer = document.getElementById("hubOfficer");
     Array.prototype.slice.call(oldGrid.children).forEach(function (sec) {
       var hub = sec.getAttribute("data-hub");
-      if (hub === "parade") parade.appendChild(sec);
+      if (hub === "parade" || hub === "give") parade.appendChild(sec);
       else if (hub === "fun") fun.appendChild(sec);
       else if (hub === "officer") officer.appendChild(sec);
       else if (hub === "krewe") krewe.appendChild(sec);
       else fun.appendChild(sec);
     });
+    // Member desk = Parade Ready + volunteer hours
+    if (give && give.firstChild) parade.appendChild(give.firstChild);
     oldGrid.remove();
     relocateHours();
   }
@@ -221,57 +254,94 @@
     return '<span class="hub-chip ' + cls + '">🤝 ' + n + "/12 volunteer hours</span>";
   }
 
-  function nextActionsHtml() {
-    var acts = [];
-    var me = state.parade;
-    if (me) {
-      if (!me.dues_paid) acts.push({ tab: "parade", title: "View / pay dues", hint: "Settle season dues with the treasurer." });
-      if (!me.waiver_signed) acts.push({ tab: "parade", title: "Sign the liability waiver", hint: "Required for your parade wristband." });
-      if (!me.meeting_attended) acts.push({ tab: "events", title: "Attend the mandatory meeting", hint: "Scan the check-in QR at the next required meeting." });
+  function craicHeroHtml() {
+    var g = state.game || {};
+    var found = !!g.found;
+    var life = found ? Number(g.lifetime || 0) : 0;
+    var season = found ? Number(g.season || 0) : 0;
+    var rank = found ? (g.rank_name || "Newcomer") : "Newcomer";
+    var icon = found ? (g.rank_icon || "🌱") : "🌱";
+    var next = g.next_rank_name || null;
+    var need = Number(g.clovers_to_next || 0);
+    var total = life + need;
+    var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
+    return '<div class="hub-craic">' +
+      '<div class="tag">Welcome to our Krewe Digital Home</div>' +
+      '<h2>This is the Craic Cup</h2>' +
+      '<div class="hub-craic-grid">' +
+      '<div class="rank-big">' + esc(icon) + '</div>' +
+      '<div><div style="font-size:15px;opacity:.9;">Hey ' + esc(firstName()) + " — you're a</div>" +
+      '<div style="font-family:var(--display);font-size:24px;margin:2px 0 6px;">' + esc(icon) + ' ' + esc(rank) + '</div>' +
+      '<div class="clovers">' + life + ' 🍀</div>' +
+      '<div class="meta">Season Clovers: <b>' + season + '</b>' +
+      (next ? (' · <b>' + need + '</b> to ' + esc(next)) : ' · top rank!') + '</div>' +
+      (next ? ('<div class="prog"><i style="width:' + pct + '%"></i></div>') : '') +
+      '</div></div>' +
+      nextQuestHtml() +
+      '<div style="margin-top:12px;"><button type="button" class="btn" id="hubOpenCraic" style="background:transparent;border:1px solid rgba(240,215,140,.55);color:#f6efdc;">Open full Craic Cup →</button></div>' +
+      '</div>';
+  }
+
+  function nextQuestHtml() {
+    var ev = state.nextEvent;
+    if (ev && ev.name) {
+      return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to ' + esc(ev.name) + ' → +Clovers</div></div>' +
+        '<a class="btn" href="event-signup.html">RSVP</a></div>';
     }
-    if ((state.hoursApproved || 0) < 12) acts.push({ tab: "give", title: "Log volunteer hours", hint: "Work toward 12 approved hours this season." });
-    acts.push({ tab: "krewe", title: "Watch the orientation video", hint: "What new Krewe of Shamrock members must know." });
-    acts.push({ tab: "events", title: "RSVP to the next event", hint: "Open the events calendar and RSVP." });
-    acts.push({ tab: "krewe", title: "Read governing docs", hint: "Code of Conduct, bylaws, and parade rules." });
-    var html = '<div class="hub-actions"><h3>My next actions</h3><div class="hub-action-grid">';
-    acts.slice(0, 5).forEach(function (a) {
-      html += '<button type="button" class="hub-action" data-hub-action="' + a.tab + '"><b>' + esc(a.title) + "</b><span>" + esc(a.hint) + "</span></button>";
-    });
-    html += "</div></div>";
-    return html;
+    return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to an upcoming event → +Clovers when you show up</div></div>' +
+      '<a class="btn" href="event-signup.html">Find an event</a></div>';
+  }
+
+  function softMemberDeskHtml() {
+    var me = state.parade;
+    var bits = [];
+    if (me) {
+      if (!me.dues_paid) bits.push("dues");
+      if (!me.waiver_signed) bits.push("waiver");
+      if (!me.meeting_attended) bits.push("mandatory meeting");
+    }
+    if ((state.hoursApproved || 0) < 12) bits.push((state.hoursApproved || 0) + "/12 hours");
+    var ready = !!(me && me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var line = ready
+      ? "Parade Ready looks good — wristband territory."
+      : (bits.length ? ("Still open on Member desk: " + bits.join(", ") + ".") : "Open Member desk for dues, waiver, and hours.");
+    return '<div class="hub-soft-desk">' +
+      '<h3>Member desk</h3>' +
+      '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + '</div>' +
+      '<p style="margin:0 0 10px;font-size:14px;color:var(--muted);">' + esc(line) + '</p>' +
+      '<button type="button" class="btn btn-primary" data-hub-action="parade">Open Member desk</button>' +
+      '</div>';
   }
 
   function renderHome() {
     var home = document.getElementById("hubHome");
     if (!home) return;
-    var officerCard = state.officer
-      ? '<div class="hub-officer-card" data-hub-action="officer"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Reports dashboard and officer tools</div></div><div class="go">Open →</div></div>'
+    var officerCard = (state.officer || state.canManageEvents)
+      ? '<div class="hub-officer-card" data-hub-action="officer" style="margin-top:14px;"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Reports dashboard and event tools</div></div><div class="go">Open →</div></div>'
       : "";
-    home.innerHTML =
-      '<div class="hub-welcome">' +
-      "<h2>Welcome, " + esc(firstName()) + "</h2>" +
-      '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + "</div>" +
-      nextActionsHtml() +
-      officerCard +
-      "</div>";
+    home.innerHTML = craicHeroHtml() + softMemberDeskHtml() + officerCard;
 
     renderProfileCard();
 
     home.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
     });
+    var openC = document.getElementById("hubOpenCraic");
+    if (openC) openC.addEventListener("click", function () {
+      if (typeof window.openGame === "function") window.openGame();
+    });
   }
 
   function showTab(name) {
     var tab = name || TAB_HOME;
-    if (tab === "officer" && !state.officer) tab = TAB_HOME;
+    if (tab === "officer" && !state.officer && !state.canManageEvents) tab = TAB_HOME;
     document.querySelectorAll("[data-hub-panel]").forEach(function (el) {
       el.classList.toggle("hub-on", el.getAttribute("data-hub-panel") === tab);
     });
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       var id = btn.getAttribute("data-hub-tab");
       btn.classList.toggle("on", id === tab);
-      if (id === "officer") btn.style.display = state.officer ? "" : "none";
+      if (id === "officer") btn.style.display = (state.officer || state.canManageEvents) ? "" : "none";
     });
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
     if (tab === "hub") renderHome();
@@ -294,8 +364,30 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
-    if (state.officer) { loadApprovals(client); loadPaymentsCard(client); }
+    try {
+      var pay = await client.rpc("can_view_payments");
+      state.canViewPayments = !!pay.data;
+    } catch (e) { state.canViewPayments = false; }
+    try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
+    if (state.officer) loadApprovals(client);
+    if (state.canViewPayments) loadPaymentsCard(client);
+    if (state.canManageEvents) loadEventStudio(client);
 
+    try {
+      var email = (window.kosProfile || {}).email || null;
+      if (email) {
+        var gc = await client.rpc("get_member_game_card", { p_email: email });
+        state.game = gc.data || null;
+      }
+    } catch (e) { state.game = null; }
+    try {
+      var evs = await client.from("events").select("id,name,start_time,status").gte("start_time", new Date().toISOString()).order("start_time", { ascending: true }).limit(5);
+      var list = (evs.data || []).filter(function (e) {
+        var st = String(e.status || "published").toLowerCase();
+        return st === "published" || st === "live";
+      });
+      state.nextEvent = list[0] || null;
+    } catch (e) { state.nextEvent = null; }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
       var pr = await client.from("v_parade_ready").select("*");
@@ -328,7 +420,7 @@
 
     var saved = TAB_HOME;
     try { saved = sessionStorage.getItem("kosHubTab") || TAB_HOME; } catch (e) {}
-    if (saved === "officer" && !state.officer) saved = TAB_HOME;
+    if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
     showTab(saved);
     renderHome();
   }
@@ -622,7 +714,7 @@
 
   // ---- Officer payments feed: what Stripe recorded, straight from the ledger ----
   async function loadPaymentsCard(client) {
-    if (!state.officer) return;
+    if (!state.canViewPayments) return;
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
     var card = document.getElementById("hubPayments");
@@ -635,7 +727,7 @@
       else panel.appendChild(card);
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Online payments recorded automatically</small></div></div>' +
+      '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Treasurer &amp; board — online payments recorded automatically</small></div></div>' +
       '<div class="app-body" id="hubPaymentsBody"><p class="empty">Loading payments…</p></div>';
     var body = card.querySelector("#hubPaymentsBody");
     var data = null;
@@ -659,6 +751,198 @@
     });
     html += "</table></div>";
     body.innerHTML = html;
+  }
+
+  // ---- Event Studio: authorized event creation and editing ----
+  function eventLocalInput(value) {
+    if (!value) return "";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return String(value).slice(0, 16);
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+      "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function eventLocalDisplay(value) {
+    if (!value) return "";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+    return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+  }
+
+  function eventStudioFormHtml() {
+    return '<div class="hub-event-form" id="hubEventFormWrap">' +
+      '<h3 id="hubEventFormTitle">New event</h3>' +
+      '<form id="hubEventForm"><input type="hidden" id="hubEventId" />' +
+      '<div class="hub-event-grid">' +
+      '<div><label for="hubEventName">Name *</label><input id="hubEventName" required /></div>' +
+      '<div><label for="hubEventType">Event type</label><select id="hubEventType">' +
+      '<option value="social">Social</option><option value="parade">Parade</option><option value="meeting">Meeting</option>' +
+      '<option value="fundraiser">Fundraiser</option><option value="other">Other</option></select></div>' +
+      '<div><label for="hubEventStart">Start time *</label><input id="hubEventStart" type="datetime-local" required /></div>' +
+      '<div><label for="hubEventEnd">End time</label><input id="hubEventEnd" type="datetime-local" /></div>' +
+      '<div><label for="hubEventLocation">Location</label><input id="hubEventLocation" /></div>' +
+      '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
+      '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
+      '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
+      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
+      '<div class="hub-event-grid">' +
+      '<div><label for="hubEventStatus">Status</label><select id="hubEventStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></div>' +
+      '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
+      '<div><label for="hubEventTicketPrice">Ticket price (dollars)</label><input id="hubEventTicketPrice" type="number" min="0" step="0.01" placeholder="0.00" /></div>' +
+      '<div><label for="hubEventPaymentUrl">Ticket payment URL</label><input id="hubEventPaymentUrl" type="url" placeholder="https://buy.stripe.com/..." /></div>' +
+      '<div class="wide"><label for="hubEventFlyerUrl">Flyer URL</label><input id="hubEventFlyerUrl" type="url" /></div></div>' +
+      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Stripe Payment Link (metadata <code>kind=event</code>) and paste it here. See PAYMENTS_SETUP.md.</p>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
+      '<button class="btn" type="button" id="hubEventNew">New / clear</button></div><p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form></div>';
+  }
+
+  function clearEventForm() {
+    var form = document.getElementById("hubEventForm");
+    if (!form) return;
+    form.reset();
+    document.getElementById("hubEventId").value = "";
+    document.getElementById("hubEventPublic").checked = true;
+    document.getElementById("hubEventMandatory").checked = false;
+    document.getElementById("hubEventStatus").value = "draft";
+    document.getElementById("hubEventType").value = "social";
+    document.getElementById("hubEventFormTitle").textContent = "New event";
+    document.getElementById("hubEventMsg").textContent = "";
+  }
+
+  function fillEventForm(event) {
+    function get(id) { return document.getElementById(id); }
+    get("hubEventId").value = event.id || "";
+    get("hubEventName").value = event.name || "";
+    get("hubEventType").value = event.event_type || "other";
+    get("hubEventStart").value = eventLocalInput(event.start_time);
+    get("hubEventEnd").value = eventLocalInput(event.end_time);
+    get("hubEventLocation").value = event.location || "";
+    get("hubEventCapacity").value = event.capacity == null ? "" : event.capacity;
+    get("hubEventDescription").value = event.description || "";
+    get("hubEventPublic").checked = event.is_public !== false;
+    get("hubEventMandatory").checked = !!event.is_mandatory;
+    get("hubEventStatus").value = event.status || "published";
+    get("hubEventTicketLabel").value = event.ticket_label || "";
+    get("hubEventTicketPrice").value = event.ticket_price_cents == null ? "" : (Number(event.ticket_price_cents) / 100).toFixed(2);
+    get("hubEventPaymentUrl").value = event.ticket_payment_url || "";
+    get("hubEventFlyerUrl").value = event.flyer_url || "";
+    get("hubEventFormTitle").textContent = "Edit event";
+    get("hubEventMsg").textContent = "";
+    var wrap = document.getElementById("hubEventFormWrap");
+    if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function renderEventList(list) {
+    var target = document.getElementById("hubEventList");
+    if (!target) return;
+    if (!list.length) {
+      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below.</p>';
+      return;
+    }
+    var html = "";
+    list.forEach(function (event) {
+      var details = [];
+      if (event.start_time) details.push(eventLocalDisplay(event.start_time) + (event.end_time ? " – " + eventLocalDisplay(event.end_time) : ""));
+      if (event.location) details.push(event.location);
+      var ticket = event.ticket_price_cents != null ? " · $" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
+      var readOnly = String(event.source || "").toLowerCase() === "ikc";
+      html += '<div class="hub-event-row"><div><b>' + esc(event.name) + '</b>' +
+        '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
+        '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
+        (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
+        (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn" type="button" data-event-edit="' + esc(event.id) + '">Edit</button></div>') + '</div>';
+    });
+    target.innerHTML = html;
+    target.querySelectorAll("[data-event-edit]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-edit");
+        var event = list.find(function (row) { return String(row.id) === String(id); });
+        if (event && String(event.source || "").toLowerCase() !== "ikc") fillEventForm(event);
+      });
+    });
+  }
+
+  async function refreshEventStudio(client) {
+    var target = document.getElementById("hubEventList");
+    if (!target) return;
+    target.innerHTML = '<p class="empty">Loading events…</p>';
+    try {
+      var res = await client.rpc("officer_list_events");
+      if (res.error) throw res.error;
+      var data = res.data || {};
+      var list = Array.isArray(data) ? data : (data.events || []);
+      if (data.ok === false) throw new Error(data.message || "Not authorized.");
+      renderEventList(list);
+    } catch (e) {
+      target.innerHTML = '<p class="empty">Couldn&rsquo;t load events. ' + esc((e && e.message) || "Try again in a moment.") + '</p>';
+    }
+  }
+
+  async function saveEventStudio(client) {
+    var msg = document.getElementById("hubEventMsg");
+    var save = document.getElementById("hubEventSave");
+    function value(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+    var startValue = value("hubEventStart");
+    var start = startValue ? new Date(startValue) : null;
+    if (!start || isNaN(start.getTime())) { if (msg) msg.textContent = "A valid start time is required."; return; }
+    var endValue = value("hubEventEnd");
+    var end = endValue ? new Date(endValue) : null;
+    if (endValue && (!end || isNaN(end.getTime()))) { if (msg) msg.textContent = "Please check the end time."; return; }
+    var capacityValue = value("hubEventCapacity");
+    var ticketValue = value("hubEventTicketPrice");
+    var capacity = capacityValue === "" ? null : parseInt(capacityValue, 10);
+    var dollars = ticketValue === "" ? null : Number(ticketValue);
+    if (capacityValue !== "" && (isNaN(capacity) || capacity < 0)) { if (msg) msg.textContent = "Capacity must be a whole number."; return; }
+    if (ticketValue !== "" && (isNaN(dollars) || dollars < 0)) { if (msg) msg.textContent = "Ticket price must be zero or more."; return; }
+    var payload = {
+      id: value("hubEventId") || null, name: value("hubEventName"), start_time: start.toISOString(),
+      end_time: end ? end.toISOString() : null, location: value("hubEventLocation") || null,
+      description: value("hubEventDescription") || null, event_type: value("hubEventType") || "other",
+      capacity: capacity, is_public: !!document.getElementById("hubEventPublic").checked,
+      is_mandatory: !!document.getElementById("hubEventMandatory").checked, status: value("hubEventStatus") || "draft",
+      ticket_label: value("hubEventTicketLabel") || null,
+      ticket_price_cents: ticketValue === "" ? null : Math.round(dollars * 100),
+      ticket_payment_url: value("hubEventPaymentUrl") || null, flyer_url: value("hubEventFlyerUrl") || null
+    };
+    if (!payload.name) { if (msg) msg.textContent = "Event name is required."; return; }
+    if (save) { save.disabled = true; save.textContent = "Saving…"; }
+    if (msg) msg.textContent = "";
+    try {
+      var res = await client.rpc("officer_upsert_event", { p: payload });
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not save event.");
+      if (msg) msg.textContent = "Event saved.";
+      clearEventForm();
+      await refreshEventStudio(client);
+    } catch (e) { if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e); }
+    if (save) { save.disabled = false; save.textContent = "☘ Save event"; }
+  }
+  async function loadEventStudio(client) {
+    if (!state.canManageEvents) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = document.getElementById("hubEventStudio");
+    if (!card) {
+      card = document.createElement("section");
+      card.className = "app-card";
+      card.id = "hubEventStudio";
+      var payments = document.getElementById("hubPayments");
+      var approvals = document.getElementById("hubApprovals");
+      var after = payments || approvals;
+      if (after && after.nextSibling) panel.insertBefore(card, after.nextSibling);
+      else if (after) panel.appendChild(card);
+      else panel.appendChild(card);
+    }
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create and edit krewe events</small></div></div>' +
+      '<div class="app-body"><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
+      eventStudioFormHtml() + '</div>';
+    document.getElementById("hubEventForm").addEventListener("submit", function (e) {
+      e.preventDefault(); saveEventStudio(client);
+    });
+    document.getElementById("hubEventNew").addEventListener("click", clearEventForm);
+    clearEventForm();
+    await refreshEventStudio(client);
   }
 
   function bindTabs() {
