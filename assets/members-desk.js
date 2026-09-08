@@ -5,20 +5,37 @@
   var TAB_HOME = "hub";
   var CSS = [
     ".hub-wrap{margin:0 0 18px;}",
-    ".hub-welcome{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow-sm);}",
+    ".hub-welcome{position:relative;overflow:hidden;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow-sm);}",
+    ".hub-welcome::before{content:'☘';position:absolute;top:-8px;right:10px;font-size:64px;opacity:.12;pointer-events:none;transform:rotate(12deg);}",
     ".hub-welcome h2{font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:26px;}",
-    ".hub-craic{background:linear-gradient(165deg,#1d6b3e 0%,#14532d 55%,#0f3d22 100%);color:#f6efdc;border-radius:20px;padding:22px 22px 18px;box-shadow:var(--shadow-sm);border:1px solid rgba(212,175,55,.45);}",
+    ".hub-craic{position:relative;overflow:hidden;background:linear-gradient(165deg,#1d6b3e 0%,#14532d 55%,#0f3d22 100%);color:#f6efdc;border-radius:20px;padding:22px 22px 18px;box-shadow:var(--shadow-sm);border:1px solid rgba(212,175,55,.45);}",
+    ".hub-craic::before,.hub-craic::after{content:'☘';position:absolute;pointer-events:none;line-height:1;opacity:.16;z-index:0;}",
+    ".hub-craic::before{top:-6px;left:8px;font-size:72px;transform:rotate(-18deg);}",
+    ".hub-craic::after{bottom:-10px;right:6px;font-size:84px;transform:rotate(22deg);opacity:.14;}",
+    ".hub-craic > *{position:relative;z-index:1;}",
     ".hub-craic h2{font-family:var(--display);margin:0 0 4px;font-size:28px;color:#fff;}",
     ".hub-craic .tag{opacity:.9;font-size:14px;margin:0 0 14px;}",
     ".hub-craic-grid{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;}",
     ".hub-craic .rank-big{font-size:52px;line-height:1;}",
     ".hub-craic .clovers{font-size:34px;font-family:var(--display);font-weight:700;}",
     ".hub-craic .meta{font-size:14px;opacity:.92;}",
-    ".hub-craic .prog{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:8px;}",
-    ".hub-craic .prog>i{display:block;height:100%;background:linear-gradient(90deg,#f0d78c,#d4af37);}",
-    ".hub-quest{margin-top:14px;background:rgba(255,255,255,.12);border:1px solid rgba(240,215,140,.35);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;}",
-    ".hub-quest b{font-family:var(--display);font-size:16px;}",
-    ".hub-quest .btn{background:#f0d78c;color:#14532d;border:0;text-decoration:none;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;}",
+    ".hub-craic .prog{height:12px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:8px;box-shadow:inset 0 1px 2px rgba(0,0,0,.18);}",
+    ".hub-craic .prog>i{display:block;height:100%;background:linear-gradient(90deg,#fff6c8 0%,#f0d78c 35%,#d4af37 70%,#f7e7a1 100%);box-shadow:0 0 10px rgba(240,215,140,.55);position:relative;}",
+    ".hub-craic .prog>i::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.45) 50%,transparent 60%);background-size:200% 100%;animation:hubSparkle 2.8s ease-in-out infinite;}",
+    "@keyframes hubSparkle{0%,100%{background-position:100% 0}50%{background-position:0 0}}",
+    ".hub-quest{margin-top:14px;}",
+    ".hub-quest-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;}",
+    ".hub-quest-head b{font-family:var(--display);font-size:17px;}",
+    ".hub-quest-head span{font-size:13px;opacity:.88;}",
+    ".hub-quest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}",
+    ".hub-quest-card{background:rgba(255,255,255,.12);border:1px solid rgba(240,215,140,.35);border-radius:14px;padding:12px 13px;display:flex;flex-direction:column;gap:6px;min-height:118px;}",
+    ".hub-quest-card .date{display:inline-block;align-self:flex-start;background:rgba(240,215,140,.22);border:1px solid rgba(240,215,140,.45);color:#f6efdc;border-radius:999px;padding:3px 9px;font-size:12px;font-family:var(--display);letter-spacing:.02em;}",
+    ".hub-quest-card .title{font-family:var(--display);font-size:15px;line-height:1.25;color:#fff;}",
+    ".hub-quest-card .meta{font-size:12px;opacity:.88;line-height:1.35;}",
+    ".hub-quest-card .hint{font-size:12px;color:#f0d78c;font-weight:700;}",
+    ".hub-quest-card .btn{margin-top:auto;background:#f0d78c;color:#14532d;border:0;text-decoration:none;display:inline-block;padding:7px 12px;border-radius:999px;font-weight:700;font-size:13px;align-self:flex-start;}",
+    ".hub-quest-empty{background:rgba(255,255,255,.12);border:1px solid rgba(240,215,140,.35);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;}",
+    ".hub-quest-empty .btn{background:#f0d78c;color:#14532d;border:0;text-decoration:none;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;}",
     ".hub-soft-desk{margin-top:14px;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:14px 16px;color:var(--green-800);}",
     ".hub-soft-desk h3{font-family:var(--display);margin:0 0 8px;font-size:18px;}",
     ".hub-soft-desk .hub-chips{margin:0 0 8px;}",
@@ -80,7 +97,7 @@
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
-  var state = { officer: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null };
+  var state = { officer: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [] };
 
   function injectCss() {
     if (document.getElementById("kosHubCss")) return;
@@ -266,7 +283,7 @@
     var total = life + need;
     var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
     return '<div class="hub-craic">' +
-      '<div class="tag">Welcome to our Krewe Digital Home</div>' +
+      '<div class="tag">☘ Welcome to our Krewe Digital Home</div>' +
       '<h2>This is the Craic Cup</h2>' +
       '<div class="hub-craic-grid">' +
       '<div class="rank-big">' + esc(icon) + '</div>' +
@@ -282,14 +299,33 @@
       '</div>';
   }
 
+  function questDateChip(iso) {
+    if (!iso) return "Soon";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+    return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  }
+
   function nextQuestHtml() {
-    var ev = state.nextEvent;
-    if (ev && ev.name) {
-      return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to ' + esc(ev.name) + ' → +Clovers</div></div>' +
-        '<a class="btn" href="event-signup.html">RSVP</a></div>';
+    var list = (state.nextEvents && state.nextEvents.length) ? state.nextEvents : (state.nextEvent ? [state.nextEvent] : []);
+    var head = '<div class="hub-quest"><div class="hub-quest-head"><b>Next Easy Win</b><span>Shamrock-hosted events · +5 Clovers for RSVP</span></div>';
+    if (!list.length) {
+      return head +
+        '<div class="hub-quest-empty"><div><b>You\'re caught up</b><div style="font-size:14px;opacity:.95;margin-top:2px;">Clovers await at the next Shamrock event</div></div>' +
+        '<a class="btn" href="event-signup.html">Browse calendar</a></div></div>';
     }
-    return '<div class="hub-quest"><div><b>Next easy win</b><div style="font-size:14px;opacity:.95;margin-top:2px;">RSVP to an upcoming event → +Clovers when you show up</div></div>' +
-      '<a class="btn" href="event-signup.html">Find an event</a></div>';
+    var cards = list.slice(0, 4).map(function (ev) {
+      var loc = ev.location ? ('<div class="meta">' + esc(ev.location) + '</div>') : '';
+      var href = 'event-signup.html?event=' + encodeURIComponent(ev.id || '');
+      return '<div class="hub-quest-card">' +
+        '<span class="date">' + esc(questDateChip(ev.start_time)) + '</span>' +
+        '<div class="title">' + esc(ev.name || 'Krewe event') + '</div>' +
+        loc +
+        '<div class="hint">+5 Clovers for RSVP</div>' +
+        '<a class="btn" href="' + href + '">RSVP</a>' +
+        '</div>';
+    }).join('');
+    return head + '<div class="hub-quest-grid">' + cards + '</div></div>';
   }
 
   function softMemberDeskHtml() {
@@ -381,13 +417,32 @@
       }
     } catch (e) { state.game = null; }
     try {
-      var evs = await client.from("events").select("id,name,start_time,status").gte("start_time", new Date().toISOString()).order("start_time", { ascending: true }).limit(5);
+      var evs = await client.from("events")
+        .select("id,name,start_time,location,status,source")
+        .eq("source", "krewe")
+        .gte("start_time", new Date().toISOString())
+        .order("start_time", { ascending: true })
+        .limit(8);
       var list = (evs.data || []).filter(function (e) {
         var st = String(e.status || "published").toLowerCase();
-        return st === "published" || st === "live";
+        var src = String(e.source || "").toLowerCase();
+        return src === "krewe" && (st === "published" || st === "live");
       });
-      state.nextEvent = list[0] || null;
-    } catch (e) { state.nextEvent = null; }
+      var meId = (window.kosProfile || {}).member_id || null;
+      if (meId && list.length) {
+        try {
+          var signed = await client.from("event_signups")
+            .select("event_id,status")
+            .eq("member_id", meId)
+            .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
+          var taken = {};
+          (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
+          list = list.filter(function (e) { return !taken[e.id]; });
+        } catch (signupErr) { /* keep unfiltered krewe list */ }
+      }
+      state.nextEvents = list.slice(0, 4);
+      state.nextEvent = state.nextEvents[0] || null;
+    } catch (e) { state.nextEvents = []; state.nextEvent = null; }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
       var pr = await client.from("v_parade_ready").select("*");
