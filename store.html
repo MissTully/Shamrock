@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m4" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m5" />
 <style>
 .shop-note{ background:rgba(236,208,126,.16); border:1px solid var(--gold); border-radius:12px; padding:12px 18px; text-align:center; font-size:15px; color:var(--green-900); max-width:760px; margin:0 auto; }
 .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:24px; }
@@ -35,26 +35,41 @@
 .cart-items li{ display:flex; justify-content:space-between; gap:10px; font-size:15px; border-bottom:1px dashed rgba(168,128,28,.35); padding-bottom:6px; }
 .cart-total{ font-family:var(--display); font-size:20px; color:var(--green-800); text-align:right; margin-top:8px; }
 .cart-msg{ background:rgba(236,208,126,.18); border:1px solid var(--gold); border-radius:10px; padding:12px; font-size:14px; margin-top:12px; }
-/* MOBILE STORE — cart sits bottom-right with music FAB (left), clear of product CTAs */
+/* MOBILE STORE — thin bottom dock so cart never covers product cards/CTAs */
 @media (max-width:680px){
-  .shop-grid{ grid-template-columns:1fr; gap:18px; }
+  .shop-grid{ grid-template-columns:1fr; gap:18px; padding-bottom:8px; }
   .shop-note{ margin:0 0 8px; padding:12px 14px; font-size:14.5px; }
   .product .add, .product select, .product .soon{ width:100%; }
   .product .add{ justify-content:center; text-align:center; }
   .cartbar{
-    right:12px; bottom:12px; left:auto;
-    /* sit in the same chrome row as the music control, not over mid-page cards */
+    left:0; right:0; bottom:0;
+    display:flex; justify-content:flex-end; align-items:center;
+    gap:10px;
+    padding:8px 12px 8px 70px; /* leave room for music FAB on the left */
+    padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+    background:rgba(7,42,22,.94);
+    border-top:1px solid rgba(212,175,55,.55);
+    box-shadow:0 -6px 18px rgba(0,0,0,.28);
+    z-index:70;
+    pointer-events:none;
   }
   .cartbar button{
-    padding:9px 13px; font-size:13px; min-height:44px;
-    box-shadow:0 4px 14px rgba(168,128,28,.4);
+    pointer-events:auto;
+    padding:9px 16px; font-size:13.5px; min-height:42px;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(168,128,28,.35);
+    width:100%; max-width:220px;
   }
+  /* Lift music FAB above the dock so the two don't collide */
+  .krewe-music{ bottom:62px !important; }
+  body{ padding-bottom:120px !important; } /* music + cart dock clearance */
   .cart-panel{ padding:14px; align-items:flex-end; }
   .cart-card{ max-height:85vh; overflow:auto; padding:18px 16px; }
 }
 @media (max-width:420px){
-  .cartbar{ right:10px; bottom:10px; }
-  .cartbar button{ padding:8px 11px; font-size:12.5px; border-width:1.5px; }
+  .cartbar{ padding:7px 10px 7px 64px; padding-bottom:calc(7px + env(safe-area-inset-bottom, 0px)); }
+  .cartbar button{ padding:8px 12px; font-size:13px; max-width:none; }
+  .krewe-music{ bottom:58px !important; }
 }
 </style>
 </head>
