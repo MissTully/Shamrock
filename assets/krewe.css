@@ -760,3 +760,9 @@ table{ max-width:100%; }
   .tile img{ height:180px; }
   .event-card{ padding:16px 14px; }
 }
+
+
+@media (max-width:680px){
+  /* Forms need the lower screen; tuck the music control away there */
+  body:has(.form-stage) .krewe-music{ display:none; }
+}
