@@ -531,7 +531,7 @@
       "</div></div>" + longs +
 '<div class="hub-fb-members">' +
       '<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Members only</div>' +
-      '<a href="https://www.facebook.com/share/g/1Dnc4qaxW2/" target="_blank" rel="noopener noreferrer">📘 Join the Krewe members Facebook group →</a>' +
+      '<a href="https://www.facebook.com/groups/1790675004521855" target="_blank" rel="noopener noreferrer">📘 Join the Krewe members Facebook group →</a>' +
       '</div>' +
       '<button class="btn btn-primary" id="hubProfEditBtn" type="button" style="margin-top:10px;">✏️ Edit my profile</button>' +
       (p.profile_visible === false ? '<p style="color:var(--muted);font-size:13px;">Your profile is hidden from the member directory.</p>' : "") +
