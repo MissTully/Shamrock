@@ -129,7 +129,7 @@
   .mini-form{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-top:10px; }
   .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
   .mini-form button{ white-space:nowrap; }
-  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
+  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:14px; }
   .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; text-align:left; width:100%; font:inherit; cursor:pointer; display:flex; gap:12px; align-items:center; transition:background .15s, transform .15s; }
   .dir-card:hover{ background:#f3ebd2; transform:translateY(-1px); }
   .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
@@ -137,6 +137,35 @@
   .dir-card .dir-av{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(168,128,28,.45); flex:none; background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; }
   .dir-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
   .dir-card .dir-go{ margin-left:auto; color:var(--gold); font-family:var(--display); opacity:.7; }
+  /* My Krewe people directory — photo-first, not a spreadsheet */
+  .people-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 4px; }
+  .people-toolbar #dirSearch{ flex:1 1 220px; min-width:0; }
+  .people-count{ font-size:13px; color:var(--muted); white-space:nowrap; }
+  .people-grid{ display:flex; flex-direction:column; gap:18px; margin-top:10px; }
+  .people-letter{ font-family:var(--display); font-size:18px; color:var(--green-800); letter-spacing:.04em;
+    border-bottom:1px solid rgba(168,128,28,.35); padding:4px 2px 6px; margin:4px 0 0; position:sticky; top:52px; background:#fff; z-index:2; }
+  .people-row{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .people-card{ appearance:none; -webkit-appearance:none; border:1px solid rgba(168,128,28,.28); border-radius:16px;
+    padding:18px 16px 14px; background:linear-gradient(180deg,#fffdf8,#fbf7ec); text-align:center; width:100%;
+    font:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px;
+    box-shadow:0 1px 0 rgba(168,128,28,.12); transition:background .15s, transform .15s, box-shadow .15s; }
+  .people-card:hover{ background:linear-gradient(180deg,#fff,#f3ebd2); transform:translateY(-2px); box-shadow:0 8px 22px rgba(29,91,52,.12); }
+  .people-card:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .people-card .dir-av{ width:72px; height:72px; border-radius:50%; border:3px solid rgba(212,175,55,.55);
+    background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-size:22px; overflow:hidden; flex:none; }
+  .people-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+  .people-card .nm{ font-family:var(--display); color:var(--green-800); font-size:17px; line-height:1.25; margin:2px 0 0; }
+  .people-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .people-card .people-go{ margin-top:4px; font-size:12px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--green-800); background:rgba(29,107,62,.08); border:1px solid rgba(168,128,28,.3);
+    border-radius:999px; padding:4px 10px; font-family:var(--display); }
+  @media (max-width:640px){
+    .people-row{ grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+    .people-card{ padding:14px 10px 12px; }
+    .people-card .dir-av{ width:64px; height:64px; font-size:18px; }
+    .people-letter{ top:48px; }
+  }
   #memberProfileModal .modal-card{ background:#fbf7ec; }
   #memberProfileModal .mp-sheet{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:16px 18px; }
   #memberProfileModal .mp-head{ display:flex; gap:14px; align-items:center; margin:0 0 12px; }
@@ -638,11 +667,15 @@
       </section>
 
       <!-- DIRECTORY -->
-      <section class="app-card">
-        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
+            <section class="app-card">
+        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Your krewe — faces first</small></div></div>
         <div class="app-body">
-          <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
-          <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
+          <div class="people-toolbar">
+            <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
+            <span class="people-count" id="dirCount"></span>
+          </div>
+          <div class="people-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
+
           <p style="font-size:13px;color:var(--muted);margin-top:12px;">Tap a card to open their My Krewe profile. Contact details stay private — reach people through a krewe officer or <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a>.</p><p style="margin:10px 0 0;"><a class="btn" href="https://www.facebook.com/groups/1790675004521855" target="_blank" rel="noopener noreferrer" style="background:#1877f2;color:#fff;border:0;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;text-decoration:none;">📘 Members-only Facebook group →</a></p>
         </div>
       </section>
@@ -911,17 +944,34 @@
     window.renderDir=()=>{
       const q=(document.getElementById("dirSearch").value||"").toLowerCase();
       const grid=document.getElementById("dirGrid");
+      const countEl=document.getElementById("dirCount");
       const rows=dirData.filter(m=>{
         const name=`${m.first_name||""} ${m.last_name||""}`.toLowerCase();
         const title=(m.officer_title||"").toLowerCase();
         return !q || name.includes(q) || title.includes(q);
       });
+      if(countEl){
+        countEl.textContent = rows.length ? (rows.length + " member" + (rows.length===1?"":"s")) : "";
+      }
       if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
-      grid.innerHTML=rows.map(m=>{
-        const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
-        return `<button type="button" class="dir-card"${mid}>${dirAvatar(m)}<div><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(dirRole(m))}</div></div><span class="dir-go">View →</span></button>`;
+      const groups={};
+      rows.forEach(m=>{
+        const letter=((m.last_name||m.first_name||"?").trim()[0]||"?").toUpperCase();
+        const key=/[A-Z]/.test(letter)?letter:"#";
+        (groups[key]||(groups[key]=[])).push(m);
+      });
+      const letters=Object.keys(groups).sort((a,b)=>{
+        if(a==="#") return 1; if(b==="#") return -1; return a.localeCompare(b);
+      });
+      grid.innerHTML=letters.map(letter=>{
+        const cards=groups[letter].map(m=>{
+          const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
+          const nm = `${esc(m.first_name||"")} ${esc(m.last_name||"")}`.trim();
+          return `<button type="button" class="people-card"${mid} aria-label="Open profile for ${nm}">${dirAvatar(m)}<div class="nm">${nm}</div><div class="rl">${esc(dirRole(m))}</div><span class="people-go">Open profile</span></button>`;
+        }).join("");
+        return `<div class="people-letter" aria-hidden="true">${letter}</div><div class="people-row">${cards}</div>`;
       }).join("");
-      grid.querySelectorAll(".dir-card[data-mid]").forEach(btn=>{
+      grid.querySelectorAll(".people-card[data-mid]").forEach(btn=>{
         btn.addEventListener("click", ()=> openMemberProfile(btn.getAttribute("data-mid")));
       });
     };
