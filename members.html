@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m4" />
 <style>
   .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; overflow-y:auto; }
@@ -95,7 +95,41 @@
     border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:13px; color:#57513f; line-height:1.5; }
   .castle-guide .guide-inside b{ color:var(--green-800); }
   .castle-guide .guide-help{ margin:10px 0 0; font-size:13px; color:var(--muted); text-align:center; }
-  @media (max-width:480px){ .gate-card.auth-card{ border-radius:110px 110px 12px 12px; } .castle-torch{ display:none; } }
+  /* Compact castle on small phones — fit gate + login without painful nested scroll */
+  @media (max-width:480px){
+    .castle-torch{ display:none; }
+    .gate{ padding:8px 10px 10px; }
+    .castle{ padding:2px 0 10px; width:min(100%, 400px); }
+    .castle-top{
+      height:16px; width:90%;
+      background:repeating-linear-gradient(90deg, #6b6e63 0 22px, rgba(0,0,0,0) 22px 34px),
+        linear-gradient(180deg, rgba(0,0,0,0) 0 0);
+    }
+    .castle-wall{ padding:8px 10px 10px; box-shadow:0 14px 36px rgba(0,0,0,.5), inset 0 0 28px rgba(0,0,0,.22); }
+    .castle-banner{ font-size:11.5px; margin:0 0 2px; letter-spacing:.4px; }
+    .gate-card{ padding:14px 14px 12px; }
+    .gate-card.auth-card{
+      border-radius:68px 68px 10px 10px; border-width:5px; padding-top:20px;
+      box-shadow:0 0 0 3px #3a2712, 0 8px 20px rgba(0,0,0,.4);
+    }
+    .gate-card img{ width:42px; margin-bottom:2px; }
+    .auth-card img{ box-shadow:0 0 0 3px #3a2712, 0 0 0 5px #8a8d80; }
+    .gate-card h1{ font-size:18px; margin:0 0 2px; }
+    .gate-card p{ font-size:13.5px; margin:0 0 8px; line-height:1.35; }
+    .gate-card input, .gate-card textarea{ padding:9px 12px; }
+    #authPanelSignin form input[type="password"]{ margin-top:7px !important; }
+    #authPanelSignin form .btn, #authPanelCreate form .btn, #authPanelForgot form .btn{ margin-top:8px !important; }
+    #authPanelSignin > p[style], #authPanelCreate > p[style], #authPanelForgot > p[style]{ margin-top:8px !important; font-size:13px !important; }
+    .gate-card .err{ min-height:12px; margin-top:4px; font-size:13px; }
+    .castle-guide{ margin-top:8px; border-radius:11px; }
+    .castle-guide summary{ padding:9px 12px; font-size:13px; gap:8px; }
+    .castle-guide summary .key{ font-size:16px; }
+    .castle-guide .guide-body{ padding:12px; }
+    .castle-guide .guide-step{ margin:0 0 12px; gap:10px; }
+    .castle-guide .guide-step .num{ flex-basis:26px; width:26px; height:26px; font-size:13px; }
+    .castle-guide .guide-step h3{ font-size:14px; margin:1px 0 2px; }
+    .castle-guide .guide-step p{ font-size:12.5px; }
+  }
   .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
   .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
@@ -265,13 +299,19 @@
   .krewe-form .row,.mini-form{ grid-template-columns:1fr; }
   .rpt-grid{ grid-template-columns:1fr; }
   .modal-body{ padding:16px; }
-  .gate{ padding:12px; align-items:flex-start; }
-  .castle{ width:min(100%, 430px); padding:8px 0 24px; }
-  .castle-wall{ padding:18px 14px 22px; }
+  .gate{ padding:10px; align-items:flex-start; }
+  .castle{ width:min(100%, 430px); padding:6px 0 16px; }
+  .castle-wall{ padding:14px 12px 16px; }
+  .castle-top{ height:22px; }
+  .castle-banner{ font-size:13px; }
   /* Door hinges stick out left:-14px and caused horizontal scroll on phones */
   .auth-card::before, .auth-card::after{ display:none; }
-  .gate-card{ padding:26px 18px; max-width:100%; }
-  .gate-card.auth-card{ border-width:7px; }
+  .gate-card{ padding:20px 16px; max-width:100%; }
+  .gate-card.auth-card{ border-width:6px; padding-top:30px; }
+  .gate-card img{ width:52px; margin-bottom:6px; }
+  .gate-card h1{ font-size:20px; }
+  .gate-card p{ margin:0 0 12px; font-size:14.5px; }
+  .castle-guide{ margin-top:12px; }
   .app-body{ padding:16px; }
   .app-card > .app-head{ padding:14px 16px; flex-wrap:wrap; }
   .people-row{ grid-template-columns:1fr 1fr; gap:10px; }
@@ -288,6 +328,12 @@
 @media (max-width:380px){
   .people-row{ grid-template-columns:1fr; }
 }
+  /* Avoid nested page+gate scroll while a gate overlay is up */
+  body:has(#authStage:not([style*="display:none"])),
+  body:has(#profileStage:not([style*="display:none"])),
+  body:has(#setPasswordStage:not([style*="display:none"])){
+    overflow:hidden !important;
+  }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
   <script>
