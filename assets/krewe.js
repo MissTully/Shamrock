@@ -177,8 +177,7 @@
 })();
 
 (function () {
-  var GROUP_URL = "https://www.facebook.com/share/g/1Dnc4qaxW2/";
-  var FACEBOOK_URL = "https://www.facebook.com/groups/1790675004521855";
+  var PUBLIC_GROUP_URL = "https://www.facebook.com/groups/kreweofshamrock";
   function injectSocial() {
     var foots = document.querySelectorAll("footer.krewe-foot, footer.site-footer");
     for (var i = 0; i < foots.length; i++) {
@@ -189,9 +188,7 @@
       row.setAttribute("data-kos-social", "1");
       row.style.marginBottom = "8px";
       row.innerHTML =
-        '<a href="' + GROUP_URL + '" target="_blank" rel="noopener noreferrer">Facebook Group</a>' +
-        " · " +
-        '<a href="' + FACEBOOK_URL + '" target="_blank" rel="noopener noreferrer">Facebook</a>';
+        '<a href="' + PUBLIC_GROUP_URL + '" target="_blank" rel="noopener noreferrer">Facebook Group</a>';
       var slainte = foot.querySelector(".slainte");
       var contact = null;
       var links = foot.querySelectorAll(".flinks");
