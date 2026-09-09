@@ -10,7 +10,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Krewe of Shamrock · Raffle</title>
-<meta name="description" content="Buy digital raffle tickets for the Krewe of Shamrock basket raffle and 50/50 cash raffle. Scan, pick your basket, and you're entered." />
+<meta name="description" content="Krewe of Shamrock charity gift-basket and 50/50 raffles. Browse themed donated baskets, enter tickets digitally, and pay in person at the event." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
@@ -105,20 +105,20 @@
   </nav>
 
   <header class="rf-hero">
-    <h1 id="rfTitle">Krewe of Shamrock Raffle</h1>
-    <p class="sub" id="rfSub">Pick a basket, grab your tickets, and you're in the draw ☘</p>
+    <h1 id="rfTitle">Krewe of Shamrock Charity Raffles</h1>
+    <p class="sub" id="rfSub">Gift-ready baskets from donated treasures — raise funds for charity ☘</p>
   </header>
 
   <div class="rf-wrap">
 
     <div class="rf-how">
       <div class="card">
-        <h3>🧺 How the Basket Raffle works</h3>
+        <h3>🎁 How gift-basket raffles work</h3>
         <ol>
-          <li>Browse the prize baskets below.</li>
+          <li>Browse the themed, gift-ready baskets below (donated contents — themes, bottles, or a single treasure).</li>
           <li>Enter your name and how many tickets you want for that basket.</li>
-          <li>Each ticket is one entry <em>in that basket</em>, so load up on the ones you want most!</li>
-          <li>At the end, one ticket per basket is drawn at random. More tickets = better odds.</li>
+          <li>Each ticket is one entry <em>in that basket</em>. Draws happen <b>in person</b> at the event.</li>
+          <li>Proceeds support charity. Members also use this page as a planning board while baskets come together.</li>
         </ol>
       </div>
       <div class="card">
@@ -126,15 +126,15 @@
         <ol>
           <li>Buy 50/50 tickets in any amount.</li>
           <li>All tickets go into one pot.</li>
-          <li>One ticket is drawn at the end.</li>
-          <li>The winner takes <b>half the pot</b>; the other half supports the Krewe.</li>
+          <li>One ticket is drawn in person at the event.</li>
+          <li>The winner takes <b>half the pot</b>; the other half supports charity.</li>
         </ol>
       </div>
     </div>
 
     <div class="rf-pay" id="rfPay">
-      <b>Paying:</b> Tickets are paid in person. Settle up with any Krewe volunteer at the table (cash or card).
-      Your entries are recorded the moment you submit, and a volunteer will confirm payment. Sláinte! 🍀
+      <b>Paying:</b> Tickets are tracked digitally; payment is in person. Settle up with any Krewe volunteer at the table (cash or card).
+      Your entries are recorded when you submit — a volunteer confirms payment before the draw. Sláinte! 🍀
     </div>
 
     <div id="raffleRoot"><p class="empty">Loading raffles…</p></div>
@@ -182,15 +182,16 @@
         sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
       ]);
       if(e1||e2){ root.innerHTML='<p class="rf-empty-note">Could not load the raffle right now. Please try again.</p>'; return; }
-      const active=(events||[]).filter(e=>e.is_active);
+      const active=(events||[]).filter(e=>e.is_active && (e.audience||'both')!=='internal');
       const basketEvents=active.filter(e=>e.raffle_type==='basket');
       const potEvents=active.filter(e=>e.raffle_type==='fifty_fifty');
-      if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No raffles are running right now. Check back soon! 🍀</p>'; return; }
+      if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No public raffles are running right now. Check back soon! 🍀</p>'; return; }
       let html='';
       for(const ev of basketEvents){
         const bs=(baskets||[]).filter(b=>b.raffle_event_id===ev.id);
         html+=`<h2 class="rf-section-title">${E(ev.name)} <small>${ev.basket_tickets||0} tickets in${ev.event_date?` · draws ${E(ev.event_date)}`:''}</small></h2>`;
         if(ev.description) html+=`<p style="color:#4a4a3e;margin:2px 0 6px;">${E(ev.description)}</p>`;
+        if(ev.charity_blurb) html+=`<p style="color:#14532b;margin:2px 0 8px;font-weight:600;">💚 ${E(ev.charity_blurb)}</p>`;
         html+='<div class="basket-grid">'+ (bs.length?bs.map(basketCard).join(''):'<p class="empty">No baskets added yet.</p>') +'</div>';
       }
       for(const pe of potEvents){
