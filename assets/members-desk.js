@@ -139,14 +139,14 @@
     sections.forEach(function (sec) {
       if (sec.getAttribute("data-hub")) return;
       if (sec.id === "prCard") sec.setAttribute("data-hub", "parade");
-      else if (sec.id === "dashCard") sec.setAttribute("data-hub", "officer");
+      else if (sec.id === "dashCard") sec.setAttribute("data-hub", "hub");
       else {
         var h = headingOf(sec);
         if (h.indexOf("parade") !== -1) sec.setAttribute("data-hub", "parade");
         else if (h.indexOf("craic") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("raffle") !== -1) sec.setAttribute("data-hub", "fun");
-        else if (h.indexOf("report") !== -1) sec.setAttribute("data-hub", "officer");
-        else if (h.indexOf("share") !== -1) sec.setAttribute("data-hub", "fun");
+        else if (h.indexOf("raffle") !== -1) sec.setAttribute("data-hub", "hub");
+        else if (h.indexOf("report") !== -1) sec.setAttribute("data-hub", "hub");
+        else if (h.indexOf("share") !== -1) sec.setAttribute("data-hub", "hub");
         else if (h.indexOf("locker") !== -1) sec.setAttribute("data-hub", "parade");
         else if (h.indexOf("carpool") !== -1) sec.setAttribute("data-hub", "parade");
         else if (h.indexOf("van") !== -1) sec.setAttribute("data-hub", "parade");
@@ -201,7 +201,8 @@
     tabHtml += "</nav>";
 
     root.innerHTML =
-      '<div id="hubHome" class="hub-panel hub-on" data-hub-panel="hub"></div>' +
+      '<div id="hubHome" class="hub-panel hub-on" data-hub-panel="hub">' +
+      '<div id="hubHomeTop"></div><div class="member-grid" id="hubHomeGrid"></div></div>' +
       '<div class="hub-panel" data-hub-panel="krewe"><div class="member-grid" id="hubKrewe"></div></div>' +
       '<div class="hub-panel" data-hub-panel="events"><div class="member-grid" id="hubEvents"></div></div>' +
       '<div class="hub-panel" data-hub-panel="parade"><div class="member-grid" id="hubParade"></div></div>' +
@@ -241,12 +242,15 @@
     var parade = document.getElementById("hubParade");
     var fun = document.getElementById("hubFun");
     var officer = document.getElementById("hubOfficer");
+    var homeGrid = document.getElementById("hubHomeGrid");
     Array.prototype.slice.call(oldGrid.children).forEach(function (sec) {
       var hub = sec.getAttribute("data-hub");
       if (hub === "parade" || hub === "give") parade.appendChild(sec);
       else if (hub === "fun") fun.appendChild(sec);
       else if (hub === "officer") officer.appendChild(sec);
       else if (hub === "krewe") krewe.appendChild(sec);
+      else if (hub === "hub" && homeGrid) homeGrid.appendChild(sec);
+      else if (homeGrid) homeGrid.appendChild(sec);
       else fun.appendChild(sec);
     });
     // Member desk = volunteer hours at top, then Parade Ready / other parade sections
@@ -360,14 +364,27 @@
   function renderHome() {
     var home = document.getElementById("hubHome");
     if (!home) return;
+    var top = document.getElementById("hubHomeTop");
+    if (!top) {
+      top = document.createElement("div");
+      top.id = "hubHomeTop";
+      home.insertBefore(top, home.firstChild);
+    }
+    if (!document.getElementById("hubHomeGrid")) {
+      var grid = document.createElement("div");
+      grid.className = "member-grid";
+      grid.id = "hubHomeGrid";
+      home.appendChild(grid);
+    }
     var officerCard = (state.officer || state.canManageEvents)
       ? '<div class="hub-officer-card" data-hub-action="officer" style="margin-top:14px;"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Event Studio, Shop Studio, QR, Reports, and more</div></div><div class="go">Open →</div></div>'
       : "";
-    home.innerHTML = craicHeroHtml() + softMemberDeskHtml() + officerCard;
+    // Only refresh the welcome strip — never wipe the beautiful card grid below.
+    top.innerHTML = craicHeroHtml() + softMemberDeskHtml() + officerCard;
 
     renderProfileCard();
 
-    home.querySelectorAll("[data-hub-action]").forEach(function (btn) {
+    top.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
     });
     var openC = document.getElementById("hubOpenCraic");
@@ -498,7 +515,11 @@
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "events") saved = "events";
       else if (hash === "fun") saved = "fun";
-      else saved = sessionStorage.getItem("kosHubTab") || TAB_HOME;
+      else {
+        // Always land on Home after login/refresh unless the URL asks for a tab.
+        // (Session used to reopen Officer desk and hide the beautiful hub.)
+        saved = TAB_HOME;
+      }
     } catch (e) {}
     if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
     showTab(saved);
@@ -1157,7 +1178,10 @@
     var panel = document.getElementById("hubOfficer");
     if (!panel) return [];
     return Array.prototype.filter.call(panel.children, function (el) {
-      return el.classList && el.classList.contains("app-card");
+      if (!el.classList || !el.classList.contains("app-card")) return false;
+      // Home dash cards (Reports shortcut, etc.) must never appear as officer tools
+      if (el.classList.contains("dash-card") || el.id === "dashCard") return false;
+      return true;
     });
   }
 
