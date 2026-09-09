@@ -625,7 +625,7 @@
 
       <!-- PARADE READY -->
       <section class="app-card" id="prCard">
-        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; mandatory meeting (Jun–May)</small></div></div>
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; photo release (Jun–May)</small></div></div>
         <div class="app-body">
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
@@ -1156,12 +1156,14 @@
         return;
       }
       _prMe = me;
-      const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended];
+      let mediaOk = false;
+      try{ const { data } = await supabase.rpc("has_media_consent"); mediaOk = !!data; }catch(_){}
+      const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended, mediaOk];
       const ready = gates.every(Boolean);
       const DUES_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
       const LOA_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
       const gate = (ok, label, hint) =>
-        `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
+        `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok||!hint?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
       const duesGate = (ok) => ok
         ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} dues paid</span></div>`
         : `<div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} dues</span>
@@ -1169,19 +1171,23 @@
             <div class="pr-pay-alt">On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>
             · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
           </div>`;
+      const mediaGate = mediaOk
+        ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1</span></div>`
+        : `<div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">Photo &amp; Image Release</span> <span class="pr-hint">· required before posting photos or videos</span></div>`;
       el.innerHTML =
         `<div class="pr-pill ${ready?"ok":""}">${ready
           ? "🎗️ PARADE READY! Pick up your wristband at the next meeting."
-          : "☘ " + gates.filter(Boolean).length + " of 3 requirements complete"}</div>`
+          : "☘ " + gates.filter(Boolean).length + " of 4 requirements complete"}</div>`
         + `<div class="pr-list">`
         + duesGate(me.dues_paid)
         + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
         + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
+        + mediaGate
         + `</div>`
         + (me.waiver_signed ? "" : waiverForm())
-        + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
+        + (mediaOk ? "" : `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`);
       renderHoursBar(me);
-      loadMediaConsent();
+      if(!mediaOk) loadMediaConsent();
     }
     function waiverForm(){
       const nm = esc(kosIdentity().name);
@@ -1207,14 +1213,10 @@
       if(!el || !_prMe) return;
       let ok = false;
       try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
-      if(ok){
-        el.innerHTML = `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1 · photos &amp; videos you post may appear on the site</span></div>`;
-        return;
-      }
+      if(ok){ el.innerHTML = ""; return; }
       const nm = esc(kosIdentity().name);
       el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
-        <div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">Photo &amp; Image Release</span> <span class="pr-hint">· required before posting photos or videos · version 2026.1</span></div>
-        <div class="media-release-scroll" style="max-height:220px;overflow:auto;margin:10px 0;padding:10px 12px;background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.45;">
+        <div class="media-release-scroll" style="max-height:220px;overflow:auto;margin:0 0 10px;padding:10px 12px;background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.45;">
           <p style="margin:0 0 10px;"><b>I grant the Krewe of Shamrock permission</b> to create, use, reproduce, display, and distribute photographs, video, audio, and other images or recordings that include me (and, if applicable, my minor child) for Krewe purposes.</p>
           <p style="margin:0 0 8px;"><b>1. What this covers.</b> Media from Krewe activities including Gasparilla and other parades; St. Patrick’s Day and Irish heritage events; Tartan Ball and formal events; meetings, volunteer service, fundraisers, and social gatherings; and member-uploaded content to the Krewe website / member hub.</p>
           <p style="margin:0 0 8px;"><b>2. How the Krewe may use the media.</b> Nonprofit krewe purposes only: kreweofshamrock.com (Photo Gallery, events, member features); official email/newsletters/social; print programs, flyers, posters, and banners; Inter-Krewe Council (IKC) and community listings; historical archives. The Krewe will <b>not</b> sell member likeness rights to unrelated third parties for commercial advertising without a separate written agreement.</p>
