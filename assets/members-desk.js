@@ -300,20 +300,24 @@
     var need = Number(g.clovers_to_next || 0);
     var total = life + need;
     var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
+    var kickoffNote = (life > 0)
+      ? '<p class="tag" style="margin-top:-6px;opacity:.95;">You\'re off the line with a head start — now see if you can climb. Kind rivalry only. ☘️</p>'
+      : '<p class="tag" style="margin-top:-6px;opacity:.95;">Show up, pitch in, collect Clovers. Cheer your krewe — then try to catch them.</p>';
     return '<div class="hub-craic">' +
-      '<div class="tag">☘ Welcome to our Krewe Digital Home</div>' +
+      '<div class="tag">☘ Welcome home, ' + esc(firstName() || 'friend') + '</div>' +
       '<h2>This is the Craic Cup</h2>' +
+      kickoffNote +
       '<div class="hub-craic-grid">' +
       '<div class="rank-big">' + esc(icon) + '</div>' +
-      '<div><div style="font-size:15px;opacity:.9;">Hey ' + esc(firstName()) + " — you're a</div>" +
+      '<div><div style="font-size:15px;opacity:.9;">Right now you\'re a</div>' +
       '<div style="font-family:var(--display);font-size:24px;margin:2px 0 6px;">' + esc(icon) + ' ' + esc(rank) + '</div>' +
       '<div class="clovers">' + life + ' 🍀</div>' +
-      '<div class="meta">Season Clovers: <b>' + season + '</b>' +
-      (next ? (' · <b>' + need + '</b> to ' + esc(next)) : ' · top rank!') + '</div>' +
+      '<div class="meta">This season: <b>' + season + '</b>' +
+      (next ? (' · <b>' + need + '</b> Clovers to ' + esc(next)) : ' · you\'re at the top of the ladder!') + '</div>' +
       (next ? ('<div class="prog"><i style="width:' + pct + '%"></i></div>') : '') +
       '</div></div>' +
       nextQuestHtml() +
-      '<div style="margin-top:12px;"><button type="button" class="btn" id="hubOpenCraic" style="background:transparent;border:1px solid rgba(240,215,140,.55);color:#f6efdc;">Open full Craic Cup →</button></div>' +
+      '<div style="margin-top:12px;"><button type="button" class="btn" id="hubOpenCraic" style="background:transparent;border:1px solid rgba(240,215,140,.55);color:#f6efdc;">See the standings →</button></div>' +
       '</div>';
   }
 
