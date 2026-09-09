@@ -369,7 +369,13 @@
     if(_kosNx && /^[a-z0-9-]+\.html$/.test(_kosNx)){
       localStorage.setItem("kos_next", JSON.stringify({ p:_kosNx, t:Date.now() }));
     }
-    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname); }
+    /* Volunteer page (and others) send members here to log hours after sign-in. */
+    var _kosHub = (_kosQs.get("hub") || "").toLowerCase();
+    var _kosHash = (location.hash || "").replace(/^#/, "").toLowerCase();
+    if(_kosHub === "hours" || _kosHub === "volunteer" || _kosHash === "hours" || _kosHash === "volunteer"){
+      sessionStorage.setItem("kos_hub_intent", "hours");
+    }
+    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname + (_kosHash ? ("#" + _kosHash) : "")); }
   }catch(_){}
   </script>
 </head>
@@ -2012,7 +2018,18 @@
     async function route(){
       if(awaitingNewPassword){ showStage("setpassword"); return; }
       const { data:{ session } } = await sb.auth.getSession();
-      if(!session){ showStage("auth"); return; }
+      if(!session){
+        showStage("auth");
+        try{
+          if(sessionStorage.getItem("kos_hub_intent")==="hours"){
+            var gp=document.querySelector("#authStage .gate-card p");
+            if(gp) gp.textContent="Sign in to open the volunteer hours form.";
+            var gh=document.querySelector("#authStage .gate-card h1");
+            if(gh) gh.textContent="Log volunteer hours";
+          }
+        }catch(e){}
+        return;
+      }
       let prof=null;
       try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
       window.kosProfile = prof || {};
@@ -2456,7 +2473,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909h1" defer></script>
+<script src="assets/members-desk.js?v=20260909h2" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js" defer></script>
   <script src="assets/kos-reports.js" defer></script>
