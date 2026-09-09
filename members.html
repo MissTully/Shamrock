@@ -559,6 +559,9 @@
           </div>
         </details>
 
+        <p style="font-size:13px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:10px;padding:10px 12px;margin:14px 0 0;line-height:1.4;">
+          <b>Next step after you save:</b> update your volunteer hours. Enter <b>Total hours since July 1</b> from your TrackItForward balance so we start fresh on the new site.
+        </p>
         <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">🍀 Start earning Clovers</button>
         <div class="err" id="pfMsg"></div>
       </form>
@@ -635,14 +638,17 @@
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
           <div id="prHours"></div>
+          <p style="font-size:14px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.45;">
+            <b>Bring your TrackItForward hours over.</b> When you finish your member profile, open Volunteer hours and enter your current TrackItForward balance as <b>Total hours since July 1</b>. An officer will confirm them. After that, keep logging new hours here on the new site.
+          </p>
           <form id="vhForm" class="krewe-form" style="margin-top:10px;">
-            <div class="row">
-              <div><label for="vhActivity">Activity</label><input id="vhActivity" required placeholder="e.g. New Life Warehouse delivery" /></div>
-              <div><label for="vhHours">Hours</label><input id="vhHours" type="number" min="0.5" max="24" step="0.5" required /></div>
-            </div>
-            <label for="vhDate">Date</label>
+            <label for="vhHours">Total hours since July 1</label>
+            <input id="vhHours" type="number" min="0.5" max="500" step="0.5" required placeholder="Your TrackItForward total" />
+            <input type="hidden" id="vhActivity" value="Total hours since July 1" />
+            <label for="vhDate" style="margin-top:8px;">As of date (optional)</label>
             <input id="vhDate" type="date" />
-            <button class="btn btn-primary" type="submit">☘ Log volunteer hours</button>
+            <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Tip: copy the number from TrackItForward. Later logs can still use this form for new shifts (change the hours and we will keep the same season label).</p>
+            <button class="btn btn-primary" type="submit">☘ Save hours from TrackItForward</button>
             <div class="msg" id="vhMsg"></div>
           </form>
         </div>
@@ -820,6 +826,7 @@
           <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Stack Clovers for attending and volunteering. Watch the standings, chase the next rank, collect badges. Rivalries welcome, egos optional.</div></div>
           <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Create gift baskets for charity, plan donated contents, and enter tickets (draws are in person).</div></div>
           <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
+          <div class="tour-item"><span>🤝</span><div><b>Volunteer hours</b><br>Enter <b>Total hours since July 1</b> from TrackItForward so your balance moves to the new site. Officers confirm the entry.</div></div>
           <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
           <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
         </div>
@@ -1258,15 +1265,15 @@
     document.getElementById("vhForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       if(!_prMe){ show("vhMsg","Your account is not linked to a member record yet.","error"); return; }
-      const activity = (document.getElementById("vhActivity").value||"").trim();
       const hours = Number(document.getElementById("vhHours").value);
       const d = document.getElementById("vhDate").value;
-      if(activity.length < 2 || !(hours > 0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
+      const activity = (document.getElementById("vhActivity").value||"Total hours since July 1").trim() || "Total hours since July 1";
+      if(!(hours > 0)){ show("vhMsg","Enter your Total hours since July 1 from TrackItForward.","error"); return; }
       const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours };
       if(d) row.worked_on = d;
       const { error } = await supabase.from("volunteer_hours").insert(row);
       if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
-      show("vhMsg","Logged! An officer will confirm them shortly.","success");
+      show("vhMsg","Saved! An officer will confirm your Total hours since July 1 shortly.","success");
       document.getElementById("vhForm").reset();
       loadParadeReady();
     });
@@ -2265,7 +2272,19 @@
         }catch(err){ /* the profile is saved; a failed role request can be retried from the hub */ }
       }
       localStorage.removeItem("kosTourDone");
+      try{ localStorage.setItem("kosHoursNudge","1"); }catch(_){}
       await route();
+      setTimeout(()=>{
+        try{
+          if(localStorage.getItem("kosHoursNudge")==="1"){
+            localStorage.removeItem("kosHoursNudge");
+            alert("Profile saved! Next: open Volunteer hours and enter Total hours since July 1 from your TrackItForward balance.");
+            const hoursCard = document.getElementById("hubHoursCard") || document.getElementById("vhForm");
+            if(hoursCard && hoursCard.scrollIntoView) hoursCard.scrollIntoView({behavior:"smooth", block:"center"});
+            const h = document.getElementById("vhHours"); if(h) h.focus();
+          }
+        }catch(_){}
+      }, 600);
     });
     function maybeTour(){
       if(localStorage.getItem("kosTourDone")==="1") return;
@@ -2534,7 +2553,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909craic3" defer></script>
+<script src="assets/members-desk.js?v=20260909hours1" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
