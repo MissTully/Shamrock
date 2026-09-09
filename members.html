@@ -479,7 +479,7 @@
 
       <div class="auth-features">
         <div class="afe"><span>🍀</span> The Craic Cup: earn Clovers, climb the ranks, collect badges</div>
-        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles: enter and track your tickets</div>
+        <div class="afe"><span>🎟️</span> Gift-basket &amp; 50/50 raffles for charity — create, plan, enter</div>
         <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
       </div>
@@ -671,11 +671,11 @@
       <section class="app-card dash-card raffle-head" role="button" tabindex="0"
                onclick="openRaffles()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaffles();}">
         <div class="app-head"><span class="ic">🎟️</span>
-          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50: enter and track your tickets</small></div>
+          <div><h2>Raffles</h2><small>Gift baskets &amp; 50/50 for charity — create, plan, enter</small></div>
           <span class="dash-go">Open →</span></div>
         <div class="app-body dash-body">
-          <p>Try your luck and support the Krewe. Drop tickets in the baskets you love, or buy into the 50/50 pot. Every entry is tied to your account.</p>
-          <div class="dash-chips"><span>🧺 Basket raffles</span><span>💰 50/50</span><span>🎫 My tickets</span></div>
+          <p>Build gift-ready baskets from donated contents, track who is bringing what, and raise money for charity. Draws happen in person at events — tickets are tracked digitally; pay a volunteer at the table.</p>
+          <div class="dash-chips"><span>🎁 Gift baskets</span><span>💚 Charity</span><span>📋 Planning</span><span>🎫 In-person draws</span></div>
         </div>
       </section>
 
@@ -819,7 +819,7 @@
         <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Craic Cup.</p>
         <div class="tour-grid">
           <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Earn Clovers for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
-          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50; your tickets are tracked to you.</div></div>
+          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Create gift baskets for charity, plan donated contents, and enter tickets (draws are in person).</div></div>
           <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
           <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
           <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
@@ -2295,14 +2295,19 @@
         rb.from("v_raffle_baskets_public").select("*"),
         rb.rpc("get_my_raffle_summary")
       ]);
-      if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; return; }
-      if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now. Check back soon! 🍀</p>'; return; }
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>\ud83e\uddfa <b>Basket raffle:</b> buy tickets for the specific basket(s) you want \u2014 each ticket is one entry in that basket, and one ticket per basket is drawn at the end. \ud83d\udcb0 <b>50/50:</b> all tickets share one pot; one ticket wins half the pot. Tickets are paid in person \u2014 settle up with a volunteer. You can also scan the QR code on any basket to enter from your phone.</div>';
-      for(const e of events){
+      if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; renderOfficerTools(events||[], baskets||[]); renderManage(); return; }
+      if(!events || !events.length){
+        box.innerHTML='';
+        /* empty list — still show how-it-works + Create & manage below */
+      }
+      let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events — enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      if(events && events.length) for(const e of events){
         html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
         if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
+        if(e.charity_blurb) html+=`<p style="margin:0 0 10px;color:#14532b;font-size:14px;">💚 ${RE(e.charity_blurb)}</p>`;
+        if(e.audience && e.audience!=='both') html+=`<p style="margin:0 0 8px;font-size:12px;color:var(--muted);">Audience: ${RE(e.audience)}</p>`;
         if(e.raffle_type==='fifty_fifty'){
           html+=`<div class="van-card"><div class="seats">50/50 Pot</div>
             <div style="font-size:14px;color:var(--muted);">${e.pot_tickets} tickets in${e.ticket_price?` · $${e.ticket_price} each`:''}</div>`;
@@ -2315,6 +2320,7 @@
           html+=`<div class="dir-grid">`;
           for(const b of bs){
             html+=`<div class="dir-card"><div class="nm">${RE(b.name)}</div>`;
+            if(b.contents) html+=`<div class="rl" style="margin-top:4px;"><b>Inside:</b> ${RE(b.contents)}</div>`;
             if(b.description) html+=`<div class="rl">${RE(b.description)}</div>`;
             if(b.estimated_value) html+=`<div class="rl">~$${b.estimated_value}</div>`;
             html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets} tickets in · you: <b>${myB[b.id]||0}</b></div>`;
@@ -2327,8 +2333,9 @@
         }
         html+=`</div>`;
       }
+      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now — create one below to start planning gift baskets for charity. 🍀</p>'; }
       box.innerHTML=html;
-      renderOfficerTools(events,baskets);
+      renderOfficerTools(events||[],baskets||[]);
       renderManage();
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
         ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
@@ -2401,11 +2408,11 @@
       var IS='__IS__';
       var box=document.createElement('div'); box.className='dir-card'; box.style.marginTop='8px';
       box.innerHTML =
-        mrInput('Basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
-        mrInput('Approximate worth ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
-        mrInput('Contents (what’s inside)','<textarea class="bfContents" rows="2" '+IS+'>'+(b&&b.contents?RE(b.contents):'')+'</textarea>')+
-        mrInput('Details / description','<textarea class="bfDesc" rows="2" '+IS+'>'+(b&&b.description?RE(b.description):'')+'</textarea>')+
-        mrInput('Photo of the basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
+        mrInput('Gift basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
+        mrInput('Approximate gift value ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
+        mrInput('Donated contents (what’s inside — themes, bottles, or a single item)','<textarea class="bfContents" rows="2" '+IS+' placeholder="e.g. Irish whiskey, tartan throw, tea towels — note donors if known">'+(b&&b.contents?RE(b.contents):'')+'</textarea>')+
+        mrInput('Gift presentation / details','<textarea class="bfDesc" rows="2" '+IS+' placeholder="Theme, wrapping, display notes for the planning board">'+(b&&b.description?RE(b.description):'')+'</textarea>')+
+        mrInput('Photo of the finished gift basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
         (b&&b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="margin-top:8px;max-width:120px;border-radius:8px;" />':'')+
         '<div style="margin-top:10px;"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
         '<div class="msg bfMsg"></div>';
@@ -2434,7 +2441,7 @@
       var w=document.createElement("div"); w.className="raffle-event";
       w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
-        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets. You own and manage what you create.</p>'+
+        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create a gift-basket or 50/50 raffle for charity. Use baskets as a planning board for donated contents, then draw winners in person at the event.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
       box.appendChild(w);
@@ -2445,10 +2452,12 @@
       var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
       f.innerHTML='<div class="dir-card">'+
         mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" />')+
-        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🧺 Basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
-        mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+'></textarea>')+
+        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🎁 Gift basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
+        mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+' placeholder="Theme night, event, or planning notes"></textarea>')+
+        mrInput('Charity / cause (optional)','<textarea id="crCharity" rows="2" '+IS+' placeholder="Where the proceeds go"></textarea>')+
+        mrInput('Audience','<select id="crAudience" '+IS+'><option value="both">Internal + external</option><option value="internal">Internal (members only)</option><option value="external">External (public)</option></select>')+
         mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
-        mrInput('Draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
+        mrInput('Event / draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
         '<div style="margin-top:10px;"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
         '<div class="msg" id="crMsg"></div></div>';
       document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
@@ -2457,7 +2466,7 @@
         var name=document.getElementById("crName").value.trim();
         if(!name){ msg.className='msg error'; msg.textContent='Please enter a raffle name.'; return; }
         btn.disabled=true; msg.className='msg'; msg.textContent='Creating…';
-        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null});
+        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null,p_audience:(document.getElementById("crAudience")||{}).value||"both",p_charity_blurb:(document.getElementById("crCharity")||{}).value||null});
         if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; btn.disabled=false; return; }
         renderRaffles();
       };
@@ -2489,6 +2498,7 @@
             row.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid rgba(168,128,28,.25);border-radius:10px;padding:8px;';
             row.innerHTML=(b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;" />':'<div style="width:54px;height:54px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;">🧺</div>')+
               '<div style="flex:1;min-width:0;"><div style="font-weight:600;">'+RE(b.name)+'</div>'+
+              (b.contents?'<div style="font-size:12px;color:#3a3a2e;margin-top:2px;"><b>Inside:</b> '+RE(b.contents)+'</div>':'')+
               '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' tix'+(b.winner_name?' · 🏆 '+RE(b.winner_name):'')+'</div></div>'+
               '<div style="display:flex;flex-direction:column;gap:4px;">'+
                 '<button class="btn mrEditB" type="button" style="padding:3px 8px;font-size:12px;">Edit</button>'+
