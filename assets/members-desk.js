@@ -361,7 +361,7 @@
     var home = document.getElementById("hubHome");
     if (!home) return;
     var officerCard = (state.officer || state.canManageEvents)
-      ? '<div class="hub-officer-card" data-hub-action="officer" style="margin-top:14px;"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Reports dashboard and event tools</div></div><div class="go">Open →</div></div>'
+      ? '<div class="hub-officer-card" data-hub-action="officer" style="margin-top:14px;"><div><b style="font-family:var(--display);font-size:18px;">Officer desk</b><div style="opacity:.9;font-size:14px;margin-top:4px;">Event Studio, Shop Studio, QR, Reports, and more</div></div><div class="go">Open →</div></div>'
       : "";
     home.innerHTML = craicHeroHtml() + softMemberDeskHtml() + officerCard;
 
@@ -389,7 +389,11 @@
     });
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
     if (tab === "hub") renderHome();
-    if (tab === "officer") setTimeout(wireOfficerDeskPicker, 80);
+    if (tab === "officer") {
+      setTimeout(wireOfficerDeskPicker, 80);
+      setTimeout(wireOfficerDeskPicker, 400);
+      setTimeout(wireOfficerDeskPicker, 1200);
+    }
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
   }
 
@@ -1129,12 +1133,35 @@
   }
 
   
+  var OFFICER_TOOL_ORDER = [
+    "hubApprovals",
+    "hubPayments",
+    "hubEventStudio",
+    "hubShopStudio",
+    "hubQrStudio",
+    "hubReports",
+    "hubAllKrewe"
+  ];
+
+  function officerDeskCards() {
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return [];
+    return Array.prototype.filter.call(panel.querySelectorAll(":scope > .app-card, .app-card"), function (el) {
+      // Prefer direct children; fall back includes any app-card under panel except nested ones inside another card
+      if (!el.classList || !el.classList.contains("app-card")) return false;
+      if (el.id === "hubOfficerPicker") return false;
+      var parentCard = el.parentElement && el.parentElement.closest && el.parentElement.closest(".app-card");
+      if (parentCard && parentCard !== el) return false;
+      return panel.contains(el);
+    }).filter(function (el) {
+      return el.parentElement === panel;
+    });
+  }
+
   function wireOfficerDeskPicker() {
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
-    var cards = Array.prototype.filter.call(panel.children, function (el) {
-      return el.classList && el.classList.contains("app-card");
-    });
+    var cards = officerDeskCards();
     if (!cards.length) return;
     var picker = document.getElementById("hubOfficerPicker");
     if (!picker) {
@@ -1144,22 +1171,32 @@
       picker.innerHTML =
         '<label for="officerToolSelect">Officer desk — choose a tool</label>' +
         '<select id="officerToolSelect"></select>' +
-        '<p class="hint" id="officerToolHint">Select one tool. Everything else stays tucked away.</p>';
+        '<p class="hint" id="officerToolHint">Every officer tool is in this list. Pick one to open it.</p>';
       panel.insertBefore(picker, panel.firstChild);
     }
     var sel = document.getElementById("officerToolSelect");
     var hint = document.getElementById("officerToolHint");
     var prev = sel.value;
-    sel.innerHTML = "";
+    // Stable order: known tools first, then any extras alphabetically
+    var byId = {};
     cards.forEach(function (card, i) {
+      if (!card.id) card.id = "officerTool" + i;
+      byId[card.id] = card;
+    });
+    var ordered = [];
+    OFFICER_TOOL_ORDER.forEach(function (id) {
+      if (byId[id]) { ordered.push(byId[id]); delete byId[id]; }
+    });
+    Object.keys(byId).sort().forEach(function (id) { ordered.push(byId[id]); });
+
+    sel.innerHTML = "";
+    ordered.forEach(function (card) {
       var h = card.querySelector(".app-head h2, h2");
-      var title = (h && h.textContent) ? h.textContent.trim() : ("Tool " + (i + 1));
+      var title = (h && h.textContent) ? h.textContent.trim() : card.id;
       var small = card.querySelector(".app-head small");
       var desc = small ? small.textContent.trim() : "";
-      var id = card.id || ("officerTool" + i);
-      if (!card.id) card.id = id;
       var opt = document.createElement("option");
-      opt.value = id;
+      opt.value = card.id;
       opt.textContent = title;
       opt.setAttribute("data-desc", desc);
       sel.appendChild(opt);
@@ -1167,11 +1204,13 @@
     function apply() {
       var id = sel.value;
       var opt = sel.options[sel.selectedIndex];
-      if (hint) hint.textContent = (opt && opt.getAttribute("data-desc")) || "Select one tool.";
-      cards.forEach(function (card) {
-        card.classList.toggle("hub-officer-hidden", card.id !== id);
+      if (hint) hint.textContent = (opt && opt.getAttribute("data-desc")) || "Pick a tool from the list.";
+      officerDeskCards().forEach(function (card) {
+        var show = card.id === id;
+        card.classList.toggle("hub-officer-hidden", !show);
+        card.style.display = show ? "" : "none";
       });
-      try { sessionStorage.setItem("kosOfficerTool", id); } catch (e) {}
+      try { if (id) sessionStorage.setItem("kosOfficerTool", id); } catch (e) {}
     }
     if (prev && Array.prototype.some.call(sel.options, function (o) { return o.value === prev; })) {
       sel.value = prev;
@@ -1184,7 +1223,18 @@
     if (!sel.value && sel.options.length) sel.selectedIndex = 0;
     sel.onchange = apply;
     apply();
+
+    if (!panel.getAttribute("data-kos-picker-observed")) {
+      panel.setAttribute("data-kos-picker-observed", "1");
+      var timer = null;
+      var mo = new MutationObserver(function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { wireOfficerDeskPicker(); }, 80);
+      });
+      mo.observe(panel, { childList: true });
+    }
   }
+  window.kosRefreshOfficerDesk = wireOfficerDeskPicker;
 
   function boot() {
     if (!document.getElementById("memberContent")) return;

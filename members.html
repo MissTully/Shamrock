@@ -684,11 +684,11 @@
                onclick="openReports()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReports();}">
         <div class="app-head">
           <span class="ic">📊</span>
-          <div><h2>Reports &amp; QR tools</h2><small>Pick a report or QR solution from a short list</small></div>
+          <div><h2>Reports</h2><small>Pick a report from the list</small></div>
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Officer reports in one place — choose from a dropdown. QR for events/products lives in Event Studio and Shop Studio.</p>
+          <p>Officer reports in one place — choose from a dropdown. Meeting check-in and handy link QRs are in Officer desk → QR Code Studio.</p>
         </div>
       </section>
 
@@ -855,7 +855,7 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-label="Officer reports and QR tools">
       <div class="modal-head">
         <span class="ic" style="font-size:24px;">📊</span>
-        <h2>Officer reports &amp; QR tools</h2>
+        <h2>Officer reports</h2>
         <button class="modal-x" type="button" onclick="closeReports()" aria-label="Close dashboard">✕</button>
       </div>
       <div class="modal-body">
@@ -1348,7 +1348,12 @@
       const { error } = await supabase.rpc("officer_upsert_meeting",
         { p_name:name, p_start:new Date(when).toISOString(), p_mandatory:mand });
       if(error){ show("mtMsg","Could not create the meeting. "+(error.message||""),"error"); return; }
-      runReport("meeting_checkin");
+      show("mtMsg","Meeting saved.","ok");
+      if(typeof window.kosRefreshQrMeetings==="function") window.kosRefreshQrMeetings();
+      else if(document.getElementById("hubQrStudio")){
+        try{ sessionStorage.setItem("kosOfficerTool","hubQrStudio"); }catch(e){}
+        if(typeof window.kosRefreshOfficerDesk==="function") window.kosRefreshOfficerDesk();
+      }
     };
     window.kosShowCheckinQR = async (eventId, btn)=>{
       const { data:code, error } = await supabase.rpc("officer_enable_checkin", { p_event:eventId });
@@ -1525,74 +1530,8 @@
           return html;
         }},
 
-      { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
-        desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
-        run: async()=>{
-          const since=new Date(Date.now()-86400000).toISOString();
-          const { data, error } = await supabase.from("events")
-            .select("id,name,start_time,is_mandatory").eq("event_type","meeting")
-            .gte("start_time",since).order("start_time",{ascending:true});
-          if(error) throw error;
-          const rows=data||[];
-          let html = `<div class="krewe-form" style="padding:0 0 14px;">
-            <h3 class="rpt-cat" style="margin-top:0;">➕ Schedule a meeting</h3>
-            <div class="row">
-              <div><label for="mtName">Meeting name</label><input id="mtName" placeholder="e.g. February parade briefing" /></div>
-              <div><label for="mtWhen">Date &amp; time</label><input id="mtWhen" type="datetime-local" /></div>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;font-weight:400;"><input type="checkbox" id="mtMand" checked style="width:auto;" /> Mandatory (counts toward Parade Ready)</label>
-            <button type="button" class="btn btn-primary" onclick="kosCreateMeeting()">☘ Create meeting</button>
-            <div class="msg" id="mtMsg"></div></div>
-            <h3 class="rpt-cat">📲 Upcoming meetings</h3>`;
-          if(!rows.length) html += '<p class="empty">No upcoming meetings yet. Create one above.</p>';
-          else html += rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
-              <b>${esc(r.name)}</b> <span>${fmtDate(r.start_time)}</span> ${r.is_mandatory?'<span class="rank-pill">mandatory</span>':""}
-              <button class="rpt-btn ok" type="button" onclick="kosShowCheckinQR('${r.id}', this)">Show check-in QR</button>
-              <div class="qr-slot" style="flex-basis:100%;"></div>
-            </div>`).join("");
-          return html;
-        }},
-
-      { id:"qr_solutions", cat:"Parade Readiness", icon:"▦", title:"How QR codes work", secure:true,
-        desc:"QR lives in Event Studio and Shop Studio — this is the plain-English cheat sheet.",
-        run: async()=>{
-          const origin = location.origin.replace(/\/$/,"");
-          const abs = (path)=> origin + "/" + path.replace(/^\//,"");
-          const dues = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-          const hours = abs("members.html?hub=hours#hours");
-          const store = abs("store.html");
-          const fbMem = "https://www.facebook.com/groups/1790675004521855";
-          let html = `<div class="rpt-picker" style="margin-bottom:16px;">
-            <p style="margin:0 0 10px;font-size:15px;line-height:1.45;"><b>Forget the “planned studio” list.</b> A QR code is just a link drawn as a square. You create the thing first — then you make its square.</p>
-            <ol style="margin:0;padding-left:1.2em;font-size:14px;line-height:1.5;color:var(--muted);">
-              <li><b>Event Studio</b> — save an event → tap <b>RSVP QR</b> (flyer) or <b>Door check-in QR</b> (projector).</li>
-              <li><b>Shop Studio</b> — save a product (with Zeffy link) → tap <b>Shop QR</b> (bar / float).</li>
-              <li><b>Tonight extras</b> — dues, volunteer hours, Facebook: quick squares below.</li>
-            </ol>
-          </div>`;
-          html += `<p class="rpt-note">Open the studios from Officer desk (dropdown). This report is only the cheat-sheet.</p>`;
-          const quick = [
-            { title:"Pay member dues", url:dues, note:"Meeting slide / postcard" },
-            { title:"Log volunteer hours", url:hours, note:"Warehouse door → login → form" },
-            { title:"Krewe store", url:store, note:"Whole shop, not one product" },
-            { title:"Members Facebook group", url:fbMem, note:"Welcome packet" },
-            { title:"Help / secretary", url:"mailto:secretary@kreweofshamrock.com", note:"Report a problem" }
-          ];
-          html += `<h3 class="rpt-cat" style="margin-top:12px;">Tonight’s handy squares</h3>`;
-          for (const it of quick) {
-            html += `<div style="padding:12px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
-              <b style="font-family:var(--display);color:var(--green-800);">${esc(it.title)}</b>
-              <div style="font-size:14px;color:var(--muted);margin:4px 0 8px;">${esc(it.note)}</div>
-              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-                <button type="button" class="rpt-btn ok" data-qr-url="${esc(it.url)}" onclick="kosShowLinkQR(this)">▦ Show QR</button>
-                <a href="${esc(it.url)}" target="_blank" rel="noopener" style="font-size:13px;">Open link</a>
-                <div class="qr-slot" style="flex-basis:100%;"></div>
-              </div></div>`;
-          }
-          html += `<p class="rpt-note">Raffle basket QRs stay on the <a href="${abs('raffle-qr-sheet.html')}" target="_blank" rel="noopener">raffle print sheet</a>. Meeting check-in is also on each event in Event Studio.</p>`;
-          return html;
-        }},
-
+      
+      
       /* ---- Events & Attendance ---- */
       { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
         desc:"Every scheduled event with date and location.",
@@ -1885,7 +1824,7 @@
         opts += `</optgroup>`;
       });
       grid.innerHTML = `<div class="rpt-picker">
-        <label for="reportSelect">Officer desk — choose one</label>
+        <label for="reportSelect">Choose a report</label>
         <select id="reportSelect" aria-describedby="reportSelectDesc">${opts}</select>
         <p class="rpt-pick-desc" id="reportSelectDesc">Pick from the list, then open it. No long scroll of cards.</p>
         <div class="rpt-pick-actions">
@@ -2567,9 +2506,10 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909q1" defer></script>
+<script src="assets/members-desk.js?v=20260909a" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
-  <script src="assets/kos-shop-studio.js?v=20260909q1" defer></script>
+  <script src="assets/kos-shop-studio.js?v=20260909a" defer></script>
+<script src="assets/kos-qr-studio.js?v=20260909a"></script>
   <script src="assets/kos-reports.js" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
 </body>

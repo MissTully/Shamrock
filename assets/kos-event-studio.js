@@ -260,6 +260,8 @@
       var after = payments || approvals;
       if (after && after.nextSibling) panel.insertBefore(card, after.nextSibling);
       else if (after) panel.appendChild(card);
+    if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
+
       else panel.appendChild(card);
     }
     card.innerHTML =

@@ -245,6 +245,7 @@
     });
     updatePreview();
     await refreshHistory(client);
+    if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
   }
 
   async function boot() {
