@@ -252,6 +252,7 @@ Remaining advisor noise is mostly “authenticated can call SECURITY DEFINER RPC
 | `GAMIFICATION_DESIGN.md` | Craic Cup design notes |
 | `TARTAN_BALL.md` | Ball ops / labels |
 | `REPORTS.md` | Officer reports |
+| `QR_FEATURE_SOLUTIONS.md` | Member & officer QR feature solutions + Attendance QR Studio plan |
 | `DEPLOYMENT_PLAN.md` | Launch readiness history |
 | `DATABASE_BACKEND.md` | Earlier schema narrative |
 
@@ -265,6 +266,7 @@ Remaining advisor noise is mostly “authenticated can call SECURITY DEFINER RPC
 - Vercel Hobby vs commercial ToS — plan Pro before heavy public traffic.
 - Cloud agents unavailable for this repo — ship via GitHub + Supabase directly.
 - Some older SQL migrations may not all live in-repo; **hosted DB is source of truth** for schema.
+- **QR feature solutions** catalogued in `QR_FEATURE_SOLUTIONS.md`. Officer desk **QR Solutions pack** generates Live/Pack squares; still planned: Attendance QR Studio (scan → attendance + volunteer hours), per-event RSVP QR, Tartan guest card, wristband station, locker sticker, per-SKU store QR.
 
 ---
 
@@ -280,4 +282,4 @@ Remaining advisor noise is mostly “authenticated can call SECURITY DEFINER RPC
 
 ---
 
-*Document owner: Krewe digital / Encountive. Last updated 2026-09-08.*
+*Document owner: Krewe digital / Encountive. Last updated 2026-09-09.*
