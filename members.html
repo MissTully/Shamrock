@@ -1946,7 +1946,7 @@
       ]);
       if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       const yr=new Date().getFullYear();
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season. so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -2304,7 +2304,7 @@
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
       const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events — enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
       if(e1){
-        box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now — create one above to start planning gift baskets for charity. 🍀</p>';
+        box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>';
         await renderManage();
         try{ await renderOfficerTools(events||[], baskets||[]); }catch(_){ }
         return;
@@ -2340,7 +2340,7 @@
         }
         html+=`</div>`;
       }
-      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now — create one above to start planning gift baskets for charity. 🍀</p>'; }
+      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>'; }
       box.innerHTML=html;
       await renderManage();
       try{ await renderOfficerTools(events||[],baskets||[]); }catch(_){ }
