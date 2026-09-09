@@ -177,6 +177,37 @@
   .dir-card .dir-av{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(168,128,28,.45); flex:none; background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; }
   .dir-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
   .dir-card .dir-go{ margin-left:auto; color:var(--gold); font-family:var(--display); opacity:.7; }
+
+  /* Stacked panels for raffle create/manage forms (dir-card is horizontal for directory) */
+  .raffle-panel{
+    border:1px solid rgba(168,128,28,.25);
+    border-radius:12px;
+    padding:14px 16px;
+    background:#fbf7ec;
+    text-align:left;
+    width:100%;
+    box-sizing:border-box;
+    display:block;
+    cursor:default;
+  }
+  .raffle-panel:hover{ background:#fbf7ec; transform:none; }
+  .raffle-panel label{ display:block; }
+  .raffle-panel input,
+  .raffle-panel select,
+  .raffle-panel textarea{
+    display:block;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  .raffle-panel .raffle-form-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+    align-items:center;
+  }
+
   /* My Krewe people directory — photo-first, not a spreadsheet */
   .people-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 4px; }
   .people-toolbar #dirSearch{ flex:1 1 220px; min-width:0; }
@@ -2497,7 +2528,7 @@
     function mrInput(label,html){ return '<label style="display:block;font-size:13px;color:#3a3a2e;margin:8px 0 2px;font-weight:600;">'+label+'</label>'+html; }
     function makeBasketForm(eventId, b){
       var IS='__IS__';
-      var box=document.createElement('div'); box.className='dir-card'; box.style.marginTop='8px';
+      var box=document.createElement('div'); box.className='raffle-panel'; box.style.marginTop='8px';
       box.innerHTML =
         mrInput('Gift basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
         mrInput('Approximate gift value ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
@@ -2505,7 +2536,7 @@
         mrInput('Gift presentation / details','<textarea class="bfDesc" rows="2" '+IS+' placeholder="Theme, wrapping, display notes for the planning board">'+(b&&b.description?RE(b.description):'')+'</textarea>')+
         mrInput('Photo of the finished gift basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
         (b&&b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="margin-top:8px;max-width:120px;border-radius:8px;" />':'')+
-        '<div style="margin-top:10px;"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
+        '<div class="raffle-form-actions"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
         '<div class="msg bfMsg"></div>';
       box.innerHTML=box.innerHTML.split('__IS__').join('style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"');
       box.querySelector('.bfCancel').onclick=function(){ box.remove(); };
@@ -2547,15 +2578,15 @@
     }
     function showCreateForm(){
       var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
-      f.innerHTML='<div class="dir-card">'+
-        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" />')+
+      f.innerHTML='<div class="raffle-panel">'+
+        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" placeholder="e.g. St. Patrick\'s Day Gift Baskets" />')+
         mrInput('Type','<select id="crType" '+IS+'><option value="basket">🎁 Gift basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
         mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+' placeholder="Theme night, event, or planning notes"></textarea>')+
         mrInput('Charity / cause (optional)','<textarea id="crCharity" rows="2" '+IS+' placeholder="Where the proceeds go"></textarea>')+
         mrInput('Audience','<select id="crAudience" '+IS+'><option value="both">Internal + external</option><option value="internal">Internal (members only)</option><option value="external">External (public)</option></select>')+
         mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
         mrInput('Event / draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
-        '<div style="margin-top:10px;"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
+        '<div class="raffle-form-actions"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
         '<div class="msg" id="crMsg"></div></div>';
       document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
       document.getElementById("crSave").onclick=async function(){
@@ -2573,7 +2604,7 @@
       if(!list.length){ L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; return; }
       L.innerHTML='';
       list.forEach(function(e){
-        var card=document.createElement('div'); card.className='dir-card'; card.style.marginBottom='12px';
+        var card=document.createElement('div'); card.className='raffle-panel'; card.style.marginBottom='12px';
         var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+RE(e.name)+'</b>'+
           '<span style="font-size:12px;color:var(--muted);">'+(e.is_active?'live':'hidden')+(e.mine?'':' · (officer)')+'</span></div>';
         var body='';
