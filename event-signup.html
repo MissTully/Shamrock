@@ -115,6 +115,7 @@
               <option value="attendee">Attendee</option>
               <option value="volunteer">Volunteer</option>
             </select>
+            <div class="hint">Volunteers sign up free (no ticket checkout). Attendees use Zeffy when the event has paid tickets.</div>
           </div>
         </div>
 
@@ -357,9 +358,22 @@
         }
         eventSelect.appendChild(opt);
       }
+      function isVolunteerRole() {
+        const role = (document.getElementById("role") || {}).value || "";
+        return role === "volunteer" || role === "organizer";
+      }
       function syncSignupButton() {
         const opt = eventSelect.selectedOptions[0];
         btn.disabled = false;
+        // Volunteers / organizers RSVP free — never send them to Zeffy/ticket checkout.
+        if (isVolunteerRole()) {
+          btn.textContent = "☘ Sign me up (free volunteer)";
+          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Buy Tickets|Opening /i.test(message.textContent || "")) {
+            message.className = "msg"; message.textContent = "";
+          }
+          showMessage("Volunteering is free — you’ll be signed up without ticket checkout.", "success");
+          return;
+        }
         if (opt && opt.dataset.redirect) {
           btn.textContent = "☘ Buy Tickets";
           if (opt.dataset.checkoutKind === "tartan") {
@@ -373,12 +387,13 @@
           showMessage("Paid tickets for this event aren’t linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
         } else {
           btn.textContent = "☘ Sign me up";
-          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets/i.test(message.textContent || "")) {
+          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Volunteering is free/i.test(message.textContent || "")) {
             message.className = "msg"; message.textContent = "";
           }
         }
       }
       eventSelect.addEventListener("change", syncSignupButton);
+      document.getElementById("role").addEventListener("change", syncSignupButton);
       // Deep-link: ?event=<uuid> preselects and syncs the button
       const params = new URLSearchParams(location.search);
       const pre = params.get("event");
@@ -507,19 +522,22 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const selected = eventSelect.selectedOptions[0];
-      if (selected && selected.dataset.redirect) {
+      const roleEarly = document.getElementById("role").value;
+      const volunteering = roleEarly === "volunteer" || roleEarly === "organizer";
+      // Paid checkout only for attendees — volunteers RSVP free on-site.
+      if (!volunteering && selected && selected.dataset.redirect) {
         window.open(selected.dataset.redirect, "_blank", "noopener,noreferrer");
         showMessage(selected.dataset.checkoutKind === "tartan"
           ? "Opening Tampa Bay Tartan Ball tickets in a new tab…"
           : "Opening Zeffy ticket checkout in a new tab…", "success");
         return;
       }
-      if (selected && selected.dataset.needsTickets) {
+      if (!volunteering && selected && selected.dataset.needsTickets) {
         showMessage("Paid tickets for this event aren’t linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
         return;
       }
       message.className = "msg"; btn.disabled = true; btn.textContent = "Submitting…";
-      const role = document.getElementById("role").value;
+      const role = roleEarly;
       const plannedRaw = document.getElementById("plannedHours").value;
       const planned = (role === "volunteer" || role === "organizer") && plannedRaw
         ? Number(plannedRaw) : null;
