@@ -1,5 +1,5 @@
 /* All Krewe Messages — Officer desk compose + history.
-   Queues via send_all_krewe_message → queue_broadcast → outbound_emails. */
+   Queues via send_all_krewe_message → queue_broadcast (branded wrap) → outbound_emails. */
 (function () {
   var CSS =
     ".hub-akm-form label{display:block;font-size:13px;color:var(--muted);margin:0 0 4px;}" +
@@ -16,7 +16,24 @@
     ".hub-akm-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(168,128,28,.2);}" +
     ".hub-akm-row:first-of-type{border-top:0;}" +
     ".hub-akm-row .muted{font-size:13px;color:var(--muted);margin-top:4px;}" +
-    ".hub-akm-row .count{white-space:nowrap;font-size:13px;color:var(--muted);}";
+    ".hub-akm-row .count{white-space:nowrap;font-size:13px;color:var(--muted);}" +
+    ".hub-akm-note{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.45;}" +
+    ".hub-akm-preview-wrap{margin-top:14px;}" +
+    ".hub-akm-preview-wrap h4{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:600;}" +
+    ".hub-akm-preview{border:1px solid rgba(168,128,28,.4);border-radius:10px;overflow:hidden;" +
+    "background:#f6efdd;max-width:420px;font-size:13px;line-height:1.45;}" +
+    ".hub-akm-prev-hdr{display:flex;gap:10px;align-items:center;padding:10px 12px;" +
+    "background:linear-gradient(180deg,#14532d,#0c3b21);border-bottom:3px solid #d4af37;color:#fff;}" +
+    ".hub-akm-prev-hdr img{width:36px;height:36px;border-radius:50%;background:#fff;}" +
+    ".hub-akm-prev-hdr .t{font-family:var(--display);font-size:14px;line-height:1.2;}" +
+    ".hub-akm-prev-hdr .s{font-size:10px;color:#ecd07e;margin-top:2px;}" +
+    ".hub-akm-prev-gold{height:3px;background:linear-gradient(90deg,#a9801c,#d4af37,#ecd07e,#d4af37,#a9801c);}" +
+    ".hub-akm-prev-body{background:#fff;padding:14px 14px 12px;color:#23291f;}" +
+    ".hub-akm-prev-body h1{margin:0 0 10px;font-family:var(--display);font-size:16px;color:#14532d;}" +
+    ".hub-akm-prev-body .hub-akm-prev-content{font-size:13px;max-height:120px;overflow:auto;}" +
+    ".hub-akm-prev-body .hub-akm-prev-content p{margin:0 0 8px;}" +
+    ".hub-akm-prev-ftr{background:#e9f3ea;padding:8px 12px;border-top:1px solid #ecd07e;" +
+    "font-size:11px;color:#5f6b5a;text-align:center;}";
 
   function injectCss() {
     if (document.getElementById("kosAllKreweCss")) return;
@@ -52,6 +69,25 @@
     return t.split(/\n{2,}/).map(function (p) {
       return "<p>" + esc(p).replace(/\n/g, "<br>") + "</p>";
     }).join("");
+  }
+
+
+  var LOGO = "https://www.kreweofshamrock.com/assets/img/emblem-shamrock.png";
+
+  function updatePreview() {
+    var box = document.getElementById("hubAkmPreview");
+    if (!box) return;
+    var subject = val("hubAkmSubject") || "Your subject here";
+    var bodyHtml = toHtml(val("hubAkmBody")) || "<p class=\"muted\"><em>Message preview…</em></p>";
+    box.innerHTML =
+      '<div class="hub-akm-prev-hdr">' +
+      '<img src="' + LOGO + '" alt="" />' +
+      '<div><div class="t">Krewe of Shamrock</div><div class="s">Tampa · Gasparilla</div></div></div>' +
+      '<div class="hub-akm-prev-gold"></div>' +
+      '<div class="hub-akm-prev-body"><h1>' + esc(subject) + '</h1>' +
+      '<div class="hub-akm-prev-content">' + bodyHtml + "</div></div>" +
+      '<div class="hub-akm-prev-ftr">Sent to Krewe of Shamrock members · ' +
+      '<a href="https://www.kreweofshamrock.com/" target="_blank" rel="noopener">kreweofshamrock.com</a></div>';
   }
 
   function setMsg(text, kind) {
@@ -180,10 +216,12 @@
       '<div class="app-body">' +
       '<div class="hub-akm-form" id="hubAkmFormWrap">' +
       "<h3>Compose</h3>" +
+      '<p class="hub-akm-note">Messages send in a branded Shamrock template (deep green header, crest, gold accents, and footer). Recipients see the framed version; history below keeps your original wording.</p>' +
       '<div class="hub-akm-grid">' +
       '<div><label for="hubAkmSubject">Subject *</label><input id="hubAkmSubject" type="text" maxlength="200" placeholder="e.g. Parade lineup is set!" /></div>' +
       '<div><label for="hubAkmBody">Message *</label><textarea id="hubAkmBody" placeholder="Write your note to the krewe. Plain text is fine; short HTML is OK."></textarea></div>' +
       "</div>" +
+      '<div class="hub-akm-preview-wrap"><h4>Branded preview</h4><div class="hub-akm-preview" id="hubAkmPreview" aria-live="polite"></div></div>' +
       '<label class="hub-akm-confirm"><input type="checkbox" id="hubAkmConfirm" /> ' +
       "<span>I understand this <b>emails ALL current members</b> (active roster) through the krewe outbound email queue.</span></label>" +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">' +
@@ -195,6 +233,13 @@
     document.getElementById("hubAkmSend").addEventListener("click", function () {
       sendMessage(client);
     });
+    ["hubAkmSubject", "hubAkmBody"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", updatePreview);
+      el.addEventListener("change", updatePreview);
+    });
+    updatePreview();
     await refreshHistory(client);
   }
 

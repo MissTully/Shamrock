@@ -81,6 +81,7 @@ select public.queue_broadcast(
 );
 ```
 It returns how many recipients were queued; the sender does the rest.
+Bodies are wrapped in the Shamrock branded HTML frame (see All Krewe Messages below).
 
 
 ### Officer desk — All Krewe Messages
@@ -94,9 +95,18 @@ Officers can compose and send a message to **all current (active) members** from
 2. Saves a history row in `all_krewe_messages` (subject, body, sent_by,
    recipient_count, segment, created_at).
 
+**Branded template:** `queue_broadcast` wraps every broadcast body with
+`wrap_all_krewe_email_html(subject, body)` — deep-green header + emblem, gold
+accents, paper content card, and muted footer linking to
+[kreweofshamrock.com](https://www.kreweofshamrock.com/). The Officer desk stores
+the officer-composed (unwrapped) HTML for history; only the queued outbound copy
+is framed. Apply `sql/kos_all_krewe_messages.sql` first, then the delta
+`sql/kos_all_krewe_email_template.sql` on Supabase. Already-wrapped bodies
+(marker `<!-- kos-all-krewe-email -->` or class `kos-akm-wrap`) are not
+double-wrapped.
+
 RLS and the RPCs require `is_krewe_officer()`; non-officers see no UI and cannot
-insert or list. Apply `sql/kos_all_krewe_messages.sql` on the Supabase project
-before using the feature.
+insert or list.
 
 ---
 
