@@ -472,13 +472,13 @@
               <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
             </div>
           </div>
-          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game — role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game. role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
           <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
         </div>
       </details>
 
       <div class="auth-features">
-        <div class="afe"><span>🍀</span> The Craic Cup: friendly competition — earn Clovers, climb ranks, cheer your krewe</div>
+        <div class="afe"><span>🍀</span> The Craic Cup: friendly competition. earn Clovers, climb ranks, cheer your krewe</div>
         <div class="afe"><span>🎟️</span> Gift-basket &amp; 50/50 raffles for charity — create, plan, enter</div>
         <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
@@ -507,7 +507,7 @@
     <div class="gate-card" style="max-width:480px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Welcome to our Krewe Digital Home</h1>
-      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — our kindly competitive game of showing up. Earn Clovers, climb the ranks, collect badges, and chase your friends up the ladder (with a smile). First, let’s get your face in the game.</p>
+      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b>. our kindly competitive game of showing up. Earn Clovers, climb the ranks, collect badges, and chase your friends up the ladder (with a smile). First, let’s get your face in the game.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
         <div style="display:flex;gap:14px;align-items:center;margin:12px 0 8px;">
           <div id="pfAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:#e8f0e4;border:2px solid rgba(168,128,28,.45);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:0 0 auto;">☘</div>
@@ -658,8 +658,7 @@
         </div>
         <div class="app-body dash-body">
           <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
-             <b>Clovers 🍀</b> — they fuel your <b>rank</b> and unlock <b>badges</b>.
-             Cheer your krewe, then try to catch them. Good-natured competition only.</p>
+             <b>Clovers 🍀</b>. they fuel your <b>rank</b> and unlock <b>badges</b>. Cheer your krewe, then try to catch them. Good-natured competition only.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
             <span>🤝 Volunteer bonuses</span><span>🔎 Your Clovers</span>
@@ -816,9 +815,9 @@
     <div class="modal-card" style="max-width:680px;">
       <div class="modal-head"><span class="ic" style="font-size:24px;">🍀</span><h2>Welcome to Members Only</h2></div>
       <div class="modal-body">
-        <p style="margin:0 0 14px;color:#3a3a2e;">You're in! Your account powers the <b>Craic Cup</b> — a friendly race to see who shows up and pitches in. Cheer loud, climb kind.</p>
+        <p style="margin:0 0 14px;color:#3a3a2e;">You're in! Your account powers the <b>Craic Cup</b>. a friendly race to see who shows up and pitches in. Cheer loud, climb kind.</p>
         <div class="tour-grid">
-          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Stack Clovers for attending and volunteering. Watch the standings, chase the next rank, collect badges — rivalries welcome, egos optional.</div></div>
+          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Stack Clovers for attending and volunteering. Watch the standings, chase the next rank, collect badges. rivalries welcome, egos optional.</div></div>
           <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Create gift baskets for charity, plan donated contents, and enter tickets (draws are in person).</div></div>
           <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
           <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
@@ -1587,7 +1586,7 @@
       /* ---- Membership ---- */
 
       { id:"secretary_engagement", cat:"Membership", icon:"📣", title:"Secretary engagement (board)", secure:true,
-        desc:"Who is active, light, or quiet — RSVPs, attendance, volunteer hours, season/lifetime Clovers, rank, and badges for the board secretary.",
+        desc:"Who is active, light, or quiet. RSVPs, attendance, volunteer hours, season/lifetime Clovers, rank, and badges for the board secretary.",
         run: async()=>{
           const { data, error } = await supabase.from("v_secretary_engagement").select("*");
           if(error) throw error;
@@ -1607,7 +1606,7 @@
             {l:"Light",v:light.length},
             {l:"Quiet",v:quiet.length}
           ]);
-          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP, no approved volunteer hours, and no Clovers this year. Columns for <b>season Clovers</b>, <b>lifetime</b>, <b>badges</b>, and <b>rank</b> are ready — they fill as the Craic Cup ledger records activity.</p>';
+          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP, no approved volunteer hours, and no Clovers this year. Columns for <b>season Clovers</b>, <b>lifetime</b>, <b>badges</b>, and <b>rank</b> are ready. they fill as the Craic Cup ledger records activity.</p>';
           html += '<h3 class="rpt-cat">😴 Quiet (reach out)</h3>';
           const rowCols = r => [
             `${r.first_name||""} ${r.last_name||""}`.trim(),
@@ -1623,7 +1622,7 @@
           const headers = ["Name","RSVPs","Attended","Vol hrs","Season 🍀","Lifetime 🍀","Rank","Badges","Last RSVP"];
           html += quiet.length
             ? rTable(["Name","Email","Status","Season 🍀","Lifetime 🍀","Rank","Last RSVP"],
-                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_status||"—", String(r.season_clovers||0), String(r.lifetime_clovers||0), `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`, fmtLast(r.last_rsvp_at)]))
+                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||". ", r.membership_status||". ", String(r.season_clovers||0), String(r.lifetime_clovers||0), `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`, fmtLast(r.last_rsvp_at)]))
             : '<p class="empty">Nobody is fully quiet — nice.</p>';
           html += '<h3 class="rpt-cat">🌤️ Light engagement</h3>';
           html += light.length
@@ -1947,7 +1946,7 @@
       ]);
       if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       const yr=new Date().getFullYear();
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season — so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season. so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -2535,7 +2534,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909craic2" defer></script>
+<script src="assets/members-desk.js?v=20260909craic3" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
