@@ -477,10 +477,27 @@
     }
 
     var saved = TAB_HOME;
-    try { saved = sessionStorage.getItem("kosHubTab") || TAB_HOME; } catch (e) {}
+    try {
+      var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+      if (hash === "hours" || hash === "volunteer" || hash === "parade" || hash === "desk") saved = "parade";
+      else if (hash === "officer") saved = "officer";
+      else if (hash === "krewe" || hash === "directory") saved = "krewe";
+      else if (hash === "events") saved = "events";
+      else if (hash === "fun") saved = "fun";
+      else saved = sessionStorage.getItem("kosHubTab") || TAB_HOME;
+    } catch (e) {}
     if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
     showTab(saved);
     renderHome();
+    try {
+      var h2 = (location.hash || "").replace(/^#/, "").toLowerCase();
+      if (h2 === "hours" || h2 === "volunteer") {
+        setTimeout(function () {
+          var el = document.getElementById("hubHoursCard") || document.getElementById("vhForm") || document.getElementById("prHours");
+          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 250);
+      }
+    } catch (e2) {}
   }
 
   // ---- My profile: photo, birthday, anniversary, and friendly questions ----
