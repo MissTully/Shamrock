@@ -171,7 +171,7 @@
   var path = (location.pathname.split("/").pop() || "").toLowerCase();
   if (path !== "members.html") return;
   var s = document.createElement("script");
-  s.src = "assets/members-desk.js?v=20260908b";
+  s.src = "assets/members-desk.js?v=20260909h1";
   s.defer = true;
   document.head.appendChild(s);
 })();
