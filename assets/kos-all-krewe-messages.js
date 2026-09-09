@@ -82,12 +82,16 @@
     box.innerHTML =
       '<div class="hub-akm-prev-hdr">' +
       '<img src="' + LOGO + '" alt="" />' +
-      '<div><div class="t">Krewe of Shamrock</div><div class="s">Tampa · Gasparilla</div></div></div>' +
+      '<div><div class="t">Krewe of Shamrock</div><div class="s">Since 1999</div></div></div>' +
       '<div class="hub-akm-prev-gold"></div>' +
       '<div class="hub-akm-prev-body"><h1>' + esc(subject) + '</h1>' +
       '<div class="hub-akm-prev-content">' + bodyHtml + "</div></div>" +
-      '<div class="hub-akm-prev-ftr">Sent to Krewe of Shamrock members · ' +
-      '<a href="https://www.kreweofshamrock.com/" target="_blank" rel="noopener">kreweofshamrock.com</a></div>';
+      '<div class="hub-akm-prev-ftr"><div style="font-weight:600;color:var(--green-800);margin-bottom:6px;">Krewe of Shamrock · Office</div>' +
+      '<div><a href="mailto:patrick@kreweofshamrock.com">patrick@kreweofshamrock.com</a><br>' +
+      '<a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a><br>' +
+      '<a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a><br>' +
+      '<a href="mailto:digital@kreweofshamrock.com">digital@kreweofshamrock.com</a></div>' +
+      '<div style="margin-top:8px;"><a href="https://www.kreweofshamrock.com/" target="_blank" rel="noopener">kreweofshamrock.com</a></div></div>';
   }
 
   function setMsg(text, kind) {

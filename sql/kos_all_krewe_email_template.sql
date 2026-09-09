@@ -60,7 +60,7 @@ begin
     '<div style="font-size:20px;font-weight:700;letter-spacing:0.4px;line-height:1.2;">' ||
     'Krewe of Shamrock</div>' ||
     '<div style="font-size:12px;color:#ecd07e;margin-top:4px;letter-spacing:0.3px;">' ||
-    'Tampa · Gasparilla</div>' ||
+    'Since 1999</div>' ||
     '</td>' ||
     '</tr></table>' ||
     '</td></tr>' ||
@@ -82,8 +82,14 @@ begin
     '<tr><td style="background-color:#e9f3ea;padding:16px 22px;border-top:1px solid #ecd07e;' ||
     'font-family:Georgia,''Times New Roman'',serif;font-size:12px;line-height:1.5;color:#5f6b5a;' ||
     'text-align:center;">' ||
-    '<div>Sent to Krewe of Shamrock members</div>' ||
-    '<div style="margin-top:6px;">' ||
+    '<div style="margin:0 0 8px;font-weight:700;color:#14532d;">Krewe of Shamrock · Office</div>' ||
+    '<div style="line-height:1.7;">' ||
+    '<a href="mailto:patrick@kreweofshamrock.com" style="color:#1b6b39;text-decoration:none;">patrick@kreweofshamrock.com</a><br>' ||
+    '<a href="mailto:secretary@kreweofshamrock.com" style="color:#1b6b39;text-decoration:none;">secretary@kreweofshamrock.com</a><br>' ||
+    '<a href="mailto:treasurer@kreweofshamrock.com" style="color:#1b6b39;text-decoration:none;">treasurer@kreweofshamrock.com</a><br>' ||
+    '<a href="mailto:digital@kreweofshamrock.com" style="color:#1b6b39;text-decoration:none;">digital@kreweofshamrock.com</a>' ||
+    '</div>' ||
+    '<div style="margin-top:10px;">' ||
     '<a href="' || v_site || '" style="color:#1b6b39;text-decoration:underline;">' ||
     'www.kreweofshamrock.com</a></div>' ||
     '</td></tr>' ||
