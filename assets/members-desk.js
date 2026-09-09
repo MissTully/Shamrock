@@ -301,7 +301,7 @@
     var total = life + need;
     var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
     var kickoffNote = (life > 0)
-      ? '<p class="tag" style="margin-top:-6px;opacity:.95;">You\'re off the line with a head start — now see if you can climb. Kind rivalry only. ☘️</p>'
+      ? '<p class="tag" style="margin-top:-6px;opacity:.95;">You\'re off the line with a head start. Now see if you can climb. Kind rivalry only. ☘️</p>'
       : '<p class="tag" style="margin-top:-6px;opacity:.95;">Show up, pitch in, collect Clovers. Cheer your krewe, then try to catch them.</p>';
     return '<div class="hub-craic">' +
       '<div class="tag">☘ Welcome home, ' + esc(firstName() || 'friend') + '</div>' +
