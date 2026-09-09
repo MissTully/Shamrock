@@ -478,7 +478,7 @@
       </details>
 
       <div class="auth-features">
-        <div class="afe"><span>🍀</span> The Craic Cup: earn Clovers, climb the ranks, collect badges</div>
+        <div class="afe"><span>🍀</span> The Craic Cup: friendly competition — earn Clovers, climb ranks, cheer your krewe</div>
         <div class="afe"><span>🎟️</span> Gift-basket &amp; 50/50 raffles for charity — create, plan, enter</div>
         <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
@@ -507,7 +507,7 @@
     <div class="gate-card" style="max-width:480px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Welcome to our Krewe Digital Home</h1>
-      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — earn Clovers for showing up, climb the ranks, unlock badges. First, let’s get your face in the game.</p>
+      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — our kindly competitive game of showing up. Earn Clovers, climb the ranks, collect badges, and chase your friends up the ladder (with a smile). First, let’s get your face in the game.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
         <div style="display:flex;gap:14px;align-items:center;margin:12px 0 8px;">
           <div id="pfAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:#e8f0e4;border:2px solid rgba(168,128,28,.45);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:0 0 auto;">☘</div>
@@ -653,13 +653,13 @@
                onclick="openGame()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGame();}">
         <div class="app-head">
           <span class="ic">🍀</span>
-          <div><h2>The Craic Cup</h2><small>Earn Clovers for showing up &amp; pitching in, and climb the ranks!</small></div>
+          <div><h2>The Craic Cup</h2><small>Kind rivalry. Real bragging rights. All for the craic.</small></div>
           <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Our friendly participation game. Every event you attend and every shift you volunteer earns
-             <b>Clovers 🍀</b> that build your <b>rank</b> and unlock <b>badges</b>. See who's leading the
-             season, learn how to earn, and look up your own standing.</p>
+          <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
+             <b>Clovers 🍀</b> — they fuel your <b>rank</b> and unlock <b>badges</b>.
+             Cheer your krewe, then try to catch them. Good-natured competition only.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
             <span>🤝 Volunteer bonuses</span><span>🔎 Your Clovers</span>
@@ -816,9 +816,9 @@
     <div class="modal-card" style="max-width:680px;">
       <div class="modal-head"><span class="ic" style="font-size:24px;">🍀</span><h2>Welcome to Members Only</h2></div>
       <div class="modal-body">
-        <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Craic Cup.</p>
+        <p style="margin:0 0 14px;color:#3a3a2e;">You're in! Your account powers the <b>Craic Cup</b> — a friendly race to see who shows up and pitches in. Cheer loud, climb kind.</p>
         <div class="tour-grid">
-          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Earn Clovers for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
+          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Stack Clovers for attending and volunteering. Watch the standings, chase the next rank, collect badges — rivalries welcome, egos optional.</div></div>
           <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Create gift baskets for charity, plan donated contents, and enter tickets (draws are in person).</div></div>
           <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
           <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
@@ -1947,7 +1947,7 @@
       ]);
       if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       const yr=new Date().getFullYear();
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most craic. Earn <b>Clovers 🍀</b> by showing up, volunteering, and pitching in. Standings reset each season, so it's always anyone's game.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season — so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -1965,7 +1965,7 @@
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Loading…</p>';
       const { data:badges } = await sb.from("badge_defs").select("*").order("sort",{ascending:true});
-      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Clovers add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun: recognition, bragging rights, and a wee bit of friendly rivalry to fill our events and volunteer shifts.</p>`;
+      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Stack them to climb <b>ranks</b> and unlock <b>badges</b>. Think recognition with a wink: bragging rights, a nudge to fill the room, and rivalry that’s always kind.</p>`;
       html+=`<h3 class="rpt-cat">🍀 How to earn Clovers</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
         POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
@@ -2535,7 +2535,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909r2" defer></script>
+<script src="assets/members-desk.js?v=20260909craic2" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
