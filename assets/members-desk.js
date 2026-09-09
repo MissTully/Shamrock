@@ -244,8 +244,8 @@
       else if (hub === "krewe") krewe.appendChild(sec);
       else fun.appendChild(sec);
     });
-    // Member desk = Parade Ready + volunteer hours
-    if (give && give.firstChild) parade.appendChild(give.firstChild);
+    // Member desk = volunteer hours at top, then Parade Ready / other parade sections
+    if (give && give.firstChild) parade.insertBefore(give.firstChild, parade.firstChild);
     oldGrid.remove();
     relocateHours();
   }
