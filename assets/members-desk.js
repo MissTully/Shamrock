@@ -873,6 +873,39 @@
     wireOfficerDeskPicker();
   }
 
+
+  function studioAbs(path) {
+    var origin = (location.origin || "").replace(/\/$/, "");
+    return origin + "/" + String(path || "").replace(/^\//, "");
+  }
+
+  function studioPaintQR(slot, url, label) {
+    if (!slot) return;
+    slot.innerHTML = '<canvas></canvas><div style="font-size:13px;color:var(--muted);margin-top:6px;word-break:break-all;">' +
+      esc(label || "Scan or open") + ': <a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(url) + "</a></div>";
+    if (window.QRCode) {
+      QRCode.toCanvas(slot.querySelector("canvas"), url, { width: 220, margin: 1, color: { dark: "#14532d", light: "#ffffff" } });
+    } else {
+      slot.querySelector("canvas").replaceWith(Object.assign(document.createElement("p"), { textContent: "QR library unavailable — use the link." }));
+    }
+  }
+
+  async function studioShowEventCheckinQR(eventId, slot) {
+    var client = window.__kosSb;
+    if (!client) { slot.innerHTML = '<p class="empty">Sign-in client not ready. Refresh and try again.</p>'; return; }
+    slot.innerHTML = '<p class="empty">Making check-in QR…</p>';
+    try {
+      var res = await client.rpc("officer_enable_checkin", { p_event: eventId });
+      if (res.error || !res.data) throw res.error || new Error("No check-in code returned.");
+      var code = res.data;
+      var url = studioAbs("members.html?checkin=" + encodeURIComponent(code));
+      studioPaintQR(slot, url, "Door check-in");
+    } catch (e) {
+      slot.innerHTML = '<p class="empty">Couldn’t make a check-in QR. ' + esc((e && e.message) || "Try again.") +
+        " (Check-in codes work for krewe meetings/events the officer check-in system knows.)</p>";
+    }
+  }
+
   // ---- Event Studio: authorized event creation and editing ----
   function eventLocalInput(value) {
     if (!value) return "";
@@ -956,7 +989,7 @@
     var target = document.getElementById("hubEventList");
     if (!target) return;
     if (!list.length) {
-      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below.</p>';
+      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below. After you save, you can make RSVP and door check-in QR codes here.</p>';
       return;
     }
     var html = "";
@@ -966,11 +999,17 @@
       if (event.location) details.push(event.location);
       var ticket = event.ticket_price_cents != null ? " · $" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
       var readOnly = String(event.source || "").toLowerCase() === "ikc";
+      var eid = esc(event.id);
       html += '<div class="hub-event-row"><div><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
-        (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn" type="button" data-event-edit="' + esc(event.id) + '">Edit</button></div>') + '</div>';
+        (readOnly ? "" : '<div class="hub-appr-btns">' +
+          '<button class="btn" type="button" data-event-edit="' + eid + '">Edit</button>' +
+          '<button class="btn" type="button" data-event-rsvp-qr="' + eid + '">▦ RSVP QR</button>' +
+          '<button class="btn btn-primary" type="button" data-event-checkin-qr="' + eid + '">▦ Door check-in QR</button>' +
+        '</div>') +
+        '<div class="qr-slot" data-event-qr-slot="' + eid + '" style="flex-basis:100%;margin-top:8px;"></div></div>';
     });
     target.innerHTML = html;
     target.querySelectorAll("[data-event-edit]").forEach(function (button) {
@@ -978,6 +1017,21 @@
         var id = button.getAttribute("data-event-edit");
         var event = list.find(function (row) { return String(row.id) === String(id); });
         if (event && String(event.source || "").toLowerCase() !== "ikc") fillEventForm(event);
+      });
+    });
+    target.querySelectorAll("[data-event-rsvp-qr]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-rsvp-qr");
+        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
+        var url = studioAbs("event-signup.html?event=" + encodeURIComponent(id));
+        studioPaintQR(slot, url, "RSVP / Sign me up");
+      });
+    });
+    target.querySelectorAll("[data-event-checkin-qr]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-checkin-qr");
+        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
+        studioShowEventCheckinQR(id, slot);
       });
     });
   }
@@ -1031,7 +1085,7 @@
       var res = await client.rpc("officer_upsert_event", { p: payload });
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not save event.");
-      if (msg) msg.textContent = "Event saved.";
+      if (msg) msg.textContent = "Event saved. Use RSVP QR or Door check-in QR on the event in the list above.";
       clearEventForm();
       await refreshEventStudio(client);
     } catch (e) { if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e); }
@@ -1054,8 +1108,10 @@
       else panel.appendChild(card);
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create and edit krewe events</small></div></div>' +
-      '<div class="app-body"><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
+      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create events — then make RSVP & door check-in QR codes</small></div></div>' +
+      '<div class="app-body">' +
+      '<p style="font-size:14px;color:var(--muted);margin:0 0 12px;">How QR works here: <b>save the event</b>, then tap <b>RSVP QR</b> (flyer/table tent) or <b>Door check-in QR</b> (projector at the door). The square is just that link.</p>' +
+      '<div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
       eventStudioFormHtml() + '</div>';
     document.getElementById("hubEventForm").addEventListener("submit", function (e) {
       e.preventDefault(); saveEventStudio(client);
