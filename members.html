@@ -246,6 +246,11 @@
   .rpt-card .t{ font-family:var(--display); color:var(--green-800); font-size:16px; display:flex; align-items:center; gap:7px; }
   .rpt-card .d{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
   .rpt-card .lock{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#7a5b00; background:#f0e2bd; border-radius:999px; padding:2px 9px; display:inline-block; margin-top:9px; }
+  .rpt-picker{ background:#fff; border:1px solid rgba(168,128,28,.35); border-radius:14px; padding:16px 16px 14px; }
+  .rpt-picker label{ display:block; font-family:var(--display); color:var(--green-800); font-size:14px; margin:0 0 8px; letter-spacing:.03em; }
+  .rpt-picker select{ width:100%; box-sizing:border-box; font:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid rgba(168,128,28,.5); background:#fbf7ec; color:var(--green-800); }
+  .rpt-picker .rpt-pick-desc{ margin:10px 0 12px; font-size:14px; color:var(--muted); line-height:1.4; min-height:2.8em; }
+  .rpt-picker .rpt-pick-actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
   .rpt-back{ background:none; border:0; color:var(--green-700); font-family:var(--display); font-size:15px; cursor:pointer; padding:0; margin-bottom:10px; }
   .rpt-back:hover{ text-decoration:underline; }
   #reportTitle{ font-family:var(--display); color:var(--green-800); margin:0 0 14px; font-size:22px; }
@@ -679,17 +684,11 @@
                onclick="openReports()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReports();}">
         <div class="app-head">
           <span class="ic">📊</span>
-          <div><h2>Reports Dashboard</h2><small>Coordination reports drawn from the krewe's live data</small></div>
+          <div><h2>Reports &amp; QR tools</h2><small>Pick a report or QR solution from a short list</small></div>
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>One place for every coordination report the website's data can produce: event headcounts and
-             volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
-             content inventory. Tap a report to run it against the latest data.</p>
-          <div class="dash-chips">
-            <span>📅 Events &amp; Attendance</span><span>👥 Membership</span><span>💶 Dues</span>
-            <span>🚐 Logistics</span><span>📚 Content</span>
-          </div>
+          <p>Officer reports and QR Solutions in one place — choose from a dropdown instead of scrolling a long card wall.</p>
         </div>
       </section>
 
@@ -853,16 +852,16 @@
   <!-- REPORTS DASHBOARD MODAL -->
   <div class="modal-overlay" id="reportsModal" aria-hidden="true"
        onclick="if(event.target===this) closeReports()">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member Reports Dashboard">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Officer reports and QR tools">
       <div class="modal-head">
         <span class="ic" style="font-size:24px;">📊</span>
-        <h2>Member Reports Dashboard</h2>
+        <h2>Officer reports &amp; QR tools</h2>
         <button class="modal-x" type="button" onclick="closeReports()" aria-label="Close dashboard">✕</button>
       </div>
       <div class="modal-body">
         <div id="reportGrid"></div>
         <div id="reportView" style="display:none;">
-          <button class="rpt-back" type="button" onclick="showReportGrid()">← All reports</button>
+          <button class="rpt-back" type="button" onclick="showReportGrid()">← Choose another</button>
           <h3 id="reportTitle"></h3>
           <div id="reportBody"></div>
         </div>
@@ -1893,20 +1892,38 @@
 
     function buildReportGrid(){
       const grid=document.getElementById("reportGrid");
-      grid.innerHTML = CATS.map(cat=>{
+      let opts = `<option value="">Select a tool or report…</option>`;
+      CATS.forEach(cat=>{
         const items=REPORTS.filter(r=>r.cat===cat);
-        return `<div class="rpt-cat">${esc(cat)}</div><div class="rpt-grid">${
-          items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
-            <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
-            <div class="d">${esc(r.desc)}</div>
-            ${r.secure?'<span class="lock">🔒 Officers only</span>':''}
-          </div>`).join("")}</div>`;
-      }).join("");
-      grid.querySelectorAll(".rpt-card").forEach(c=>{
-        const go=()=>runReport(c.getAttribute("data-id"));
-        c.addEventListener("click",go);
-        c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+        if(!items.length) return;
+        opts += `<optgroup label="${esc(cat)}">`;
+        items.forEach(r=>{
+          const lock = r.secure ? " 🔒" : "";
+          opts += `<option value="${esc(r.id)}" data-desc="${esc(r.desc)}">${r.icon||"📈"} ${esc(r.title)}${lock}</option>`;
+        });
+        opts += `</optgroup>`;
       });
+      grid.innerHTML = `<div class="rpt-picker">
+        <label for="reportSelect">Officer desk — choose one</label>
+        <select id="reportSelect" aria-describedby="reportSelectDesc">${opts}</select>
+        <p class="rpt-pick-desc" id="reportSelectDesc">Pick from the list, then open it. No long scroll of cards.</p>
+        <div class="rpt-pick-actions">
+          <button type="button" class="btn btn-primary" id="reportSelectGo">☘ Open</button>
+        </div>
+      </div>`;
+      const sel = document.getElementById("reportSelect");
+      const desc = document.getElementById("reportSelectDesc");
+      const goBtn = document.getElementById("reportSelectGo");
+      const syncDesc = ()=>{
+        const opt = sel.options[sel.selectedIndex];
+        const d = opt && opt.getAttribute("data-desc");
+        desc.textContent = d || "Pick from the list, then open it. No long scroll of cards.";
+      };
+      const go = ()=>{ if(sel.value) runReport(sel.value); };
+      sel.addEventListener("change", syncDesc);
+      sel.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+      goBtn.addEventListener("click", go);
+      syncDesc();
     }
 
     window.openReports=()=>{
@@ -2569,7 +2586,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909h3" defer></script>
+<script src="assets/members-desk.js?v=20260909h4" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js" defer></script>
   <script src="assets/kos-reports.js" defer></script>
