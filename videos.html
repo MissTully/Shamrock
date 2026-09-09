@@ -84,41 +84,13 @@
   </section>
 
   <main class="wrap">
-    <!-- Featured parade footage -->
     <div class="section-title">
-      <h2>Parade Footage</h2>
-      <p class="sub">Rolling with the Krewe through Tampa Bay</p>
+      <h2>Krewe Videos</h2>
+      <p class="sub">A 15-clip showcase of performances, parade footage, and krewe moments</p>
+      <p class="sub" style="margin-top:6px;font-size:14px;opacity:.9;">Up to 15 clips · about 25 MB each · oldest rotates out when full.</p>
     </div>
     <div class="knot-divider"><span class="knot"></span></div>
-    <div class="grid-auto" style="margin-bottom:28px;">
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;" src="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/krewe-videos/IMG_2497.MOV"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">Parade day</figcaption>
-      </figure>
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;" src="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/krewe-videos/20231202_123228.mp4"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">Parade day</figcaption>
-      </figure>
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;" src="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/krewe-videos/20230311_203629.mp4"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">Parade day</figcaption>
-      </figure>
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;" src="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/krewe-videos/IMG_2831.MOV"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">Parade day</figcaption>
-      </figure>
-    </div>
-
-    <!-- Dynamic videos from the backend -->
-    <div id="content"><p class="empty" style="text-align:center;">Loading more videos…</p></div>
+    <div id="content"><p class="empty" style="text-align:center;">Loading videos…</p></div>
   </main>
 
   <footer class="krewe-foot">
@@ -193,7 +165,8 @@
         const { data, error } = await supabase
           .from("content_items").select("title, url, notes, created_at")
           .eq("type","video").eq("is_published",true)
-          .order("created_at",{ascending:false});
+          .order("created_at",{ascending:false})
+          .limit(15);
         if (error) {
           console.warn("videos load failed", error);
           root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
@@ -203,10 +176,9 @@
           root.innerHTML = '<p class="empty" style="text-align:center;">No published videos yet. Check back soon for performances and parade footage!</p>';
           return;
         }
-    
-        const sec = document.createElement("section");
-        sec.innerHTML = `<div class="section-title" style="margin-top:34px;"><h2>More Videos</h2></div><div class="knot-divider"><span class="knot"></span></div><div class="grid-auto"></div>`;
-        const grid = sec.querySelector(".grid-auto");
+
+        const grid = document.createElement("div");
+        grid.className = "grid-auto";
         for (const it of data){
           const fig = document.createElement("figure");
           fig.style = "margin:0;";
@@ -216,7 +188,7 @@
           grid.appendChild(fig);
         }
         root.innerHTML = "";
-        root.appendChild(sec);
+        root.appendChild(grid);
       } catch (err) {
         console.warn("videos load exception", err);
         root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
