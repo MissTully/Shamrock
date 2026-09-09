@@ -16,19 +16,67 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
 <style>
-/* ---- The Heritage School (learning modules) ---- */
+/* ---- Learn modules (lm-*) + Heritage School lessons (hs-*) ---- */
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.lm-intro .lm-eyebrow{margin:0 0 6px;font-family:var(--display);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-deep);}
+.lm-intro h2{margin-bottom:10px;}
+.lm-intro .sub{max-width:42rem;margin-left:auto;margin-right:auto;}
+
+/* Sticky module menu */
+.lm-mods{position:sticky;top:68px;z-index:40;background:rgba(255,253,244,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:10px 12px;margin:0 0 22px;box-shadow:var(--shadow-sm);}
+.lm-mods-scroll{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding:2px 2px 6px;scrollbar-width:thin;}
+.lm-mods-scroll::-webkit-scrollbar{height:6px;}
+.lm-pill{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid rgba(168,128,28,.4);background:#fff;color:var(--green-800);font-family:var(--display);font-size:13.5px;letter-spacing:.3px;text-decoration:none;white-space:nowrap;transition:background .2s,border-color .2s,color .2s;}
+.lm-pill:hover,.lm-pill:focus-visible{background:rgba(212,175,55,.18);border-color:var(--gold);outline:none;}
+.lm-pill.is-active{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
+.lm-mods-select-wrap{display:none;margin:0;}
+.lm-mods-select{width:100%;font:inherit;font-family:var(--display);color:var(--green-800);padding:10px 12px;border-radius:12px;border:1px solid rgba(168,128,28,.45);background:#fff;appearance:auto;}
+@media(max-width:720px){
+  .lm-mods-scroll{display:none;}
+  .lm-mods-select-wrap{display:block;}
+  .lm-mods{padding:10px;}
+}
+
+/* Category accordion */
+.lm-cat{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:16px;margin:0 0 14px;overflow:hidden;box-shadow:var(--shadow-sm);scroll-margin-top:140px;}
+.lm-cat + .lm-cat{margin-top:12px;}
+.lm-cat-sum{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;list-style:none;min-height:64px;box-sizing:border-box;}
+.lm-cat-sum::-webkit-details-marker{display:none;}
+.lm-cat-sum:hover{background:rgba(212,175,55,.08);}
+.lm-cat-sum:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
+.lm-cat-ico{flex:0 0 40px;height:40px;border-radius:12px;background:rgba(20,83,45,.08);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.lm-cat-t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.lm-cat-t b{font-family:var(--display);color:var(--green-800);font-size:20px;letter-spacing:.4px;}
+.lm-cat-t small{color:var(--muted);font-family:var(--fancy);font-style:italic;font-size:15px;}
+.lm-cat-caret{color:var(--gold-deep);font-size:18px;transition:transform .25s ease;margin-left:auto;}
+.lm-cat[open] > .lm-cat-sum .lm-cat-caret{transform:rotate(180deg);}
+.lm-cat[open]{box-shadow:var(--shadow);}
+.lm-cat-body{padding:4px 12px 14px;border-top:1px dashed rgba(168,128,28,.35);display:flex;flex-direction:column;gap:10px;}
+
+/* Uniform lesson / reading rows */
 .hs-progress{text-align:center;font-family:var(--display);color:var(--green-800);font-size:18px;margin:0 0 18px;}
-.hs-mod{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:14px;box-shadow:var(--shadow-sm);margin:0 0 14px;overflow:hidden;}
-.hs-mod summary{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;list-style:none;}
-.hs-mod summary::-webkit-details-marker{display:none;}
-.hs-num{flex:0 0 38px;height:38px;border-radius:50%;background:var(--green-800);color:#f6efdc;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;}
-.hs-t{flex:1;display:flex;flex-direction:column;}
-.hs-t b{font-family:var(--display);color:var(--green-800);font-size:20px;letter-spacing:.5px;}
-.hs-t small{color:var(--muted);font-family:var(--fancy);font-style:italic;font-size:15px;}
-.hs-badge{opacity:.15;font-size:22px;transition:opacity .3s;}
+.hs-bar{max-width:340px;height:8px;margin:-8px auto 24px;background:rgba(20,83,45,.12);border-radius:6px;overflow:hidden;}
+.hs-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green-700),var(--gold));border-radius:6px;transition:width .5s ease;}
+.lm-lesson,.hs-mod{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:14px;box-shadow:none;margin:0;overflow:hidden;transition:box-shadow .25s ease,border-color .2s;scroll-margin-top:150px;}
+.lm-lesson summary,.hs-mod summary{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;list-style:none;min-height:72px;box-sizing:border-box;}
+.lm-lesson summary::-webkit-details-marker,.hs-mod summary::-webkit-details-marker{display:none;}
+.lm-lesson summary:hover,.hs-mod summary:hover{background:rgba(212,175,55,.08);}
+.lm-lesson summary:focus-visible,.hs-mod summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
+.hs-num{flex:0 0 36px;height:36px;border-radius:50%;background:var(--green-800);color:#f6efdc;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:16px;}
+.hs-t{flex:1;display:flex;flex-direction:column;min-width:0;}
+.hs-t b{font-family:var(--display);color:var(--green-800);font-size:18px;letter-spacing:.3px;line-height:1.25;}
+.hs-t small{color:var(--muted);font-family:var(--fancy);font-style:italic;font-size:14.5px;margin-top:2px;}
+.hs-badge{opacity:.15;font-size:20px;transition:opacity .3s;flex:0 0 auto;}
 .hs-mod.done .hs-badge{opacity:1;}
 .hs-mod.done .hs-num{background:var(--gold);color:#23420f;}
-.hs-body{padding:4px 20px 20px;border-top:1px dashed rgba(168,128,28,.35);}
+.hs-more{margin-left:auto;flex:0 0 auto;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:14.5px;white-space:nowrap;}
+details[open] > summary .hs-more{display:none;}
+.lm-lesson[open],.hs-mod[open]{box-shadow:var(--shadow-sm);border-color:rgba(168,128,28,.5);}
+.hs-body{padding:4px 18px 18px;border-top:1px dashed rgba(168,128,28,.3);}
+.lm-reading-body .dropcap{margin-top:8px;}
+.lm-reading .hs-num{background:rgba(20,83,45,.12);color:var(--green-800);}
+.lm-reading .hs-badge{opacity:.55;}
+
 .hs-learn h4{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:15px;text-transform:uppercase;letter-spacing:1px;}
 .hs-learn ul{margin:0 0 14px;padding-left:20px;}
 .hs-learn li{margin:4px 0;}
@@ -55,22 +103,6 @@
 .ph-w{min-width:230px;}
 .ph-w i{color:var(--muted);font-size:14px;}
 .ph-m{color:#3a3a2e;}
-@media(max-width:640px){
-  .hs-ph{flex-wrap:wrap;}
-  .ph-w{min-width:0;}
-  .hs-mod summary{flex-wrap:wrap; gap:10px; padding:14px 12px; align-items:flex-start;}
-  .hs-more{display:none;} /* nowrap "Click to learn" was forcing horizontal scroll */
-  .hs-badge{display:none;}
-  .hs-t b{font-size:17px; letter-spacing:0;}
-  .hs-t small{font-size:13.5px;}
-  .hs-num{flex:0 0 34px; height:34px; font-size:16px;}
-  .hs-body{padding:4px 14px 16px;}
-  .hs-opts button{width:100%; text-align:left;}
-  .lib-cat{gap:8px; margin:28px 0 12px;}
-  .lib-cat h3{white-space:normal; font-size:18px;}
-}
-.hs-more{margin-left:auto;flex:0 0 auto;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:15px;white-space:nowrap;}
-details[open] > summary .hs-more{display:none;}
 .hs-terms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 4px;}
 .hs-terms span{background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.18);color:var(--green-800);border-radius:14px;padding:3px 10px;font-size:13.5px;}
 .hs-terms .lbl{background:none;border:0;color:var(--muted);font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-size:12px;padding:0;}
@@ -81,30 +113,25 @@ details[open] > summary .hs-more{display:none;}
 .hs-download{margin:16px 0 4px;padding:14px 16px;background:rgba(212,180,90,.12);border:1px dashed rgba(168,128,28,.5);border-radius:12px;text-align:center;}
 .hs-download .btn{width:100%;max-width:420px;}
 .hs-download small{display:block;margin-top:10px;color:var(--muted);font-size:13px;line-height:1.45;}
-.arch summary{cursor:pointer;list-style:none;}
-.arch summary::-webkit-details-marker{display:none;}
-.arch-hint{display:inline-block;margin-top:2px;color:var(--gold-deep);font-family:var(--fancy);font-style:italic;font-size:16px;}
-details[open] > summary .arch-hint{display:none;}
-.arch-body{margin-top:8px;}
-.lib-cat{display:flex;align-items:center;gap:14px;margin:38px 0 14px;}
-.lib-cat h3{margin:0;font-family:var(--display);color:var(--green-800);font-size:22px;letter-spacing:.5px;white-space:nowrap;}
-.lib-cat::before,.lib-cat::after{content:"";flex:1;height:2px;border-radius:2px;}
-.lib-cat::before{background:linear-gradient(90deg,transparent,rgba(212,175,55,.55));}
-.lib-cat::after{background:linear-gradient(90deg,rgba(212,175,55,.55),transparent);}
-@media(max-width:560px){ .lib-cat h3{white-space:normal;font-size:19px;} }
-/* visual polish */
-.hs-mod{transition:box-shadow .25s ease;}
-.hs-mod summary:hover{background:rgba(212,175,55,.08);}
-.hs-mod[open]{box-shadow:var(--shadow);}
-.hs-bar{max-width:340px;height:8px;margin:-8px auto 24px;background:rgba(20,83,45,.12);border-radius:6px;overflow:hidden;}
-.hs-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green-700),var(--gold));border-radius:6px;transition:width .5s ease;}
-.arch summary{position:relative;padding-right:30px;}
-.arch summary:hover h2{color:var(--green-700);}
-.arch-caret{position:absolute;right:4px;top:4px;color:var(--gold-deep);font-size:18px;transition:transform .25s ease;}
-details[open] > summary .arch-caret{transform:rotate(180deg);}
-.arch-body > img{max-height:460px;object-fit:cover;}
-.article{transition:box-shadow .25s ease;}
-.article:hover{box-shadow:var(--shadow);}
+
+.lm-empty{padding:18px 16px 8px;text-align:center;}
+.lm-empty-title{font-family:var(--display);color:var(--green-800);font-size:18px;margin:0 0 8px;}
+.lm-empty p{margin:0 auto 10px;max-width:36rem;color:#3a3a2e;}
+
+@media(max-width:640px){
+  .hs-ph{flex-wrap:wrap;}
+  .ph-w{min-width:0;}
+  .lm-lesson summary,.hs-mod summary,.lm-cat-sum{gap:10px;padding:12px;align-items:flex-start;}
+  .lm-lesson summary,.hs-mod summary{min-height:64px;}
+  .hs-more{display:none;}
+  .hs-badge{display:none;}
+  .hs-t b,.lm-cat-t b{font-size:16.5px;letter-spacing:0;}
+  .hs-t small,.lm-cat-t small{font-size:13px;}
+  .hs-num{flex:0 0 32px;height:32px;font-size:15px;}
+  .hs-body{padding:4px 12px 14px;}
+  .hs-opts button{width:100%;text-align:left;}
+  .lm-cat-ico{flex:0 0 34px;height:34px;font-size:17px;}
+}
 </style>
 </head>
 <body>
@@ -157,27 +184,62 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
     </div>
   </nav>
 
-  <header class="page-head">
+    <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/celtic-cross.jpg')"></div>
-    <p class="eyebrow">Stories, symbols &amp; traditions</p>
+    <p class="eyebrow">Wisdom of the Gael</p>
     <h1>Learn</h1>
-    <p class="sub">Irish heritage, Celtic art, Gasparilla &amp; krewe know-how, and the meaning behind it all.</p>
+    <p class="sub">From the filí and the seanchaí to the Salmon of Knowledge, Celtic tradition prized those who sought wisdom. Welcome to our Heritage Library.</p>
   </header>
 
   <main class="wrap narrow">
-
-    <!-- THE HERITAGE LIBRARY: lessons and stories, shelved by subject -->
-    <div class="section-title">
-      <h2>The Heritage Library</h2>
-      <p class="sub">Lessons and stories shelved by subject: click any card to open it</p>
+    <!-- THE HERITAGE LIBRARY: wisdom, lessons, and stories by module -->
+    <div class="section-title lm-intro">
+      <p class="lm-eyebrow">The Heritage Library</p>
+      <h2>Learn with the Krewe</h2>
+      <p class="sub">Celtic tradition has always prized wisdom. The filí kept the poems, the seanchaí kept the stories, and the Salmon of Knowledge rewarded those who sought understanding. Our Heritage Library follows that same path: lessons and lore for every Shamrock, shelved by subject so you can learn at your own pace.</p>
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
     <p class="hs-progress" id="hsProgress">☘ 0 of 15 lessons complete</p>
     <div class="hs-bar" aria-hidden="true"><i id="hsBarFill"></i></div>
 
-    <div class="lib-cat"><h3>☘ Kilts &amp; Krewe Style</h3></div>
-    <details class="hs-mod" data-mod="kilts">
-      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>☘ Krewe style · start here</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <nav class="lm-mods" id="lmMods" aria-label="Learning modules">
+      <div class="lm-mods-scroll" role="list">
+      <a class="lm-pill" href="#cat-kilts" data-cat="cat-kilts">☘ Kilts & Style</a>
+      <a class="lm-pill" href="#cat-gasparilla" data-cat="cat-gasparilla">🏴‍☠️ Gasparilla & IKC</a>
+      <a class="lm-pill" href="#cat-parade" data-cat="cat-parade">🛡 Parade Day</a>
+      <a class="lm-pill" href="#cat-krewe-life" data-cat="cat-krewe-life">💚 Krewe Life</a>
+      <a class="lm-pill" href="#cat-music" data-cat="cat-music">🎻 Music & Dance</a>
+      <a class="lm-pill" href="#cat-heritage" data-cat="cat-heritage">📜 Heritage & History</a>
+      <a class="lm-pill" href="#cat-legends" data-cat="cat-legends">🏰 Legends & Myth</a>
+      <a class="lm-pill" href="#cat-language" data-cat="cat-language">🗣 Language & Symbols</a>
+      <a class="lm-pill" href="#cat-member" data-cat="cat-member">🌿 Member Knowledge</a>
+      </div>
+      <label class="lm-mods-select-wrap">
+        <span class="visually-hidden">Jump to module</span>
+        <select class="lm-mods-select" id="lmModSelect" aria-label="Jump to module">
+          <option value="">Jump to a module…</option>
+        <option value="#cat-kilts">☘ Kilts &amp; Krewe Style</option>
+        <option value="#cat-gasparilla">🏴‍☠️ Gasparilla &amp; the Inter-Krewe Council</option>
+        <option value="#cat-parade">🛡 Parade Day Know-How</option>
+        <option value="#cat-krewe-life">💚 Krewe Life &amp; Giving Back</option>
+        <option value="#cat-music">🎻 Music &amp; Dance</option>
+        <option value="#cat-heritage">📜 Irish Heritage &amp; History</option>
+        <option value="#cat-legends">🏰 Legends &amp; Myth</option>
+        <option value="#cat-language">🗣 Language &amp; Symbols</option>
+        <option value="#cat-member">🌿 Member Knowledge</option>
+        </select>
+      </label>
+    </nav>
+
+    <details class="lm-cat" id="cat-kilts">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">☘</span>
+        <span class="lm-cat-t"><b>Kilts &amp; Krewe Style</b><small>7 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="kilts">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Kilt: Two Gaelic Traditions</b><small>☘ Krewe style · start here</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -204,8 +266,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="formal">
-      <summary><span class="hs-num">2</span><span class="hs-t"><b>Formal Kilt Wear</b><small>🥂 Krewe style · watch and dress the part</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="formal">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Formal Kilt Wear</b><small>🥂 Krewe style · watch and dress the part</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -237,8 +299,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="women">
-      <summary><span class="hs-num">3</span><span class="hs-t"><b>Women in Kilts: A Guide for the Ladies</b><small>👑 Krewe style · wear it your way</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="women">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>Women in Kilts: A Guide for the Ladies</b><small>👑 Krewe style · wear it your way</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -270,17 +332,10 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-kilts">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe Style</div>
-          <h2>Kilts in the Krewe</h2>
-          <div class="by">What we wear on parade day</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <p class="dropcap">In the Krewe of Shamrock, the kilt is the uniform of the day, and both great Gaelic
+    <details class="lm-lesson lm-reading" id="art-kilts">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Kilts in the Krewe</b><small>📖 Reading · What we wear on parade day</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<p class="dropcap">In the Krewe of Shamrock, the kilt is the uniform of the day, and both great Gaelic
          traditions are welcome on the route. Some members march Irish, in saffron or solid-color kilts and
          county tartans. Others march Scottish, in clan tartans handed down the family line. Wear whichever
          tradition calls to you; the only requirement is that you wear it proudly.</p>
@@ -288,21 +343,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
          county tartan beside solid green, and ghillie shirts everywhere in the Florida sun. Add a sporran,
          kilt hose, and a good handful of beads, and you're parade-ready. New to kilts? The lesson cards above
          sort the styles, and any member will happily talk tartan with you.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-colors">
-      <details class="arch">
-        <summary>
-          <div class="cat">Heritage &amp; Style</div>
-          <h2>The Colors of the Cloth</h2>
-          <div class="by">What the hues of a tartan mean</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns in many colors" />
+    <details class="lm-lesson lm-reading" id="art-colors">
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Colors of the Cloth</b><small>📖 Reading · What the hues of a tartan mean</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns in many colors" />
       <p class="dropcap">Every color woven into a kilt carries a story. <b>Green</b> speaks of Ireland's lush
          scenery and of patriotism, tying the wearer to the land itself and the spirit of Saint Patrick.
          <b>Blue</b> recalls the ancient Irish aristocracy and loyalty; long before green took over, blue was
@@ -315,21 +362,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p>So when the Krewe rolls out on parade morning in green and gold, saffron and plaid, it isn't just a
          pretty picture. It's a whole history told in thread, and every member wearing it becomes part of
          the telling.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-kiltmyths">
-      <details class="arch">
-        <summary>
-          <div class="cat">Heritage &amp; Style</div>
-          <h2>Kilt Myths &amp; Legends</h2>
-          <div class="by">Sorting fact from folklore</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns" />
+    <details class="lm-lesson lm-reading" id="art-kiltmyths">
+      <summary><span class="hs-num">6</span><span class="hs-t"><b>Kilt Myths &amp; Legends</b><small>📖 Reading · Sorting fact from folklore</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/kilt-grid.jpg" alt="Grid of tartan kilt patterns" />
       <p class="dropcap">Few garments carry as many tall tales as the kilt. Did the Irish bring it to Scotland?
          Did tartan begin in the Highlands? Does the number of colors mark the wearer's rank, or hide a secret
          Ogham message woven into the cloth? The truth is often older, and stranger, than the legend.</p>
@@ -341,21 +380,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
         <a class="btn btn-green" href="https://www.gaelicclothing.com/myths-and-legends"
            target="_blank" rel="noopener">Read the myths &amp; legends ☘</a>
       </p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-invent">
-      <details class="arch">
-        <summary>
-          <div class="cat">From the Blogs</div>
-          <h2>Did the Irish Invent the Kilt?</h2>
-          <div class="by">From the Celtic Fire blog</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-parade-kilts.jpg" alt="Krewe members marching in kilts on the Tampa parade route" />
+    <details class="lm-lesson lm-reading" id="art-invent">
+      <summary><span class="hs-num">7</span><span class="hs-t"><b>Did the Irish Invent the Kilt?</b><small>📖 Reading · From the Celtic Fire blog</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-parade-kilts.jpg" alt="Krewe members marching in kilts on the Tampa parade route" />
       <p class="dropcap">Around 432 AD, in the days of Saint Patrick, what did the Irish actually wear? Author
          Erin O'Quinn paints the picture from old manuscripts, Roman accounts, Ireland's earliest legends, and
          garments pulled from the preserving depths of the bog: the linen <i>léine</i> belted at the waist, the
@@ -369,14 +400,20 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
         <a class="btn btn-green" href="https://erinsromance.wordpress.com/2012/06/21/did-the-irish-invent-the-kilt/"
            target="_blank" rel="noopener">Read the blog post ☘</a>
       </p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>🏴‍☠️ Gasparilla &amp; the Inter-Krewe Council</h3></div>
-    <details class="hs-mod" data-mod="gasparilla">
-      <summary><span class="hs-num">4</span><span class="hs-t"><b>Gasparilla: Tampa's Pirate Invasion</b><small>🏴‍☠️ Parade culture · know the season</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-gasparilla">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🏴‍☠️</span>
+        <span class="lm-cat-t"><b>Gasparilla &amp; the Inter-Krewe Council</b><small>3 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="gasparilla">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>Gasparilla: Tampa's Pirate Invasion</b><small>🏴‍☠️ Parade culture · know the season</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -404,8 +441,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="ikc">
-      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Inter-Krewe Council &amp; Tampa's Krewes</b><small>🤝 Parade culture · our wider family</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="ikc">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Inter-Krewe Council &amp; Tampa's Krewes</b><small>🤝 Parade culture · our wider family</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -431,17 +468,10 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-founding">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe History</div>
-          <h2>From Grace O'Malley's Guard to a Krewe of Our Own</h2>
-          <div class="by">The founding story, 1998–1999</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-pub-cheers.jpg" alt="Krewe of Shamrock friends raising a toast together" />
+    <details class="lm-lesson lm-reading" id="art-founding">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>From Grace O'Malley's Guard to a Krewe of Our Own</b><small>📖 Reading · The founding story, 1998–1999</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-pub-cheers.jpg" alt="Krewe of Shamrock friends raising a toast together" />
       <p class="dropcap">Every krewe has an origin story, and ours begins on someone else's parade route. In 1998,
          five friends, Matt Glow, Tim Hubbell, Hayden Polk, Chris Jenkins, and Steve Hubbell, walked the Ybor City
          parades as security for Ye Loyal Krewe of Grace O'Malley. They kept the route safe, watched the krewe
@@ -456,14 +486,20 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p style="text-align:center;margin-top:18px;">
         <a class="btn btn-green" href="krewe-history.html">Read the full Krewe history ☘</a>
       </p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>🛡 Parade Day Know-How</h3></div>
-    <details class="hs-mod" data-mod="paradeday">
-      <summary><span class="hs-num">6</span><span class="hs-t"><b>Parade Day Rules &amp; Safety</b><small>🛡 Member know-how · required reading</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-parade">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🛡</span>
+        <span class="lm-cat-t"><b>Parade Day Know-How</b><small>4 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="paradeday">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>Parade Day Rules &amp; Safety</b><small>🛡 Member know-how · required reading</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -491,8 +527,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="beads">
-      <summary><span class="hs-num">7</span><span class="hs-t"><b>Bead Etiquette &amp; the Bead-Free Bay</b><small>📿 Member know-how · throw like a pro</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="beads">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Bead Etiquette &amp; the Bead-Free Bay</b><small>📿 Member know-how · throw like a pro</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -520,8 +556,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="eligibility">
-      <summary><span class="hs-num">8</span><span class="hs-t"><b>Earning Your Wristband: Parade Eligibility</b><small>🎟 Member know-how · how you make the roster</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="eligibility">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>Earning Your Wristband: Parade Eligibility</b><small>🎟 Member know-how · how you make the roster</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -547,17 +583,10 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-creed">
-      <details class="arch">
-        <summary>
-          <div class="cat">Member Know-How</div>
-          <h2>The Creed of the Krewe</h2>
-          <div class="by">Our Code of Conduct, and why it matters</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-friends-group.jpg" alt="Krewe of Shamrock friends gathered together" />
+    <details class="lm-lesson lm-reading" id="art-creed">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>The Creed of the Krewe</b><small>📖 Reading · Our Code of Conduct, and why it matters</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-friends-group.jpg" alt="Krewe of Shamrock friends gathered together" />
       <p class="dropcap">A krewe built on friendship needs a few clear rules to protect it. Our Code of Conduct
          is the quiet backbone of everything we do in public: it keeps the fun safe, the friendships strong, and
          the krewe's good name untarnished in front of the whole bay. Verbal intimidation, illegal substances,
@@ -571,23 +600,22 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
          When the public sees a krewe that celebrates hard and carries itself well, the whole heritage we
          represent stands a little taller. That's the Emerald Bond: discipline and friendship, woven together
          like the cloth we wear.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>💚 Krewe Life &amp; Giving Back</h3></div>
-    <article class="article" id="art-morning">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe Life</div>
-          <h2>The morning the floats roll</h2>
-          <div class="by">Parade day</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-group-parade.jpg" alt="Krewe of Shamrock members in kilts gathered before a parade" />
+    <details class="lm-cat" id="cat-krewe-life">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">💚</span>
+        <span class="lm-cat-t"><b>Krewe Life &amp; Giving Back</b><small>3 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="lm-lesson lm-reading" id="art-morning">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The morning the floats roll</b><small>📖 Reading · Parade day</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-group-parade.jpg" alt="Krewe of Shamrock members in kilts gathered before a parade" />
       <p class="dropcap">There's a particular kind of magic to parade morning. The kilts come out of their garment
          bags, the beads get untangled, and somebody's always missing a sporran. Then the pipes start to tune,
          that first wheezy drone fills the air, and a hundred neighbors suddenly become one krewe.</p>
@@ -598,21 +626,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p>That's the secret we relearn every season: the parade we give Tampa Bay gives back double. Strangers on
          the curb wave their little flags, children dash for beads, and for a few green-and-gold hours the whole
          bay feels like family. We march to bring the joy, and we come home carrying more of it than we brought.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-family">
-      <details class="arch">
-        <summary>
-          <div class="cat">Krewe Life</div>
-          <h2>The Family You Choose</h2>
-          <div class="by">Our welcome</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-big-group.jpg" alt="A large group of smiling Krewe of Shamrock members together" />
+    <details class="lm-lesson lm-reading" id="art-family">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Family You Choose</b><small>📖 Reading · Our welcome</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-big-group.jpg" alt="A large group of smiling Krewe of Shamrock members together" />
       <p class="dropcap">Ask almost anyone in the Krewe what kept them, and they won't say the parades or the
          party. They'll say the people. Folks arrive knowing one member, or none, and within a season they've got
          a whole table of friends saving them a seat. Irish or not, kilted or not, everyone's welcome.</p>
@@ -623,21 +643,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p>"All for Fun, Fun for All" isn't just our motto; it's how a stranger at their first meeting becomes the
          one tuning the pipes a few years on. New faces, as we like to say, are simply old friends we haven't met
          yet. Pull up a chair. Yours is next.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-giving">
-      <details class="arch">
-        <summary>
-          <div class="cat">Giving Back</div>
-          <h2>More Than a Good Time</h2>
-          <div class="by">Service &amp; charity</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gallery/krewe-ladies-group.jpg" alt="Krewe of Shamrock members together at a community gathering" />
+    <details class="lm-lesson lm-reading" id="art-giving">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>More Than a Good Time</b><small>📖 Reading · Service &amp; charity</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gallery/krewe-ladies-group.jpg" alt="Krewe of Shamrock members together at a community gathering" />
       <p class="dropcap">For all the craic, the Krewe has always believed a good time should do some good. Over the
          years our members have given thousands of dollars and countless hours to Tampa Bay: unloading delivery
          trucks for families starting over, standing beside children fighting illness, and filling toy drives,
@@ -650,13 +662,20 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
          community, together. If that sounds like your kind of morning, our
          <a href="volunteer.html">Service &amp; Charity</a> page is the place to start. Bring a friend. Come see
          what a good time can build.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-    <div class="lib-cat"><h3>🎻 Music &amp; Dance</h3></div>
-    <details class="hs-mod" data-mod="pipes">
-      <summary><span class="hs-num">9</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>🎻 Music · watch and listen</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-music">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🎻</span>
+        <span class="lm-cat-t"><b>Music &amp; Dance</b><small>4 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="pipes">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Pipes &amp; the Session</b><small>🎻 Music · watch and listen</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -693,8 +712,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="dance">
-      <summary><span class="hs-num">10</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>👞 Dance · a 7-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="dance">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Seven Minutes That Changed Irish Dance</b><small>👞 Dance · a 7-minute watch</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -725,17 +744,10 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-session">
-      <details class="arch">
-        <summary>
-          <div class="cat">Music &amp; Dance</div>
-          <h2>Pipes, Drums &amp; the Music Session</h2>
-          <div class="by">Irish &amp; Scottish tradition</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
+    <details class="lm-lesson lm-reading" id="art-session">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>Pipes, Drums &amp; the Music Session</b><small>📖 Reading · Irish &amp; Scottish tradition</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img loading="lazy" src="images/a-session.gif" alt="A lively pub music session: friends playing tunes together around the table" />
       <p class="dropcap">There is no mistaking the first skirl of the pipes. Whether it's the Great Highland
          bagpipe of the Scottish tradition or the gentler Irish uilleann pipes, bellows-blown and played
          sitting down, the sound carries centuries in it. Add the heartbeat of the bodhrán, the goatskin
@@ -744,21 +756,13 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
          reels rolling one into the next, no sheet music in sight. And when the fiddle strikes up, the
          céilí dancing begins: lines and circles and the whirl of a good time shared. It's participation,
          not performance, and that's exactly the spirit we march in.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-dance">
-      <details class="arch">
-        <summary>
-          <div class="cat">Music &amp; Dance</div>
-          <h2>Dancing Irish Women</h2>
-          <div class="by">Steps through time</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
+    <details class="lm-lesson lm-reading" id="art-dance">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>Dancing Irish Women</b><small>📖 Reading · Steps through time</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="images/irish-dancers.jpg" alt="Traditional Irish dance costume on a mannequin: a cream léine gown with deep red and gold Celtic knotwork, a woven gold crios belt, and a flowing gold-trimmed cape" />
       <p class="dropcap">From the curled hair and embroidered dresses to the fancy footwork, women's Irish dance
          carries centuries of heritage in every step. The costumes themselves tell the story: born of the late-19th
          century Celtic Revival, when a full-length <i>léine</i>, woven <i>crios</i> belt, and flowing <i>brat</i>
@@ -771,14 +775,20 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
         <a class="btn btn-green" href="https://folklife.si.edu/magazine/women-irish-dance-costume-evolution"
            target="_blank" rel="noopener">Read the Smithsonian article ☘</a>
       </p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>📜 Irish Heritage &amp; History</h3></div>
-    <details class="hs-mod" data-mod="patrick">
-      <summary><span class="hs-num">11</span><span class="hs-t"><b>The Real St. Patrick</b><small>📜 History · a 3-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-heritage">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">📜</span>
+        <span class="lm-cat-t"><b>Irish Heritage &amp; History</b><small>5 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="patrick">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>The Real St. Patrick</b><small>📜 History · a 3-minute watch</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -809,8 +819,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="revival">
-      <summary><span class="hs-num">12</span><span class="hs-t"><b>The Gaelic Revival &amp; the Saffron Kilt</b><small>📜 Heritage · why we wear what we wear</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="revival">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Gaelic Revival &amp; the Saffron Kilt</b><small>📜 Heritage · why we wear what we wear</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -838,8 +848,8 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <details class="hs-mod" data-mod="diaspora">
-      <summary><span class="hs-num">13</span><span class="hs-t"><b>The Irish in America</b><small>📜 Heritage · the diaspora's story</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="hs-mod lm-lesson" data-mod="diaspora">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Irish in America</b><small>📜 Heritage · the diaspora's story</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -865,37 +875,22 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-crosses">
-      <details class="arch">
-        <summary>
-          <div class="cat">Heritage</div>
-          <h2>High Crosses &amp; the Fields of Clover</h2>
-          <div class="by">Irish heritage</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
+    <details class="lm-lesson lm-reading" id="art-crosses">
+      <summary><span class="hs-num">4</span><span class="hs-t"><b>High Crosses &amp; the Fields of Clover</b><small>📖 Reading · Irish heritage</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/celtic-cross.jpg" alt="Stone Celtic cross in a field of clover" />
       <p>The great stone high crosses of Ireland, ringed where the cross-arms meet, once stood as
          gathering points and teaching tools, their panels telling stories to all who passed.
          Set among the clover, they marry the sacred and the everyday in a way that feels deeply Irish.</p>
       <p>And the clover itself? Saint Patrick, so the tradition goes, plucked a humble shamrock to
          explain the Trinity with its three leaves on a single stem, and the little plant has been ours ever since.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-festivals">
-      <details class="arch">
-        <summary>
-          <div class="cat">Festivals</div>
-          <h2>The Wheel of the Year</h2>
-          <div class="by">Seasons &amp; celebrations</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
+    <details class="lm-lesson lm-reading" id="art-festivals">
+      <summary><span class="hs-num">5</span><span class="hs-t"><b>The Wheel of the Year</b><small>📖 Reading · Seasons &amp; celebrations</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
       <p class="dropcap">The Celtic calendar turns on four great fire-festivals. <b>Imbolc</b> in February greets
          the first stirrings of spring and Saint Brigid. <b>Bealtaine</b> in May lights the summer fires.
          <b>Lúnasa</b> in August gives thanks for the harvest. And <b>Samhain</b> at the end of October,
@@ -903,14 +898,20 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
          and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
          finer place to wear your green than marching with the Krewe.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>🏰 Legends &amp; Myth</h3></div>
-    <details class="hs-mod" data-mod="legend">
-      <summary><span class="hs-num">14</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>🏰 Legends · a 5-minute watch</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-legends">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🏰</span>
+        <span class="lm-cat-t"><b>Legends &amp; Myth</b><small>3 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="legend">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>Finn McCool &amp; the Giant's Causeway</b><small>🏰 Legends · a 5-minute watch</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -941,17 +942,10 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-salmon">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends &amp; Myth</div>
-          <h2>The Salmon of Knowledge</h2>
-          <div class="by">A tale of Éireann</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
+    <details class="lm-lesson lm-reading" id="art-salmon">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>The Salmon of Knowledge</b><small>📖 Reading · A tale of Éireann</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="images/salmon-of-knowledge.jpg" alt="A glowing, colorful salmon leaping from a mystical river" />
       <p class="dropcap">There is a fish that swam in the Well of Segais, at the source of the River Boyne,
       and whoever tasted its flesh would gain all the wisdom in the world. The salmon had fed on hazelnuts
       fallen from the nine sacred trees that ringed the well, and in each nut was the knowledge of the ages.</p>
@@ -963,70 +957,33 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       <p>From that day forward, whenever Fionn needed guidance, he had only to press his thumb to his teeth and
       the knowledge would come. The great hero who would go on to lead the Fianna, Ireland's legendary warrior
       band, was made not by a sword stroke, but by an accidental taste of something wonderful.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-leprechaun">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends &amp; Myth</div>
-          <h2>The Leprechaun: The Clever Protector</h2>
-          <div class="by">A tale of wits over muscle</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/leprechaun-clever.svg" alt="Celtic-style illustration of a winking leprechaun beside his pot of gold, holding a red ribbon aloft, while every bush on the moonlit hillside behind him wears an identical red ribbon" />
-      <p class="dropcap">Of all the fair folk of Ireland, the leprechaun is the smallest, and the smartest. He
-         commands no armies, hurls no thunder, and stands about as tall as your kneecap. What he carries instead
-         is the quickest mind in the country, and every coin in his famous pot was earned the honest way: one
-         perfectly cobbled shoe at a time, for the leprechaun is the shoemaker and banker of the fairy world, a
-         craftsman who never breaks his word and never forgets who tried to make him break it.</p>
-      <p>They tell of a leprechaun named Lorcan, caught one evening under a hedge by a greedy squire twice his
-         height and ten times his weight, who squeezed him in one fist and demanded his gold. Now, a leprechaun
-         cannot lie, and Lorcan didn't. "The gold lies buried beneath a bush in the far field," he said, and led
-         the squire straight to it. The squire tied his own red ribbon to the branch to mark the spot, and Lorcan,
-         ever courteous, gave his solemn promise not to remove it, if only the squire would set him down and
-         fetch his spade. Off the big man thundered, sure that size had won the day.</p>
-      <p>He returned to find every promise kept, and every bush in the field wearing an identical red ribbon:
-         a thousand bushes, a thousand ribbons, and not one clue which was which. Lorcan had not lied, had not
-         stolen, had not so much as raised his little fist. He had simply out-thought a man who mistook grabbing
-         for winning, and his gold, the wages of his own two hands, stayed exactly where it belonged.</p>
-      <p>That is the true genius of the leprechaun, too often miscalled mere trickery. His "cunning" is
-         intelligence in its Sunday best: the wit to protect himself and the fruits of his labor without force,
-         to honor the letter of his word while teaching the greedy a lesson they'll never forget, and to prove,
-         one red ribbon at a time, that the sharpest thing anyone can carry is a quick mind. In a krewe that
-         marches on charm rather than muscle, we consider him one of our own.</p>
-            </div>
-      </details>
-    </article>
-
-    <article class="article" id="art-warriors">
-      <details class="arch">
-        <summary>
-          <div class="cat">Legends</div>
-          <h2>Daughters &amp; Warriors of Éireann</h2>
-          <div class="by">Irish legend</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
+    <details class="lm-lesson lm-reading" id="art-warriors">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>Daughters &amp; Warriors of Éireann</b><small>📖 Reading · Irish legend</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/warrior-woman.jpg" alt="Illustrated red-haired Celtic warrior woman with sword and cloak" />
       <p class="dropcap">Long before the parades, the women of the Celtic world were warriors, queens, and
          keepers of the law. Queen Medb of Connacht led armies into the great cattle raid of the Táin;
          the war-goddess The Morrígan wheeled over the battlefield as a crow; and on the Isle of Skye,
          the warrior-woman Scáthach trained the greatest heroes of the age.</p>
       <p>It's a heritage worth remembering: in the Krewe of Shamrock, the women march, pipe, and lead
          right alongside the men: daughters of Éireann, every one.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    <div class="lib-cat"><h3>🗣 Language &amp; Symbols</h3></div>
-    <details class="hs-mod" data-mod="irish">
-      <summary><span class="hs-num">15</span><span class="hs-t"><b>Speak a Little Irish</b><small>🗣 Language · listen &amp; repeat</small></span><span class="hs-more">Click to learn ▾</span><span class="hs-badge">☘</span></summary>
+    <details class="lm-cat" id="cat-language">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🗣</span>
+        <span class="lm-cat-t"><b>Language &amp; Symbols</b><small>3 modules</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+    <details class="hs-mod lm-lesson" data-mod="irish">
+      <summary><span class="hs-num">1</span><span class="hs-t"><b>Speak a Little Irish</b><small>🗣 Language · listen &amp; repeat</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">☘</span></summary>
       <div class="hs-body">
         <div class="hs-learn"><h4>What you'll learn</h4>
           <ul>
@@ -1055,53 +1012,48 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       </div>
     </details>
 
-    <article class="article" id="art-gaelic">
-      <details class="arch">
-        <summary>
-          <div class="cat">Gaelic &amp; Blessings</div>
-          <h2>Sláinte! A Few Words of Irish</h2>
-          <div class="by">As Gaeilge, in the Irish language</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
+    <details class="lm-lesson lm-reading" id="art-gaelic">
+      <summary><span class="hs-num">2</span><span class="hs-t"><b>Sláinte! A Few Words of Irish</b><small>📖 Reading · As Gaeilge, in the Irish language</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/gaelic-cottage.jpg" alt="Gaelic folk before a stone cottage at dusk" />
       <p class="dropcap">A few words of Irish go a long way. Raise a glass and you'll hear <b>Sláinte</b>
          (SLAWN-cha), which means "health!" Our own welcome, <b>Céad Míle Fáilte</b> (kayd MEE-luh felt-cha), means
          "a hundred thousand welcomes," and we mean every one of them.</p>
       <p>The old blessings are the loveliest of all: <i>"May the road rise up to meet you, may the wind be
          always at your back."</i> And when someone sneezes, you might hear <b>Dia linn</b>, "God be with us."
          You needn't be fluent; a single warm word, well meant, is pure Irish.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
 
-    <article class="article" id="art-triquetra">
-      <details class="arch">
-        <summary>
-          <div class="cat">Celtic Symbols</div>
-          <h2>The Triquetra: Knot of Three</h2>
-          <div class="by">Irish heritage</div>
-          <span class="arch-hint">☘ Click to read the story</span>
-          <span class="arch-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="arch-body">
-      <img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
+    <details class="lm-lesson lm-reading" id="art-triquetra">
+      <summary><span class="hs-num">3</span><span class="hs-t"><b>The Triquetra: Knot of Three</b><small>📖 Reading · Irish heritage</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
+      <div class="hs-body lm-reading-body">
+<img src="assets/img/trinity-knot.jpg" alt="Green and gold trinity knot" />
       <p class="dropcap">The triquetra, or trinity knot, is among the oldest and best-loved of Celtic symbols.
          Drawn as a single unbroken line, it has no beginning and no end, a fitting emblem for
          eternity, unity, and the bonds of community that the early Irish prized above all.</p>
       <p>You'll find it carved on standing stones, illuminated in the Book of Kells, and worked
          into jewelry to this day. We carry it as our quiet reminder that a krewe, like the knot,
          is stronger for being woven together.</p>
-            </div>
-      </details>
-    </article>
+      </div>
+    </details>
+      </div>
+    </details>
 
-
-    
-
-
-  </main>
+    <details class="lm-cat" id="cat-member">
+      <summary class="lm-cat-sum">
+        <span class="lm-cat-ico" aria-hidden="true">🌿</span>
+        <span class="lm-cat-t"><b>Member Knowledge</b><small>Contribute yours</small></span>
+        <span class="lm-cat-caret" aria-hidden="true">▾</span>
+      </summary>
+      <div class="lm-cat-body">
+        <div class="lm-empty">
+          <p class="lm-empty-title">Modules coming soon. Contribute yours.</p>
+          <p>This shelf is reserved for knowledge from our own members: parade tips, family lore, recipes, music, and the stories only a Shamrock can tell. Share a piece through <a href="share.html">Share Yours</a> or the <a href="members.html">members hub</a>, and help the Heritage Library grow.</p>
+        </div>
+      </div>
+    </details>
+</main>
 
   <footer class="krewe-foot">
     <img class="fimg crest-img" src="assets/img/krewe-crest.png" alt="" />
@@ -1133,9 +1085,9 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js" defer></script>
+    <script src="assets/krewe.js" defer></script>
   <script>
-  /* The Heritage School: video facades, quick checks, and progress */
+  /* The Heritage School: video facades, quick checks, progress, module nav */
   (function(){
     var KEY="kos_heritage_school";
     function getDone(){ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } }
@@ -1153,7 +1105,6 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       if(f) f.style.width = Math.round(n/mods.length*100)+"%";
     }
 
-    // Click-to-load video embeds: the page stays light until a lesson is played.
     document.querySelectorAll(".hs-video").forEach(function(v){
       var btn=v.querySelector(".hs-play"); if(!btn) return;
       btn.addEventListener("click",function(){
@@ -1189,18 +1140,76 @@ details[open] > summary .arch-caret{transform:rotate(180deg);}
       b.addEventListener("click",function(){ a.currentTime=0; a.play(); });
     });
 
-    // "Keep learning" links open the archive card they point to before jumping.
+    function openTarget(el){
+      if(!el) return;
+      if(el.tagName==="DETAILS"){ el.open=true; }
+      else {
+        var d=el.querySelector("details");
+        if(d) d.open=true;
+      }
+      var cat=el.closest && el.closest("details.lm-cat");
+      if(cat) cat.open=true;
+    }
+
     document.querySelectorAll(".hs-goto").forEach(function(a){
       a.addEventListener("click",function(){
         var href=a.getAttribute("href")||"";
         if(href.charAt(0)!=="#") return;
-        var t=document.getElementById(href.slice(1));
-        if(t){ var d=t.querySelector("details"); if(d) d.open=true; }
+        openTarget(document.getElementById(href.slice(1)));
       });
     });
 
+    // Sticky module nav: pills, select, scroll-spy
+    var pills=[].slice.call(document.querySelectorAll(".lm-pill"));
+    var select=document.getElementById("lmModSelect");
+    var catEls=pills.map(function(p){ return document.getElementById((p.getAttribute("href")||"").slice(1)); }).filter(Boolean);
+
+    function setActive(id){
+      pills.forEach(function(p){
+        var on=p.getAttribute("data-cat")===id;
+        p.classList.toggle("is-active", on);
+        if(on) p.setAttribute("aria-current","true"); else p.removeAttribute("aria-current");
+      });
+      if(select){
+        var want="#"+id;
+        if(select.value!==want) select.value=want;
+      }
+    }
+
+    function jumpTo(hash){
+      var id=(hash||"").replace(/^#/,"");
+      var el=document.getElementById(id);
+      if(!el) return;
+      openTarget(el);
+      el.scrollIntoView({behavior:"smooth", block:"start"});
+      setActive(id);
+    }
+
+    pills.forEach(function(p){
+      p.addEventListener("click",function(e){
+        e.preventDefault();
+        jumpTo(p.getAttribute("href"));
+      });
+    });
+    if(select){
+      select.addEventListener("change",function(){
+        if(select.value) jumpTo(select.value);
+      });
+    }
+
+    if("IntersectionObserver" in window && catEls.length){
+      var io=new IntersectionObserver(function(entries){
+        var visible=entries.filter(function(en){ return en.isIntersecting; })
+          .sort(function(a,b){ return b.intersectionRatio-a.intersectionRatio; });
+        if(visible[0]) setActive(visible[0].target.id);
+      },{rootMargin:"-20% 0px -55% 0px", threshold:[0,0.15,0.35,0.6]});
+      catEls.forEach(function(c){ io.observe(c); });
+    }
+
+    if(location.hash) jumpTo(location.hash);
     refresh();
   })();
   </script>
+
 </body>
 </html>
