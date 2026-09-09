@@ -242,7 +242,7 @@
 
     var give = document.getElementById("hubGive");
     if (give) give.innerHTML =
-      '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Log hours toward your season goal</small></div></div>' +
+      '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Total hours since July 1 (bring TrackItForward over)</small></div></div>' +
       '<div class="app-body" id="hubHoursBody"><p class="empty">Loading hours…</p></div></section>';
 
     var parade = document.getElementById("hubParade");
