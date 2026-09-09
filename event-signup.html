@@ -119,6 +119,20 @@
           </div>
         </div>
 
+        <div id="haveTicketWrap" style="display:none;">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" id="haveTicket" style="width:auto;margin-top:5px;flex:0 0 auto;" />
+            <span>My ticket is already purchased
+              <span class="hint" style="display:block;font-weight:400;margin-top:2px;">Check this if a spouse or family member bought your ticket, or you're covered by a group order. You'll be signed up without paying again.</span>
+            </span>
+          </label>
+          <div id="purchasedByWrap" style="display:none;margin-top:10px;">
+            <label for="purchasedBy">Whose name is on the ticket order?</label>
+            <input id="purchasedBy" type="text" maxlength="120" placeholder="e.g. Patrick Tully — Zeffy order for 2" />
+            <div class="hint">This helps our officers match your RSVP to the Zeffy order. Bought a group of tickets yourself? RSVP with your guest count above so we know everyone who's coming.</div>
+          </div>
+        </div>
+
         <div id="plannedHoursWrap" style="display:none;">
           <label for="plannedHours">Volunteer hours you expect to work</label>
           <input id="plannedHours" type="number" min="0.5" max="24" step="0.5" placeholder="e.g. 2" />
@@ -362,16 +376,32 @@
         const role = (document.getElementById("role") || {}).value || "";
         return role === "volunteer" || role === "organizer";
       }
+      const haveTicketWrap = document.getElementById("haveTicketWrap");
+      const haveTicketBox = document.getElementById("haveTicket");
+      const purchasedByWrap = document.getElementById("purchasedByWrap");
+      function ticketAlreadyPurchased() {
+        return haveTicketWrap.style.display !== "none" && haveTicketBox.checked;
+      }
       function syncSignupButton() {
         const opt = eventSelect.selectedOptions[0];
         btn.disabled = false;
+        // The "ticket already purchased" option only applies to attendees of ticketed events.
+        const ticketedAttendee = !!(opt && opt.dataset.redirect && !isVolunteerRole());
+        haveTicketWrap.style.display = ticketedAttendee ? "block" : "none";
+        if (!ticketedAttendee) haveTicketBox.checked = false;
+        purchasedByWrap.style.display = ticketAlreadyPurchased() ? "block" : "none";
         // Volunteers / organizers RSVP free — never send them to Zeffy/ticket checkout.
         if (isVolunteerRole()) {
           btn.textContent = "☘ Sign me up (free volunteer)";
-          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Buy Tickets|Opening /i.test(message.textContent || "")) {
+          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Buy Tickets|Opening |ticket is covered/i.test(message.textContent || "")) {
             message.className = "msg"; message.textContent = "";
           }
           showMessage("Volunteering is free — you’ll be signed up without ticket checkout.", "success");
+          return;
+        }
+        if (ticketedAttendee && ticketAlreadyPurchased()) {
+          btn.textContent = "☘ Sign me up (ticket purchased)";
+          showMessage("Your ticket is covered — you’ll RSVP without checkout so we know you’re coming.", "success");
           return;
         }
         if (opt && opt.dataset.redirect) {
@@ -379,7 +409,7 @@
           if (opt.dataset.checkoutKind === "tartan") {
             showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
           } else {
-            showMessage("Tickets for this event are sold on Zeffy. Tap Buy Tickets to continue checkout.", "success");
+            showMessage("Tickets for this event are sold on Zeffy. Tap Buy Tickets to continue checkout. Someone already bought your ticket? Check the box above.", "success");
           }
         } else if (opt && opt.dataset.needsTickets) {
           btn.textContent = "☘ Tickets coming soon";
@@ -394,6 +424,9 @@
       }
       eventSelect.addEventListener("change", syncSignupButton);
       document.getElementById("role").addEventListener("change", syncSignupButton);
+      haveTicketBox.addEventListener("change", syncSignupButton);
+      // The submit handler lives outside this scope; give it a safe handle.
+      window.__kosSyncSignup = syncSignupButton;
       // Deep-link: ?event=<uuid> preselects and syncs the button
       const params = new URLSearchParams(location.search);
       const pre = params.get("event");
@@ -521,11 +554,16 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      // Restore the button label/message for the current selection (defined inside loadEvents).
+      const resync = () => { try { (window.__kosSyncSignup || function(){ btn.textContent = "☘ Sign me up"; })(); } catch(_) { btn.textContent = "☘ Sign me up"; } };
       const selected = eventSelect.selectedOptions[0];
       const roleEarly = document.getElementById("role").value;
       const volunteering = roleEarly === "volunteer" || roleEarly === "organizer";
-      // Paid checkout only for attendees — volunteers RSVP free on-site.
-      if (!volunteering && selected && selected.dataset.redirect) {
+      const ticketPurchased = !volunteering && selected && selected.dataset.redirect &&
+        document.getElementById("haveTicket").checked;
+      // Paid checkout only for attendees — volunteers RSVP free on-site, and so does
+      // anyone whose ticket was already purchased (spouse, family, or group order).
+      if (!volunteering && !ticketPurchased && selected && selected.dataset.redirect) {
         window.open(selected.dataset.redirect, "_blank", "noopener,noreferrer");
         showMessage(selected.dataset.checkoutKind === "tartan"
           ? "Opening Tampa Bay Tartan Ball tickets in a new tab…"
@@ -541,6 +579,11 @@
       const plannedRaw = document.getElementById("plannedHours").value;
       const planned = (role === "volunteer" || role === "organizer") && plannedRaw
         ? Number(plannedRaw) : null;
+      let note = null;
+      if (ticketPurchased) {
+        const buyer = (document.getElementById("purchasedBy").value || "").trim();
+        note = "Ticket already purchased" + (buyer ? " — order by: " + buyer : "");
+      }
       const { data, error } = await supabase.rpc("rsvp_to_event", {
         p_event_id: eventSelect.value,
         p_first_name: document.getElementById("firstName").value.trim(),
@@ -548,14 +591,18 @@
         p_email: document.getElementById("email").value.trim(),
         p_guests_count: parseInt(document.getElementById("guests").value || "0", 10),
         p_signup_role: role,
-        p_volunteer_hours_planned: (planned && planned > 0) ? planned : null
+        p_volunteer_hours_planned: (planned && planned > 0) ? planned : null,
+        p_note: note
       });
-      btn.disabled = false; btn.textContent = "☘ Sign me up";
-      if (error) { showMessage("Something went wrong submitting your RSVP. Please try again.", "error"); return; }
+      btn.disabled = false;
+      if (error) { resync(); showMessage("Something went wrong submitting your RSVP. Please try again.", "error"); return; }
       if (data && data.ok) {
+        const doneMsg = ticketPurchased && data.status !== "waitlisted"
+          ? "You're signed up — no second charge, since your ticket is already covered. See you there!"
+          : data.message;
         if (data.status === "waitlisted") { showMessage(data.message, "waitlist"); }
-        else { showMessage(data.message, "success"); form.reset(); document.getElementById("guests").value = "0"; }
-      } else { showMessage((data && data.message) || "Please check your details and try again.", "error"); }
+        else { form.reset(); document.getElementById("guests").value = "0"; resync(); showMessage(doneMsg, "success"); }
+      } else { resync(); showMessage((data && data.message) || "Please check your details and try again.", "error"); }
     });
 
     loadEvents();
