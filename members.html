@@ -1874,6 +1874,7 @@
       try { body.innerHTML = await def.run(); }
       catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
     }
+    window.REPORTS=REPORTS;
     window.runReport=runReport;
     document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeReports(); });
   </script>
@@ -2506,10 +2507,10 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909a" defer></script>
+<script src="assets/members-desk.js?v=20260909b" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
-  <script src="assets/kos-shop-studio.js?v=20260909a" defer></script>
-<script src="assets/kos-qr-studio.js?v=20260909a"></script>
+  <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
+<script src="assets/kos-qr-studio.js?v=20260909b"></script>
   <script src="assets/kos-reports.js" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
 </body>
