@@ -181,7 +181,7 @@
       <div class="share-card">
         <div class="share-head">
           <span class="ic">&#127916;</span>
-          <div><h2>Submit a Video</h2><small>MP4 link or YouTube/Vimeo URL</small></div>
+          <div><h2>Submit a Video</h2><small>Upload a file or paste a YouTube/Vimeo/MP4 link</small></div>
         </div>
         <div class="share-body">
           <form id="formVideo" novalidate>
@@ -190,9 +190,20 @@
               <input id="vTitle" type="text" placeholder="Give your video a title" required />
             </div>
             <div class="form-group">
-              <label for="vUrl">Video URL *</label>
-              <input id="vUrl" type="url" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." required />
-              <div class="hint">Paste a YouTube, Vimeo, or direct MP4 link.</div>
+              <label>Video File</label>
+              <div class="file-drop" id="dropVideo">
+                <div class="ic">&#127916;</div>
+                <p><strong>Click to choose</strong> or drag &amp; drop your video here</p>
+                <p>MP4, WebM, MOV · max ~500 MB</p>
+                <input type="file" id="fileVideo" accept="video/mp4,video/webm,video/quicktime" />
+              </div>
+              <div class="file-chosen" id="fileVideoName"></div>
+              <div class="hint">MP4 preferred; MOV may not play in all browsers; max ~500 MB.</div>
+            </div>
+            <div class="form-group">
+              <label for="vUrl">Or Video URL</label>
+              <input id="vUrl" type="url" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
+              <div class="hint">Upload a file <em>or</em> paste a YouTube, Vimeo, or direct MP4 link (one is required).</div>
             </div>
             <div class="form-group">
               <label for="vDesc">Description</label>
@@ -479,6 +490,7 @@ function setupFileDrop(dropId, inputId, nameId) {
   });
 }
 
+setupFileDrop('dropVideo', 'fileVideo', 'fileVideoName');
 setupFileDrop('dropPhoto', 'filePhoto', 'filePhotoName');
 setupFileDrop('dropArt',   'fileArt',   'fileArtName');
 setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
@@ -486,7 +498,13 @@ setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
 // ---- Upload file to Supabase Storage ----
 async function uploadFile(bucket, file) {
   const ext = file.name.split('.').pop();
-  const path = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const base = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  let path = base;
+  if (bucket === 'krewe-videos') {
+    const uid = currentUser?.id;
+    if (!uid) throw new Error('You must be signed in to upload videos.');
+    path = uid + '/' + base;
+  }
   const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: false });
   if (error) throw error;
   const { data } = sb.storage.from(bucket).getPublicUrl(path);
@@ -508,16 +526,17 @@ async function gatePhotoVideo(msgId) {
 
 // ---- Insert content_items row ----
 async function insertItem(fields) {
+  let notes = fields.notes || fields.body || null;
+  if (fields.subtitle) {
+    notes = notes ? (fields.subtitle + ' — ' + notes) : fields.subtitle;
+  }
   const row = {
     type: fields.type,
     title: fields.title,
-    subtitle: fields.subtitle || null,
-    body: fields.body || null,
-    media_url: fields.media_url || null,
-    author: window._authorName || 'Krewe Member',
-    submitted_by: currentUser?.id || null,
+    url: fields.url || fields.media_url || null,
+    notes: notes,
     is_published: true,
-    sort_order: 999,
+    is_demo: false,
   };
   const { error } = await sb.from('content_items').insert(row);
   if (error) throw error;
@@ -541,17 +560,31 @@ document.getElementById('formVideo').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) return;
   const btn = e.target.querySelector('button[type=submit]');
+  const title = document.getElementById('vTitle').value.trim();
+  const file = document.getElementById('fileVideo').files[0];
+  const vUrl = document.getElementById('vUrl').value.trim();
+  if (!title) { showMsg('msgVideo','error','Please enter a video title.'); return; }
+  if (!file && !vUrl) { showMsg('msgVideo','error','Please upload a video file or paste a video URL.'); return; }
+  if (file && file.size > 500 * 1024 * 1024) {
+    showMsg('msgVideo','error','Video file is too large (max ~500 MB).');
+    return;
+  }
   setLoading(btn, true);
   try {
     if (!(await gatePhotoVideo('msgVideo'))) { setLoading(btn, false); return; }
+    let url = vUrl;
+    if (file) {
+      url = await uploadFile('krewe-videos', file);
+    }
     await insertItem({
       type: 'video',
-      title: document.getElementById('vTitle').value.trim(),
-      body: document.getElementById('vDesc').value.trim() || null,
-      media_url: document.getElementById('vUrl').value.trim(),
+      title,
+      url,
+      notes: document.getElementById('vDesc').value.trim() || null,
     });
-    showMsg('msgVideo', 'success', 'Thanks! Your video is live on the site.');
+    showMsg('msgVideo', 'success', 'Thanks! Your video is live on the videos page.');
     e.target.reset();
+    document.getElementById('fileVideoName').textContent = '';
   } catch(err) {
     showMsg('msgVideo', 'error', 'Something went wrong: ' + err.message);
   }
