@@ -264,12 +264,24 @@
   .rpt-secure p{ margin:0 0 8px; }
 
   /* ---- Parade Ready ---- */
-  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 12px;}
+  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 14px;}
   .pr-pill.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
-  .pr-gate{padding:5px 2px;font-size:15.5px;}
-  .pr-gate small{color:var(--muted);font-size:13.5px;}
+  .pr-list{display:grid;gap:10px;margin:0 0 4px;}
+  .pr-gate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 14px;font-size:15.5px;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:12px;line-height:1.35;}
+  .pr-gate.ok{background:#f3faf5;border-color:rgba(20,83,45,.28);}
+  .pr-gate.need{background:#fffdf6;border-color:rgba(168,128,28,.45);}
+  .pr-gate .pr-mark{flex:none;font-size:16px;line-height:1;}
+  .pr-gate .pr-label{font-weight:700;color:var(--green-800);}
+  .pr-gate small,.pr-gate .pr-hint{color:var(--muted);font-size:13.5px;font-weight:400;}
+  .pr-pay{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:8px 14px;border-radius:999px;background:var(--gold,#c9a227);color:var(--green-900,#1a3a24);font-family:var(--display);font-size:14px;font-weight:700;text-decoration:none;border:1px solid rgba(120,90,10,.35);white-space:nowrap;}
+  .pr-pay:hover{filter:brightness(1.05);}
+  .pr-pay-alt{flex:1 1 100%;margin:2px 0 0;font-size:13px;color:var(--muted);}
+  .pr-pay-alt a{color:var(--green-800);font-weight:600;}
   .pr-waiver{background:#fffdf4;border:1px dashed rgba(168,128,28,.5);border-radius:12px;padding:12px 14px;margin-top:10px;}
   .pr-hrs{font-size:15px;margin:0 0 6px;}
+  @media (max-width:480px){
+    .pr-pay{margin-left:0;width:100%;}
+  }
   .rpt-btn{font:inherit;font-size:13.5px;padding:5px 12px;border-radius:14px;border:1px solid rgba(168,128,28,.5);background:#fff;cursor:pointer;}
   .rpt-btn.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
   .rpt-btn:hover{opacity:.85;}
@@ -613,7 +625,7 @@
 
       <!-- PARADE READY -->
       <section class="app-card" id="prCard">
-        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; 12 volunteer hours (Jun–May)</small></div></div>
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver &amp; mandatory meeting (Jun–May)</small></div></div>
         <div class="app-body">
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
@@ -1146,15 +1158,26 @@
       _prMe = me;
       const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended];
       const ready = gates.every(Boolean);
+      const DUES_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+      const LOA_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
       const gate = (ok, label, hint) =>
-        `<div class="pr-gate">${ok?"✅":"⬜"} <b>${label}</b>${ok?"":` <small>· ${hint}</small>`}</div>`;
+        `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
+      const duesGate = (ok) => ok
+        ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} dues paid</span></div>`
+        : `<div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} dues</span>
+            <a class="pr-pay" href="${DUES_PAY_URL}" target="_blank" rel="noopener">☘ Pay member dues</a>
+            <div class="pr-pay-alt">On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>
+            · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
+          </div>`;
       el.innerHTML =
         `<div class="pr-pill ${ready?"ok":""}">${ready
           ? "🎗️ PARADE READY! Pick up your wristband at the next meeting."
           : "☘ " + gates.filter(Boolean).length + " of 3 requirements complete"}</div>`
-        + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
+        + `<div class="pr-list">`
+        + duesGate(me.dues_paid)
         + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
         + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
+        + `</div>`
         + (me.waiver_signed ? "" : waiverForm())
         + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
       renderHoursBar(me);
@@ -1185,12 +1208,12 @@
       let ok = false;
       try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
       if(ok){
-        el.innerHTML = `<div class="pr-gate">✅ <b>Photo &amp; Image Release signed</b> <small>· version 2026.1 · photos &amp; videos you post may appear on the site</small></div>`;
+        el.innerHTML = `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1 · photos &amp; videos you post may appear on the site</span></div>`;
         return;
       }
       const nm = esc(kosIdentity().name);
       el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
-        <div class="pr-gate">⬜ <b>Photo &amp; Image Release</b> <small>· required before posting photos or videos · version 2026.1</small></div>
+        <div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">Photo &amp; Image Release</span> <span class="pr-hint">· required before posting photos or videos · version 2026.1</span></div>
         <div class="media-release-scroll" style="max-height:220px;overflow:auto;margin:10px 0;padding:10px 12px;background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.45;">
           <p style="margin:0 0 10px;"><b>I grant the Krewe of Shamrock permission</b> to create, use, reproduce, display, and distribute photographs, video, audio, and other images or recordings that include me (and, if applicable, my minor child) for Krewe purposes.</p>
           <p style="margin:0 0 8px;"><b>1. What this covers.</b> Media from Krewe activities including Gasparilla and other parades; St. Patrick’s Day and Irish heritage events; Tartan Ball and formal events; meetings, volunteer service, fundraisers, and social gatherings; and member-uploaded content to the Krewe website / member hub.</p>
