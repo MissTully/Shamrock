@@ -82,6 +82,22 @@ select public.queue_broadcast(
 ```
 It returns how many recipients were queued; the sender does the rest.
 
+
+### Officer desk — All Krewe Messages
+Officers can compose and send a message to **all current (active) members** from
+**Member Hub → Officer desk → All Krewe Messages**. The UI calls
+`send_all_krewe_message(subject, html, 'active')`, which:
+
+1. Invokes `queue_broadcast(..., 'active')` so each recipient is enqueued in
+   `outbound_emails` (same Resend / `process-outbound-emails` path — no parallel
+   sender).
+2. Saves a history row in `all_krewe_messages` (subject, body, sent_by,
+   recipient_count, segment, created_at).
+
+RLS and the RPCs require `is_krewe_officer()`; non-officers see no UI and cannot
+insert or list. Apply `sql/kos_all_krewe_messages.sql` on the Supabase project
+before using the feature.
+
 ---
 
 ## 4. How each email type flows
