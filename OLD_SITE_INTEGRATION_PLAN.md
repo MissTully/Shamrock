@@ -58,7 +58,7 @@ SantaFest, Gasparilla Children's Parade, Gasparilla Day Parade, Knights of Sant'
 
 ### Contact & social
 - **Mail:** Krewe of Shamrock, P.O. Box 274102, Tampa, FL 33688
-- **Email:** kreweofshamrocktampa@gmail.com
+- **Email:** secretary@kreweofshamrock.com (the old site listed the retired kreweofshamrocktampa@gmail.com mailbox; see `CONTACT_EMAILS.md`)
 - **Facebook:** facebook.com/Krewe-of-Shamrock-254165718576675
 - **Instagram:** @kreweofshamrock
 - **Tartan Ball ticketing:** tampabaytartanball.com
