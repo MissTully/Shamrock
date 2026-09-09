@@ -2282,6 +2282,7 @@
   </script>
 
   <!-- ============== RAFFLES ============== -->
+  <!-- raffle-module v=20260909r2 -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -2289,20 +2290,27 @@
     window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
     window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
     async function renderRaffles(){
-      const box=document.getElementById("raffleBody"); box.innerHTML='<p class="empty">Loading raffles…</p>';
-      const [{data:events,error:e1},{data:baskets},{data:mine}] = await Promise.all([
-        rb.from("v_raffle_events_public").select("*").order("event_date",{ascending:true,nullsFirst:false}),
-        rb.from("v_raffle_baskets_public").select("*"),
-        rb.rpc("get_my_raffle_summary")
+      const box=document.getElementById("raffleBody"); if(!box) return; box.innerHTML='<p class="empty">Loading raffles…</p>';
+      const wrapCall = (p) => Promise.resolve(p).then(r => ({data: r && r.data != null ? r.data : null, error: r && r.error ? r.error : null})).catch(e => ({data:null, error:e}));
+      const [evRes, baskRes, mineRes] = await Promise.all([
+        wrapCall(rb.from("v_raffle_events_public").select("*").order("event_date",{ascending:true,nullsFirst:false})),
+        wrapCall(rb.from("v_raffle_baskets_public").select("*")),
+        wrapCall(rb.rpc("get_my_raffle_summary"))
       ]);
+      const events = evRes.data;
+      const baskets = baskRes.data;
+      const mine = mineRes.data;
+      const e1 = evRes.error;
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; renderOfficerTools(events||[], baskets||[]); renderManage(); return; }
-      if(!events || !events.length){
-        box.innerHTML='';
-        /* empty list — still show how-it-works + Create & manage below */
+      const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events — enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      if(e1){
+        box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now — create one above to start planning gift baskets for charity. 🍀</p>';
+        await renderManage();
+        try{ await renderOfficerTools(events||[], baskets||[]); }catch(_){ }
+        return;
       }
-      let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events — enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      let html=howHtml;
       if(events && events.length) for(const e of events){
         html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
         if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
@@ -2333,10 +2341,10 @@
         }
         html+=`</div>`;
       }
-      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now — create one below to start planning gift baskets for charity. 🍀</p>'; }
+      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now — create one above to start planning gift baskets for charity. 🍀</p>'; }
       box.innerHTML=html;
-      renderOfficerTools(events||[],baskets||[]);
-      renderManage();
+      await renderManage();
+      try{ await renderOfficerTools(events||[],baskets||[]); }catch(_){ }
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
         ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
         const { error}=await rb.rpc("enter_basket_as_member",{p_basket_id:id,p_tickets:q});
@@ -2437,16 +2445,22 @@
     }
     async function renderManage(){
       var box=document.getElementById("raffleBody"); if(!box) return;
-      var mine=[]; try{ var r=await rb.rpc("get_my_raffles"); mine=r.data||[]; }catch(e){}
-      var w=document.createElement("div"); w.className="raffle-event";
-      w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
+      var mine=[];
+      try{
+        var r=await rb.rpc("get_my_raffles");
+        if(r && r.error){ mine=[]; }
+        else { mine=(r && r.data) || []; }
+      }catch(e){ mine=[]; }
+      if(!Array.isArray(mine)) mine=[];
+      var w=document.createElement("div"); w.className="raffle-event"; w.id="mrCreateManage";
+      w.style.cssText="border-bottom:2px dashed var(--gold);margin:0 0 18px;padding:0 0 14px;";
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
         '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create a gift-basket or 50/50 raffle for charity. Use baskets as a planning board for donated contents, then draw winners in person at the event.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
-      box.appendChild(w);
-      document.getElementById("mrNew").onclick=showCreateForm;
-      renderMine(mine);
+      if(box.firstChild) box.insertBefore(w, box.firstChild); else box.appendChild(w);
+      var btn=document.getElementById("mrNew"); if(btn) btn.onclick=showCreateForm;
+      try{ renderMine(mine); }catch(_){ var L=document.getElementById("mrList"); if(L) L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; }
     }
     function showCreateForm(){
       var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
@@ -2521,7 +2535,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909r1" defer></script>
+<script src="assets/members-desk.js?v=20260909r2" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
