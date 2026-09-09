@@ -53,6 +53,11 @@
     ".hub-officer-card{margin-top:14px;background:linear-gradient(180deg,#1d6b3e,var(--green-900));color:#fff;border-radius:16px;padding:16px 18px;display:flex;gap:14px;align-items:center;cursor:pointer;border:1px solid var(--gold);}",
     ".hub-officer-card:hover{filter:brightness(1.05);}",
     ".hub-officer-card .go{margin-left:auto;color:var(--gold-light);font-family:var(--display);}",
+    ".hub-officer-picker{background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:16px;padding:14px 16px;margin:0 0 14px;}",
+    ".hub-officer-picker label{display:block;font-family:var(--display);color:var(--green-800);font-size:15px;margin:0 0 8px;}",
+    ".hub-officer-picker select{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px 14px;border-radius:10px;border:1px solid rgba(168,128,28,.5);background:#fbf7ec;color:var(--green-800);}",
+    ".hub-officer-picker .hint{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.35;}",
+    "#hubOfficer > .app-card.hub-officer-hidden,#hubOfficer > section.app-card.hub-officer-hidden{display:none !important;}",
     ".hub-tabs{position:sticky;top:0;z-index:40;display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 14px;background:linear-gradient(180deg,#fbf7ec 70%,rgba(251,247,236,0));}",
     ".hub-tabs button{border:1px solid rgba(168,128,28,.4);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:14px;cursor:pointer;}",
     ".hub-tabs button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
@@ -384,6 +389,7 @@
     });
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
     if (tab === "hub") renderHome();
+    if (tab === "officer") setTimeout(wireOfficerDeskPicker, 80);
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
   }
 
@@ -822,6 +828,7 @@
         decideApproval(client, "dismiss_duplicate", { p_id: b.getAttribute("data-appr-dismiss") }, b);
       });
     });
+    wireOfficerDeskPicker();
   }
 
   // ---- Officer payments feed: what Stripe recorded, straight from the ledger ----
@@ -863,6 +870,7 @@
     });
     html += "</table></div>";
     body.innerHTML = html;
+    wireOfficerDeskPicker();
   }
 
   // ---- Event Studio: authorized event creation and editing ----
@@ -1055,12 +1063,71 @@
     document.getElementById("hubEventNew").addEventListener("click", clearEventForm);
     clearEventForm();
     await refreshEventStudio(client);
+    wireOfficerDeskPicker();
   }
 
   function bindTabs() {
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-tab")); });
     });
+  }
+
+  
+  function wireOfficerDeskPicker() {
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var cards = Array.prototype.filter.call(panel.children, function (el) {
+      return el.classList && el.classList.contains("app-card");
+    });
+    if (!cards.length) return;
+    var picker = document.getElementById("hubOfficerPicker");
+    if (!picker) {
+      picker = document.createElement("div");
+      picker.className = "hub-officer-picker";
+      picker.id = "hubOfficerPicker";
+      picker.innerHTML =
+        '<label for="officerToolSelect">Officer desk — choose a tool</label>' +
+        '<select id="officerToolSelect"></select>' +
+        '<p class="hint" id="officerToolHint">Select one tool. Everything else stays tucked away.</p>';
+      panel.insertBefore(picker, panel.firstChild);
+    }
+    var sel = document.getElementById("officerToolSelect");
+    var hint = document.getElementById("officerToolHint");
+    var prev = sel.value;
+    sel.innerHTML = "";
+    cards.forEach(function (card, i) {
+      var h = card.querySelector(".app-head h2, h2");
+      var title = (h && h.textContent) ? h.textContent.trim() : ("Tool " + (i + 1));
+      var small = card.querySelector(".app-head small");
+      var desc = small ? small.textContent.trim() : "";
+      var id = card.id || ("officerTool" + i);
+      if (!card.id) card.id = id;
+      var opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = title;
+      opt.setAttribute("data-desc", desc);
+      sel.appendChild(opt);
+    });
+    function apply() {
+      var id = sel.value;
+      var opt = sel.options[sel.selectedIndex];
+      if (hint) hint.textContent = (opt && opt.getAttribute("data-desc")) || "Select one tool.";
+      cards.forEach(function (card) {
+        card.classList.toggle("hub-officer-hidden", card.id !== id);
+      });
+      try { sessionStorage.setItem("kosOfficerTool", id); } catch (e) {}
+    }
+    if (prev && Array.prototype.some.call(sel.options, function (o) { return o.value === prev; })) {
+      sel.value = prev;
+    } else {
+      try {
+        var saved = sessionStorage.getItem("kosOfficerTool");
+        if (saved && Array.prototype.some.call(sel.options, function (o) { return o.value === saved; })) sel.value = saved;
+      } catch (e2) {}
+    }
+    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
+    sel.onchange = apply;
+    apply();
   }
 
   function boot() {
