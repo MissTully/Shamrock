@@ -90,21 +90,14 @@
       <p class="sub">Rolling with the Krewe through Tampa Bay</p>
     </div>
     <div class="knot-divider"><span class="knot"></span></div>
-    <div class="grid-auto" style="margin-bottom:10px;">
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;"
-                 src="https://www.kreweofshamrock.com/resources/Pictures/Parade%20Videos/2025%20Gasparilla.mp4"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">2025 Gasparilla Parade of Pirates</figcaption>
-      </figure>
-      <figure style="margin:0;">
-        <div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">
-          <video controls playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;"
-                 src="https://www.kreweofshamrock.com/resources/Pictures/Parade%20Videos/2024%20Gasparilla.mp4"></video>
-        </div>
-        <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">2024 Gasparilla Parade of Pirates</figcaption>
-      </figure>
+    <div class="card" style="margin-bottom:28px;padding:22px 24px;border:1px solid rgba(168,128,28,.35);border-radius:12px;background:rgba(255,250,240,.85);box-shadow:var(--shadow);">
+      <p style="margin:0 0 8px;font-family:var(--display);color:var(--green-800);font-size:20px;">Parade footage temporarily unavailable</p>
+      <p style="margin:0;line-height:1.55;color:var(--ink-700);">
+        The 2024 and 2025 Gasparilla parade videos used old Wild Apricot paths
+        (<code>/resources/Pictures/Parade Videos/…Gasparilla.mp4</code>) that return 404 on this site —
+        those files were never migrated. Please send YouTube or Vimeo links, or upload MP4 files,
+        so we can restore the parade footage here.
+      </p>
     </div>
 
     <!-- Dynamic videos from the backend -->
@@ -147,45 +140,72 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const root = document.getElementById("content");
-    const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-
+    const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    
     function youtubeId(url){ const m=(url||"").match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
     function vimeoId(url){ const m=(url||"").match(/vimeo\.com\/(?:video\/)?(\d+)/); return m?m[1]:null; }
+    function detectKind(url){
+      const u = (url||"").trim();
+      if (!u) return null;
+      if (youtubeId(u)) return "youtube";
+      if (vimeoId(u)) return "vimeo";
+      if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(u) || /\/.*\.mp4/i.test(u)) return "mp4";
+      return null;
+    }
+
     function embed(it){
       const frameStyle = "position:absolute;inset:0;width:100%;height:100%;border:0;";
       const vidStyle = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;";
-      if (it.media_kind === "youtube") { const id=youtubeId(it.media_url); if(id) return `<iframe src="https://www.youtube.com/embed/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`; }
-      if (it.media_kind === "vimeo")   { const id=vimeoId(it.media_url);  if(id) return `<iframe src="https://player.vimeo.com/video/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`; }
-      if (it.media_kind === "video_file") return `<video controls playsinline preload="metadata" style="${vidStyle}" src="${esc(it.media_url)}"></video>`;
+      const url = it.url || "";
+      const kind = detectKind(url);
+      if (kind === "youtube") {
+        const id = youtubeId(url);
+        if (id) return `<iframe src="https://www.youtube.com/embed/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`;
+      }
+      if (kind === "vimeo") {
+        const id = vimeoId(url);
+        if (id) return `<iframe src="https://player.vimeo.com/video/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`;
+      }
+      if (kind === "mp4") return `<video controls playsinline preload="metadata" style="${vidStyle}" src="${esc(url)}"></video>`;
+      if (url) return `<a href="${esc(url)}" target="_blank" rel="noopener" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:underline;">Open video</a>`;
       return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;">Video link not set</div>`;
     }
 
     (async () => {
-      const { data, error } = await supabase
-        .from("content_items").select("title, subtitle, media_url, media_kind, category")
-        .eq("type","video").eq("is_published",true)
-        .order("sort_order",{ascending:true}).order("created_at",{ascending:false});
-      if (error) { root.innerHTML = '<p class="empty" style="text-align:center;">Could not load videos right now.</p>'; return; }
-      if (!data || data.length===0) { root.innerHTML = '<p class="empty" style="text-align:center;">No videos yet. Check back soon for performances and parade footage!</p>'; return; }
-
-      const groups = {};
-      for (const it of data){ const k = it.category || "Videos"; (groups[k] = groups[k]||[]).push(it); }
-      root.innerHTML = "";
-      for (const cat of Object.keys(groups)){
+      try {
+        const { data, error } = await supabase
+          .from("content_items").select("title, url, notes, created_at")
+          .eq("type","video").eq("is_published",true)
+          .order("created_at",{ascending:false});
+        if (error) {
+          console.warn("videos load failed", error);
+          root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
+          return;
+        }
+        if (!data || data.length===0) {
+          root.innerHTML = '<p class="empty" style="text-align:center;">No published videos yet. Check back soon for performances and parade footage!</p>';
+          return;
+        }
+    
         const sec = document.createElement("section");
-        sec.innerHTML = `<div class="section-title" style="margin-top:34px;"><h2>${esc(cat)}</h2></div><div class="knot-divider"><span class="knot"></span></div><div class="grid-auto"></div>`;
+        sec.innerHTML = `<div class="section-title" style="margin-top:34px;"><h2>More Videos</h2></div><div class="knot-divider"><span class="knot"></span></div><div class="grid-auto"></div>`;
         const grid = sec.querySelector(".grid-auto");
-        for (const it of groups[cat]){
-        const fig = document.createElement("figure");
-        fig.style = "margin:0;";
-        fig.innerHTML = `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">${embed(it)}</div>
-<figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">${esc(it.title)}</figcaption>`;
-        grid.appendChild(fig);
+        for (const it of data){
+          const fig = document.createElement("figure");
+          fig.style = "margin:0;";
+          const caption = esc(it.title) + (it.notes ? `<br><span style="font-size:14px;opacity:.85;">${esc(it.notes)}</span>` : "");
+          fig.innerHTML = `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">${embed(it)}</div>
+    <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">${caption}</figcaption>`;
+          grid.appendChild(fig);
+        }
+        root.innerHTML = "";
+        root.appendChild(sec);
+      } catch (err) {
+        console.warn("videos load exception", err);
+        root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
       }
-      root.appendChild(sec);
-    }
-  })();
-</script>
+    })();
+  </script>
 
 </body>
 </html>
