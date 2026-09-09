@@ -139,7 +139,13 @@
     sections.forEach(function (sec) {
       if (sec.getAttribute("data-hub")) return;
       if (sec.id === "prCard") sec.setAttribute("data-hub", "parade");
-      else if (sec.id === "dashCard") sec.setAttribute("data-hub", "hub");
+      else if (sec.id === "dashCard") {
+        // Reports belong on Officer desk only — never on member Home.
+        sec.setAttribute("data-hub", "officer");
+        sec.style.display = "none";
+        sec.setAttribute("hidden", "");
+        sec.setAttribute("aria-hidden", "true");
+      }
       else {
         var h = headingOf(sec);
         if (h.indexOf("parade") !== -1) sec.setAttribute("data-hub", "parade");
@@ -430,6 +436,15 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
+    try {
+      var dash = document.getElementById("dashCard");
+      if (dash) {
+        // Keep Reports off Member Hub Home for everyone; officers use Officer desk.
+        dash.style.display = "none";
+        dash.setAttribute("hidden", "");
+        dash.setAttribute("aria-hidden", "true");
+      }
+    } catch (e) {}
     try {
       var pay = await client.rpc("can_view_payments");
       state.canViewPayments = !!pay.data;
