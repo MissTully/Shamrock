@@ -315,6 +315,18 @@
   .tour-grid{ display:grid; gap:12px; }
   .tour-item{ display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; }
   .tour-item span{ font-size:26px; line-height:1; }
+
+  /* ---- Leprechaun welcome (first profile) ---- */
+  #lepOverlay{z-index:120;}
+  #lepOverlay .lep-card{max-width:440px;text-align:center;overflow:visible;padding-top:8px;}
+  #lepOverlay .lep-sprite{font-size:72px;line-height:1;display:inline-block;animation:lepSpring .85s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25));}
+  #lepOverlay .lep-burst{position:absolute;inset:auto;pointer-events:none;font-size:22px;animation:lepSpark 1.2s ease-out both;}
+  @keyframes lepSpring{0%{transform:translateY(120px) scale(.4) rotate(-12deg);opacity:0;}60%{transform:translateY(-18px) scale(1.08) rotate(4deg);opacity:1;}100%{transform:translateY(0) scale(1) rotate(0);opacity:1;}}
+  @keyframes lepSpark{0%{transform:scale(.2);opacity:0;}40%{opacity:1;}100%{transform:scale(1.4);opacity:0;}}
+  #lepOverlay h2{font-family:var(--display);color:var(--green-800);margin:8px 0 6px;font-size:28px;}
+  #lepOverlay .lep-body{text-align:left;color:#3a3a2e;font-size:15px;line-height:1.5;margin:0 0 14px;}
+  #lepOverlay .lep-body b{color:var(--green-800);}
+
   .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); }
   .raffle-event{ margin-bottom:22px; }
 
@@ -560,7 +572,7 @@
         </details>
 
         <p style="font-size:13px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:10px;padding:10px 12px;margin:14px 0 0;line-height:1.4;">
-          <b>Next step after you save:</b> update your volunteer hours. Enter <b>Total hours since July 1</b> from your TrackItForward balance so we start fresh on the new site.
+          <b>After you save:</b> a krewe leprechaun will pop in with a welcome. Please have your TrackItForward <b>Total hours since July 1</b> handy so your service comes with you.
         </p>
         <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">🍀 Start earning Clovers</button>
         <div class="err" id="pfMsg"></div>
@@ -813,6 +825,25 @@
       <div class="modal-head"><span class="ic" style="font-size:24px;">🎟️</span><h2>Raffles</h2>
         <button class="modal-x" type="button" onclick="closeRaffles()" aria-label="Close">✕</button></div>
       <div class="modal-body"><div id="raffleBody"></div></div>
+    </div>
+  </div>
+
+
+  <!-- LEPRECHAUN FIRST-PROFILE WELCOME -->
+  <div class="modal-overlay" id="lepOverlay" aria-hidden="true">
+    <div class="modal-card lep-card" role="dialog" aria-modal="true" aria-label="Welcome from the krewe leprechaun">
+      <div style="position:relative;min-height:90px;">
+        <span class="lep-burst" style="left:18%;top:8px;">✨</span>
+        <span class="lep-burst" style="right:20%;top:0;animation-delay:.15s;">☘️</span>
+        <span class="lep-burst" style="left:48%;top:-4px;animation-delay:.28s;">✨</span>
+        <div class="lep-sprite" aria-hidden="true">🧙‍♂️</div>
+      </div>
+      <h2>Fáilte, new friend!</h2>
+      <div class="lep-body" id="lepBody"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <button class="btn btn-primary" type="button" id="lepGoHours">☘ Log my hours</button>
+        <button class="btn" type="button" id="lepLater">Keep exploring</button>
+      </div>
     </div>
   </div>
 
@@ -2272,19 +2303,9 @@
         }catch(err){ /* the profile is saved; a failed role request can be retried from the hub */ }
       }
       localStorage.removeItem("kosTourDone");
-      try{ localStorage.setItem("kosHoursNudge","1"); }catch(_){}
+      try{ localStorage.setItem("kosLepWelcome","1"); }catch(_){}
       await route();
-      setTimeout(()=>{
-        try{
-          if(localStorage.getItem("kosHoursNudge")==="1"){
-            localStorage.removeItem("kosHoursNudge");
-            alert("Profile saved! Next: open Volunteer hours and enter Total hours since July 1 from your TrackItForward balance.");
-            const hoursCard = document.getElementById("hubHoursCard") || document.getElementById("vhForm");
-            if(hoursCard && hoursCard.scrollIntoView) hoursCard.scrollIntoView({behavior:"smooth", block:"center"});
-            const h = document.getElementById("vhHours"); if(h) h.focus();
-          }
-        }catch(_){}
-      }, 600);
+      setTimeout(()=>{ try{ if(window.kosShowLepWelcome) window.kosShowLepWelcome(); }catch(_){} }, 500);
     });
     function maybeTour(){
       if(localStorage.getItem("kosTourDone")==="1") return;
@@ -2553,7 +2574,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909hours1" defer></script>
+<script src="assets/members-desk.js?v=20260909lep1" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260909b" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
