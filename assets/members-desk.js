@@ -1143,26 +1143,70 @@
     "hubAllKrewe"
   ];
 
+  var OFFICER_TOOL_META = {
+    hubApprovals: { title: "Approvals", desc: "Role requests and record merges" },
+    hubPayments: { title: "Payments", desc: "Dues and payment records" },
+    hubEventStudio: { title: "Event Studio", desc: "Create events, RSVP QR, door check-in" },
+    hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR" },
+    hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs" },
+    hubReports: { title: "Reports (live event & money)", desc: "Attendance and fundraising from Event Studio" },
+    hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership" }
+  };
+
   function officerDeskCards() {
     var panel = document.getElementById("hubOfficer");
     if (!panel) return [];
-    return Array.prototype.filter.call(panel.querySelectorAll(":scope > .app-card, .app-card"), function (el) {
-      // Prefer direct children; fall back includes any app-card under panel except nested ones inside another card
-      if (!el.classList || !el.classList.contains("app-card")) return false;
-      if (el.id === "hubOfficerPicker") return false;
-      var parentCard = el.parentElement && el.parentElement.closest && el.parentElement.closest(".app-card");
-      if (parentCard && parentCard !== el) return false;
-      return panel.contains(el);
-    }).filter(function (el) {
-      return el.parentElement === panel;
+    return Array.prototype.filter.call(panel.children, function (el) {
+      return el.classList && el.classList.contains("app-card");
     });
+  }
+
+  function ensureOfficerToolCard(id) {
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return null;
+    var card = document.getElementById(id);
+    if (card) return card;
+    var meta = OFFICER_TOOL_META[id] || { title: id, desc: "" };
+    card = document.createElement("section");
+    card.className = "app-card";
+    card.id = id;
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">☘</span><div><h2>' +
+      meta.title +
+      "</h2><small>" +
+      (meta.desc || "Loading…") +
+      "</small></div></div>" +
+      '<div class="app-body"><p class="empty">Loading this tool… If it stays blank, refresh the page.</p></div>';
+    panel.appendChild(card);
+    return card;
+  }
+
+  function officerReportDefs() {
+    var list = window.REPORTS;
+    if (!list || !list.length) return [];
+    return list.filter(function (r) {
+      return r && r.id && r.title;
+    });
+  }
+
+  function openOfficerReport(reportId) {
+    if (typeof window.openReports === "function") window.openReports();
+    if (typeof window.runReport === "function") {
+      setTimeout(function () {
+        window.runReport(reportId);
+      }, 40);
+    }
   }
 
   function wireOfficerDeskPicker() {
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
+
+    // Always ensure known studio shells exist so the dropdown stays complete
+    // even before late-loading studio scripts finish.
+    OFFICER_TOOL_ORDER.forEach(ensureOfficerToolCard);
+
     var cards = officerDeskCards();
-    if (!cards.length) return;
     var picker = document.getElementById("hubOfficerPicker");
     if (!picker) {
       picker = document.createElement("div");
@@ -1171,70 +1215,145 @@
       picker.innerHTML =
         '<label for="officerToolSelect">Officer desk — choose a tool</label>' +
         '<select id="officerToolSelect"></select>' +
-        '<p class="hint" id="officerToolHint">Every officer tool is in this list. Pick one to open it.</p>';
+        '<p class="hint" id="officerToolHint">Studios, QR, messages, and every report — pick one to open it.</p>';
       panel.insertBefore(picker, panel.firstChild);
     }
     var sel = document.getElementById("officerToolSelect");
     var hint = document.getElementById("officerToolHint");
     var prev = sel.value;
-    // Stable order: known tools first, then any extras alphabetically
-    var byId = {};
-    cards.forEach(function (card, i) {
-      if (!card.id) card.id = "officerTool" + i;
-      byId[card.id] = card;
-    });
-    var ordered = [];
-    OFFICER_TOOL_ORDER.forEach(function (id) {
-      if (byId[id]) { ordered.push(byId[id]); delete byId[id]; }
-    });
-    Object.keys(byId).sort().forEach(function (id) { ordered.push(byId[id]); });
 
     sel.innerHTML = "";
-    ordered.forEach(function (card) {
-      var h = card.querySelector(".app-head h2, h2");
-      var title = (h && h.textContent) ? h.textContent.trim() : card.id;
-      var small = card.querySelector(".app-head small");
-      var desc = small ? small.textContent.trim() : "";
+
+    var studioGroup = document.createElement("optgroup");
+    studioGroup.label = "Studios & officer tools";
+    OFFICER_TOOL_ORDER.forEach(function (id) {
+      var card = document.getElementById(id);
+      var meta = OFFICER_TOOL_META[id] || {};
+      var h = card && card.querySelector(".app-head h2, h2");
+      var title = (h && h.textContent && h.textContent.trim()) || meta.title || id;
+      var small = card && card.querySelector(".app-head small");
+      var desc = (small && small.textContent.trim()) || meta.desc || "";
       var opt = document.createElement("option");
-      opt.value = card.id;
+      opt.value = "tool:" + id;
       opt.textContent = title;
       opt.setAttribute("data-desc", desc);
-      sel.appendChild(opt);
+      studioGroup.appendChild(opt);
     });
-    function apply() {
-      var id = sel.value;
+    sel.appendChild(studioGroup);
+
+    // Any extra cards not in the known list
+    var known = {};
+    OFFICER_TOOL_ORDER.forEach(function (id) { known[id] = true; });
+    var extras = cards.filter(function (c) { return c.id && !known[c.id]; });
+    if (extras.length) {
+      var extraGroup = document.createElement("optgroup");
+      extraGroup.label = "More tools";
+      extras.forEach(function (card) {
+        var h = card.querySelector(".app-head h2, h2");
+        var title = (h && h.textContent) ? h.textContent.trim() : card.id;
+        var small = card.querySelector(".app-head small");
+        var opt = document.createElement("option");
+        opt.value = "tool:" + card.id;
+        opt.textContent = title;
+        opt.setAttribute("data-desc", small ? small.textContent.trim() : "");
+        extraGroup.appendChild(opt);
+      });
+      sel.appendChild(extraGroup);
+    }
+
+    var reports = officerReportDefs();
+    if (reports.length) {
+      var byCat = {};
+      reports.forEach(function (r) {
+        var cat = r.cat || "Reports";
+        if (!byCat[cat]) byCat[cat] = [];
+        byCat[cat].push(r);
+      });
+      Object.keys(byCat).forEach(function (cat) {
+        var group = document.createElement("optgroup");
+        group.label = "Report — " + cat;
+        byCat[cat].forEach(function (r) {
+          var opt = document.createElement("option");
+          opt.value = "report:" + r.id;
+          opt.textContent = (r.icon ? r.icon + " " : "") + r.title;
+          opt.setAttribute("data-desc", r.desc || "");
+          group.appendChild(opt);
+        });
+        sel.appendChild(group);
+      });
+    }
+
+    function apply(fromUser) {
+      var raw = sel.value || "";
       var opt = sel.options[sel.selectedIndex];
       if (hint) hint.textContent = (opt && opt.getAttribute("data-desc")) || "Pick a tool from the list.";
-      officerDeskCards().forEach(function (card) {
-        var show = card.id === id;
-        card.classList.toggle("hub-officer-hidden", !show);
-        card.style.display = show ? "" : "none";
-      });
-      try { if (id) sessionStorage.setItem("kosOfficerTool", id); } catch (e) {}
-    }
-    if (prev && Array.prototype.some.call(sel.options, function (o) { return o.value === prev; })) {
-      sel.value = prev;
-    } else {
-      try {
-        var saved = sessionStorage.getItem("kosOfficerTool");
-        if (saved && Array.prototype.some.call(sel.options, function (o) { return o.value === saved; })) sel.value = saved;
-      } catch (e2) {}
-    }
-    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
-    sel.onchange = apply;
-    apply();
 
-    if (!panel.getAttribute("data-kos-picker-observed")) {
-      panel.setAttribute("data-kos-picker-observed", "1");
+      if (raw.indexOf("report:") === 0) {
+        var rid = raw.slice(7);
+        // Keep Reports card visible underneath; open the full reports modal
+        var showId = "hubReports";
+        ensureOfficerToolCard(showId);
+        officerDeskCards().forEach(function (card) {
+          var show = card.id === showId;
+          card.classList.toggle("hub-officer-hidden", !show);
+          card.style.display = show ? "" : "none";
+        });
+        // Only launch the report when the officer picks it — not when studios
+        // finish loading and refresh this dropdown.
+        if (fromUser) openOfficerReport(rid);
+      } else {
+        var id = raw.indexOf("tool:") === 0 ? raw.slice(5) : raw;
+        if (fromUser && typeof window.closeReports === "function") {
+          try { window.closeReports(); } catch (e) {}
+        }
+        ensureOfficerToolCard(id);
+        officerDeskCards().forEach(function (card) {
+          var show = card.id === id;
+          card.classList.toggle("hub-officer-hidden", !show);
+          card.style.display = show ? "" : "none";
+        });
+      }
+      try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e) {}
+    }
+
+    // Prefer previous selection; migrate legacy bare ids to tool:
+    var tryVals = [];
+    if (prev) tryVals.push(prev);
+    try {
+      var saved = sessionStorage.getItem("kosOfficerTool");
+      if (saved) {
+        tryVals.push(saved);
+        if (saved.indexOf("tool:") !== 0 && saved.indexOf("report:") !== 0) {
+          tryVals.push("tool:" + saved);
+        }
+      }
+    } catch (e) {}
+    var picked = null;
+    for (var i = 0; i < tryVals.length; i++) {
+      var v = tryVals[i];
+      if (Array.prototype.some.call(sel.options, function (o) { return o.value === v; })) {
+        picked = v;
+        break;
+      }
+    }
+    if (picked) sel.value = picked;
+    else if (sel.options.length) sel.selectedIndex = 0;
+
+    sel.onchange = function () { apply(true); };
+    apply(false);
+
+    if (!panel._kosOfficerObs) {
       var timer = null;
-      var mo = new MutationObserver(function () {
+      panel._kosOfficerObs = new MutationObserver(function () {
         clearTimeout(timer);
         timer = setTimeout(function () { wireOfficerDeskPicker(); }, 80);
       });
-      mo.observe(panel, { childList: true });
+      panel._kosOfficerObs.observe(panel, { childList: true, subtree: false });
     }
   }
+
   window.kosRefreshOfficerDesk = wireOfficerDeskPicker;
+
 
   function boot() {
     if (!document.getElementById("memberContent")) return;
