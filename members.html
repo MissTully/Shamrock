@@ -688,7 +688,7 @@
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Officer reports and QR Solutions in one place — choose from a dropdown instead of scrolling a long card wall.</p>
+          <p>Officer reports in one place — choose from a dropdown. QR for events/products lives in Event Studio and Shop Studio.</p>
         </div>
       </section>
 
@@ -1362,7 +1362,7 @@
         slot.querySelector("canvas").replaceWith(Object.assign(document.createElement("p"),{ textContent:"QR library unavailable; share the link instead." }));
       }
     };
-    /* Static / deep-link QR for the Officer QR Solutions pack */
+    /* Static / deep-link QR helpers (dues, hours, etc.) */
     window.kosShowLinkQR = (btn)=>{
       const url = btn.getAttribute("data-qr-url") || "";
       const slot = btn.parentElement.querySelector(".qr-slot");
@@ -1553,64 +1553,45 @@
           return html;
         }},
 
-      { id:"qr_solutions", cat:"Parade Readiness", icon:"▦", title:"QR Solutions pack", secure:true,
-        desc:"Feature solutions for members & officers — generate dues, hours, store, Facebook, RSVP, and help QRs; jump to meeting check-in & raffle.",
+      { id:"qr_solutions", cat:"Parade Readiness", icon:"▦", title:"How QR codes work", secure:true,
+        desc:"QR lives in Event Studio and Shop Studio — this is the plain-English cheat sheet.",
         run: async()=>{
           const origin = location.origin.replace(/\/$/,"");
           const abs = (path)=> origin + "/" + path.replace(/^\//,"");
-          const items = [
-            { who:"Member", id:"M2", title:"Pay member dues", note:"Meeting slide / postcard → Zeffy", url:"https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership", status:"Pack" },
-            { who:"Member", id:"M3", title:"Log volunteer hours", note:"Warehouse door → login → hours form", url:abs("members.html?hub=hours#hours"), status:"Pack" },
-            { who:"Member", id:"M1", title:"Event RSVP / Sign Me Up", note:"Flyer → event calendar signup", url:abs("event-signup.html"), status:"Pack" },
-            { who:"Member", id:"M6", title:"Store / merch", note:"Bar or float → shop", url:abs("store.html"), status:"Pack" },
-            { who:"Member", id:"M4", title:"Members Facebook group", note:"Welcome packet / locker area", url:"https://www.facebook.com/groups/1790675004521855", status:"Pack" },
-            { who:"Member", id:"M5", title:"Public Facebook group", note:"Public flyer", url:"https://www.facebook.com/groups/kreweofshamrock", status:"Pack" },
-            { who:"Officer", id:"O7", title:"Help / secretary", note:"Something's wrong → email secretary", url:"mailto:secretary@kreweofshamrock.com", status:"Pack" },
-            { who:"Officer", id:"O2", title:"Meeting Check-In QR", note:"Live — schedule meeting & show wall QR", url:null, status:"Live", jump:"meeting_checkin" },
-            { who:"Officer", id:"O8", title:"Raffle basket QRs", note:"Live — print sheet", url:abs("raffle-qr-sheet.html"), status:"Live", open:true },
-            { who:"Officer", id:"O1", title:"Attendance QR Studio", note:"Planned — scan = attended + volunteer hours", url:null, status:"Planned" },
-            { who:"Member", id:"M8", title:"Event check-in (+ hours)", note:"Planned with Attendance QR Studio", url:null, status:"Planned" },
-            { who:"Member", id:"M7", title:"Tartan Ball guest card", note:"Planned — seating / meal on scan", url:null, status:"Planned" },
-            { who:"Officer", id:"O4", title:"Wristband pickup station", note:"Planned — Parade Ready in line", url:null, status:"Planned" },
-            { who:"Officer", id:"O5", title:"Event confirm deep-link", note:"Planned — officer phone at door", url:null, status:"Planned" },
-            { who:"Officer", id:"O6", title:"Locker claim sticker", note:"Planned — locker ↔ hub", url:null, status:"Planned" },
-            { who:"Member", id:"M1b", title:"Per-event RSVP QR", note:"Planned — one event on a flyer", url:null, status:"Planned" },
-            { who:"Member", id:"M6b", title:"Per-product store QR", note:"Planned — one SKU", url:null, status:"Planned" }
-          ];
-          let html = `<p class="rpt-note">QR codes are just <b>links drawn as a square</b>. Generate Pack items for the projector or print. Full write-up: <code>QR_FEATURE_SOLUTIONS.md</code> in the repo.</p>`;
-          html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;">
-            <button type="button" class="rpt-btn ok" onclick="runReport('meeting_checkin')">📲 Open Meeting Check-In QR</button>
-            <a class="rpt-btn" href="${abs('raffle-qr-sheet.html')}" target="_blank" rel="noopener">🎟 Raffle QR sheet</a>
-            <a class="rpt-btn" href="${abs('membership-application.html')}" target="_blank" rel="noopener">💶 Dues pay page</a>
+          const dues = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+          const hours = abs("members.html?hub=hours#hours");
+          const store = abs("store.html");
+          const fbMem = "https://www.facebook.com/groups/1790675004521855";
+          let html = `<div class="rpt-picker" style="margin-bottom:16px;">
+            <p style="margin:0 0 10px;font-size:15px;line-height:1.45;"><b>Forget the “planned studio” list.</b> A QR code is just a link drawn as a square. You create the thing first — then you make its square.</p>
+            <ol style="margin:0;padding-left:1.2em;font-size:14px;line-height:1.5;color:var(--muted);">
+              <li><b>Event Studio</b> — save an event → tap <b>RSVP QR</b> (flyer) or <b>Door check-in QR</b> (projector).</li>
+              <li><b>Shop Studio</b> — save a product (with Zeffy link) → tap <b>Shop QR</b> (bar / float).</li>
+              <li><b>Tonight extras</b> — dues, volunteer hours, Facebook: quick squares below.</li>
+            </ol>
           </div>`;
-          const badge = (s)=> s==="Live" ? '<span class="rank-pill" style="background:#14532d;color:#f6efdc;">Live</span>'
-            : s==="Pack" ? '<span class="rank-pill">Pack</span>'
-            : '<span class="rank-pill" style="background:#eee;color:#666;">Planned</span>';
-          for(const it of items){
+          html += `<p class="rpt-note">Open the studios from Officer desk (dropdown). This report is only the cheat-sheet.</p>`;
+          const quick = [
+            { title:"Pay member dues", url:dues, note:"Meeting slide / postcard" },
+            { title:"Log volunteer hours", url:hours, note:"Warehouse door → login → form" },
+            { title:"Krewe store", url:store, note:"Whole shop, not one product" },
+            { title:"Members Facebook group", url:fbMem, note:"Welcome packet" },
+            { title:"Help / secretary", url:"mailto:secretary@kreweofshamrock.com", note:"Report a problem" }
+          ];
+          html += `<h3 class="rpt-cat" style="margin-top:12px;">Tonight’s handy squares</h3>`;
+          for (const it of quick) {
             html += `<div style="padding:12px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
-              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;">
-                ${badge(it.status)}
-                <span style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);">${esc(it.who)} · ${esc(it.id)}</span>
-                <b style="font-family:var(--display);color:var(--green-800);">${esc(it.title)}</b>
-              </div>
-              <div style="font-size:14px;color:var(--muted);margin:4px 0 8px;">${esc(it.note)}</div>`;
-            if(it.url){
-              html += `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+              <b style="font-family:var(--display);color:var(--green-800);">${esc(it.title)}</b>
+              <div style="font-size:14px;color:var(--muted);margin:4px 0 8px;">${esc(it.note)}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
                 <button type="button" class="rpt-btn ok" data-qr-url="${esc(it.url)}" onclick="kosShowLinkQR(this)">▦ Show QR</button>
                 <a href="${esc(it.url)}" target="_blank" rel="noopener" style="font-size:13px;">Open link</a>
                 <div class="qr-slot" style="flex-basis:100%;"></div>
-              </div>`;
-            } else if(it.jump){
-              html += `<button type="button" class="rpt-btn ok" onclick="runReport('${it.jump}')">Open tool →</button>`;
-            } else if(it.open){
-              html += `<a class="rpt-btn ok" href="${abs('raffle-qr-sheet.html')}" target="_blank" rel="noopener">Open →</a>`;
-            } else {
-              html += `<span style="font-size:13px;color:var(--muted);">On the roadmap — documented in QR_FEATURE_SOLUTIONS.md</span>`;
-            }
-            html += `</div>`;
+              </div></div>`;
           }
+          html += `<p class="rpt-note">Raffle basket QRs stay on the <a href="${abs('raffle-qr-sheet.html')}" target="_blank" rel="noopener">raffle print sheet</a>. Meeting check-in is also on each event in Event Studio.</p>`;
           return html;
-        }},
+        }}
 
       /* ---- Events & Attendance ---- */
       { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
@@ -2586,9 +2567,9 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260909h4" defer></script>
+<script src="assets/members-desk.js?v=20260909q1" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
-  <script src="assets/kos-shop-studio.js" defer></script>
+  <script src="assets/kos-shop-studio.js?v=20260909q1" defer></script>
   <script src="assets/kos-reports.js" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
 </body>
