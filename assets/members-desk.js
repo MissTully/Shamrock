@@ -477,9 +477,13 @@
     }
 
     var saved = TAB_HOME;
+    var wantHours = false;
     try {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (hash === "hours" || hash === "volunteer" || hash === "parade" || hash === "desk") saved = "parade";
+      var intent = "";
+      try { intent = sessionStorage.getItem("kos_hub_intent") || ""; } catch (ie) {}
+      wantHours = (intent === "hours" || hash === "hours" || hash === "volunteer");
+      if (wantHours || hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "events") saved = "events";
@@ -489,16 +493,45 @@
     if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
     showTab(saved);
     renderHome();
-    try {
-      var h2 = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (h2 === "hours" || h2 === "volunteer") {
-        setTimeout(function () {
-          var el = document.getElementById("hubHoursCard") || document.getElementById("vhForm") || document.getElementById("prHours");
-          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 250);
-      }
-    } catch (e2) {}
+    if (wantHours) openVolunteerHoursForm(true);
   }
+
+  function openVolunteerHoursForm(clearIntent) {
+    function hubVisible() {
+      var content = document.getElementById("memberContent");
+      return !!(content && content.style.display !== "none" && content.offsetParent !== null);
+    }
+    function go() {
+      if (!hubVisible()) return false;
+      showTab("parade");
+      var form = document.getElementById("vhForm");
+      var card = document.getElementById("hubHoursCard") || form || document.getElementById("prHours");
+      if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", block: "start" });
+      var activity = document.getElementById("vhActivity");
+      if (activity) {
+        try { activity.focus({ preventScroll: true }); } catch (fe) { try { activity.focus(); } catch (fe2) {} }
+      }
+      if (form) {
+        try { form.classList.add("kos-hours-flash"); } catch (ce) {}
+        setTimeout(function () { try { form.classList.remove("kos-hours-flash"); } catch (ce2) {} }, 1800);
+      }
+      if (clearIntent) {
+        try { sessionStorage.removeItem("kos_hub_intent"); } catch (re) {}
+        try {
+          var clean = location.pathname;
+          history.replaceState(null, "", clean);
+        } catch (he) {}
+      }
+      return !!(form && activity);
+    }
+    if (go()) return;
+    var tries = 0;
+    var t = setInterval(function () {
+      tries += 1;
+      if (go() || tries > 25) clearInterval(t);
+    }, 200);
+  }
+  window.kosOpenVolunteerHours = function () { openVolunteerHoursForm(false); };
 
   // ---- My profile: photo, birthday, anniversary, and friendly questions ----
   // View mode shows what the directory sees; Edit mode saves through the
@@ -1050,6 +1083,13 @@
   window.kosUnlock = function () {
     if (typeof _unlock === "function") _unlock();
     setTimeout(boot, 50);
+    setTimeout(function () {
+      try {
+        var intent = sessionStorage.getItem("kos_hub_intent") || "";
+        var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+        if (intent === "hours" || hash === "hours" || hash === "volunteer") openVolunteerHoursForm(true);
+      } catch (e) {}
+    }, 400);
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
