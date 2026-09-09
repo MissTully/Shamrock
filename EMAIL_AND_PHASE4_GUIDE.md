@@ -17,7 +17,7 @@ nothing) until the key exists, so the rest is already wired and waiting.
 
 1. **Create a free Resend account** at <https://resend.com>.
 2. **Verify a sending identity** — either verify your domain (best; lets you send from
-   e.g. `events@krewofshamrock.org`) or use Resend's test sender for trials. Follow
+   e.g. `events@kreweofshamrock.com`) or use Resend's test sender for trials. Follow
    Resend's on-screen steps.
 3. **Create an API key** in Resend (starts with `re_...`).
 4. **Add it to Supabase** → open the **Tribe Test** project → **Edge Functions** →

@@ -377,9 +377,9 @@ $$;
 
 -- 12) Bootstrap: the site administrator's account is always board + officer ---
 -- (Administrator account: melissajotully@gmail.com, per board pivot. The
--- shared kreweofshamrocktampa@gmail.com mailbox stays the PUBLIC contact
--- address only. Applied to the live project as migration
--- admin_bootstrap_email_to_melissa.)
+-- PUBLIC contact address is secretary@kreweofshamrock.com; technical website
+-- issues go to digital@kreweofshamrock.com — see CONTACT_EMAILS.md. Applied
+-- to the live project as migration admin_bootstrap_email_to_melissa.)
 create or replace function public.kos_bootstrap_admin()
 returns trigger language plpgsql security definer set search_path to 'public' as $$
 begin

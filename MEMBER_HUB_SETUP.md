@@ -13,9 +13,13 @@
 - Password recovery uses `resetPasswordForEmail` with `redirectTo` = current origin + `/members.html`.
 
 ## Public contact and website issues
-- **`kreweofshamrocktampa@gmail.com`** is the PUBLIC address only:
-  - Public website Contact / mailto links
-  - **Report a website problem** / support issue reports
+Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
+- **`secretary@kreweofshamrock.com`** — all general information: public
+  website Contact / mailto links, footers, structured data.
+- **`digital@kreweofshamrock.com`** — technical website issues only:
+  **Report a website problem** / support issue reports, sign-in help.
+- The old shared `kreweofshamrocktampa@gmail.com` mailbox is retired from all
+  public pages (September 2026) — do not reintroduce it.
 
 ## Board / officer bootstrap (administrator) account
 - The site administrator account is **`melissajotully@gmail.com`** (board
@@ -34,7 +38,9 @@
   for the full design, database objects, and test checklist.
 - Email is used only where it must be: members proving their own address for
   password create / reset (Supabase Auth sends these automatically).
-- `kreweofshamrocktampa@gmail.com` remains the public contact address;
+- `secretary@kreweofshamrock.com` is the public contact address (general
+  information) and `digital@kreweofshamrock.com` handles technical website
+  issues (see `CONTACT_EMAILS.md`);
   the bootstrap board/officer (administrator) account is
   `melissajotully@gmail.com`, auto-granted board + officer roles by a
   database trigger the moment the account is created.
