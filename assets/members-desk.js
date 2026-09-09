@@ -352,22 +352,38 @@
 
   function softMemberDeskHtml() {
     var me = state.parade;
+    var needsProfile = !!(window.kosNeedsProfile);
     var bits = [];
     if (me) {
+      if (!me.waiver_signed) bits.push("liability waiver");
+      // photo release tracked separately in Parade Ready UI; nudge in starter list below
       if (!me.dues_paid) bits.push("dues");
-      if (!me.waiver_signed) bits.push("waiver");
       if (!me.meeting_attended) bits.push("mandatory meeting");
     }
-    if ((state.hoursApproved || 0) < 12) bits.push((state.hoursApproved || 0) + "/12 hours");
+    if ((state.hoursApproved || 0) < 1) bits.push("hours since July 1");
+    if (needsProfile) bits.push("My Krewe profile");
     var ready = !!(me && me.dues_paid && me.waiver_signed && me.meeting_attended);
-    var line = ready
-      ? "Parade Ready looks good — wristband territory."
-      : (bits.length ? ("Still open on Member desk: " + bits.join(", ") + ".") : "Open Member desk for dues, waiver, and hours.");
+    var line = "Start here: Member desk → Parade Ready (waiver + Photo Release) → My Krewe profile → Total hours since July 1.";
+    if (ready && !needsProfile && (state.hoursApproved || 0) >= 1) {
+      line = "You are set for the season tools. Keep using Member desk anytime.";
+    } else if (bits.length) {
+      line = "Still open: " + bits.join(", ") + ". " + line;
+    }
+    var profileBtn = needsProfile
+      ? '<button type="button" class="btn" id="hubOpenProfile" style="margin-left:8px;">Complete My Krewe profile</button>'
+      : '';
     return '<div class="hub-soft-desk">' +
       '<h3>Member desk</h3>' +
       '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + '</div>' +
       '<p style="margin:0 0 10px;font-size:14px;color:var(--muted);">' + esc(line) + '</p>' +
+      '<ol style="margin:0 0 12px;padding-left:1.2em;font-size:14px;color:#3a3a2e;line-height:1.45;">' +
+      '<li>Open <b>Member desk</b></li>' +
+      '<li>Sign <b>Parade Ready</b> liability waiver + <b>Photo &amp; Image Release</b></li>' +
+      '<li>Finish <b>My Krewe profile</b></li>' +
+      '<li>Enter <b>Total hours since July 1</b> (TrackItForward)</li>' +
+      '</ol>' +
       '<button type="button" class="btn btn-primary" data-hub-action="parade">Open Member desk</button>' +
+      profileBtn +
       '</div>';
   }
 
@@ -397,12 +413,17 @@
     top.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
     });
+    var op = document.getElementById("hubOpenProfile");
+    if (op) op.addEventListener("click", function () {
+      if (window.kosOpenProfileStage) window.kosOpenProfileStage();
+    });
     var openC = document.getElementById("hubOpenCraic");
     if (openC) openC.addEventListener("click", function () {
       if (typeof window.openGame === "function") window.openGame();
     });
   }
 
+  window.__hubShowTab = showTab;
   function showTab(name) {
     var tab = name || TAB_HOME;
     if (tab === "officer" && !state.officer && !state.canManageEvents) tab = TAB_HOME;
