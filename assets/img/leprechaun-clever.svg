@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="lepTitle lepDesc">
+  <title id="lepTitle">The Clever Protector</title>
+  <desc id="lepDesc">A Celtic-style illustration of a winking leprechaun beside his pot of gold, holding a red ribbon aloft, while every bush on the hillside behind him wears an identical red ribbon.</desc>
+  <defs>
+    <linearGradient id="lepSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c3b21"/>
+      <stop offset="0.65" stop-color="#14532d"/>
+      <stop offset="1" stop-color="#1e6b3c"/>
+    </linearGradient>
+    <linearGradient id="lepGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecd07e"/><stop offset="0.5" stop-color="#d4af37"/><stop offset="1" stop-color="#a9801c"/>
+    </linearGradient>
+    <radialGradient id="lepGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ecd07e" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ecd07e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lepHill1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a7d4a"/><stop offset="1" stop-color="#1e6b3c"/>
+    </linearGradient>
+    <linearGradient id="lepHill2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f7040"/><stop offset="1" stop-color="#175a33"/>
+    </linearGradient>
+    <!-- One bush, one red ribbon: the whole trick in a single symbol -->
+    <g id="lepBush">
+      <ellipse cx="0" cy="0" rx="26" ry="17" fill="#0f4a27" stroke="#0a3a1e" stroke-width="2"/>
+      <ellipse cx="-10" cy="-5" rx="12" ry="8" fill="#175a33" opacity="0.8"/>
+      <path d="M0,-15 L-11,-22 L-9,-11 Z" fill="#b3452e"/>
+      <path d="M0,-15 L11,-22 L9,-11 Z" fill="#b3452e"/>
+      <path d="M0,-14 L-4,-4 M0,-14 L5,-5" stroke="#b3452e" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <circle cx="0" cy="-15" r="3.2" fill="#8f3421"/>
+    </g>
+    <g id="lepSpark" fill="#fbf4df">
+      <path d="M0,-7 L1.8,-1.8 L7,0 L1.8,1.8 L0,7 L-1.8,1.8 L-7,0 L-1.8,-1.8 Z"/>
+    </g>
+  </defs>
+
+  <!-- Night-green sky and moonlit hills -->
+  <rect x="0" y="0" width="800" height="500" fill="url(#lepSky)"/>
+  <circle cx="655" cy="112" r="150" fill="url(#lepGlow)"/>
+
+  <!-- Trinity knot standing in for the moon -->
+  <g transform="translate(655,118) scale(0.42)">
+    <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+      <g stroke="#0c3b21" stroke-width="22">
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z"/>
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z" transform="rotate(120)"/>
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z" transform="rotate(240)"/>
+        <circle cx="0" cy="0" r="15"/>
+      </g>
+      <g stroke="url(#lepGold)" stroke-width="12">
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z"/>
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z" transform="rotate(120)"/>
+        <path d="M0,4 C-40,-24 -44,-86 0,-86 C44,-86 40,-24 0,4 Z" transform="rotate(240)"/>
+        <circle cx="0" cy="0" r="15"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Hills -->
+  <path d="M0,340 C140,290 300,320 430,335 C580,352 700,318 800,300 L800,500 L0,500 Z" fill="url(#lepHill1)"/>
+  <path d="M0,400 C180,368 420,392 610,378 C690,372 760,378 800,384 L800,500 L0,500 Z" fill="url(#lepHill2)"/>
+
+  <!-- The hillside of identical ribbons: find the right bush if you can -->
+  <use href="#lepBush" x="472" y="352"/>
+  <use href="#lepBush" x="548" y="336" transform="scale(1)"/>
+  <use href="#lepBush" x="628" y="352"/>
+  <use href="#lepBush" x="704" y="334"/>
+  <use href="#lepBush" x="762" y="362"/>
+  <use href="#lepBush" x="508" y="398"/>
+  <use href="#lepBush" x="592" y="412"/>
+  <use href="#lepBush" x="676" y="396"/>
+  <use href="#lepBush" x="748" y="424"/>
+  <use href="#lepBush" x="536" y="452"/>
+  <use href="#lepBush" x="636" y="458"/>
+  <use href="#lepBush" x="726" y="466"/>
+
+  <!-- Pot of gold, honestly earned one shoe at a time -->
+  <g transform="translate(178,0)">
+    <ellipse cx="0" cy="452" rx="64" ry="10" fill="#0a3a1e" opacity="0.55"/>
+    <path d="M-52,392 C-58,436 -30,452 0,452 C30,452 58,436 52,392 Z" fill="#20211c" stroke="#0e0f0c" stroke-width="3"/>
+    <ellipse cx="0" cy="392" rx="52" ry="12" fill="#33352c" stroke="#0e0f0c" stroke-width="3"/>
+    <g stroke="#a9801c" stroke-width="1.5">
+      <circle cx="-26" cy="384" r="9" fill="#d4af37"/>
+      <circle cx="-6" cy="378" r="9" fill="#ecd07e"/>
+      <circle cx="15" cy="382" r="9" fill="#d4af37"/>
+      <circle cx="31" cy="388" r="8" fill="#ecd07e"/>
+      <circle cx="4" cy="388" r="9" fill="#d4af37"/>
+      <circle cx="-16" cy="390" r="8" fill="#ecd07e"/>
+    </g>
+    <use href="#lepSpark" x="-58" y="366"/>
+    <use href="#lepSpark" x="46" y="358" transform="scale(0.8)"/>
+  </g>
+
+  <!-- The clever protector himself -->
+  <g stroke-linecap="round">
+    <ellipse cx="330" cy="452" rx="78" ry="11" fill="#0a3a1e" opacity="0.55"/>
+
+    <!-- Legs: breeches, stockings, buckled brogues -->
+    <path d="M304,340 L300,392 L316,392 L318,344 Z" fill="#145c31"/>
+    <path d="M356,340 L360,392 L344,392 L342,344 Z" fill="#145c31"/>
+    <rect x="299" y="390" width="18" height="34" rx="6" fill="#f6efdc" stroke="#d9cfb2" stroke-width="1.5"/>
+    <rect x="343" y="390" width="18" height="34" rx="6" fill="#f6efdc" stroke="#d9cfb2" stroke-width="1.5"/>
+    <path d="M282,438 C282,426 300,420 310,424 L318,424 L318,440 C318,446 282,448 282,438 Z" fill="#5b3a1e" stroke="#3f2813" stroke-width="2"/>
+    <path d="M378,438 C378,426 360,420 350,424 L342,424 L342,440 C342,446 378,448 378,438 Z" fill="#5b3a1e" stroke="#3f2813" stroke-width="2"/>
+    <rect x="300" y="424" width="12" height="10" rx="2" fill="url(#lepGold)" stroke="#7c5c12" stroke-width="1.5"/>
+    <rect x="348" y="424" width="12" height="10" rx="2" fill="url(#lepGold)" stroke="#7c5c12" stroke-width="1.5"/>
+
+    <!-- Raised arm, ribbon in hand -->
+    <path d="M366,282 C388,262 400,236 404,212" fill="none" stroke="#1f7a3d" stroke-width="17"/>
+    <circle cx="406" cy="204" r="11" fill="#f2c9a0" stroke="#d9a97c" stroke-width="1.5"/>
+    <path d="M410,198 C444,176 436,216 470,200 C488,192 494,206 508,200" fill="none" stroke="#b3452e" stroke-width="7"/>
+    <path d="M414,208 C436,222 452,214 462,224" fill="none" stroke="#b3452e" stroke-width="5" opacity="0.85"/>
+    <use href="#lepSpark" x="428" y="172" transform="scale(0.9)"/>
+
+    <!-- Coat -->
+    <path d="M296,258 C296,242 364,242 364,258 L376,336 C376,350 348,356 330,356 C312,356 284,350 284,336 Z"
+          fill="#1f7a3d" stroke="#0c3b21" stroke-width="3"/>
+    <path d="M330,258 L330,306" stroke="#155f30" stroke-width="3"/>
+    <circle cx="330" cy="272" r="4" fill="url(#lepGold)"/>
+    <circle cx="330" cy="290" r="4" fill="url(#lepGold)"/>
+    <!-- Belt -->
+    <path d="M287,312 L373,312 L376,330 L284,330 Z" fill="#20211c"/>
+    <rect x="318" y="308" width="24" height="26" rx="4" fill="url(#lepGold)" stroke="#7c5c12" stroke-width="2"/>
+    <rect x="325" y="315" width="10" height="12" rx="2" fill="#20211c"/>
+
+    <!-- Resting arm, hand on the pot's shoulder -->
+    <path d="M294,282 C272,300 248,330 226,368" fill="none" stroke="#1f7a3d" stroke-width="17"/>
+    <circle cx="222" cy="376" r="11" fill="#f2c9a0" stroke="#d9a97c" stroke-width="1.5"/>
+
+    <!-- Head, wink and red beard -->
+    <circle cx="330" cy="214" r="34" fill="#f2c9a0" stroke="#d9a97c" stroke-width="1.5"/>
+    <path d="M298,222 C292,262 322,272 330,272 C338,272 368,262 362,222
+             C362,240 350,238 348,248 C340,244 320,244 312,248 C310,238 298,240 298,222 Z"
+          fill="#c1502e" stroke="#96371c" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M312,244 C318,252 342,252 348,244 C346,256 332,258 330,258 C328,258 314,256 312,244 Z" fill="#f2c9a0"/>
+    <path d="M320,240 C326,246 334,246 340,240" fill="none" stroke="#7c2f16" stroke-width="2.5"/>
+    <!-- winking left eye, bright right eye -->
+    <path d="M310,210 C314,206 320,206 324,210" fill="none" stroke="#2b2b1f" stroke-width="3"/>
+    <circle cx="346" cy="208" r="3.6" fill="#2b2b1f"/>
+    <path d="M306,200 C312,196 320,196 324,199" fill="none" stroke="#a4502c" stroke-width="3"/>
+    <path d="M338,198 C344,195 352,196 356,200" fill="none" stroke="#a4502c" stroke-width="3"/>
+    <path d="M330,214 C327,220 329,226 334,226" fill="none" stroke="#d9a97c" stroke-width="2.5"/>
+    <circle cx="310" cy="226" r="4.5" fill="#e8a97e" opacity="0.7"/>
+    <circle cx="352" cy="224" r="4.5" fill="#e8a97e" opacity="0.7"/>
+
+    <!-- Buckled hat, tipped just so -->
+    <g transform="rotate(-4 330 176)">
+      <ellipse cx="330" cy="180" rx="56" ry="11" fill="#14532d" stroke="#0c3b21" stroke-width="2.5"/>
+      <path d="M296,178 L302,120 C302,110 358,110 358,120 L364,178 Z" fill="#1f7a3d" stroke="#0c3b21" stroke-width="2.5"/>
+      <path d="M298,162 L362,162 L364,178 L296,178 Z" fill="#20211c"/>
+      <rect x="318" y="156" width="24" height="26" rx="4" fill="url(#lepGold)" stroke="#7c5c12" stroke-width="2"/>
+      <rect x="325" y="163" width="10" height="12" rx="2" fill="#20211c"/>
+      <path d="M306,126 C316,120 344,120 354,126" fill="none" stroke="#2a8a4b" stroke-width="3" opacity="0.7"/>
+    </g>
+  </g>
+
+  <!-- A shamrock at his feet, for luck he doesn't need -->
+  <g transform="translate(414,438) scale(0.9)" fill="#2a8a4b" stroke="#175a33" stroke-width="1.5">
+    <path d="M0,0 C-10,-14 4,-24 6,-10 C20,-16 24,0 8,0 C20,4 12,18 2,6 C4,16 -8,16 -4,4 Z"/>
+    <path d="M0,4 C-2,12 -6,16 -10,18" fill="none" stroke="#175a33" stroke-width="2.5"/>
+  </g>
+
+  <!-- Celtic border -->
+  <rect x="12" y="12" width="776" height="476" rx="18" fill="none" stroke="url(#lepGold)" stroke-width="5"/>
+  <rect x="22" y="22" width="756" height="456" rx="12" fill="none" stroke="#fbf4df" stroke-width="1.5" opacity="0.45"/>
+  <g fill="none" stroke="url(#lepGold)" stroke-width="3.5" stroke-linecap="round">
+    <path d="M12,58 C40,58 40,26 68,26 M26,72 C54,72 54,40 82,40"/>
+    <path d="M788,58 C760,58 760,26 732,26 M774,72 C746,72 746,40 718,40"/>
+    <path d="M12,442 C40,442 40,474 68,474 M26,428 C54,428 54,460 82,460"/>
+    <path d="M788,442 C760,442 760,474 732,474 M774,428 C746,428 746,460 718,460"/>
+  </g>
+</svg>
