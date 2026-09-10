@@ -602,14 +602,14 @@
                 <select id="pfCommittee" style="width:100%;margin-top:4px;">
                   <option value="">Select…</option>
                   <option value="Merchandise">Merchandise (Shop Studio)</option>
-                  <option value="Charities">Charities</option>
+                  <option value="Social/Charity">Social / Charity (Raffles, Events, related reports)</option>
                   <option value="Events">Events</option>
                   <option value="Parade">Parade</option>
                   <option value="Membership">Membership</option>
                   <option value="Other">Other</option>
                 </select>
                 <input id="pfCommitteeOther" placeholder="If Other, name the committee" style="margin-top:8px;display:none;width:100%;" />
-                <p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">Merchandise chairs get <b>Shop Studio</b> after an officer approves. Other roles unlock matching officer tools and reports.</p>
+                <p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">After an officer approves: <b>Merchandise</b> unlocks Shop Studio; <b>Social / Charity</b> unlocks Raffles tools, Event Studio, and event/charity reports.</p>
               </div>
               <input id="pfRoleNote" placeholder="Anything that helps verify (optional)" style="margin-top:8px;" />
             </div>
@@ -2509,12 +2509,14 @@
 
     async function renderOfficerTools(events, baskets){
       const box=document.getElementById("raffleBody"); if(!box) return;
-      let off=false; try{ const {data}=await rb.rpc("is_krewe_officer"); off=!!data; }catch(_){}
+      let off=false; try{ const {data}=await rb.rpc("can_manage_raffles"); off=!!data; }catch(_){
+        try{ const {data}=await rb.rpc("is_krewe_officer"); off=!!data; }catch(__){ off=false; }
+      }
       if(!off) return;
       const PUB = location.origin + "/raffle.html";
       let h='<div class="raffle-event" style="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;">';
       h+='<h3 class="rpt-cat" style="margin-top:0;">\ud83d\udd11 Officer tools</h3>';
-      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Only krewe officers see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
+      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Officers and Social/Charity committee see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
       h+='<p style="margin:0 0 12px;"><a class="btn btn-green" href="raffle-qr-sheet.html" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Print basket QR codes</a> <a class="btn" href="'+PUB+'" target="_blank" rel="noopener">\u2197 Public raffle page</a></p>';
       for(const e of events){
         h+='<div style="margin:10px 0;"><b>'+(e.raffle_type==='fifty_fifty'?'\ud83d\udcb0':'\ud83e\uddfa')+' '+RE(e.name)+'</b>';
@@ -2685,7 +2687,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260910shoponly" defer></script>
+<script src="assets/members-desk.js?v=20260910social" defer></script>
   <script src="assets/kos-event-studio.js" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
