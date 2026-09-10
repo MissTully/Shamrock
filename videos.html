@@ -271,16 +271,12 @@
       } catch { return ""; }
     }
     function displayTitle(it, index, all){
-      const base = (it.title||"Krewe clip").trim() || "Krewe clip";
-      const same = all.filter(x => (x.title||"").trim().toLowerCase() === base.toLowerCase()).length > 1;
-      if (same && it.created_at) return `${base} · ${formatWhen(it.created_at)}`;
-      return base;
+      return (it.title||"Krewe clip").trim() || "Krewe clip";
     }
     function subline(it){
       const note = friendlyNotes(it.notes);
       if (note) return note;
-      const when = formatWhen(it.created_at);
-      return when ? `Member clip · ${when}` : "Member clip";
+      return "Member clip";
     }
     function playerHtml(it, { autoplay=false } = {}){
       const url = it.url || "";
