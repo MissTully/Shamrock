@@ -1,0 +1,2 @@
+-- Applied via Supabase migration social_charity_committee_rbac
+-- can_manage_social_charity, can_manage_raffles, updated can_manage_events, kos_can_manage_raffle, approve_role_request
