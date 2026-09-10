@@ -596,8 +596,21 @@
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
-              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
-              <input id="pfCommittee" placeholder="Which committee?" style="margin-top:8px;" />
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" id="pfRoleCommittee" /> Committee chair / member</label>
+              <div id="pfCommitteeWrap" style="margin:8px 0 0 26px;display:none;">
+                <label for="pfCommittee" style="font-size:13px;color:var(--muted);">Which committee?</label>
+                <select id="pfCommittee" style="width:100%;margin-top:4px;">
+                  <option value="">Select…</option>
+                  <option value="Merchandise">Merchandise (Shop Studio)</option>
+                  <option value="Charities">Charities</option>
+                  <option value="Events">Events</option>
+                  <option value="Parade">Parade</option>
+                  <option value="Membership">Membership</option>
+                  <option value="Other">Other</option>
+                </select>
+                <input id="pfCommitteeOther" placeholder="If Other, name the committee" style="margin-top:8px;display:none;width:100%;" />
+                <p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">Merchandise chairs get <b>Shop Studio</b> after an officer approves. Other roles unlock matching officer tools and reports.</p>
+              </div>
               <input id="pfRoleNote" placeholder="Anything that helps verify (optional)" style="margin-top:8px;" />
             </div>
           </div>
@@ -2318,7 +2331,22 @@
         p_profile_visible: !!(document.getElementById("pfVisible")||{}).checked
       });
       if(error){ msg.textContent="Couldn't save: "+error.message; return; }
-      // Role claims go to the officers' in-hub Approvals queue; membership with
+      
+        (function wireRoleCommitteeUi(){
+          var panel=document.getElementById("pfCommitteeWrap");
+          var other=document.getElementById("pfCommitteeOther");
+          var sel=document.getElementById("pfCommittee");
+          function sync(){
+            var checked=!!document.querySelector('.pfRole[value="committee"]:checked');
+            if(panel) panel.style.display=checked?"block":"none";
+            if(other&&sel) other.style.display=sel.value==="Other"?"block":"none";
+          }
+          document.querySelectorAll(".pfRole").forEach(function(cb){ cb.addEventListener("change", sync); });
+          if(sel) sel.addEventListener("change", sync);
+          sync();
+        })();
+
+        // Role claims go to the officers' in-hub Approvals queue; membership with
       // a roster email match needs no approval at all.
       const roles=[...document.querySelectorAll(".pfRole:checked")].map(c=>c.value);
       if(roles.length){
@@ -2327,7 +2355,15 @@
             p_claimed_member: document.getElementById("pfIsMember").checked,
             p_roles: roles,
             p_answers: {
-              committee: document.getElementById("pfCommittee").value.trim() || null,
+              committee: (function(){
+                var sel=document.getElementById("pfCommittee");
+                var v=(sel&&sel.value||"").trim();
+                if(v==="Other"){
+                  var o=(document.getElementById("pfCommitteeOther")||{}).value||"";
+                  return o.trim()||"Other";
+                }
+                return v||null;
+              })(),
               note: document.getElementById("pfRoleNote").value.trim() || null
             }
           });
