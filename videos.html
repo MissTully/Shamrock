@@ -9,12 +9,110 @@
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Krewe of Shamrock · Video Library</title>
-<meta name="description" content="Demonstrations, performances, and educational videos from the Krewe of Shamrock." />
+<title>Krewe of Shamrock · Videos</title>
+<meta name="description" content="Parade footage, performances, and krewe moments from the Krewe of Shamrock." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260910v1" />
+<style>
+  /* Video page redesign — page-local so we don't touch the global sheet */
+  .vid-stage{ margin: 0 auto 36px; max-width: 920px; }
+  .vid-stage .vid-frame{
+    position:relative; padding-top:56.25%; border-radius:16px; overflow:hidden;
+    background:#0a120c; box-shadow:var(--shadow); border:1px solid rgba(168,128,28,.35);
+  }
+  .vid-stage .vid-frame > *{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .vid-stage video{ object-fit:contain; background:#0a120c; }
+  .vid-stage .vid-meta{ margin-top:14px; text-align:center; }
+  .vid-stage .vid-meta h3{
+    font-family:var(--display); color:var(--green-800); margin:0 0 4px;
+    font-size:clamp(22px,3vw,30px); letter-spacing:.6px;
+  }
+  .vid-stage .vid-meta p{ margin:0; font-family:var(--fancy); font-style:italic; color:var(--muted); font-size:17px; }
+
+  .vid-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px;
+  }
+  .vid-card{
+    margin:0; border-radius:14px; overflow:hidden; background:rgba(255,252,245,.92);
+    border:1px solid rgba(168,128,28,.28); box-shadow:var(--shadow);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .vid-card:hover{ transform:translateY(-3px); box-shadow:0 14px 28px rgba(20,40,20,.18); }
+  .vid-card button.vid-thumb{
+    display:block; width:100%; border:0; padding:0; cursor:pointer; text-align:left;
+    position:relative; aspect-ratio:16/9; background:
+      radial-gradient(ellipse at 30% 20%, rgba(46,90,46,.35), transparent 55%),
+      linear-gradient(160deg, #1a3a24 0%, #0d1f14 55%, #132818 100%);
+    color:#fff;
+  }
+  .vid-card button.vid-thumb video{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.88;
+  }
+  .vid-card .vid-play{
+    position:absolute; inset:0; display:grid; place-items:center; z-index:2;
+    background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,.45));
+  }
+  .vid-card .vid-play span{
+    width:58px; height:58px; border-radius:50%;
+    background:rgba(212,175,55,.95); color:#12301a;
+    display:grid; place-items:center; font-size:22px; padding-left:3px;
+    box-shadow:0 6px 18px rgba(0,0,0,.35); border:2px solid rgba(255,255,255,.55);
+  }
+  .vid-card .vid-badge{
+    position:absolute; top:10px; left:10px; z-index:3;
+    font-size:11px; letter-spacing:.4px; text-transform:uppercase;
+    background:rgba(18,48,26,.82); color:#f5e6b8; padding:4px 8px; border-radius:999px;
+    border:1px solid rgba(212,175,55,.4);
+  }
+  .vid-card figcaption{ padding:12px 14px 16px; }
+  .vid-card figcaption strong{
+    display:block; font-family:var(--display); color:var(--green-800);
+    font-size:17px; letter-spacing:.4px; margin-bottom:2px;
+  }
+  .vid-card figcaption small{
+    display:block; font-family:var(--fancy); font-style:italic; color:var(--muted); font-size:15px;
+  }
+
+  .vid-empty{
+    text-align:center; padding:40px 16px; color:var(--muted);
+    font-family:var(--fancy); font-size:18px;
+  }
+  .vid-cta-row{ text-align:center; margin:28px 0 8px; }
+  .vid-cta-row a.btn-ghost{
+    display:inline-block; padding:10px 18px; border-radius:999px;
+    border:1px solid rgba(46,90,46,.45); color:var(--green-800);
+    text-decoration:none; font-family:var(--display); letter-spacing:.4px;
+    background:rgba(255,252,245,.7);
+  }
+  .vid-cta-row a.btn-ghost:hover{ background:rgba(46,90,46,.08); }
+
+  .vid-modal[hidden]{ display:none !important; }
+  .vid-modal{
+    position:fixed; inset:0; z-index:80; display:grid; place-items:center;
+    background:rgba(8,16,10,.78); padding:18px;
+  }
+  .vid-modal-panel{
+    width:min(920px,100%); background:#0c1610; border-radius:16px; overflow:hidden;
+    border:1px solid rgba(212,175,55,.4); box-shadow:0 24px 60px rgba(0,0,0,.45);
+  }
+  .vid-modal-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px; background:#12301a; color:#f5e6b8;
+  }
+  .vid-modal-head h3{ margin:0; font-family:var(--display); font-size:18px; letter-spacing:.4px; }
+  .vid-modal-head button{
+    border:0; background:transparent; color:#f5e6b8; font-size:28px; line-height:1;
+    cursor:pointer; padding:0 6px;
+  }
+  .vid-modal-body{ position:relative; padding-top:56.25%; background:#000; }
+  .vid-modal-body > *{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .vid-modal-body video{ object-fit:contain; }
+  .vid-modal-note{
+    padding:10px 14px 14px; color:#d8c9a0; font-family:var(--fancy); font-style:italic; font-size:15px;
+  }
+</style>
 </head>
 <body>
 
@@ -68,30 +166,36 @@
 
   <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/festival-pipeband.jpg')"></div>
-    <p class="eyebrow">Watch &amp; listen</p>
-    <h1>Video Library</h1>
-    <p class="sub">Performances, demonstrations, and stories from the Krewe.</p>
+    <p class="eyebrow">Media</p>
+    <h1>Krewe Videos</h1>
+    <p class="sub">Parade day, pipes, and the moments worth watching again.</p>
   </header>
-
-  <section class="photo-band">
-    <div class="pb-bg" style="background-image:url('assets/img/piper-painting.jpg')"></div>
-    <div class="pb-inner">
-      <div class="banner-flourish" aria-hidden="true"></div>
-      <h2>Sights &amp; Sounds of the Krewe</h2>
-      <p>Performances, parade footage, and the odd bit of mischief,
-         all gathered here for a watch by the fire.</p>
-    </div>
-  </section>
 
   <main class="wrap">
     <div class="section-title">
-      <h2>Krewe Videos</h2>
-      <p class="sub">A 15-clip showcase of performances, parade footage, and krewe moments</p>
-      <p class="sub" style="margin-top:6px;font-size:14px;opacity:.9;">Up to 15 clips · about 25 MB each · oldest rotates out when full.</p>
+      <h2>On the avenue &amp; beyond</h2>
+      <p class="sub">Tap a clip to watch. Newest first · up to 15 member clips</p>
     </div>
     <div class="knot-divider"><span class="knot"></span></div>
-    <div id="content"><p class="empty" style="text-align:center;">Loading videos…</p></div>
+
+    <div id="featured" class="vid-stage" hidden></div>
+    <div id="content"><p class="vid-empty">Loading videos…</p></div>
+
+    <div class="vid-cta-row">
+      <a class="btn-ghost" href="share.html?type=video">Share a clip from Member Hub</a>
+    </div>
   </main>
+
+  <div class="vid-modal" id="vidModal" hidden>
+    <div class="vid-modal-panel" role="dialog" aria-modal="true" aria-labelledby="vidModalTitle">
+      <div class="vid-modal-head">
+        <h3 id="vidModalTitle">Video</h3>
+        <button type="button" id="vidModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="vid-modal-body" id="vidModalBody"></div>
+      <div class="vid-modal-note" id="vidModalNote" hidden></div>
+    </div>
+  </div>
 
   <footer class="krewe-foot">
     <img class="fimg crest-img" src="assets/img/krewe-crest.png" alt="" />
@@ -129,35 +233,117 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const root = document.getElementById("content");
+    const featuredEl = document.getElementById("featured");
+    const modal = document.getElementById("vidModal");
+    const modalBody = document.getElementById("vidModalBody");
+    const modalTitle = document.getElementById("vidModalTitle");
+    const modalNote = document.getElementById("vidModalNote");
     const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-    
+
     function youtubeId(url){ const m=(url||"").match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
     function vimeoId(url){ const m=(url||"").match(/vimeo\.com\/(?:video\/)?(\d+)/); return m?m[1]:null; }
+    function isFileVideo(url){
+      const u = (url||"").trim();
+      if (!u) return false;
+      if (/\.(mp4|webm|ogg|mov|m4v|m4a)(\?|#|$)/i.test(u)) return true;
+      if (/\/storage\/v1\/object\/public\/krewe-videos\//i.test(u)) return true;
+      return false;
+    }
     function detectKind(url){
       const u = (url||"").trim();
       if (!u) return null;
       if (youtubeId(u)) return "youtube";
       if (vimeoId(u)) return "vimeo";
-      if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(u) || /\/.*\.mp4/i.test(u)) return "mp4";
+      if (isFileVideo(u)) return "file";
       return null;
     }
-
-    function embed(it){
-      const frameStyle = "position:absolute;inset:0;width:100%;height:100%;border:0;";
-      const vidStyle = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0a0a0a;";
+    function isMov(url){ return /\.mov(\?|#|$)/i.test(url||""); }
+    function friendlyNotes(notes){
+      const n = (notes||"").trim();
+      if (!n) return "";
+      if (/^seeded from/i.test(n)) return "";
+      return n;
+    }
+    function formatWhen(iso){
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleDateString("en-US",{ month:"short", day:"numeric", year:"numeric", timeZone:"America/New_York" });
+      } catch { return ""; }
+    }
+    function displayTitle(it, index, all){
+      const base = (it.title||"Krewe clip").trim() || "Krewe clip";
+      const same = all.filter(x => (x.title||"").trim().toLowerCase() === base.toLowerCase()).length > 1;
+      if (same && it.created_at) return `${base} · ${formatWhen(it.created_at)}`;
+      return base;
+    }
+    function subline(it){
+      const note = friendlyNotes(it.notes);
+      if (note) return note;
+      const when = formatWhen(it.created_at);
+      return when ? `Member clip · ${when}` : "Member clip";
+    }
+    function playerHtml(it, { autoplay=false } = {}){
       const url = it.url || "";
       const kind = detectKind(url);
+      const title = esc(it.title || "Krewe video");
       if (kind === "youtube") {
         const id = youtubeId(url);
-        if (id) return `<iframe src="https://www.youtube.com/embed/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`;
+        const ap = autoplay ? "&autoplay=1" : "";
+        return `<iframe src="https://www.youtube.com/embed/${id}?rel=0${ap}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${title}"></iframe>`;
       }
       if (kind === "vimeo") {
         const id = vimeoId(url);
-        if (id) return `<iframe src="https://player.vimeo.com/video/${id}" style="${frameStyle}" allowfullscreen title="${esc(it.title)}"></iframe>`;
+        const ap = autoplay ? "&autoplay=1" : "";
+        return `<iframe src="https://player.vimeo.com/video/${id}?${ap.replace(/^&/,"")}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${title}"></iframe>`;
       }
-      if (kind === "mp4") return `<video controls playsinline preload="metadata" style="${vidStyle}" src="${esc(url)}"></video>`;
-      if (url) return `<a href="${esc(url)}" target="_blank" rel="noopener" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:underline;">Open video</a>`;
-      return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;">Video link not set</div>`;
+      if (kind === "file") {
+        const ap = autoplay ? " autoplay" : "";
+        return `<video controls playsinline preload="metadata"${ap} src="${esc(url)}"></video>`;
+      }
+      if (url) {
+        return `<a href="${esc(url)}" target="_blank" rel="noopener" style="display:grid;place-items:center;color:#f5e6b8;text-decoration:underline;height:100%;">Open video</a>`;
+      }
+      return `<div style="display:grid;place-items:center;color:#f5e6b8;height:100%;">Video link not set</div>`;
+    }
+
+    function openModal(it, title){
+      modalTitle.textContent = title;
+      modalBody.innerHTML = playerHtml(it, { autoplay:true });
+      if (isMov(it.url)) {
+        modalNote.hidden = false;
+        modalNote.textContent = "This clip is a phone MOV. It plays best in Safari; Chrome may need a download.";
+      } else {
+        modalNote.hidden = true;
+        modalNote.textContent = "";
+      }
+      modal.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+    function closeModal(){
+      modal.hidden = true;
+      modalBody.innerHTML = "";
+      document.body.style.overflow = "";
+    }
+    document.getElementById("vidModalClose").addEventListener("click", closeModal);
+    modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(); });
+    document.addEventListener("keydown", (e)=>{ if (e.key === "Escape" && !modal.hidden) closeModal(); });
+
+    function cardHtml(it, title, idx){
+      const kind = detectKind(it.url);
+      const badge = isMov(it.url) ? `<span class="vid-badge">Phone clip</span>` : "";
+      const preview = (kind === "file")
+        ? `<video muted playsinline preload="metadata" src="${esc(it.url)}#t=0.1"></video>`
+        : "";
+      return `<figure class="vid-card" data-idx="${idx}">
+        <button type="button" class="vid-thumb" aria-label="Play ${esc(title)}">
+          ${badge}${preview}
+          <div class="vid-play"><span aria-hidden="true">▶</span></div>
+        </button>
+        <figcaption>
+          <strong>${esc(title)}</strong>
+          <small>${esc(subline(it))}</small>
+        </figcaption>
+      </figure>`;
     }
 
     (async () => {
@@ -169,29 +355,57 @@
           .limit(15);
         if (error) {
           console.warn("videos load failed", error);
-          root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
+          root.innerHTML = '<p class="vid-empty">Videos are taking a wee break — please try again shortly.</p>';
           return;
         }
         if (!data || data.length===0) {
-          root.innerHTML = '<p class="empty" style="text-align:center;">No published videos yet. Check back soon for performances and parade footage!</p>';
+          root.innerHTML = '<p class="vid-empty">No published videos yet. Check back soon for parade footage and krewe moments!</p>';
+          return;
+        }
+
+        const items = data.filter(it => it.url);
+        if (!items.length) {
+          root.innerHTML = '<p class="vid-empty">No playable clips yet. Members can share from Share Yours.</p>';
+          return;
+        }
+
+        // Featured: first file/youtube/vimeo that we can embed
+        const featureIdx = items.findIndex(it => detectKind(it.url));
+        const featured = featureIdx >= 0 ? items[featureIdx] : items[0];
+        const rest = items.filter((_,i)=> i !== featureIdx);
+
+        const fTitle = displayTitle(featured, featureIdx, items);
+        featuredEl.hidden = false;
+        featuredEl.innerHTML = `
+          <div class="vid-frame">${playerHtml(featured)}</div>
+          <div class="vid-meta">
+            <h3>${esc(fTitle)}</h3>
+            <p>${esc(subline(featured))}${isMov(featured.url) ? " · best in Safari" : ""}</p>
+          </div>`;
+
+        if (!rest.length) {
+          root.innerHTML = "";
           return;
         }
 
         const grid = document.createElement("div");
-        grid.className = "grid-auto";
-        for (const it of data){
-          const fig = document.createElement("figure");
-          fig.style = "margin:0;";
-          const caption = esc(it.title) + (it.notes ? `<br><span style="font-size:14px;opacity:.85;">${esc(it.notes)}</span>` : "");
-          fig.innerHTML = `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(168,128,28,.3);">${embed(it)}</div>
-    <figcaption style="font-family:var(--display);color:var(--green-800);margin-top:8px;font-size:18px;">${caption}</figcaption>`;
-          grid.appendChild(fig);
-        }
+        grid.className = "vid-grid";
+        grid.innerHTML = rest.map((it, i) => cardHtml(it, displayTitle(it, i, items), i)).join("");
         root.innerHTML = "";
         root.appendChild(grid);
+
+        grid.addEventListener("click", (e) => {
+          const btn = e.target.closest("button.vid-thumb");
+          if (!btn) return;
+          const fig = btn.closest(".vid-card");
+          const idx = Number(fig?.dataset?.idx);
+          const it = rest[idx];
+          if (!it) return;
+          openModal(it, displayTitle(it, idx, items));
+        });
       } catch (err) {
         console.warn("videos load exception", err);
-        root.innerHTML = '<p class="empty" style="text-align:center;">Videos are taking a wee break — please try again shortly.</p>';
+        root.innerHTML = '<p class="vid-empty">Videos are taking a wee break — please try again shortly.</p>';
       }
     })();
   </script>
