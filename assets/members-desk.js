@@ -105,7 +105,7 @@
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
-  var state = { officer: false, shopOnly: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [] };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [] };
 
   function injectCss() {
     if (document.getElementById("kosHubCss")) return;
@@ -462,7 +462,8 @@
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
     state.shopOnly = false;
-    // Merchandise Chair: Officer desk tab, but Shop Studio only (not full board tools)
+    state.socialOnly = false;
+    // Committee desks without full board officer access
     if (!state.officer) {
       try {
         var shop = await client.rpc("can_manage_shop");
@@ -471,6 +472,14 @@
           state.shopOnly = true;
         }
       } catch (e2) {}
+      try {
+        var social = await client.rpc("can_manage_social_charity");
+        if (social.data) {
+          state.officer = true;
+          state.socialOnly = true;
+          // Social/Charity also drives Event Studio via can_manage_events
+        }
+      } catch (e3) {}
     }
     try {
       var dash = document.getElementById("dashCard");
@@ -1279,7 +1288,14 @@
 
     // Always ensure known studio shells exist so the dropdown stays complete
     // even before late-loading studio scripts finish.
-    var toolOrder = state.shopOnly ? ["hubShopStudio"] : OFFICER_TOOL_ORDER.slice();
+    var toolOrder = OFFICER_TOOL_ORDER.slice();
+    if (state.shopOnly && state.socialOnly) {
+      toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
+    } else if (state.shopOnly) {
+      toolOrder = ["hubShopStudio"];
+    } else if (state.socialOnly) {
+      toolOrder = ["hubEventStudio", "hubReports"];
+    }
     toolOrder.forEach(ensureOfficerToolCard);
 
     var cards = officerDeskCards();
@@ -1301,7 +1317,7 @@
     sel.innerHTML = "";
 
     var studioGroup = document.createElement("optgroup");
-    studioGroup.label = state.shopOnly ? "Merchandise tools" : "Studios & officer tools";
+    studioGroup.label = (state.shopOnly && !state.socialOnly) ? "Merchandise tools" : (state.socialOnly && !state.shopOnly) ? "Social / Charity tools" : (state.shopOnly && state.socialOnly) ? "Committee tools" : "Studios & officer tools";
     toolOrder.forEach(function (id) {
       var card = document.getElementById(id);
       var meta = OFFICER_TOOL_META[id] || {};
@@ -1317,15 +1333,22 @@
     });
     sel.appendChild(studioGroup);
     if (hint) {
-      hint.textContent = state.shopOnly
-        ? "Merchandise Chair — Shop Studio (products, Zeffy links, shop QR)."
-        : "Studios, QR, messages, and every report — pick one to open it.";
+      if (state.shopOnly && state.socialOnly) {
+        hint.textContent = "Committee tools — Shop Studio, Event Studio, and related reports.";
+      } else if (state.shopOnly) {
+        hint.textContent = "Merchandise Chair — Shop Studio (products, Zeffy links, shop QR).";
+      } else if (state.socialOnly) {
+        hint.textContent = "Social / Charity — Event Studio, Raffles tools, and event/charity reports.";
+      } else {
+        hint.textContent = "Studios, QR, messages, and every report — pick one to open it.";
+      }
     }
 
     // Hide tools outside this person's scope (e.g. Merchandise Chair = Shop only)
     cards.forEach(function (card) {
       if (!card || !card.id) return;
-      if (state.shopOnly && card.id !== "hubShopStudio") {
+      var limited = state.shopOnly || state.socialOnly;
+      if (limited && toolOrder.indexOf(card.id) === -1) {
         card.style.display = "none";
       } else if (card.style.display === "none" && toolOrder.indexOf(card.id) !== -1) {
         card.style.display = "";
@@ -1335,7 +1358,7 @@
     // Any extra cards not in the known list
     var known = {};
     OFFICER_TOOL_ORDER.forEach(function (id) { known[id] = true; });
-    var extras = state.shopOnly ? [] : cards.filter(function (c) { return c.id && !known[c.id]; });
+    var extras = (state.shopOnly || state.socialOnly) ? [] : cards.filter(function (c) { return c.id && !known[c.id]; });
     if (extras.length) {
       var extraGroup = document.createElement("optgroup");
       extraGroup.label = "More tools";
@@ -1352,7 +1375,25 @@
       sel.appendChild(extraGroup);
     }
 
-    var reports = state.shopOnly ? [] : officerReportDefs();
+    var reports = officerReportDefs();
+    if (state.shopOnly && !state.socialOnly) {
+      reports = [];
+    } else if (state.socialOnly) {
+      var SOCIAL_REPORT_CATS = {
+        "Events & Attendance": true
+      };
+      var SOCIAL_REPORT_IDS = {
+        event_attendance: true,
+        events_upcoming: true,
+        event_headcount: true,
+        volunteer_coverage: true,
+        attendee_contacts: true,
+        tartan_ball: true
+      };
+      reports = reports.filter(function (r) {
+        return !!(SOCIAL_REPORT_IDS[r.id] || SOCIAL_REPORT_CATS[r.cat]);
+      });
+    }
     if (reports.length) {
       var byCat = {};
       reports.forEach(function (r) {
