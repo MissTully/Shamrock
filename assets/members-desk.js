@@ -461,6 +461,13 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
+    // Merchandise / Shop chairs get Officer desk for Shop Studio without full board role
+    if (!state.officer) {
+      try {
+        var shop = await client.rpc("can_manage_shop");
+        state.officer = !!shop.data;
+      } catch (e2) {}
+    }
     try {
       var dash = document.getElementById("dashCard");
       if (dash) {
