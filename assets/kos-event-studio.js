@@ -95,7 +95,8 @@
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
-      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
+      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label>' +
+      '<label><input type="checkbox" id="hubEventFeatured" /> Featured Event</label></div>' +
       '<div class="hub-event-grid">' +
       '<div><label for="hubEventStatus">Status</label><select id="hubEventStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></div>' +
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
@@ -114,7 +115,7 @@
 
   // Uploads a flyer file to the public "event-flyers" storage bucket and
   // returns its public URL. Storage RLS only lets can_manage_events() write.
-  var FLYER_NOTE_DEFAULT = "Upload fills the URL above. Published public events show on the Events page Featured block and in the scrolling preview strip.";
+  var FLYER_NOTE_DEFAULT = "Upload fills the URL above. Published public events show on the Events page. Check Featured Event to pin one in the Featured spot (only one at a time).";
   var FLYER_MAX_BYTES = 10 * 1024 * 1024;
   var FLYER_TYPES = {
     "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"
@@ -159,6 +160,7 @@
     document.getElementById("hubEventId").value = "";
     document.getElementById("hubEventPublic").checked = true;
     document.getElementById("hubEventMandatory").checked = false;
+    var feat = document.getElementById("hubEventFeatured"); if (feat) feat.checked = false;
     document.getElementById("hubEventStatus").value = "draft";
     document.getElementById("hubEventType").value = "social";
     document.getElementById("hubEventFormTitle").textContent = "New event";
@@ -180,6 +182,7 @@
     get("hubEventDescription").value = event.description || "";
     get("hubEventPublic").checked = event.is_public !== false;
     get("hubEventMandatory").checked = !!event.is_mandatory;
+    var featEl = get("hubEventFeatured"); if (featEl) featEl.checked = !!event.is_featured;
     get("hubEventStatus").value = event.status || "published";
     get("hubEventTicketLabel").value = event.ticket_label || "";
     get("hubEventTicketPrice").value = event.ticket_price_cents == null ? "" : (Number(event.ticket_price_cents) / 100).toFixed(2);
@@ -265,7 +268,9 @@
       end_time: end ? end.toISOString() : null, location: value("hubEventLocation") || null,
       description: value("hubEventDescription") || null, event_type: value("hubEventType") || "other",
       capacity: capacity, is_public: !!document.getElementById("hubEventPublic").checked,
-      is_mandatory: !!document.getElementById("hubEventMandatory").checked, status: value("hubEventStatus") || "draft",
+      is_mandatory: !!document.getElementById("hubEventMandatory").checked,
+      is_featured: !!(document.getElementById("hubEventFeatured") && document.getElementById("hubEventFeatured").checked),
+      status: value("hubEventStatus") || "draft",
       ticket_label: value("hubEventTicketLabel") || null,
       ticket_price_cents: ticketValue === "" ? null : Math.round(dollars * 100),
       ticket_payment_url: value("hubEventPaymentUrl") || null, flyer_url: value("hubEventFlyerUrl") || null
