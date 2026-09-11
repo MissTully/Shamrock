@@ -22,6 +22,42 @@
   #kcal-grids{ grid-template-columns:1fr !important; }
   #kcal-legend{ gap:12px !important; }
 }
+
+  /* Upcoming event preview strip under Featured */
+  .ev-strip-wrap{margin-top:28px;}
+  .ev-strip-wrap .section-title{margin-bottom:8px;}
+  .ev-strip{
+    display:flex; gap:16px; overflow-x:auto; padding:10px 4px 18px;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+  }
+  .ev-strip::-webkit-scrollbar{height:8px;}
+  .ev-strip::-webkit-scrollbar-thumb{background:rgba(46,90,46,.35);border-radius:999px;}
+  .ev-card{
+    flex:0 0 min(320px,85vw); scroll-snap-align:start;
+    background:rgba(255,252,245,.95); border:1px solid rgba(168,128,28,.3);
+    border-radius:14px; box-shadow:var(--shadow); overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .ev-card .ev-media{
+    aspect-ratio:16/10; background:linear-gradient(160deg,#1a3a24,#0d1f14);
+    display:grid; place-items:center; color:#f5e6b8; font-family:var(--display);
+    position:relative; overflow:hidden;
+  }
+  .ev-card .ev-media img{width:100%;height:100%;object-fit:cover;}
+  .ev-card .ev-media .pdf-pill{
+    position:absolute; inset:auto 10px 10px auto; background:rgba(18,48,26,.85);
+    color:#f5e6b8; padding:4px 8px; border-radius:999px; font-size:11px;
+  }
+  .ev-card .ev-body{padding:12px 14px 16px; flex:1; display:flex; flex-direction:column; gap:6px;}
+  .ev-card .ev-body h3{margin:0; font-family:var(--display); color:var(--green-800); font-size:18px; letter-spacing:.3px;}
+  .ev-card .ev-meta{margin:0; font-size:13px; color:var(--muted); line-height:1.4;}
+  .ev-card .ev-desc{margin:0; font-size:14px; color:var(--ink); line-height:1.45; flex:1;
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+  .ev-card .ev-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .ev-marquee-hint{text-align:center; font-size:13px; color:var(--muted); margin:0 0 6px;}
+  @media (prefers-reduced-motion: no-preference) {
+    .ev-strip.autoplay { scroll-behavior:smooth; }
+  }
 </style>
 </head>
 <body>
@@ -162,6 +198,16 @@
     </div>
   </section>
 
+  <!-- UPCOMING EVENT PREVIEWS: full details + scrolling images -->
+  <section class="wrap ev-strip-wrap" id="event-previews" hidden>
+    <div class="section-title">
+      <h2>Upcoming Krewe Events</h2>
+      <p class="sub">Full details and flyers — swipe or scroll</p>
+    </div>
+    <p class="ev-marquee-hint">Scroll sideways to browse every upcoming public Krewe event</p>
+    <div class="ev-strip" id="eventPreviewStrip" tabindex="0" aria-label="Upcoming event previews"></div>
+  </section>
+
   <!-- KREWE OF SHAMROCK CALENDAR -->
   <section class="wrap" id="krewe-calendar" style="padding-top:28px;">
     <div class="knot-divider"><span class="knot" aria-hidden="true"></span></div>
@@ -278,57 +324,142 @@
 
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
 
+    function ticketCheckoutUrlFor(ev) {
+      const n = (ev.name || "").toLowerCase();
+      const isBall = n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
+      if (isBall) return ev.ticket_payment_url || ev.external_url || "http://www.tampabaytartanball.com/home.html";
+      if (ev.ticket_payment_url) return ev.ticket_payment_url;
+      const ext = (ev.external_url || "").toLowerCase();
+      if (ext.includes("zeffy.com")) return ev.external_url;
+      return "";
+    }
+
     function renderFeaturedEvent(event) {
       const title = document.getElementById("featured-event-title");
       const sub = document.getElementById("featured-event-sub");
       const content = document.getElementById("featured-event-content");
       if (!title || !sub || !content) return;
-      if (!event || !event.flyer_url) {
+      if (!event) {
         title.textContent = "Featured Event";
-        sub.textContent = "The next Krewe event with a flyer";
-        content.innerHTML = '<div class="ft-text"><h2>Event flyers are coming soon</h2><p>We’ll feature the next public Krewe event here as soon as its flyer is ready.</p><a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a></div>';
+        sub.textContent = "The next public Krewe event";
+        content.innerHTML = '<div class="ft-text"><h2>No upcoming events yet</h2><p>Check back soon for the next Krewe gathering.</p><a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a></div>';
         return;
       }
       const date = event.start_time ? new Date(event.start_time) : null;
       const when = date && !isNaN(date) ? dateStrFull(date) : "Date to be announced";
-      const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
-      const flyer = isPdf
-        ? '<object data="' + esc(event.flyer_url) + '" type="application/pdf" style="display:block;width:100%;min-height:520px;border:0;">' +
-          '<p style="padding:26px 18px;text-align:center;margin:0;">The flyer for this event is a PDF — tap below to view it.</p>' +
-          '</object><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
-        : '<img src="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" /><p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer ↗</a></p>';
+      const end = event.end_time ? new Date(event.end_time) : null;
+      const until = end && !isNaN(end) ? " · ends " + timeStr(end) : "";
+      const payFeat = ticketCheckoutUrlFor(event);
+      const price = event.ticket_price_cents != null ? "$" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
+      const ticketBits = [event.ticket_label, price].filter(Boolean).join(" · ");
+      let media = "";
+      if (event.flyer_url) {
+        const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
+        media = isPdf
+          ? '<object data="' + esc(event.flyer_url) + '" type="application/pdf" style="display:block;width:100%;min-height:420px;border:0;"></object>' +
+            '<p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
+          : '<img src="' + esc(event.flyer_url) + '" alt="Image for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" />' +
+            '<p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open image ↗</a></p>';
+      } else {
+        media = '<div style="display:grid;place-items:center;min-height:220px;padding:24px;background:linear-gradient(160deg,#1a3a24,#0d1f14);color:#f5e6b8;border-radius:12px;font-family:var(--display);text-align:center;">Event image coming soon<br><small style="font-family:var(--fancy);font-style:italic;opacity:.85;">Officers can upload in Event Studio</small></div>';
+      }
       title.textContent = "Featured Event: " + (event.name || "Upcoming Krewe event");
-      sub.textContent = event.description || "Join the Krewe of Shamrock at our next public event";
-      const nFeat = (event.name || "").toLowerCase();
-      const isBallFeat = nFeat.includes("tartan ball") && !nFeat.includes("basket") && !nFeat.includes("happy hour");
-      const payFeat = event.ticket_payment_url
-        || (isBallFeat ? "http://www.tampabaytartanball.com/home.html" : "")
-        || ((event.external_url || "").toLowerCase().includes("zeffy.com") ? event.external_url : "");
+      sub.textContent = "Full details for our next public Krewe event";
       const ctaFeat = payFeat
         ? '<a class="btn btn-primary" href="' + esc(payFeat) + '" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>'
         : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">☘ Sign Up Today</a>';
-      content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + flyer + '</div></div>' +
-        '<div class="ft-text"><h2>' + esc(when) + '</h2>' +
-        (event.location ? '<p><b>' + esc(event.location) + '</b></p>' : '') +
-        (event.description ? '<p>' + esc(event.description) + '</p>' : '') +
-        ctaFeat + '</div>';
+      content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + '</div></div>' +
+        '<div class="ft-text"><h2>' + esc(event.name || "Upcoming event") + '</h2>' +
+        '<p><b>' + esc(when + until) + '</b></p>' +
+        (event.location ? '<p><b>Where:</b> ' + esc(event.location) + '</p>' : '') +
+        (ticketBits ? '<p><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
+        (event.description ? '<p>' + esc(event.description) + '</p>' : '<p>Join the Krewe of Shamrock — details in RSVP below.</p>') +
+        '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + ctaFeat +
+        '<a class="btn" href="#event-previews">Browse all upcoming</a></div></div>';
+    }
+
+    function renderEventPreviews(events) {
+      const wrap = document.getElementById("event-previews");
+      const strip = document.getElementById("eventPreviewStrip");
+      if (!wrap || !strip) return;
+      const now = new Date();
+      const upcoming = (events || []).filter((ev) =>
+        ev.source !== "ikc" && ev.status === "published" && ev.start_time && new Date(ev.start_time) >= now
+      ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+      if (!upcoming.length) {
+        wrap.hidden = true;
+        strip.innerHTML = "";
+        return;
+      }
+      wrap.hidden = false;
+      strip.innerHTML = upcoming.map((ev) => {
+        const d = new Date(ev.start_time);
+        const when = !isNaN(d) ? (hasTime(d) ? dateStrShort(d) + ", " + timeStr(d) : dateStrShort(d)) : "Date TBD";
+        const pay = ticketCheckoutUrlFor(ev);
+        const price = ev.ticket_price_cents != null ? " · $" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
+        let media;
+        if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) {
+          media = '<img src="' + esc(ev.flyer_url) + '" alt="" loading="lazy" />';
+        } else if (ev.flyer_url) {
+          media = '<span>PDF flyer</span><span class="pdf-pill"><a href="' + esc(ev.flyer_url) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Open PDF</a></span>';
+        } else {
+          media = '<span>Image soon</span>';
+        }
+        const cta = pay
+          ? '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
+          : '<a class="btn btn-primary" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">Sign up</a>';
+        return '<article class="ev-card">' +
+          '<div class="ev-media">' + media + '</div>' +
+          '<div class="ev-body"><h3>' + esc(ev.name) + '</h3>' +
+          '<p class="ev-meta">' + esc(when) + (ev.location ? " · " + esc(ev.location) : "") + esc(price) + '</p>' +
+          (ev.description ? '<p class="ev-desc">' + esc(ev.description) + '</p>' : '<p class="ev-desc">Krewe event — open RSVP for details.</p>') +
+          '<div class="ev-actions">' + cta +
+          (ev.flyer_url ? '<a class="btn" href="' + esc(ev.flyer_url) + '" target="_blank" rel="noopener">Flyer</a>' : '') +
+          '</div></div></article>';
+      }).join("");
+
+      strip.querySelectorAll("[data-preview-event]").forEach((a) => {
+        a.addEventListener("click", () => {
+          const id = a.getAttribute("data-preview-event");
+          if (id && eventSelect) {
+            eventSelect.value = id;
+            eventSelect.dispatchEvent(new Event("change"));
+          }
+        });
+      });
+
+      // Gentle auto-scroll if there are several cards (respects reduced-motion via CSS)
+      if (strip._evTimer) clearInterval(strip._evTimer);
+      if (upcoming.length > 2 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        strip.classList.add("autoplay");
+        strip._evTimer = setInterval(() => {
+          if (document.hidden) return;
+          const max = strip.scrollWidth - strip.clientWidth;
+          if (max <= 0) return;
+          const next = strip.scrollLeft + 336;
+          strip.scrollLeft = next >= max - 8 ? 0 : next;
+        }, 4200);
+        strip.addEventListener("pointerdown", () => { if (strip._evTimer) { clearInterval(strip._evTimer); strip._evTimer = null; } }, { once: true });
+      }
     }
 
     async function loadEvents() {
       const { data, error } = await supabase
-        .from("events").select("id, name, description, start_time, end_time, location, source, external_url, ticket_payment_url, flyer_url, status")
+        .from("events").select("id, name, description, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, ticket_label, flyer_url, status")
         .eq("is_public", true).order("start_time", { ascending: true });
       if (error) {
         eventSelect.innerHTML = '<option value="">Could not load events</option>';
         showMessage("Sorry, we couldn't load the events list. Please try again later.", "error");
         buildCalendar([]);
         renderFeaturedEvent(null);
+        renderEventPreviews([]);
         return;
       }
       if (!data || data.length === 0) {
         eventSelect.innerHTML = '<option value="">No upcoming events</option>';
         buildCalendar([]);
         renderFeaturedEvent(null);
+        renderEventPreviews([]);
         return;
       }
       eventSelect.innerHTML = '<option value="">Select an event…</option>';
@@ -434,8 +565,9 @@
         eventSelect.value = pre;
       }
       syncSignupButton();
-      const featured = (data || []).filter((ev) => ev.status === "published" && ev.flyer_url && ev.start_time && new Date(ev.start_time) >= new Date()).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0];
+      const featured = (ours || []).filter((ev) => ev.status === "published" && ev.start_time && new Date(ev.start_time) >= new Date()).sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0] || null;
       renderFeaturedEvent(featured);
+      renderEventPreviews(ours);
       injectEventSchema(ours);
       buildCalendar(data);
     }
