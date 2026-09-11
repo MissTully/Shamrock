@@ -1032,7 +1032,8 @@
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
-      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
+      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label>' +
+      '<label><input type="checkbox" id="hubEventFeatured" /> Featured Event</label></div>' +
       '<div class="hub-event-grid">' +
       '<div><label for="hubEventStatus">Status</label><select id="hubEventStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="cancelled">Cancelled</option></select></div>' +
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
@@ -1041,7 +1042,7 @@
       '<div class="wide"><label for="hubEventFlyerUrl">Event image / PDF URL</label><input id="hubEventFlyerUrl" type="url" placeholder="https://… or upload a file below" /></div>' +
       '<div class="wide"><label for="hubEventFlyerFile">Upload event image or PDF</label>' +
       '<input id="hubEventFlyerFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />' +
-      '<p class="hub-flyer-note" id="hubEventFlyerNote" aria-live="polite">Upload fills the URL above. Then press Save event to attach it. Published public events show on the Events page.</p>' +
+      '<p class="hub-flyer-note" id="hubEventFlyerNote" aria-live="polite">Upload fills the URL above. Then press Save event to attach it. Published public events show on the Events page. Check Featured Event to pin one in the Featured spot (only one at a time).</p>' +
       '<div class="hub-flyer-preview" id="hubEventFlyerPreview"></div>' +
       '<button class="btn" type="button" id="hubEventFlyerClear" style="margin-top:8px;">Clear image / PDF</button></div></div>' +
       '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Zeffy ticketing campaign and paste the public share link here. Sign me up / RSVP will open that checkout.</p>' +
@@ -1093,6 +1094,7 @@
     document.getElementById("hubEventId").value = "";
     document.getElementById("hubEventPublic").checked = true;
     document.getElementById("hubEventMandatory").checked = false;
+    document.getElementById("hubEventFeatured").checked = false;
     document.getElementById("hubEventStatus").value = "draft";
     document.getElementById("hubEventType").value = "social";
     document.getElementById("hubEventFormTitle").textContent = "New event";
@@ -1114,6 +1116,7 @@
     get("hubEventDescription").value = event.description || "";
     get("hubEventPublic").checked = event.is_public !== false;
     get("hubEventMandatory").checked = !!event.is_mandatory;
+    get("hubEventFeatured").checked = !!event.is_featured;
     get("hubEventStatus").value = event.status || "published";
     get("hubEventTicketLabel").value = event.ticket_label || "";
     get("hubEventTicketPrice").value = event.ticket_price_cents == null ? "" : (Number(event.ticket_price_cents) / 100).toFixed(2);
@@ -1149,6 +1152,7 @@
       html += '<div class="hub-event-row">' + thumb + '<div class="hub-event-copy"><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
+        (event.is_featured ? " · Featured" : "") +
         (flyer ? " · has image/PDF" : " · add image/PDF") +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
         (readOnly ? "" : '<div class="hub-appr-btns">' +
@@ -1220,7 +1224,9 @@
       end_time: end ? end.toISOString() : null, location: value("hubEventLocation") || null,
       description: value("hubEventDescription") || null, event_type: value("hubEventType") || "other",
       capacity: capacity, is_public: !!document.getElementById("hubEventPublic").checked,
-      is_mandatory: !!document.getElementById("hubEventMandatory").checked, status: value("hubEventStatus") || "draft",
+      is_mandatory: !!document.getElementById("hubEventMandatory").checked,
+      is_featured: !!document.getElementById("hubEventFeatured").checked,
+      status: value("hubEventStatus") || "draft",
       ticket_label: value("hubEventTicketLabel") || null,
       ticket_price_cents: ticketValue === "" ? null : Math.round(dollars * 100),
       ticket_payment_url: value("hubEventPaymentUrl") || null, flyer_url: value("hubEventFlyerUrl") || null
