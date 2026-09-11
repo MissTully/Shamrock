@@ -102,6 +102,12 @@
     ".hub-event-row .hub-appr-btns{flex:none;}",
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
+    ".hub-flyer-note{font-size:12px;color:var(--muted);margin:4px 0 0;}",
+    ".hub-flyer-preview{margin-top:10px;display:none;align-items:center;gap:12px;flex-wrap:wrap;}",
+    ".hub-flyer-preview.show{display:flex;}",
+    ".hub-flyer-preview img{max-width:160px;max-height:120px;border-radius:10px;border:1px solid rgba(168,128,28,.35);object-fit:cover;background:#fff;}",
+    ".hub-event-thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid rgba(168,128,28,.35);background:#f3efe2;flex:none;}",
+    ".hub-event-thumb.ph{display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;}",
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
   ].join("");
 
@@ -1029,10 +1035,52 @@
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
       '<div><label for="hubEventTicketPrice">Ticket price (dollars)</label><input id="hubEventTicketPrice" type="number" min="0" step="0.01" placeholder="0.00" /></div>' +
       '<div><label for="hubEventPaymentUrl">Ticket payment URL</label><input id="hubEventPaymentUrl" type="url" placeholder="https://buy.stripe.com/..." /></div>' +
-      '<div class="wide"><label for="hubEventFlyerUrl">Flyer URL</label><input id="hubEventFlyerUrl" type="url" /></div></div>' +
-      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Stripe Payment Link (metadata <code>kind=event</code>) and paste it here. See PAYMENTS_SETUP.md.</p>' +
+      '<div class="wide"><label for="hubEventFlyerUrl">Event image / PDF URL</label><input id="hubEventFlyerUrl" type="url" placeholder="https://… or upload a file below" /></div>' +
+      '<div class="wide"><label for="hubEventFlyerFile">Upload event image or PDF</label>' +
+      '<input id="hubEventFlyerFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />' +
+      '<p class="hub-flyer-note" id="hubEventFlyerNote" aria-live="polite">Upload fills the URL above. Then press Save event to attach it. Published public events show on the Events page.</p>' +
+      '<div class="hub-flyer-preview" id="hubEventFlyerPreview"></div>' +
+      '<button class="btn" type="button" id="hubEventFlyerClear" style="margin-top:8px;">Clear image / PDF</button></div></div>' +
+      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Zeffy ticketing campaign and paste the public share link here. Sign me up / RSVP will open that checkout.</p>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
       '<button class="btn" type="button" id="hubEventNew">New / clear</button></div><p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form></div>';
+  }
+
+
+  var FLYER_MAX_BYTES = 10 * 1024 * 1024;
+  var FLYER_TYPES = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+  async function uploadEventFlyer(client, file) {
+    var ext = FLYER_TYPES[file.type];
+    if (!ext) {
+      var name = (file.name || "").toLowerCase();
+      if (name.endsWith(".pdf")) ext = "pdf";
+      else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) ext = "jpg";
+      else if (name.endsWith(".png")) ext = "png";
+      else if (name.endsWith(".webp")) ext = "webp";
+    }
+    if (!ext) throw new Error("Please choose a PDF, JPG, PNG, or WEBP file.");
+    if (file.size > FLYER_MAX_BYTES) throw new Error("Files must be 10 MB or smaller.");
+    var base = (file.name || "flyer").replace(/\.[^.]*$/, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "flyer";
+    var path = Date.now() + "-" + base + "." + ext;
+    var up = await client.storage.from("event-flyers").upload(path, file, {
+      upsert: false, contentType: file.type || undefined, cacheControl: "3600"
+    });
+    if (up.error) throw up.error;
+    return client.storage.from("event-flyers").getPublicUrl(path).data.publicUrl;
+  }
+  function syncFlyerPreview() {
+    var urlEl = document.getElementById("hubEventFlyerUrl");
+    var preview = document.getElementById("hubEventFlyerPreview");
+    if (!preview) return;
+    var url = urlEl ? urlEl.value.trim() : "";
+    if (!url) { preview.className = "hub-flyer-preview"; preview.innerHTML = ""; return; }
+    preview.className = "hub-flyer-preview show";
+    if (/\.pdf(?:$|[?#])/i.test(url)) {
+      preview.innerHTML = '<span class="hub-event-thumb ph">PDF</span><a href="' + esc(url) + '" target="_blank" rel="noopener">Open PDF ↗</a>';
+    } else {
+      preview.innerHTML = '<img src="' + esc(url) + '" alt="Event media preview" /><a href="' + esc(url) + '" target="_blank" rel="noopener">Open image ↗</a>';
+    }
   }
 
   function clearEventForm() {
@@ -1046,6 +1094,9 @@
     document.getElementById("hubEventType").value = "social";
     document.getElementById("hubEventFormTitle").textContent = "New event";
     document.getElementById("hubEventMsg").textContent = "";
+    var note = document.getElementById("hubEventFlyerNote");
+    if (note) note.textContent = "Upload fills the URL above. Then press Save event to attach it. Published public events show on the Events page.";
+    syncFlyerPreview();
   }
 
   function fillEventForm(event) {
@@ -1065,6 +1116,7 @@
     get("hubEventTicketPrice").value = event.ticket_price_cents == null ? "" : (Number(event.ticket_price_cents) / 100).toFixed(2);
     get("hubEventPaymentUrl").value = event.ticket_payment_url || "";
     get("hubEventFlyerUrl").value = event.flyer_url || "";
+    syncFlyerPreview();
     get("hubEventFormTitle").textContent = "Edit event";
     get("hubEventMsg").textContent = "";
     var wrap = document.getElementById("hubEventFormWrap");
@@ -1085,9 +1137,16 @@
       var ticket = event.ticket_price_cents != null ? " · $" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
       var readOnly = String(event.source || "").toLowerCase() === "ikc";
       var eid = esc(event.id);
-      html += '<div class="hub-event-row"><div><b>' + esc(event.name) + '</b>' +
+      var flyer = event.flyer_url || "";
+      var thumb = flyer
+        ? (/\.pdf(?:$|[?#])/i.test(flyer)
+            ? '<div class="hub-event-thumb ph">PDF</div>'
+            : '<img class="hub-event-thumb" src="' + esc(flyer) + '" alt="" />')
+        : '<div class="hub-event-thumb ph">No image</div>';
+      html += '<div class="hub-event-row">' + thumb + '<div style="flex:1;min-width:0;"><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
+        (flyer ? " · has image/PDF" : " · add image/PDF") +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
         (readOnly ? "" : '<div class="hub-appr-btns">' +
           '<button class="btn" type="button" data-event-edit="' + eid + '">Edit</button>' +
@@ -1202,6 +1261,33 @@
       e.preventDefault(); saveEventStudio(client);
     });
     document.getElementById("hubEventNew").addEventListener("click", clearEventForm);
+    var flyerFile = document.getElementById("hubEventFlyerFile");
+    if (flyerFile) flyerFile.addEventListener("change", async function () {
+      var note = document.getElementById("hubEventFlyerNote");
+      var file = flyerFile.files && flyerFile.files[0];
+      if (!file) return;
+      if (note) note.textContent = "Uploading…";
+      flyerFile.disabled = true;
+      try {
+        var url = await uploadEventFlyer(client, file);
+        document.getElementById("hubEventFlyerUrl").value = url;
+        syncFlyerPreview();
+        if (note) note.textContent = "Uploaded. Press ☘ Save event to attach it to this event.";
+      } catch (e) {
+        if (note) note.textContent = "Upload failed: " + ((e && e.message) || e);
+      }
+      flyerFile.disabled = false;
+      flyerFile.value = "";
+    });
+    var flyerUrl = document.getElementById("hubEventFlyerUrl");
+    if (flyerUrl) flyerUrl.addEventListener("input", syncFlyerPreview);
+    var flyerClear = document.getElementById("hubEventFlyerClear");
+    if (flyerClear) flyerClear.addEventListener("click", function () {
+      if (flyerUrl) flyerUrl.value = "";
+      syncFlyerPreview();
+      var note = document.getElementById("hubEventFlyerNote");
+      if (note) note.textContent = "Cleared. Save the event to remove it from the public page.";
+    });
     clearEventForm();
     await refreshEventStudio(client);
     wireOfficerDeskPicker();
