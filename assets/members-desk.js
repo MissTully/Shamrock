@@ -96,10 +96,13 @@
     ".hub-event-checks{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;}",
     ".hub-event-checks label{display:flex;align-items:center;gap:7px;margin:0;color:var(--green-800);cursor:pointer;}",
     ".hub-event-checks input{width:auto;}",
-    ".hub-event-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:11px 12px;margin:8px 0;background:#fffdf4;}",
+    "#hubEventStudio,.hub-event-list,.hub-event-form{width:100%;max-width:100%;box-sizing:border-box;}",
+    ".hub-event-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:11px 12px;margin:8px 0;background:#fffdf4;width:100%;box-sizing:border-box;}",
     ".hub-event-row b{font-family:var(--display);color:var(--green-800);}",
     ".hub-event-row .muted{color:var(--muted);font-size:13px;line-height:1.45;}",
-    ".hub-event-row .hub-appr-btns{flex:none;}",
+    ".hub-event-copy{flex:1 1 220px;min-width:0;}",
+    ".hub-event-row .hub-appr-btns{flex:1 1 auto;justify-content:flex-end;}",
+    ".hub-event-row .qr-slot{flex:1 1 100%;width:100%;}",
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
     ".hub-flyer-note{font-size:12px;color:var(--muted);margin:4px 0 0;}",
@@ -1143,7 +1146,7 @@
             ? '<div class="hub-event-thumb ph">PDF</div>'
             : '<img class="hub-event-thumb" src="' + esc(flyer) + '" alt="" />')
         : '<div class="hub-event-thumb ph">No image</div>';
-      html += '<div class="hub-event-row">' + thumb + '<div style="flex:1;min-width:0;"><b>' + esc(event.name) + '</b>' +
+      html += '<div class="hub-event-row">' + thumb + '<div class="hub-event-copy"><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
         (flyer ? " · has image/PDF" : " · add image/PDF") +
