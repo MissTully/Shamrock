@@ -388,7 +388,7 @@
       content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + '</div></div>' +
         '<div class="ft-text"><h2>' + esc(event.name || "Upcoming event") + '</h2>' +
         '<p><b>' + esc(when + until) + '</b></p>' +
-        (event.location ? '<p><b>Where:</b> ' + esc(event.location) + '</p>' : '') +
+        '<p><b>Where:</b> ' + esc(event.location || 'Address to be announced') + '</p>' +
         (ticketBits ? '<p><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
         (event.description ? '<p class="feat-desc">' + esc(event.description) + '</p>' : '<p class="feat-desc">Join the Krewe of Shamrock. Details are in RSVP below.</p>') +
         '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + ctaFeat +
@@ -430,7 +430,7 @@
           '<div class="ev-media">' + media + '</div>' +
           '<div class="ev-body"><h3>' + esc(ev.name) + '</h3>' +
           '<p class="ev-meta"><b>When:</b> ' + esc(when) + '</p>' +
-          (ev.location ? '<p class="ev-meta"><b>Where:</b> ' + esc(ev.location) + '</p>' : '') +
+          '<p class="ev-meta"><b>Where:</b> ' + esc(ev.location || 'Address to be announced') + '</p>' +
           (ticketBits ? '<p class="ev-meta"><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
           (ev.description ? '<p class="ev-desc">' + esc(ev.description) + '</p>' : '<p class="ev-desc">Krewe event. Open RSVP below for more.</p>') +
           '<div class="ev-actions">' + cta +
