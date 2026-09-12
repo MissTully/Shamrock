@@ -48,15 +48,32 @@
     position:absolute; inset:auto 10px 10px auto; background:rgba(18,48,26,.85);
     color:#f5e6b8; padding:4px 8px; border-radius:999px; font-size:11px;
   }
-  .ev-card .ev-body{padding:12px 14px 16px; flex:1; display:flex; flex-direction:column; gap:6px;}
-  .ev-card .ev-body h3{margin:0; font-family:var(--display); color:var(--green-800); font-size:18px; letter-spacing:.3px;}
-  .ev-card .ev-meta{margin:0; font-size:13px; color:var(--muted); line-height:1.4;}
-  .ev-card .ev-desc{margin:0; font-size:14px; color:var(--ink); line-height:1.45; flex:1;
-    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+  .ev-card .ev-body{padding:14px 16px 18px; flex:1; display:flex; flex-direction:column; gap:8px; min-width:0;}
+  .ev-card .ev-body h3{margin:0; font-family:var(--display); color:var(--green-800); font-size:20px; letter-spacing:.2px; line-height:1.25; overflow-wrap:anywhere;}
+  .ev-card .ev-meta{margin:0; font-size:15px; color:var(--ink); line-height:1.5; overflow-wrap:anywhere; white-space:normal;}
+  .ev-card .ev-meta b{color:var(--green-800);}
+  .ev-card .ev-desc{margin:2px 0 0; font-size:16px; color:var(--ink); line-height:1.55; overflow:visible;
+    display:block; white-space:pre-wrap; overflow-wrap:anywhere;}
   .ev-card .ev-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
   .ev-marquee-hint{text-align:center; font-size:13px; color:var(--muted); margin:0 0 6px;}
+  #featured-event-content.feature{align-items:start;}
+  .feature .ft-text, .feature .ft-media{min-width:0;}
+  .feature .ft-text{overflow:visible;}
+  .feature .ft-text h2, .feature .ft-text p{overflow-wrap:anywhere; white-space:normal;}
+  .feature .ft-text .feat-desc{font-size:17px; line-height:1.6; white-space:pre-wrap;}
   @media (prefers-reduced-motion: no-preference) {
     .ev-strip.autoplay { scroll-behavior:smooth; }
+  }
+  @media (max-width:680px){
+    .ev-strip{
+      flex-direction:column; overflow-x:visible; scroll-snap-type:none;
+      padding:4px 0 8px; gap:18px;
+    }
+    .ev-card{flex:1 1 auto; width:100%; max-width:100%;}
+    .ev-card .ev-media{aspect-ratio:16/9; max-height:220px;}
+    .ev-marquee-hint{display:none;}
+    .feature .ft-text h2{font-size:26px; line-height:1.25;}
+    .feature .ft-text p{font-size:17px; line-height:1.6;}
   }
 </style>
 </head>
@@ -189,7 +206,7 @@
       <p class="sub" id="featured-event-sub">The next Krewe event with a flyer</p>
     </div>
     <div class="banner-flourish" aria-hidden="true"></div>
-    <div class="feature" id="featured-event-content" style="align-items:center;">
+    <div class="feature" id="featured-event-content">
       <div class="ft-text">
         <h2>Event flyers are coming soon</h2>
         <p>We’ll feature the next public Krewe event here as soon as its flyer is ready.</p>
@@ -202,7 +219,7 @@
   <section class="wrap ev-strip-wrap" id="event-previews" hidden>
     <div class="section-title">
       <h2>Upcoming Krewe Events</h2>
-      <p class="sub">Full details and flyers — swipe or scroll</p>
+      <p class="sub">Full details and flyers for every upcoming public Krewe event</p>
     </div>
     <p class="ev-marquee-hint">Scroll sideways to browse every upcoming public Krewe event</p>
     <div class="ev-strip" id="eventPreviewStrip" tabindex="0" aria-label="Upcoming event previews"></div>
@@ -373,7 +390,7 @@
         '<p><b>' + esc(when + until) + '</b></p>' +
         (event.location ? '<p><b>Where:</b> ' + esc(event.location) + '</p>' : '') +
         (ticketBits ? '<p><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
-        (event.description ? '<p>' + esc(event.description) + '</p>' : '<p>Join the Krewe of Shamrock — details in RSVP below.</p>') +
+        (event.description ? '<p class="feat-desc">' + esc(event.description) + '</p>' : '<p class="feat-desc">Join the Krewe of Shamrock. Details are in RSVP below.</p>') +
         '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + ctaFeat +
         '<a class="btn" href="#event-previews">Browse all upcoming</a></div></div>';
     }
@@ -396,7 +413,8 @@
         const d = new Date(ev.start_time);
         const when = !isNaN(d) ? (hasTime(d) ? dateStrShort(d) + ", " + timeStr(d) : dateStrShort(d)) : "Date TBD";
         const pay = ticketCheckoutUrlFor(ev);
-        const price = ev.ticket_price_cents != null ? " · $" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
+        const price = ev.ticket_price_cents != null ? "$" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
+        const ticketBits = [ev.ticket_label, price].filter(Boolean).join(" · ");
         let media;
         if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) {
           media = '<img src="' + esc(ev.flyer_url) + '" alt="" loading="lazy" />';
@@ -411,8 +429,10 @@
         return '<article class="ev-card">' +
           '<div class="ev-media">' + media + '</div>' +
           '<div class="ev-body"><h3>' + esc(ev.name) + '</h3>' +
-          '<p class="ev-meta">' + esc(when) + (ev.location ? " · " + esc(ev.location) : "") + esc(price) + '</p>' +
-          (ev.description ? '<p class="ev-desc">' + esc(ev.description) + '</p>' : '<p class="ev-desc">Krewe event — open RSVP for details.</p>') +
+          '<p class="ev-meta"><b>When:</b> ' + esc(when) + '</p>' +
+          (ev.location ? '<p class="ev-meta"><b>Where:</b> ' + esc(ev.location) + '</p>' : '') +
+          (ticketBits ? '<p class="ev-meta"><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
+          (ev.description ? '<p class="ev-desc">' + esc(ev.description) + '</p>' : '<p class="ev-desc">Krewe event. Open RSVP below for more.</p>') +
           '<div class="ev-actions">' + cta +
           (ev.flyer_url ? '<a class="btn" href="' + esc(ev.flyer_url) + '" target="_blank" rel="noopener">Flyer</a>' : '') +
           '</div></div></article>';
@@ -430,7 +450,7 @@
 
       // Gentle auto-scroll if there are several cards (respects reduced-motion via CSS)
       if (strip._evTimer) clearInterval(strip._evTimer);
-      if (upcoming.length > 2 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (upcoming.length > 2 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && !window.matchMedia("(max-width:680px)").matches) {
         strip.classList.add("autoplay");
         strip._evTimer = setInterval(() => {
           if (document.hidden) return;
