@@ -112,9 +112,32 @@
     ".hub-event-thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid rgba(168,128,28,.35);background:#f3efe2;flex:none;}",
     ".hub-event-thumb.ph{display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;}",
     "@media(max-width:620px){.hub-event-grid{grid-template-columns:1fr;}.hub-event-grid .wide{grid-column:auto;}.hub-event-row{flex-direction:column;}}",
+    "@keyframes kosHoursFlash{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 4px rgba(29,107,62,.45)}}",
+    "#vhForm.kos-hours-flash{animation:kosHoursFlash 1.6s ease;border-radius:12px;}",
   ].join("");
 
   var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [] };
+  var hoursDeepLink = false;
+
+  function hoursIntent() {
+    try {
+      var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+      var intent = "";
+      try { intent = sessionStorage.getItem("kos_hub_intent") || ""; } catch (ie) {}
+      return hoursDeepLink || intent === "hours" || hash === "hours" || hash === "volunteer";
+    } catch (e) {
+      return hoursDeepLink;
+    }
+  }
+
+  function clearHoursIntent() {
+    hoursDeepLink = false;
+    try { sessionStorage.removeItem("kos_hub_intent"); } catch (re) {}
+    try {
+      var h = (location.hash || "").replace(/^#/, "").toLowerCase();
+      if (h === "hours" || h === "volunteer") history.replaceState(null, "", location.pathname);
+    } catch (he) {}
+  }
 
   function injectCss() {
     if (document.getElementById("kosHubCss")) return;
@@ -433,7 +456,7 @@
   }
 
   window.__hubShowTab = showTab;
-  function showTab(name) {
+  function showTab(name, opts) {
     var tab = name || TAB_HOME;
     if (tab === "officer" && !state.officer && !state.canManageEvents) tab = TAB_HOME;
     document.querySelectorAll("[data-hub-panel]").forEach(function (el) {
@@ -451,7 +474,9 @@
       setTimeout(wireOfficerDeskPicker, 400);
       setTimeout(wireOfficerDeskPicker, 1200);
     }
-    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+    if (!(opts && opts.skipScroll)) {
+      try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+    }
   }
 
   window.kosShowHub = showTab;
@@ -573,13 +598,13 @@
     }
 
     var saved = TAB_HOME;
-    var wantHours = false;
+    var wantHours = hoursIntent();
     try {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-      var intent = "";
-      try { intent = sessionStorage.getItem("kos_hub_intent") || ""; } catch (ie) {}
-      wantHours = (intent === "hours" || hash === "hours" || hash === "volunteer");
-      if (wantHours || hash === "parade" || hash === "desk") saved = "parade";
+      if (wantHours) {
+        hoursDeepLink = true;
+        saved = "parade";
+      } else if (hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "events") saved = "events";
@@ -589,40 +614,36 @@
         // (Session used to reopen Officer desk and hide the beautiful hub.)
         saved = TAB_HOME;
       }
-    } catch (e) {}
+    } catch (e) {
+      if (wantHours) saved = "parade";
+    }
     if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
-    showTab(saved);
+    showTab(saved, wantHours ? { skipScroll: true } : null);
     renderHome();
-    if (wantHours) openVolunteerHoursForm(true);
+    if (wantHours) openVolunteerHoursForm(false);
   }
 
   function openVolunteerHoursForm(clearIntent) {
     function hubVisible() {
       var content = document.getElementById("memberContent");
-      return !!(content && content.style.display !== "none" && content.offsetParent !== null);
+      return !!(content && content.style.display !== "none");
     }
     function go() {
       if (!hubVisible()) return false;
-      showTab("parade");
+      hoursDeepLink = true;
+      showTab("parade", { skipScroll: true });
       var form = document.getElementById("vhForm");
+      if (!form) return false;
       var card = document.getElementById("hubHoursCard") || form || document.getElementById("prHours");
       if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", block: "start" });
-      var activity = document.getElementById("vhActivity");
-      if (activity) {
-        try { activity.focus({ preventScroll: true }); } catch (fe) { try { activity.focus(); } catch (fe2) {} }
+      var hours = document.getElementById("vhHours") || document.getElementById("vhActivity");
+      if (hours) {
+        try { hours.focus({ preventScroll: true }); } catch (fe) { try { hours.focus(); } catch (fe2) {} }
       }
-      if (form) {
-        try { form.classList.add("kos-hours-flash"); } catch (ce) {}
-        setTimeout(function () { try { form.classList.remove("kos-hours-flash"); } catch (ce2) {} }, 1800);
-      }
-      if (clearIntent) {
-        try { sessionStorage.removeItem("kos_hub_intent"); } catch (re) {}
-        try {
-          var clean = location.pathname;
-          history.replaceState(null, "", clean);
-        } catch (he) {}
-      }
-      return !!(form && activity);
+      try { form.classList.add("kos-hours-flash"); } catch (ce) {}
+      setTimeout(function () { try { form.classList.remove("kos-hours-flash"); } catch (ce2) {} }, 1800);
+      if (clearIntent) clearHoursIntent();
+      return true;
     }
     if (go()) return;
     var tries = 0;
@@ -1316,7 +1337,11 @@
 
   function bindTabs() {
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
-      btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-tab")); });
+      btn.addEventListener("click", function () {
+        var tab = btn.getAttribute("data-hub-tab");
+        if (tab !== "parade") clearHoursIntent();
+        showTab(tab);
+      });
     });
   }
 
@@ -1616,9 +1641,7 @@
     setTimeout(boot, 50);
     setTimeout(function () {
       try {
-        var intent = sessionStorage.getItem("kos_hub_intent") || "";
-        var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-        if (intent === "hours" || hash === "hours" || hash === "volunteer") openVolunteerHoursForm(true);
+        if (hoursIntent()) openVolunteerHoursForm(false);
       } catch (e) {}
     }, 400);
   };
