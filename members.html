@@ -359,6 +359,27 @@
   #lepOverlay .lep-body{text-align:left;color:#3a3a2e;font-size:15px;line-height:1.5;margin:0 0 14px;}
   #lepOverlay .lep-body b{color:var(--green-800);}
 
+  /* ---- Signed-in Fáilte hero (members hub) ---- */
+  .page-head.is-home{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .page-head.is-home .lep-wave{
+    margin:0 0 8px; padding:0; position:relative; display:inline-flex;
+    align-items:flex-end; justify-content:center; line-height:1;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));
+  }
+  .lep-wave .lep-core{ font-size:58px; line-height:1; display:inline-block; }
+  .lep-wave .lep-arm{
+    position:absolute; right:-10px; top:2px; font-size:30px; line-height:1;
+    display:inline-block; transform-origin:70% 85%;
+    animation:lepWave 1.15s ease-in-out infinite;
+  }
+  @keyframes lepWave{
+    0%,100%{ transform:rotate(-22deg); }
+    50%{ transform:rotate(32deg); }
+  }
+  .page-head.is-home h1{ letter-spacing:2px; }
+
   .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); }
   .raffle-event{ margin-bottom:22px; }
 
@@ -996,6 +1017,28 @@
         const nm = (p.display_name || [p.first_name,p.last_name].filter(Boolean).join(" ") || p.email || "").toString().trim();
         const who = document.getElementById("memberWho");
         if(who) who.textContent = nm ? ("Signed in as "+nm) : "Signed in";
+      }catch(e){}
+      try{
+        const head = document.querySelector("header.page-head");
+        if(head){
+          head.classList.add("is-home");
+          const ey = head.querySelector(".eyebrow");
+          const h1 = head.querySelector("h1");
+          const sub = head.querySelector("p.sub");
+          if(ey) ey.textContent = "Céad míle fáilte";
+          if(h1) h1.textContent = "Fáilte";
+          if(sub) sub.textContent = "The leprechaun waves you in.";
+          if(!head.querySelector(".lep-wave")){
+            const fig = document.createElement("figure");
+            fig.className = "lep-wave";
+            fig.setAttribute("aria-hidden","true");
+            fig.title = "Waving leprechaun";
+            fig.innerHTML = '<span class="lep-core">🎩☘️</span><span class="lep-arm">✋</span>';
+            const eyNode = head.querySelector(".eyebrow");
+            if(eyNode) head.insertBefore(fig, eyNode);
+            else head.appendChild(fig);
+          }
+        }
       }catch(e){}
       if(!window.__kosInit){ window.__kosInit=true; initAll(); }
     }
