@@ -2254,7 +2254,14 @@
             localStorage.setItem("kosLepWelcome","1");
           }
         }catch(_){ }
-        setTimeout(function(){ try{ if(window.kosShowLepWelcome) window.kosShowLepWelcome(); else maybeTour(); }catch(_){ maybeTour(); } }, 400);
+        setTimeout(function(){
+          try{
+            var hours = false;
+            try{ hours = sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
+            if(hours) return;
+            if(window.kosShowLepWelcome) window.kosShowLepWelcome(); else maybeTour();
+          }catch(_){ maybeTour(); }
+        }, 400);
     }
     document.getElementById("signinForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -2462,7 +2469,12 @@
       localStorage.removeItem("kosTourDone");
       try{ localStorage.setItem("kosLepWelcome","1"); }catch(_){}
       await route();
-      setTimeout(()=>{ try{ if(window.kosShowLepWelcome) window.kosShowLepWelcome(); }catch(_){} }, 500);
+      setTimeout(()=>{ try{
+        var hours=false;
+        try{ hours=sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
+        if(hours) return;
+        if(window.kosShowLepWelcome) window.kosShowLepWelcome();
+      }catch(_){} }, 500);
     });
     function maybeTour(){
       if(localStorage.getItem("kosTourDone")==="1") return;
@@ -2774,7 +2786,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260913a1" defer></script>
+<script src="assets/members-desk.js?v=20260913h1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260911f1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
