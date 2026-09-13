@@ -663,6 +663,10 @@
     else if (p.member_role) facts.push("Role: " + esc(p.member_role));
     if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(p.membership_status || state.membershipStatus));
     if (p.hometown) facts.push("🏠 " + esc(p.hometown));
+    if (p.street_address || p.city) {
+      var addr = [p.street_address, [p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" · ");
+      if (addr) facts.push("📫 " + esc(addr));
+    }
     if (p.parade_since) facts.push("🥁 Marching since " + esc(p.parade_since));
     if (p.birthday) facts.push("🎂 " + esc(fmtMonthDay(p.birthday)));
     if (p.anniversary) facts.push("💍 " + esc(fmtMonthDay(p.anniversary)));
@@ -703,6 +707,10 @@
       '<div><label for="hubPfLast">Last name</label><input id="hubPfLast" value="' + attr(p.last_name) + '" required /></div>' +
       '<div><label for="hubPfPhone">Phone</label><input id="hubPfPhone" type="tel" value="' + attr(p.phone) + '" /></div>' +
       '<div><label for="hubPfHometown">Hometown</label><input id="hubPfHometown" value="' + attr(p.hometown) + '" /></div>' +
+      '<div style="grid-column:1/-1;"><label for="hubPfStreet">Mailing address</label><input id="hubPfStreet" value="' + attr(p.street_address) + '" autocomplete="street-address" /></div>' +
+      '<div><label for="hubPfCity">City</label><input id="hubPfCity" value="' + attr(p.city) + '" autocomplete="address-level2" /></div>' +
+      '<div><label for="hubPfState">State</label><input id="hubPfState" value="' + attr(p.state) + '" maxlength="20" autocomplete="address-level1" /></div>' +
+      '<div><label for="hubPfZip">ZIP</label><input id="hubPfZip" value="' + attr(p.zip) + '" maxlength="16" autocomplete="postal-code" /></div>' +
       '<div><label for="hubPfBirthday">Birthday (members see month + day only)</label><input id="hubPfBirthday" type="date" value="' + attr(p.birthday) + '" /></div>' +
       '<div><label for="hubPfAnniversary">Anniversary (month + day shown)</label><input id="hubPfAnniversary" type="date" value="' + attr(p.anniversary) + '" /></div>' +
       '<div><label for="hubPfSince">Marching with the krewe since (year)</label><input id="hubPfSince" type="number" min="1998" max="2100" value="' + attr(p.parade_since) + '" /></div>' +
@@ -796,6 +804,10 @@
         p_phone: val("hubPfPhone") || null,
         p_bio: val("hubPfBio") || null,
         p_hometown: val("hubPfHometown") || null,
+        p_street_address: val("hubPfStreet") || null,
+        p_city: val("hubPfCity") || null,
+        p_state: val("hubPfState") || null,
+        p_zip: val("hubPfZip") || null,
         p_parade_since: isNaN(since) ? null : since,
         p_interests: val("hubPfInterests") || null,
         p_photo_url: photoUrl,

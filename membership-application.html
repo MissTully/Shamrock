@@ -1,20 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="/favicon.ico" sizes="any" />
-<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
-<link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
-
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
 <title>Krewe of Shamrock · Membership Application</title>
 <meta name="description" content="Join the Krewe of Shamrock. Apply for membership and celebrate Irish heritage in Tampa Bay." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m2" />
 <style>
 .mem-glance{padding:20px 26px 4px;}
 .mem-glance h2{font-family:var(--display);color:var(--green-800);text-align:center;margin:0 0 6px;}
@@ -134,6 +129,23 @@
         <label for="phone">Phone <span class="hint">(optional)</span></label>
         <input id="phone" type="tel" autocomplete="tel" />
 
+        <label for="street">Mailing address</label>
+        <input id="street" type="text" required autocomplete="street-address" placeholder="Street" />
+        <div class="row">
+          <div>
+            <label for="city">City</label>
+            <input id="city" type="text" required autocomplete="address-level2" />
+          </div>
+          <div>
+            <label for="state">State</label>
+            <input id="state" type="text" required autocomplete="address-level1" maxlength="20" placeholder="FL" />
+          </div>
+          <div>
+            <label for="zip">ZIP</label>
+            <input id="zip" type="text" required autocomplete="postal-code" maxlength="16" />
+          </div>
+        </div>
+
         <label for="notes">Tell us a bit about yourself <span class="hint">(optional)</span></label>
         <textarea id="notes" placeholder="Why you'd like to join, how you heard about us, your interests..."></textarea>
 
@@ -195,6 +207,10 @@
         p_last_name: document.getElementById("lastName").value.trim(),
         p_email: document.getElementById("email").value.trim(),
         p_phone: document.getElementById("phone").value.trim() || null,
+        p_street_address: document.getElementById("street").value.trim(),
+        p_city: document.getElementById("city").value.trim(),
+        p_state: document.getElementById("state").value.trim(),
+        p_zip: document.getElementById("zip").value.trim(),
         p_notes: document.getElementById("notes").value.trim() || null
       });
       btn.disabled = false; btn.textContent = "☘ Submit application";

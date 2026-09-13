@@ -586,6 +586,13 @@
           <div><label for="pfFirst">First name *</label><input id="pfFirst" required /></div>
           <div><label for="pfLast">Last name *</label><input id="pfLast" required /></div>
         </div>
+        <label for="pfStreet">Mailing address</label>
+        <input id="pfStreet" autocomplete="street-address" placeholder="Street" />
+        <div class="row">
+          <div><label for="pfCity">City</label><input id="pfCity" autocomplete="address-level2" /></div>
+          <div><label for="pfState">State</label><input id="pfState" autocomplete="address-level1" maxlength="20" placeholder="FL" /></div>
+          <div><label for="pfZip">ZIP</label><input id="pfZip" autocomplete="postal-code" maxlength="16" /></div>
+        </div>
         <label for="pfFact">A fun fact about you</label>
         <input id="pfFact" placeholder="e.g. I once caught 47 strands of beads in one parade" />
         <label for="pfMemory">Favorite krewe or parade memory</label>
@@ -2204,6 +2211,10 @@
           setIf("pfLast", pf.last_name);
           setIf("pfPhone", pf.phone);
           setIf("pfHometown", pf.hometown);
+          setIf("pfStreet", pf.street_address);
+          setIf("pfCity", pf.city);
+          setIf("pfState", pf.state);
+          setIf("pfZip", pf.zip);
           setIf("pfHobbies", pf.hobbies);
           setIf("pfMemory", pf.favorite_memory);
           setIf("pfFact", pf.fun_fact);
@@ -2363,6 +2374,10 @@
         p_phone: v("pfPhone") || null,
         p_bio: null,
         p_hometown: v("pfHometown") || null,
+        p_street_address: v("pfStreet") || null,
+        p_city: v("pfCity") || null,
+        p_state: v("pfState") || null,
+        p_zip: v("pfZip") || null,
         p_parade_since: null,
         p_interests: null,
         p_photo_url: photoUrl,
@@ -2730,7 +2745,7 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js?v=20260911f1" defer></script>
+<script src="assets/members-desk.js?v=20260913a1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260911f1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
