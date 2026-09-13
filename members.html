@@ -478,11 +478,11 @@
       <!-- Sign in -->
       <div id="authPanelSignin">
         <p>Fáilte! This Member Hub is new. Your old Wild Apricot password will not work here.</p>
-        <p style="font-size:14px;">First time? Use the email on the krewe roster and tap Create your password. We will email a setup link. Already set a Hub password? Sign in below.</p>
+        <p style="font-size:14px;">Enter the email on the krewe roster first. We check that list. If you are on it and have never set a Hub password, we email a setup link. If you already have one, enter it below and sign in.</p>
         <form id="signinForm">
-          <input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
-          <input id="siPassword" type="password" placeholder="Password" autocomplete="current-password" required style="margin-top:10px;" />
-          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Sign in</button>
+          <input id="siEmail" type="email" placeholder="Email on the krewe roster" autocomplete="email" required />
+          <input id="siPassword" type="password" placeholder="Hub password (if you already have one)" autocomplete="current-password" style="margin-top:10px;" />
+          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Continue</button>
           <div class="err" id="signinMsg"></div>
         </form>
         <p style="margin-top:12px;">
@@ -2272,24 +2272,28 @@
       const email=document.getElementById("siEmail").value.trim();
       const password=document.getElementById("siPassword").value;
       const msg=document.getElementById("signinMsg");
-      if(!email || !password){ msg.style.color=""; msg.textContent="Please enter your email and password."; return; }
-      msg.style.color=""; msg.textContent="Signing in…";
+      if(!email){ msg.style.color=""; msg.textContent="Please enter the email on the krewe roster."; return; }
+      msg.style.color=""; msg.textContent="Checking the member list…";
+      const { data: door, error: doorErr } = await sb.rpc("hub_door_status", { p_email: email });
+      if(doorErr || !door){
+        msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com.";
+        return;
+      }
+      if(door.status==="not_on_roster" || door.status==="invalid" || door.status==="rate_limited"){
+        msg.textContent=door.message; return;
+      }
+      if(door.status==="needs_invite"){
+        await requestPasswordMail(email, msg, "signin", door);
+        return;
+      }
+      if(!password){
+        msg.textContent="You're on the roster and already have a Hub login. Enter your Hub password, or tap Forgot your password.";
+        return;
+      }
+      msg.textContent="Signing in…";
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if(error){
-        msg.textContent="Checking the member list…";
-        const { data: door, error: doorErr } = await sb.rpc("hub_door_status", { p_email: email });
-        if(doorErr || !door){
-          msg.textContent="Couldn't sign in. If this is your first time at the Hub, tap Create your password.";
-          return;
-        }
-        if(door.status==="needs_invite"){
-          await requestPasswordMail(email, msg, "signin", door);
-          return;
-        }
-        if(door.status==="not_on_roster" || door.status==="invalid" || door.status==="rate_limited"){
-          msg.textContent=door.message; return;
-        }
-        msg.textContent="That password isn't right. Old Wild Apricot passwords do not work here. Tap Forgot your password if you already set a Hub password.";
+        msg.textContent="That password isn't right. Old Wild Apricot passwords do not work here. Tap Forgot your password if you need a reset.";
         return;
       }
       msg.textContent="";
