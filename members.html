@@ -505,7 +505,7 @@
             <span class="num" aria-hidden="true">2</span>
             <div>
               <h3>Forge your key (set a password)</h3>
-              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. No invitation? Use the gold button below and we&rsquo;ll email you a link (peek in your spam folder if it hides).</p>
+              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. Already invited and need the link again? Use the gold button below, then check the inbox for that address (peek in spam if it hides). If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write <a href="mailto:digital@kreweofshamrock.com">digital@kreweofshamrock.com</a>.</p>
               <button type="button" class="guide-cta" id="guideCreateBtn">☘ Email me a link to create my password</button>
             </div>
           </div>
@@ -2222,7 +2222,7 @@
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
-      msg.textContent="✓ Check your email for a link to create your password, then click it on this device.";
+      msg.textContent="✓ Check the inbox for that address for a link to create your password, then click it on this device. If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write digital@kreweofshamrock.com.";
     });
     document.getElementById("forgotForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -2233,7 +2233,7 @@
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
-      msg.textContent="✓ Check your email for a password reset link, then click it on this device.";
+      msg.textContent="✓ Check the inbox for that address for a password reset link, then click it on this device. If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write digital@kreweofshamrock.com.";
     });
     document.getElementById("setPasswordForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
