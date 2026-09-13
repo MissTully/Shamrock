@@ -492,7 +492,7 @@
 
       <!-- Create password (first-time / invited members) -->
       <div id="authPanelCreate" style="display:none;">
-        <p>New to the Member Hub, or never set a password? Enter your email and we'll send you a link to create one.</p>
+        <p>New to the Member Hub, or never set a password? Enter the email on the member roster. If you are on the list, we will email a first-login link. If you are not, the door will say so.</p>
         <form id="createForm">
           <input id="cpEmail2" type="email" placeholder="you@example.com" autocomplete="email" required />
           <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a link to create a password</button>
@@ -503,7 +503,7 @@
 
       <!-- Forgot password -->
       <div id="authPanelForgot" style="display:none;">
-        <p>Enter your email and we'll send you a password reset link.</p>
+        <p>Enter the email on the member roster. If you already have a Hub login, we send a reset link. If you are on the list but never set a password, we send a first-login link. If you are not on the list, the door will say so.</p>
         <form id="forgotForm">
           <input id="fpEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
           <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a reset link</button>
@@ -526,7 +526,7 @@
             <span class="num" aria-hidden="true">2</span>
             <div>
               <h3>Forge your key (set a password)</h3>
-              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. Already invited and need the link again? Use the gold button below, then check the inbox for that address (peek in spam if it hides). If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write <a href="mailto:digital@kreweofshamrock.com">digital@kreweofshamrock.com</a>.</p>
+              <p>Use the gold button below with the email on the member roster. If you are on the list, we email a first-login link. If that address is not on the roster, the door will say so. Then click the link on this device and choose a password of at least 8 characters.</p>
               <button type="button" class="guide-cta" id="guideCreateBtn">☘ Email me a link to create my password</button>
             </div>
           </div>
@@ -2267,27 +2267,56 @@
       if(error){ msg.textContent="Couldn't sign in: "+error.message; return; }
       msg.textContent="";
     });
-    document.getElementById("createForm").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const email=document.getElementById("cpEmail2").value.trim();
-      const msg=document.getElementById("createMsg");
+    async function requestPasswordMail(email, msg, kind){
       if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
-      msg.style.color=""; msg.textContent="Sending…";
+      msg.style.color=""; msg.textContent="Checking the member list…";
+      const { data: door, error: doorErr } = await sb.rpc("hub_door_status", { p_email: email });
+      if(doorErr || !door){ msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com."; return; }
+      if(door.status==="invalid" || door.status==="rate_limited" || door.status==="not_on_roster"){
+        msg.textContent=door.message; return;
+      }
+      if(door.status==="needs_invite"){
+        msg.textContent="You're on the roster. Sending a first-login link…";
+        try{
+          const res = await fetch("https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/hub-password-mail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "apikey": "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS" },
+            body: JSON.stringify({ email })
+          });
+          const body = await res.json().catch(()=>({}));
+          if(body && body.send_reset){
+            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+            if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+            msg.style.color="#14532d";
+            msg.textContent="Check that inbox for a password link, then click it on this device.";
+            return;
+          }
+          if(!res.ok || !body.ok){
+            msg.textContent=body.message || "You're on the roster, but the invite did not send. Write digital@kreweofshamrock.com.";
+            return;
+          }
+          msg.style.color="#14532d";
+          msg.textContent="You're on the roster. We emailed a first-login link to create your password. Check that inbox (and spam), then click it on this device.";
+        }catch(err){
+          msg.textContent="You're on the roster, but the invite did not send. Write digital@kreweofshamrock.com.";
+        }
+        return;
+      }
+      msg.textContent="Sending…";
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
-      msg.textContent="✓ Check the inbox for that address for a link to create your password, then click it on this device. If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write digital@kreweofshamrock.com.";
+      msg.textContent = kind==="create"
+        ? "Check that inbox for a link to create your password, then click it on this device."
+        : "Check that inbox for a password reset link, then click it on this device.";
+    }
+    document.getElementById("createForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      await requestPasswordMail(document.getElementById("cpEmail2").value.trim(), document.getElementById("createMsg"), "create");
     });
     document.getElementById("forgotForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const email=document.getElementById("fpEmail").value.trim();
-      const msg=document.getElementById("forgotMsg");
-      if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
-      msg.style.color=""; msg.textContent="Sending…";
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
-      msg.style.color="#14532d";
-      msg.textContent="✓ Check the inbox for that address for a password reset link, then click it on this device. If no email arrives in a few minutes, you are not set up yet. First-time login needs an officer invite. Write digital@kreweofshamrock.com.";
+      await requestPasswordMail(document.getElementById("fpEmail").value.trim(), document.getElementById("forgotMsg"), "forgot");
     });
     document.getElementById("setPasswordForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
