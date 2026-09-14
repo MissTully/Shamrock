@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Krewe of Shamrock · Share Content</title>
@@ -9,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
 <style>
 .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
   background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; }
@@ -40,6 +46,10 @@
 .share-head h2{ margin:0; font-family:var(--display); font-size:22px; }
 .share-head small{ display:block; font-family:var(--fancy); font-style:italic; color:var(--gold-light); font-size:14px; }
 .share-body{ padding:26px 28px 32px; }
+.note-box{ background:#f7f1e3; border:1px solid rgba(168,128,28,.4); border-left:4px solid var(--green-700);
+  border-radius:10px; padding:14px 16px; margin:0 0 20px; font-size:14px; color:var(--green-800); line-height:1.55; }
+.note-box strong{ color:var(--green-900,#0f3d24); }
+.msg.warn{ background:#fff8e6; border:1px solid #e6c96a; color:#6b5200; display:block; }
 
 .form-group{ margin-bottom:18px; }
 .form-group label{ display:block; font-family:var(--display); color:var(--green-800); font-size:14px;
@@ -154,9 +164,11 @@
 
     <a href="members.html" class="back-link">&#8592; Back to Member Hub</a>
 
-    <p style="color:var(--muted);font-size:15px;margin:0 0 20px;">
-      Choose the type of content you&rsquo;d like to share. Signed-in members: your posts go live on the site right away. Photos and videos need a signed media consent (faces/likeness).
-    </p>
+    <div style="color:var(--muted);font-size:15px;margin:0 0 20px;line-height:1.5;">
+      <p style="margin:0 0 10px;">Choose the type of content you&rsquo;d like to share. This space is for lifting each other up &mdash; post what is <b>positive, kind, and true to the krewe spirit</b>.</p>
+      <p style="margin:0 0 10px;"><b>Our posting values:</b> keep it welcoming and constructive. Please do <b>not</b> post political campaigning, partisan arguments, or content that judges, shames, or attacks people. Celebrate our culture, creativity, and camaraderie instead.</p>
+      <p style="margin:0;">Signed-in members: your posts go live on the site right away. Photos and videos need a signed media consent (faces/likeness).</p>
+    </div>
 
     <!-- Type selector tabs -->
     <div class="type-tabs" id="typeTabs">
@@ -173,18 +185,34 @@
       <div class="share-card">
         <div class="share-head">
           <span class="ic">&#127916;</span>
-          <div><h2>Submit a Video</h2><small>MP4 link or YouTube/Vimeo URL</small></div>
+          <div><h2>Submit a Video</h2><small>Upload a file or paste a YouTube/Vimeo/MP4 link</small></div>
         </div>
         <div class="share-body">
+          <div class="note-box" role="note">
+            <strong>Video showcase limits (free plan):</strong> the site holds <strong>15 videos</strong> max (~<strong>25&nbsp;MB</strong> each).
+            Prefer clips <strong>under 25&nbsp;MB</strong> (MP4). When the library is full, uploading another
+            <strong>rotates out the earliest</strong> video and <strong>deletes it from Storage</strong>.
+          </div>
           <form id="formVideo" novalidate>
             <div class="form-group">
               <label for="vTitle">Video Title *</label>
               <input id="vTitle" type="text" placeholder="Give your video a title" required />
             </div>
             <div class="form-group">
-              <label for="vUrl">Video URL *</label>
-              <input id="vUrl" type="url" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." required />
-              <div class="hint">Paste a YouTube, Vimeo, or direct MP4 link.</div>
+              <label>Video File</label>
+              <div class="file-drop" id="dropVideo">
+                <div class="ic">&#127916;</div>
+                <p><strong>Click to choose</strong> or drag &amp; drop your video here</p>
+                <p>MP4, WebM, MOV · max 25 MB</p>
+                <input type="file" id="fileVideo" accept="video/mp4,video/webm,video/quicktime" />
+              </div>
+              <div class="file-chosen" id="fileVideoName"></div>
+              <div class="hint">MP4 preferred; MOV may not play in all browsers; keep under 25 MB.</div>
+            </div>
+            <div class="form-group">
+              <label for="vUrl">Or Video URL</label>
+              <input id="vUrl" type="url" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
+              <div class="hint">Upload a file <em>or</em> paste a YouTube, Vimeo, or direct MP4 link (one is required).</div>
             </div>
             <div class="form-group">
               <label for="vDesc">Description</label>
@@ -392,7 +420,7 @@
 
 <footer class="site-footer" style="background:var(--green-900);color:#c8d9c0;text-align:center;padding:24px;font-size:14px;margin-top:0;">
   <p style="margin:0;">&copy; Krewe of Shamrock · Tampa Bay, Florida. <a href="members.html" style="color:var(--gold-light);">Member Hub</a></p>
-  <p style="margin:8px 0 0;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report" style="color:var(--gold-light);">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com" style="color:var(--gold-light);">Contact</a></p>
+  <p style="margin:8px 0 0;"><a href="mailto:secretary@kreweofshamrock.com" style="color:var(--gold-light);">Contact: secretary@kreweofshamrock.com</a></p>
 </footer>
 
 <script type="module">
@@ -471,6 +499,7 @@ function setupFileDrop(dropId, inputId, nameId) {
   });
 }
 
+setupFileDrop('dropVideo', 'fileVideo', 'fileVideoName');
 setupFileDrop('dropPhoto', 'filePhoto', 'filePhotoName');
 setupFileDrop('dropArt',   'fileArt',   'fileArtName');
 setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
@@ -478,7 +507,13 @@ setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
 // ---- Upload file to Supabase Storage ----
 async function uploadFile(bucket, file) {
   const ext = file.name.split('.').pop();
-  const path = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const base = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  let path = base;
+  if (bucket === 'krewe-videos') {
+    const uid = currentUser?.id;
+    if (!uid) throw new Error('You must be signed in to upload videos.');
+    path = uid + '/' + base;
+  }
   const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: false });
   if (error) throw error;
   const { data } = sb.storage.from(bucket).getPublicUrl(path);
@@ -500,16 +535,17 @@ async function gatePhotoVideo(msgId) {
 
 // ---- Insert content_items row ----
 async function insertItem(fields) {
+  let notes = fields.notes || fields.body || null;
+  if (fields.subtitle) {
+    notes = notes ? (fields.subtitle + ' — ' + notes) : fields.subtitle;
+  }
   const row = {
     type: fields.type,
     title: fields.title,
-    subtitle: fields.subtitle || null,
-    body: fields.body || null,
-    media_url: fields.media_url || null,
-    author: window._authorName || 'Krewe Member',
-    submitted_by: currentUser?.id || null,
+    url: fields.url || fields.media_url || null,
+    notes: notes,
     is_published: true,
-    sort_order: 999,
+    is_demo: false,
   };
   const { error } = await sb.from('content_items').insert(row);
   if (error) throw error;
@@ -533,17 +569,45 @@ document.getElementById('formVideo').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) return;
   const btn = e.target.querySelector('button[type=submit]');
+  const title = document.getElementById('vTitle').value.trim();
+  const file = document.getElementById('fileVideo').files[0];
+  const vUrl = document.getElementById('vUrl').value.trim();
+  const desc = document.getElementById('vDesc').value.trim();
+  if (!title) { showMsg('msgVideo','error','Please enter a video title.'); return; }
+  if (!file && !vUrl) { showMsg('msgVideo','error','Please upload a video file or paste a video URL.'); return; }
+  if (file && file.size > 25 * 1024 * 1024) {
+    showMsg('msgVideo','error','Video file is too large (max 25 MB). Prefer a shorter MP4 clip.');
+    return;
+  }
   setLoading(btn, true);
   try {
     if (!(await gatePhotoVideo('msgVideo'))) { setLoading(btn, false); return; }
-    await insertItem({
-      type: 'video',
-      title: document.getElementById('vTitle').value.trim(),
-      body: document.getElementById('vDesc').value.trim() || null,
-      media_url: document.getElementById('vUrl').value.trim(),
+    let url = vUrl;
+    if (file) {
+      url = await uploadFile('krewe-videos', file);
+    }
+    const { data, error } = await sb.rpc('publish_krewe_video', {
+      p_title: title,
+      p_url: url,
+      p_notes: desc || null,
     });
-    showMsg('msgVideo', 'success', 'Thanks! Your video is live on the site.');
+    if (error) throw error;
+    let msg = 'Thanks! Your video is live on the videos page.';
+    let kind = 'success';
+    if (data && data.rotated) {
+      kind = 'warn';
+      const removed = Array.isArray(data.removed_titles) && data.removed_titles.length
+        ? ' Removed: ' + data.removed_titles.join(', ') + '.'
+        : '';
+      const countBit = (data.count != null) ? ` Showcase is now at ${data.count}/15.` : '';
+      msg = 'Library was full — oldest video(s) rotated out and deleted from Storage.' + removed
+        + ' Your new video is live.' + countBit;
+    } else if (data && data.count != null) {
+      msg = `Thanks! Your video is live on the videos page (${data.count}/15).`;
+    }
+    showMsg('msgVideo', kind, msg);
     e.target.reset();
+    document.getElementById('fileVideoName').textContent = '';
   } catch(err) {
     showMsg('msgVideo', 'error', 'Something went wrong: ' + err.message);
   }

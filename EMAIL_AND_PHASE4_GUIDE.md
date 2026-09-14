@@ -17,7 +17,7 @@ nothing) until the key exists, so the rest is already wired and waiting.
 
 1. **Create a free Resend account** at <https://resend.com>.
 2. **Verify a sending identity** — either verify your domain (best; lets you send from
-   e.g. `events@krewofshamrock.org`) or use Resend's test sender for trials. Follow
+   e.g. `events@kreweofshamrock.com`) or use Resend's test sender for trials. Follow
    Resend's on-screen steps.
 3. **Create an API key** in Resend (starts with `re_...`).
 4. **Add it to Supabase** → open the **Tribe Test** project → **Edge Functions** →
@@ -81,6 +81,32 @@ select public.queue_broadcast(
 );
 ```
 It returns how many recipients were queued; the sender does the rest.
+Bodies are wrapped in the Shamrock branded HTML frame (see All Krewe Messages below).
+
+
+### Officer desk — All Krewe Messages
+Officers can compose and send a message to **all current (active) members** from
+**Member Hub → Officer desk → All Krewe Messages**. The UI calls
+`send_all_krewe_message(subject, html, 'active')`, which:
+
+1. Invokes `queue_broadcast(..., 'active')` so each recipient is enqueued in
+   `outbound_emails` (same Resend / `process-outbound-emails` path — no parallel
+   sender).
+2. Saves a history row in `all_krewe_messages` (subject, body, sent_by,
+   recipient_count, segment, created_at).
+
+**Branded template:** `queue_broadcast` wraps every broadcast body with
+`wrap_all_krewe_email_html(subject, body)` — deep-green header + emblem, gold
+accents, paper content card, and muted footer linking to
+[kreweofshamrock.com](https://www.kreweofshamrock.com/). The Officer desk stores
+the officer-composed (unwrapped) HTML for history; only the queued outbound copy
+is framed. Apply `sql/kos_all_krewe_messages.sql` first, then the delta
+`sql/kos_all_krewe_email_template.sql` on Supabase. Already-wrapped bodies
+(marker `<!-- kos-all-krewe-email -->` or class `kos-akm-wrap`) are not
+double-wrapped.
+
+RLS and the RPCs require `is_krewe_officer()`; non-officers see no UI and cannot
+insert or list.
 
 ---
 

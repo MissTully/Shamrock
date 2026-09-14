@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
 <title>Krewe of Shamrock · Shop</title>
 <meta name="description" content="Krewe of Shamrock gear: logo tees, tartan kilts, and Celtic hats." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m7" />
 <style>
 .shop-note{ background:rgba(236,208,126,.16); border:1px solid var(--gold); border-radius:12px; padding:12px 18px; text-align:center; font-size:15px; color:var(--green-900); max-width:760px; margin:0 auto; }
 .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:24px; }
@@ -35,6 +40,46 @@
 .cart-items li{ display:flex; justify-content:space-between; gap:10px; font-size:15px; border-bottom:1px dashed rgba(168,128,28,.35); padding-bottom:6px; }
 .cart-total{ font-family:var(--display); font-size:20px; color:var(--green-800); text-align:right; margin-top:8px; }
 .cart-msg{ background:rgba(236,208,126,.18); border:1px solid var(--gold); border-radius:10px; padding:12px; font-size:14px; margin-top:12px; }
+/* MOBILE STORE — thin bottom dock so cart never covers product cards/CTAs */
+@media (max-width:680px){
+  .shop-grid{ grid-template-columns:1fr; gap:18px; padding-bottom:8px; }
+  .shop-note{ margin:0 0 8px; padding:12px 14px; font-size:14.5px; }
+  .product .add, .product select, .product .soon{ width:100%; }
+  .product .add{ justify-content:center; text-align:center; }
+  .cartbar{
+    left:0; right:0; bottom:0;
+    display:flex; justify-content:flex-end; align-items:center;
+    gap:8px;
+    padding:6px 10px 6px 66px; /* leave room for music FAB on the left */
+    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));
+    background:rgba(7,42,22,.96);
+    border-top:1px solid rgba(212,175,55,.5);
+    box-shadow:0 -4px 14px rgba(0,0,0,.25);
+    z-index:70;
+    pointer-events:none;
+  }
+  .cartbar button{
+    pointer-events:auto;
+    padding:7px 14px; font-size:13px; min-height:38px;
+    border-radius:999px;
+    box-shadow:0 2px 8px rgba(168,128,28,.35);
+    width:auto; max-width:none;
+  }
+  /* Lift music FAB above the dock so the two don't collide */
+  .krewe-music{ bottom:54px !important; }
+  body{ padding-bottom:120px !important; } /* music + cart dock clearance */
+  .shop-grid{ padding-bottom:28px; }
+  .product, .product .add, .product .soon, .product select{
+    scroll-margin-bottom:72px; /* keep CTAs above the fixed cart dock */
+  }
+  .cart-panel{ padding:14px; align-items:flex-end; padding-bottom:calc(14px + 56px); }
+  .cart-card{ max-height:85vh; overflow:auto; padding:18px 16px; }
+}
+@media (max-width:420px){
+  .cartbar{ padding:7px 10px 7px 64px; padding-bottom:calc(7px + env(safe-area-inset-bottom, 0px)); }
+  .cartbar button{ padding:8px 12px; font-size:13px; max-width:none; }
+  .krewe-music{ bottom:58px !important; }
+}
 </style>
 </head>
 <body>
@@ -103,7 +148,7 @@
     <h2>Your Cart</h2>
     <ul class="cart-items" id="cartItems"><li>Your cart is empty.</li></ul>
     <div class="cart-total" id="cartTotal"></div>
-    <div class="cart-msg" id="cartMsg">&#x1F340; For items without a checkout link, email <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</div>
+    <div class="cart-msg" id="cartMsg">&#x1F340; For items without a checkout link, email <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</div>
     <div class="btns" style="margin-top:14px;"><a class="btn btn-outline" href="#" onclick="closeCart();return false;">Keep shopping</a></div>
   </div>
 </div>
@@ -125,7 +170,7 @@
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
 </div>
-  <div class="flinks" style="margin-bottom:8px;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com">Contact</a></div>
+  <div class="flinks" style="margin-bottom:8px;"><a href="mailto:secretary@kreweofshamrock.com">Contact: secretary@kreweofshamrock.com</a></div>
     <div class="slainte">Sl&aacute;inte! &#x1F340; Tampa Bay, Florida</div>
   <div class="fine">&copy; Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
 </footer>
@@ -149,7 +194,7 @@ function addToCart(id){let p=PRODUCTS.find(x=>String(x.id||x.slug)===String(id))
 function renderCart(){let ks=Object.keys(cart),n=ks.reduce((a,k)=>a+cart[k].qty,0);document.getElementById("cartCount").textContent=n;let u=document.getElementById("cartItems");if(!ks.length){u.innerHTML="<li>Your cart is empty.</li>";document.getElementById("cartTotal").textContent="";return}u.innerHTML=ks.map(k=>'<li><span>'+esc(cart[k].name)+' ('+esc(cart[k].size)+') x'+cart[k].qty+'</span><span>$'+(cart[k].price*cart[k].qty).toFixed(2)+'</span></li>').join("");document.getElementById("cartTotal").textContent="Total: $"+ks.reduce((a,k)=>a+cart[k].price*cart[k].qty,0).toFixed(2)}
 function openCart(){renderCart();document.getElementById("cartPanel").classList.add("open")}function closeCart(){document.getElementById("cartPanel").classList.remove("open")}
 window.openCart=openCart;window.closeCart=closeCart;window.addToCart=addToCart;document.getElementById("cartPanel").addEventListener("click",e=>{if(e.target===e.currentTarget)closeCart()});
-async function load(){let note=document.getElementById("shopNote");try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");buildGrid();if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Buy below — checkout opens in a secure payment window. Questions? <a href="mailto:kreweofshamrocktampa@gmail.com">Email the Krewe</a> or ask Merchandise in the Member Hub.';}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now — <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a> if you need something sooner.';}}catch(e){document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>';note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.'}}
+async function load(){let note=document.getElementById("shopNote");try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");buildGrid();if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Buy below — checkout opens in a secure payment window. Questions? <a href="mailto:secretary@kreweofshamrock.com">Email the Krewe</a> or ask Merchandise in the Member Hub.';}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now — <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a> if you need something sooner.';}}catch(e){document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>';note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a>.'}}
 load();
 </script>
 

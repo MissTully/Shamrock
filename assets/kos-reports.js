@@ -246,6 +246,7 @@
     document.getElementById("hubReportRun").addEventListener("click", function () { runEventReport(client); });
     document.getElementById("hubReportMoneyRun").addEventListener("click", function () { runMoneyReport(client); });
     await loadOptions(client);
+    if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
   }
 
   async function bootReports() {
@@ -263,6 +264,7 @@
     } catch (e) { can = false; }
     if (!can) return;
     await loadReports(client);
+    if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
   }
 
   var _unlock = window.kosUnlock;

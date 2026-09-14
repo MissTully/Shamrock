@@ -1,6 +1,12 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Krewe of Shamrock · Members Only</title>
@@ -9,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m6" />
 <style>
   .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(180deg,var(--green-800),var(--green-900)); padding:24px; overflow-y:auto; }
@@ -95,7 +101,41 @@
     border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:13px; color:#57513f; line-height:1.5; }
   .castle-guide .guide-inside b{ color:var(--green-800); }
   .castle-guide .guide-help{ margin:10px 0 0; font-size:13px; color:var(--muted); text-align:center; }
-  @media (max-width:480px){ .gate-card.auth-card{ border-radius:110px 110px 12px 12px; } .castle-torch{ display:none; } }
+  /* Compact castle on small phones — fit gate + login without painful nested scroll */
+  @media (max-width:480px){
+    .castle-torch{ display:none; }
+    .gate{ padding:8px 10px 10px; }
+    .castle{ padding:2px 0 10px; width:min(100%, 400px); }
+    .castle-top{
+      height:16px; width:90%;
+      background:repeating-linear-gradient(90deg, #6b6e63 0 22px, rgba(0,0,0,0) 22px 34px),
+        linear-gradient(180deg, rgba(0,0,0,0) 0 0);
+    }
+    .castle-wall{ padding:8px 10px 10px; box-shadow:0 14px 36px rgba(0,0,0,.5), inset 0 0 28px rgba(0,0,0,.22); }
+    .castle-banner{ font-size:11.5px; margin:0 0 2px; letter-spacing:.4px; }
+    .gate-card{ padding:14px 14px 12px; }
+    .gate-card.auth-card{
+      border-radius:68px 68px 10px 10px; border-width:5px; padding-top:20px;
+      box-shadow:0 0 0 3px #3a2712, 0 8px 20px rgba(0,0,0,.4);
+    }
+    .gate-card img{ width:42px; margin-bottom:2px; }
+    .auth-card img{ box-shadow:0 0 0 3px #3a2712, 0 0 0 5px #8a8d80; }
+    .gate-card h1{ font-size:18px; margin:0 0 2px; }
+    .gate-card p{ font-size:13.5px; margin:0 0 8px; line-height:1.35; }
+    .gate-card input, .gate-card textarea{ padding:9px 12px; }
+    #authPanelSignin form input[type="password"]{ margin-top:7px !important; }
+    #authPanelSignin form .btn, #authPanelCreate form .btn, #authPanelForgot form .btn{ margin-top:8px !important; }
+    #authPanelSignin > p[style], #authPanelCreate > p[style], #authPanelForgot > p[style]{ margin-top:8px !important; font-size:13px !important; }
+    .gate-card .err{ min-height:12px; margin-top:4px; font-size:13px; }
+    .castle-guide{ margin-top:8px; border-radius:11px; }
+    .castle-guide summary{ padding:9px 12px; font-size:13px; gap:8px; }
+    .castle-guide summary .key{ font-size:16px; }
+    .castle-guide .guide-body{ padding:12px; }
+    .castle-guide .guide-step{ margin:0 0 12px; gap:10px; }
+    .castle-guide .guide-step .num{ flex-basis:26px; width:26px; height:26px; font-size:13px; }
+    .castle-guide .guide-step h3{ font-size:14px; margin:1px 0 2px; }
+    .castle-guide .guide-step p{ font-size:12.5px; }
+  }
   .gate-card{ background:#fff; border-radius:18px; padding:34px 30px; max-width:380px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,.4); border:1px solid var(--gold); }
   .gate-card img{ width:64px; height:auto; margin-bottom:10px; }
@@ -129,7 +169,7 @@
   .mini-form{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-top:10px; }
   .mini-form input{ padding:9px 11px; border:1px solid rgba(168,128,28,.5); border-radius:9px; font-size:14px; }
   .mini-form button{ white-space:nowrap; }
-  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:14px; }
+  .dir-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:14px; }
   .dir-card{ border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; background:#fbf7ec; text-align:left; width:100%; font:inherit; cursor:pointer; display:flex; gap:12px; align-items:center; transition:background .15s, transform .15s; }
   .dir-card:hover{ background:#f3ebd2; transform:translateY(-1px); }
   .dir-card .nm{ font-family:var(--display); color:var(--green-800); font-size:16px; }
@@ -137,6 +177,66 @@
   .dir-card .dir-av{ width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(168,128,28,.45); flex:none; background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:15px; }
   .dir-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
   .dir-card .dir-go{ margin-left:auto; color:var(--gold); font-family:var(--display); opacity:.7; }
+
+  /* Stacked panels for raffle create/manage forms (dir-card is horizontal for directory) */
+  .raffle-panel{
+    border:1px solid rgba(168,128,28,.25);
+    border-radius:12px;
+    padding:14px 16px;
+    background:#fbf7ec;
+    text-align:left;
+    width:100%;
+    box-sizing:border-box;
+    display:block;
+    cursor:default;
+  }
+  .raffle-panel:hover{ background:#fbf7ec; transform:none; }
+  .raffle-panel label{ display:block; }
+  .raffle-panel input,
+  .raffle-panel select,
+  .raffle-panel textarea{
+    display:block;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  .raffle-panel .raffle-form-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+    align-items:center;
+  }
+
+  /* My Krewe people directory — photo-first, not a spreadsheet */
+  .people-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 4px; }
+  .people-toolbar #dirSearch{ flex:1 1 220px; min-width:0; }
+  .people-count{ font-size:13px; color:var(--muted); white-space:nowrap; }
+  .people-grid{ display:flex; flex-direction:column; gap:18px; margin-top:10px; }
+  .people-letter{ font-family:var(--display); font-size:18px; color:var(--green-800); letter-spacing:.04em;
+    border-bottom:1px solid rgba(168,128,28,.35); padding:4px 2px 6px; margin:4px 0 0; position:sticky; top:52px; background:#fff; z-index:2; }
+  .people-row{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .people-card{ appearance:none; -webkit-appearance:none; border:1px solid rgba(168,128,28,.28); border-radius:16px;
+    padding:18px 16px 14px; background:linear-gradient(180deg,#fffdf8,#fbf7ec); text-align:center; width:100%;
+    font:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px;
+    box-shadow:0 1px 0 rgba(168,128,28,.12); transition:background .15s, transform .15s, box-shadow .15s; }
+  .people-card:hover{ background:linear-gradient(180deg,#fff,#f3ebd2); transform:translateY(-2px); box-shadow:0 8px 22px rgba(29,91,52,.12); }
+  .people-card:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .people-card .dir-av{ width:72px; height:72px; border-radius:50%; border:3px solid rgba(212,175,55,.55);
+    background:var(--green-800); color:#f6efdc; display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-size:22px; overflow:hidden; flex:none; }
+  .people-card .dir-av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+  .people-card .nm{ font-family:var(--display); color:var(--green-800); font-size:17px; line-height:1.25; margin:2px 0 0; }
+  .people-card .rl{ font-size:13px; color:var(--muted); text-transform:capitalize; }
+  .people-card .people-go{ margin-top:4px; font-size:12px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--green-800); background:rgba(29,107,62,.08); border:1px solid rgba(168,128,28,.3);
+    border-radius:999px; padding:4px 10px; font-family:var(--display); }
+  @media (max-width:640px){
+    .people-row{ grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+    .people-card{ padding:14px 10px 12px; }
+    .people-card .dir-av{ width:64px; height:64px; font-size:18px; }
+    .people-letter{ top:48px; }
+  }
   #memberProfileModal .modal-card{ background:#fbf7ec; }
   #memberProfileModal .mp-sheet{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:16px 18px; }
   #memberProfileModal .mp-head{ display:flex; gap:14px; align-items:center; margin:0 0 12px; }
@@ -177,6 +277,11 @@
   .rpt-card .t{ font-family:var(--display); color:var(--green-800); font-size:16px; display:flex; align-items:center; gap:7px; }
   .rpt-card .d{ font-size:13px; color:var(--muted); margin-top:4px; line-height:1.4; }
   .rpt-card .lock{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#7a5b00; background:#f0e2bd; border-radius:999px; padding:2px 9px; display:inline-block; margin-top:9px; }
+  .rpt-picker{ background:#fff; border:1px solid rgba(168,128,28,.35); border-radius:14px; padding:16px 16px 14px; }
+  .rpt-picker label{ display:block; font-family:var(--display); color:var(--green-800); font-size:14px; margin:0 0 8px; letter-spacing:.03em; }
+  .rpt-picker select{ width:100%; box-sizing:border-box; font:inherit; font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid rgba(168,128,28,.5); background:#fbf7ec; color:var(--green-800); }
+  .rpt-picker .rpt-pick-desc{ margin:10px 0 12px; font-size:14px; color:var(--muted); line-height:1.4; min-height:2.8em; }
+  .rpt-picker .rpt-pick-actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
   .rpt-back{ background:none; border:0; color:var(--green-700); font-family:var(--display); font-size:15px; cursor:pointer; padding:0; margin-bottom:10px; }
   .rpt-back:hover{ text-decoration:underline; }
   #reportTitle{ font-family:var(--display); color:var(--green-800); margin:0 0 14px; font-size:22px; }
@@ -195,12 +300,24 @@
   .rpt-secure p{ margin:0 0 8px; }
 
   /* ---- Parade Ready ---- */
-  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 12px;}
+  .pr-pill{font-family:var(--display);font-size:16px;letter-spacing:.4px;background:rgba(20,83,45,.08);border:1px solid rgba(20,83,45,.25);color:var(--green-800);border-radius:12px;padding:10px 14px;margin:0 0 14px;}
   .pr-pill.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
-  .pr-gate{padding:5px 2px;font-size:15.5px;}
-  .pr-gate small{color:var(--muted);font-size:13.5px;}
+  .pr-list{display:grid;gap:10px;margin:0 0 4px;}
+  .pr-gate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 14px;font-size:15.5px;background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:12px;line-height:1.35;}
+  .pr-gate.ok{background:#f3faf5;border-color:rgba(20,83,45,.28);}
+  .pr-gate.need{background:#fffdf6;border-color:rgba(168,128,28,.45);}
+  .pr-gate .pr-mark{flex:none;font-size:16px;line-height:1;}
+  .pr-gate .pr-label{font-weight:700;color:var(--green-800);}
+  .pr-gate small,.pr-gate .pr-hint{color:var(--muted);font-size:13.5px;font-weight:400;}
+  .pr-pay{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:8px 14px;border-radius:999px;background:var(--gold,#c9a227);color:var(--green-900,#1a3a24);font-family:var(--display);font-size:14px;font-weight:700;text-decoration:none;border:1px solid rgba(120,90,10,.35);white-space:nowrap;}
+  .pr-pay:hover{filter:brightness(1.05);}
+  .pr-pay-alt{flex:1 1 100%;margin:2px 0 0;font-size:13px;color:var(--muted);}
+  .pr-pay-alt a{color:var(--green-800);font-weight:600;}
   .pr-waiver{background:#fffdf4;border:1px dashed rgba(168,128,28,.5);border-radius:12px;padding:12px 14px;margin-top:10px;}
   .pr-hrs{font-size:15px;margin:0 0 6px;}
+  @media (max-width:480px){
+    .pr-pay{margin-left:0;width:100%;}
+  }
   .rpt-btn{font:inherit;font-size:13.5px;padding:5px 12px;border-radius:14px;border:1px solid rgba(168,128,28,.5);background:#fff;cursor:pointer;}
   .rpt-btn.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}
   .rpt-btn:hover{opacity:.85;}
@@ -229,10 +346,97 @@
   .tour-grid{ display:grid; gap:12px; }
   .tour-item{ display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid rgba(168,128,28,.25); border-radius:12px; padding:12px 14px; }
   .tour-item span{ font-size:26px; line-height:1; }
+
+  /* ---- Leprechaun welcome (first profile) ---- */
+  #lepOverlay{z-index:120;}
+  #lepOverlay .lep-card{max-width:440px;text-align:center;overflow:visible;padding:8px 26px 24px;}
+  @media(max-width:480px){ #lepOverlay .lep-card{padding:8px 16px 20px;} }
+  #lepOverlay .lep-sprite{font-size:72px;line-height:1;display:inline-block;animation:lepSpring .85s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25));}
+  #lepOverlay .lep-burst{position:absolute;inset:auto;pointer-events:none;font-size:22px;animation:lepSpark 1.2s ease-out both;}
+  @keyframes lepSpring{0%{transform:translateY(120px) scale(.4) rotate(-12deg);opacity:0;}60%{transform:translateY(-18px) scale(1.08) rotate(4deg);opacity:1;}100%{transform:translateY(0) scale(1) rotate(0);opacity:1;}}
+  @keyframes lepSpark{0%{transform:scale(.2);opacity:0;}40%{opacity:1;}100%{transform:scale(1.4);opacity:0;}}
+  #lepOverlay h2{font-family:var(--display);color:var(--green-800);margin:8px 0 6px;font-size:28px;}
+  #lepOverlay .lep-body{text-align:left;color:#3a3a2e;font-size:15px;line-height:1.5;margin:0 0 14px;}
+  #lepOverlay .lep-body b{color:var(--green-800);}
+
+  /* ---- Signed-in Fáilte hero (members hub) ---- */
+  .page-head.is-home{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .page-head.is-home .lep-wave{
+    margin:0 0 8px; padding:0; position:relative; display:inline-flex;
+    align-items:flex-end; justify-content:center; line-height:1;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));
+  }
+  .lep-wave .lep-core{ font-size:58px; line-height:1; display:inline-block; }
+  .lep-wave .lep-arm{
+    position:absolute; right:-10px; top:2px; font-size:30px; line-height:1;
+    display:inline-block; transform-origin:70% 85%;
+    animation:lepWave 1.15s ease-in-out infinite;
+  }
+  @keyframes lepWave{
+    0%,100%{ transform:rotate(-22deg); }
+    50%{ transform:rotate(32deg); }
+  }
+  .page-head.is-home h1{ letter-spacing:2px; }
+
   .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); }
   .raffle-event{ margin-bottom:22px; }
 
-  @media (max-width:640px){ .krewe-form .row,.mini-form{ grid-template-columns:1fr; } .rpt-grid{ grid-template-columns:1fr; } .modal-body{ padding:16px; } }
+  @media (max-width:640px){
+  .krewe-form .row,.mini-form{ grid-template-columns:1fr; }
+  .rpt-grid{ grid-template-columns:1fr; }
+  .modal-body{ padding:16px; }
+  .gate{ padding:10px; align-items:flex-start; }
+  .castle{ width:min(100%, 430px); padding:6px 0 16px; }
+  .castle-wall{ padding:14px 12px 16px; }
+  .castle-top{ height:22px; }
+  .castle-banner{ font-size:13px; }
+  /* Door hinges stick out left:-14px and caused horizontal scroll on phones */
+  .auth-card::before, .auth-card::after{ display:none; }
+  .gate-card{ padding:20px 16px; max-width:100%; }
+  .gate-card.auth-card{ border-width:6px; padding-top:30px; }
+  .gate-card img{ width:52px; margin-bottom:6px; }
+  .gate-card h1{ font-size:20px; }
+  .gate-card p{ margin:0 0 12px; font-size:14.5px; }
+  .castle-guide{ margin-top:12px; }
+  .auth-card .auth-features{ margin-top:10px; gap:4px; }
+  .afe{ font-size:12.5px; line-height:1.35; }
+  .app-body{ padding:16px; }
+  .app-card > .app-head{ padding:14px 16px; flex-wrap:wrap; }
+  .people-row{ grid-template-columns:1fr 1fr; gap:10px; }
+  .people-card{ padding:12px 8px 10px; }
+  .people-card .nm{ font-size:15px; }
+  .people-toolbar{ flex-direction:column; align-items:stretch; }
+  .dir-grid{ grid-template-columns:1fr; }
+  .badge-gallery{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+  .modal-overlay{ padding:12px 8px; }
+  .dash-chips{ gap:6px; }
+  .seg{ width:100%; }
+  .seg button{ flex:1; text-align:center; }
+}
+@media (max-width:380px){
+  .people-row{ grid-template-columns:1fr; }
+}
+  /* Must come AFTER base .auth-features{display:grid} or hide loses the cascade */
+  @media (max-width:480px){
+    .auth-card .auth-features,
+    .auth-features{ display:none !important; }
+    .gate-card.auth-card{ border-radius:56px 56px 10px 10px; padding-top:16px; }
+    .gate-card img{ width:40px; }
+    .gate-card h1{ font-size:17px; }
+    .gate-card p{ font-size:13px; margin:0 0 6px; }
+    #authPanelSignin form input[type="password"]{ margin-top:6px !important; }
+    #authPanelSignin form .btn{ margin-top:7px !important; }
+    .castle-guide{ margin-top:6px; }
+  }
+
+  /* Avoid nested page+gate scroll while a gate overlay is up */
+  body:has(#authStage:not([style*="display:none"])),
+  body:has(#profileStage:not([style*="display:none"])),
+  body:has(#setPasswordStage:not([style*="display:none"])){
+    overflow:hidden !important;
+  }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
   <script>
@@ -247,7 +451,13 @@
     if(_kosNx && /^[a-z0-9-]+\.html$/.test(_kosNx)){
       localStorage.setItem("kos_next", JSON.stringify({ p:_kosNx, t:Date.now() }));
     }
-    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname); }
+    /* Volunteer page (and others) send members here to log hours after sign-in. */
+    var _kosHub = (_kosQs.get("hub") || "").toLowerCase();
+    var _kosHash = (location.hash || "").replace(/^#/, "").toLowerCase();
+    if(_kosHub === "hours" || _kosHub === "volunteer" || _kosHash === "hours" || _kosHash === "volunteer"){
+      sessionStorage.setItem("kos_hub_intent", "hours");
+    }
+    if(_kosCk || _kosNx){ history.replaceState(null, "", location.pathname + (_kosHash ? ("#" + _kosHash) : "")); }
   }catch(_){}
   </script>
 </head>
@@ -267,14 +477,18 @@
 
       <!-- Sign in -->
       <div id="authPanelSignin">
-        <p>Fáilte! Sign in at the door with your email and password.</p>
+        <p>Fáilte! This Member Hub is new. Your old Wild Apricot password will not work here.</p>
+        <p style="font-size:14px;">Enter the email on the krewe roster first. We check that list. If you are on it and have never set a Hub password, we email a setup link. If you already have one, enter it below and sign in.</p>
         <form id="signinForm">
-          <input id="siEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
-          <input id="siPassword" type="password" placeholder="Password" autocomplete="current-password" required style="margin-top:10px;" />
-          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Sign in</button>
+          <input id="siEmail" type="email" placeholder="Email on the krewe roster" autocomplete="email" required />
+          <input id="siPassword" type="password" placeholder="Hub password (if you already have one)" autocomplete="current-password" style="margin-top:10px;" />
+          <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Continue</button>
           <div class="err" id="signinMsg"></div>
         </form>
-        <p style="margin-top:14px;font-size:14px;">
+        <p style="margin-top:12px;">
+          <button type="button" class="btn" id="showCreateBtn" style="width:100%;">☘ Create your password</button>
+        </p>
+        <p style="margin-top:10px;font-size:14px;">
           <a href="#" id="showForgot">Forgot your password?</a> ·
           <a href="#" id="showCreate">Create your password</a>
         </p>
@@ -282,7 +496,7 @@
 
       <!-- Create password (first-time / invited members) -->
       <div id="authPanelCreate" style="display:none;">
-        <p>New to the Member Hub, or never set a password? Enter your email and we'll send you a link to create one.</p>
+        <p>New to the Member Hub, or never set a password? Enter the email on the member roster. If you are on the list, we will email a first-login link. If you are not, the door will say so.</p>
         <form id="createForm">
           <input id="cpEmail2" type="email" placeholder="you@example.com" autocomplete="email" required />
           <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a link to create a password</button>
@@ -293,7 +507,7 @@
 
       <!-- Forgot password -->
       <div id="authPanelForgot" style="display:none;">
-        <p>Enter your email and we'll send you a password reset link.</p>
+        <p>Enter the email on the member roster. If you already have a Hub login, we send a reset link. If you are on the list but never set a password, we send a first-login link. If you are not on the list, the door will say so.</p>
         <form id="forgotForm">
           <input id="fpEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
           <button class="btn btn-primary" type="submit" style="width:100%;margin-top:12px;">☘ Email me a reset link</button>
@@ -309,14 +523,14 @@
             <span class="num" aria-hidden="true">1</span>
             <div>
               <h3>The door knows you by email</h3>
-              <p>Use the email address the krewe has on the member roster. Not sure which one that is? Ask at <a href="mailto:kreweofshamrocktampa@gmail.com">kreweofshamrocktampa@gmail.com</a>.</p>
+              <p>Use the email address the krewe has on the member roster. Not sure which one that is? Ask at <a href="mailto:digital@kreweofshamrock.com">digital@kreweofshamrock.com</a>.</p>
             </div>
           </div>
           <div class="guide-step">
             <span class="num" aria-hidden="true">2</span>
             <div>
               <h3>Forge your key (set a password)</h3>
-              <p>Got an invitation email from the krewe? Click its link and choose a password of at least 8 characters. No invitation? Use the gold button below and we&rsquo;ll email you a link (peek in your spam folder if it hides).</p>
+              <p>Use the gold button below with the email on the member roster. If you are on the list, we email a first-login link. If that address is not on the roster, the door will say so. Then click the link on this device and choose a password of at least 8 characters.</p>
               <button type="button" class="guide-cta" id="guideCreateBtn">☘ Email me a link to create my password</button>
             </div>
           </div>
@@ -327,14 +541,14 @@
               <p>Come back here and sign in with your email and new password. Your browser can remember it for next time.</p>
             </div>
           </div>
-          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game — role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
-          <p class="guide-help">Stuck at the door? Email <a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">kreweofshamrocktampa@gmail.com</a> and a human will let you in.</p>
+          <div class="guide-inside"><b>What&rsquo;s waiting inside:</b> a quick Craic Cup welcome (photo, name, a couple playful prompts) gets you into the game. role claims stay optional. Then it&rsquo;s your personal hub &mdash; your standing and next actions on Home, plus tabs for <b>My Krewe</b>, <b>Events</b>, <b>Parade Day</b>, <b>Give Back</b>, and <b>Fun</b>. Officers see an extra Officer desk. Role requests are confirmed by an officer, usually within a day &mdash; the rest of the castle is yours right away.</div>
+          <p class="guide-help">Stuck at the door? Email <a href="mailto:digital@kreweofshamrock.com?subject=Website%20issue%20report">digital@kreweofshamrock.com</a> and a human will let you in.</p>
         </div>
       </details>
 
       <div class="auth-features">
-        <div class="afe"><span>🍀</span> The Craic Cup: earn Clovers, climb the ranks, collect badges</div>
-        <div class="afe"><span>🎟️</span> Basket &amp; 50/50 raffles: enter and track your tickets</div>
+        <div class="afe"><span>🍀</span> The Craic Cup: friendly competition. Earn Clovers, climb ranks, cheer your krewe</div>
+        <div class="afe"><span>🎟️</span> Gift-basket &amp; 50/50 raffles for charity — create, plan, enter</div>
         <div class="afe"><span>📅</span> RSVP to events &amp; volunteer, all tied to you</div>
         <div class="afe"><span>🚗</span> Carpools, van pools, lockers &amp; the member directory</div>
       </div>
@@ -362,7 +576,7 @@
     <div class="gate-card" style="max-width:480px;">
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <h1>Welcome to our Krewe Digital Home</h1>
-      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b> — earn Clovers for showing up, climb the ranks, unlock badges. First, let’s get your face in the game.</p>
+      <p style="margin:0 0 6px;"><b>This is the Craic Cup</b>. Our kindly competitive game of showing up. Earn Clovers, climb the ranks, collect badges, and chase your friends up the ladder (with a smile). First, let’s get your face in the game.</p>
       <form id="profileForm" class="krewe-form" style="text-align:left;">
         <div style="display:flex;gap:14px;align-items:center;margin:12px 0 8px;">
           <div id="pfAvatarPreview" style="width:72px;height:72px;border-radius:50%;background:#e8f0e4;border:2px solid rgba(168,128,28,.45);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:0 0 auto;">☘</div>
@@ -375,6 +589,13 @@
         <div class="row">
           <div><label for="pfFirst">First name *</label><input id="pfFirst" required /></div>
           <div><label for="pfLast">Last name *</label><input id="pfLast" required /></div>
+        </div>
+        <label for="pfStreet">Mailing address</label>
+        <input id="pfStreet" autocomplete="street-address" placeholder="Street" />
+        <div class="row">
+          <div><label for="pfCity">City</label><input id="pfCity" autocomplete="address-level2" /></div>
+          <div><label for="pfState">State</label><input id="pfState" autocomplete="address-level1" maxlength="20" placeholder="FL" /></div>
+          <div><label for="pfZip">ZIP</label><input id="pfZip" autocomplete="postal-code" maxlength="16" /></div>
         </div>
         <label for="pfFact">A fun fact about you</label>
         <input id="pfFact" placeholder="e.g. I once caught 47 strands of beads in one parade" />
@@ -407,13 +628,29 @@
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="treasurer" /> Treasurer</label>
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="secretary" /> Secretary</label>
               <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="captain" /> Parade captain</label>
-              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" /> Committee member</label>
-              <input id="pfCommittee" placeholder="Which committee?" style="margin-top:8px;" />
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" class="pfRole" value="committee" id="pfRoleCommittee" /> Committee chair / member</label>
+              <div id="pfCommitteeWrap" style="margin:8px 0 0 26px;display:none;">
+                <label for="pfCommittee" style="font-size:13px;color:var(--muted);">Which committee?</label>
+                <select id="pfCommittee" style="width:100%;margin-top:4px;">
+                  <option value="">Select…</option>
+                  <option value="Merchandise">Merchandise (Shop Studio)</option>
+                  <option value="Social/Charity">Social / Charity (Raffles, Events, related reports)</option>
+                  <option value="Events">Events</option>
+                  <option value="Parade">Parade</option>
+                  <option value="Membership">Membership</option>
+                  <option value="Other">Other</option>
+                </select>
+                <input id="pfCommitteeOther" placeholder="If Other, name the committee" style="margin-top:8px;display:none;width:100%;" />
+                <p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">After an officer approves: <b>Merchandise</b> unlocks Shop Studio; <b>Social / Charity</b> unlocks Raffles tools, Event Studio, and event/charity reports.</p>
+              </div>
               <input id="pfRoleNote" placeholder="Anything that helps verify (optional)" style="margin-top:8px;" />
             </div>
           </div>
         </details>
 
+        <p style="font-size:13px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:10px;padding:10px 12px;margin:14px 0 0;line-height:1.4;">
+          <b>You are on step 3 of 4.</b> After you save, finish <b>Total hours since July 1</b> from TrackItForward on Member desk (step 4).
+        </p>
         <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">🍀 Start earning Clovers</button>
         <div class="err" id="pfMsg"></div>
       </form>
@@ -503,19 +740,22 @@
 
       <!-- PARADE READY -->
       <section class="app-card" id="prCard">
-        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; 12 volunteer hours (Jun–May)</small></div></div>
+        <div class="app-head"><span class="ic">🎗️</span><div><h2>Parade Ready</h2><small>Dues, waiver, meeting &amp; photo release (Jun–May)</small></div></div>
         <div class="app-body">
           <div id="prStatus"><p class="empty">Loading your status…</p></div>
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
           <div id="prHours"></div>
+          <p style="font-size:14px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.45;">
+            <b>Bring your TrackItForward hours over.</b> When you finish your member profile, open Volunteer hours and enter your current TrackItForward balance as <b>Total hours since July 1</b>. An officer will confirm them. After that, keep logging new hours here on the new site.
+          </p>
           <form id="vhForm" class="krewe-form" style="margin-top:10px;">
-            <div class="row">
-              <div><label for="vhActivity">Activity</label><input id="vhActivity" required placeholder="e.g. New Life Warehouse delivery" /></div>
-              <div><label for="vhHours">Hours</label><input id="vhHours" type="number" min="0.5" max="24" step="0.5" required /></div>
-            </div>
-            <label for="vhDate">Date</label>
+            <label for="vhHours">Total hours since July 1</label>
+            <input id="vhHours" type="number" min="0.5" max="500" step="0.5" required placeholder="Your TrackItForward total" />
+            <input type="hidden" id="vhActivity" value="Total hours since July 1" />
+            <label for="vhDate" style="margin-top:8px;">As of date (optional)</label>
             <input id="vhDate" type="date" />
-            <button class="btn btn-primary" type="submit">☘ Log volunteer hours</button>
+            <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Tip: copy the number from TrackItForward. Later logs can still use this form for new shifts (change the hours and we will keep the same season label).</p>
+            <button class="btn btn-primary" type="submit">☘ Save hours from TrackItForward</button>
             <div class="msg" id="vhMsg"></div>
           </form>
         </div>
@@ -526,13 +766,12 @@
                onclick="openGame()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGame();}">
         <div class="app-head">
           <span class="ic">🍀</span>
-          <div><h2>The Craic Cup</h2><small>Earn Clovers for showing up &amp; pitching in, and climb the ranks!</small></div>
+          <div><h2>The Craic Cup</h2><small>Kind rivalry. Real bragging rights. All for the craic.</small></div>
           <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Our friendly participation game. Every event you attend and every shift you volunteer earns
-             <b>Clovers 🍀</b> that build your <b>rank</b> and unlock <b>badges</b>. See who's leading the
-             season, learn how to earn, and look up your own standing.</p>
+          <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
+             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. Cheer your krewe, then try to catch them. Good-natured competition only.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
             <span>🤝 Volunteer bonuses</span><span>🔎 Your Clovers</span>
@@ -544,30 +783,24 @@
       <section class="app-card dash-card raffle-head" role="button" tabindex="0"
                onclick="openRaffles()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaffles();}">
         <div class="app-head"><span class="ic">🎟️</span>
-          <div><h2>Raffles</h2><small>Basket raffles &amp; the 50/50: enter and track your tickets</small></div>
+          <div><h2>Raffles</h2><small>Gift baskets &amp; 50/50 for charity — create, plan, enter</small></div>
           <span class="dash-go">Open →</span></div>
         <div class="app-body dash-body">
-          <p>Try your luck and support the Krewe. Drop tickets in the baskets you love, or buy into the 50/50 pot. Every entry is tied to your account.</p>
-          <div class="dash-chips"><span>🧺 Basket raffles</span><span>💰 50/50</span><span>🎫 My tickets</span></div>
+          <p>Build gift-ready baskets from donated contents, track who is bringing what, and raise money for charity. Draws happen in person at events — tickets are tracked digitally; pay a volunteer at the table.</p>
+          <div class="dash-chips"><span>🎁 Gift baskets</span><span>💚 Charity</span><span>📋 Planning</span><span>🎫 In-person draws</span></div>
         </div>
       </section>
 
       <!-- REPORTS DASHBOARD -->
-      <section class="app-card dash-card" id="dashCard" role="button" tabindex="0"
+      <section class="app-card dash-card" id="dashCard" hidden aria-hidden="true" style="display:none;" role="button" tabindex="-1"
                onclick="openReports()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReports();}">
         <div class="app-head">
           <span class="ic">📊</span>
-          <div><h2>Reports Dashboard</h2><small>Coordination reports drawn from the krewe's live data</small></div>
+          <div><h2>Reports</h2><small>Pick a report from the list</small></div>
           <span class="dash-go">Open →</span>
         </div>
         <div class="app-body dash-body">
-          <p>One place for every coordination report the website's data can produce: event headcounts and
-             volunteer coverage, membership and dues summaries, locker, carpool and van‑pool logistics, and a
-             content inventory. Tap a report to run it against the latest data.</p>
-          <div class="dash-chips">
-            <span>📅 Events &amp; Attendance</span><span>👥 Membership</span><span>💶 Dues</span>
-            <span>🚐 Logistics</span><span>📚 Content</span>
-          </div>
+          <p>Officer reports in one place — choose from a dropdown. Meeting check-in and handy link QRs are in Officer desk → QR Code Studio.</p>
         </div>
       </section>
 
@@ -582,7 +815,7 @@
         <div class="app-body dash-body">
           <p>Share your work with the whole Krewe. Upload an MP4 video or photos, add a piece of artwork, or
              publish a poem, short story, essay, or recipe. Posts go live right away. Photos and videos need a
-             signed media consent (faces/likeness) in Parade Ready first.</p>
+             signed Photo &amp; Image Release (faces/likeness) in Parade Ready first.</p>
           <div class="dash-chips" onclick="event.stopPropagation()">
               <a href="share.html?type=video" class="dash-chip-link">🎬 Videos</a>
               <a href="share.html?type=photo" class="dash-chip-link">📷 Gallery photos</a>
@@ -604,7 +837,7 @@
               <div><label for="lkEmail">Email</label><input id="lkEmail" type="email" /></div>
             </div>
             <label for="lkSize">Locker size</label>
-            <select id="lkSize"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select>
+            <select id="lkSize"><option value="small" selected>Small</option><option value="large">Large</option></select>
             <label for="lkNotes">Notes (optional)</label>
             <input id="lkNotes" placeholder="e.g. prefer near the entrance" />
             <button class="btn btn-primary" type="submit">☘ Request a locker</button>
@@ -656,12 +889,16 @@
       </section>
 
       <!-- DIRECTORY -->
-      <section class="app-card">
-        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Active krewe members</small></div></div>
+            <section class="app-card">
+        <div class="app-head"><span class="ic">👥</span><div><h2>Member Directory</h2><small>Your krewe — faces first</small></div></div>
         <div class="app-body">
-          <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="width:100%;padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
-          <div class="dir-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
-          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Tap a card to open their My Krewe profile. Contact details stay private — reach people through a krewe officer or <a href="mailto:kreweofshamrocktampa@gmail.com">email the Krewe</a>.</p>
+          <div class="people-toolbar">
+            <input id="dirSearch" class="krewe-form" placeholder="Search by name…" style="padding:11px 13px;border:1px solid rgba(168,128,28,.5);border-radius:10px;" oninput="renderDir()" />
+            <span class="people-count" id="dirCount"></span>
+          </div>
+          <div class="people-grid" id="dirGrid"><p class="empty">Loading directory…</p></div>
+
+          <p style="font-size:13px;color:var(--muted);margin-top:12px;">Tap a card to open their My Krewe profile. Contact details stay private — reach people through a krewe officer or <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a>.</p><p style="margin:10px 0 0;"><a class="btn" href="https://www.facebook.com/groups/1790675004521855" target="_blank" rel="noopener noreferrer" style="background:#1877f2;color:#fff;border:0;display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700;text-decoration:none;">📘 Members-only Facebook group →</a></p>
         </div>
       </section>
 
@@ -686,20 +923,39 @@
     </div>
   </div>
 
+
+  <!-- LEPRECHAUN FIRST-PROFILE WELCOME -->
+  <div class="modal-overlay" id="lepOverlay" aria-hidden="true">
+    <div class="modal-card lep-card" role="dialog" aria-modal="true" aria-label="Welcome from the krewe leprechaun">
+      <div style="position:relative;min-height:90px;">
+        <span class="lep-burst" style="left:18%;top:8px;">✨</span>
+        <span class="lep-burst" style="right:20%;top:0;animation-delay:.15s;">☘️</span>
+        <span class="lep-burst" style="left:48%;top:-4px;animation-delay:.28s;">✨</span>
+        <div class="lep-sprite" aria-hidden="true" title="Krewe leprechaun">🎩☘️</div>
+      </div>
+      <h2>Fáilte, new friend!</h2>
+      <div class="lep-body" id="lepBody"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <button class="btn btn-primary" type="button" id="lepGoDesk">☘ Start on Member desk</button>
+        <button class="btn" type="button" id="lepLater">Show me the checklist</button>
+      </div>
+    </div>
+  </div>
+
   <!-- WELCOME TOUR -->
   <div class="modal-overlay" id="tourOverlay" aria-hidden="true">
     <div class="modal-card" style="max-width:680px;">
       <div class="modal-head"><span class="ic" style="font-size:24px;">🍀</span><h2>Welcome to Members Only</h2></div>
       <div class="modal-body">
-        <p style="margin:0 0 14px;color:#3a3a2e;">You're wired in! Everything here is tied to your account, so your activity counts toward the Craic Cup.</p>
+        <p style="margin:0 0 14px;color:#3a3a2e;">You're in! Start on <b>Member desk</b> so you can use the hub for connecting, events, Share, and the Craic Cup.</p>
         <div class="tour-grid">
-          <div class="tour-item"><span>🍀</span><div><b>The Craic Cup</b><br>Earn Clovers for attending and volunteering. See standings and your own rank &amp; badges.</div></div>
-          <div class="tour-item"><span>🎟️</span><div><b>Raffles</b><br>Enter basket raffles and the 50/50; your tickets are tracked to you.</div></div>
-          <div class="tour-item"><span>📅</span><div><b>Events &amp; RSVPs</b><br>RSVP and volunteer; officers mark attendance, which awards your Clovers.</div></div>
-          <div class="tour-item"><span>🚗</span><div><b>Coordinate</b><br>Carpools, van pools, lockers, and the member directory.</div></div>
-          <div class="tour-item"><span>📊</span><div><b>Reports &amp; Share</b><br>Krewe coordination reports, plus share photos, videos, poems &amp; recipes.</div></div>
+          <div class="tour-item"><span>1️⃣</span><div><b>Member desk</b><br>Begin here. Your checklist for the season lives on this tab.</div></div>
+          <div class="tour-item"><span>2️⃣</span><div><b>Parade Ready + Photo Release</b><br>Sign the liability waiver and the Photo &amp; Image Release so you are parade-safe and can share media.</div></div>
+          <div class="tour-item"><span>3️⃣</span><div><b>My Krewe profile</b><br>Add your photo and a few friendly details so the directory feels like people, not a spreadsheet.</div></div>
+          <div class="tour-item"><span>4️⃣</span><div><b>Volunteer hours</b><br>Enter <b>Total hours since July 1</b> from TrackItForward. Then keep logging new hours here.</div></div>
+          <div class="tour-item"><span>🍀</span><div><b>Then play</b><br>Craic Cup, events, raffles, lockers, carpools, and Share unlock as you go. Cheer loud, climb kind.</div></div>
         </div>
-        <div style="text-align:center;margin-top:18px;"><button class="btn btn-primary" onclick="kosCloseTour()">☘ Let's go</button></div>
+        <div style="text-align:center;margin-top:18px;"><button class="btn btn-primary" onclick="kosCloseTour(); if(window.showHubTab) window.showHubTab('parade');">☘ Open Member desk</button></div>
       </div>
     </div>
   </div>
@@ -727,16 +983,16 @@
   <!-- REPORTS DASHBOARD MODAL -->
   <div class="modal-overlay" id="reportsModal" aria-hidden="true"
        onclick="if(event.target===this) closeReports()">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Member Reports Dashboard">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Officer reports and QR tools">
       <div class="modal-head">
         <span class="ic" style="font-size:24px;">📊</span>
-        <h2>Member Reports Dashboard</h2>
+        <h2>Officer reports</h2>
         <button class="modal-x" type="button" onclick="closeReports()" aria-label="Close dashboard">✕</button>
       </div>
       <div class="modal-body">
         <div id="reportGrid"></div>
         <div id="reportView" style="display:none;">
-          <button class="rpt-back" type="button" onclick="showReportGrid()">← All reports</button>
+          <button class="rpt-back" type="button" onclick="showReportGrid()">← Choose another</button>
           <h3 id="reportTitle"></h3>
           <div id="reportBody"></div>
         </div>
@@ -762,7 +1018,7 @@
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
 </div>
-    <div class="flinks" style="margin-bottom:8px;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com">Contact</a></div>
+    <div class="flinks" style="margin-bottom:8px;"><a href="mailto:secretary@kreweofshamrock.com">Contact: secretary@kreweofshamrock.com</a></div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
     <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
@@ -790,6 +1046,28 @@
         const nm = (p.display_name || [p.first_name,p.last_name].filter(Boolean).join(" ") || p.email || "").toString().trim();
         const who = document.getElementById("memberWho");
         if(who) who.textContent = nm ? ("Signed in as "+nm) : "Signed in";
+      }catch(e){}
+      try{
+        const head = document.querySelector("header.page-head");
+        if(head){
+          head.classList.add("is-home");
+          const ey = head.querySelector(".eyebrow");
+          const h1 = head.querySelector("h1");
+          const sub = head.querySelector("p.sub");
+          if(ey) ey.textContent = "Céad míle fáilte";
+          if(h1) h1.textContent = "Fáilte";
+          if(sub) sub.textContent = "The leprechaun waves you in.";
+          if(!head.querySelector(".lep-wave")){
+            const fig = document.createElement("figure");
+            fig.className = "lep-wave";
+            fig.setAttribute("aria-hidden","true");
+            fig.title = "Waving leprechaun";
+            fig.innerHTML = '<span class="lep-core">🎩☘️</span><span class="lep-arm">✋</span>';
+            const eyNode = head.querySelector(".eyebrow");
+            if(eyNode) head.insertBefore(fig, eyNode);
+            else head.appendChild(fig);
+          }
+        }
       }catch(e){}
       if(!window.__kosInit){ window.__kosInit=true; initAll(); }
     }
@@ -929,17 +1207,34 @@
     window.renderDir=()=>{
       const q=(document.getElementById("dirSearch").value||"").toLowerCase();
       const grid=document.getElementById("dirGrid");
+      const countEl=document.getElementById("dirCount");
       const rows=dirData.filter(m=>{
         const name=`${m.first_name||""} ${m.last_name||""}`.toLowerCase();
         const title=(m.officer_title||"").toLowerCase();
         return !q || name.includes(q) || title.includes(q);
       });
+      if(countEl){
+        countEl.textContent = rows.length ? (rows.length + " member" + (rows.length===1?"":"s")) : "";
+      }
       if(!rows.length){ grid.innerHTML='<p class="empty">No members found.</p>'; return; }
-      grid.innerHTML=rows.map(m=>{
-        const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
-        return `<button type="button" class="dir-card"${mid}>${dirAvatar(m)}<div><div class="nm">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="rl">${esc(dirRole(m))}</div></div><span class="dir-go">View →</span></button>`;
+      const groups={};
+      rows.forEach(m=>{
+        const letter=((m.last_name||m.first_name||"?").trim()[0]||"?").toUpperCase();
+        const key=/[A-Z]/.test(letter)?letter:"#";
+        (groups[key]||(groups[key]=[])).push(m);
+      });
+      const letters=Object.keys(groups).sort((a,b)=>{
+        if(a==="#") return 1; if(b==="#") return -1; return a.localeCompare(b);
+      });
+      grid.innerHTML=letters.map(letter=>{
+        const cards=groups[letter].map(m=>{
+          const mid = m.member_id ? ` data-mid="${esc(m.member_id)}"` : "";
+          const nm = `${esc(m.first_name||"")} ${esc(m.last_name||"")}`.trim();
+          return `<button type="button" class="people-card"${mid} aria-label="Open profile for ${nm}">${dirAvatar(m)}<div class="nm">${nm}</div><div class="rl">${esc(dirRole(m))}</div><span class="people-go">Open profile</span></button>`;
+        }).join("");
+        return `<div class="people-letter" aria-hidden="true">${letter}</div><div class="people-row">${cards}</div>`;
       }).join("");
-      grid.querySelectorAll(".dir-card[data-mid]").forEach(btn=>{
+      grid.querySelectorAll(".people-card[data-mid]").forEach(btn=>{
         btn.addEventListener("click", ()=> openMemberProfile(btn.getAttribute("data-mid")));
       });
     };
@@ -1013,21 +1308,38 @@
         return;
       }
       _prMe = me;
-      const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended];
+      let mediaOk = false;
+      try{ const { data } = await supabase.rpc("has_media_consent"); mediaOk = !!data; }catch(_){}
+      const gates = [me.dues_paid, me.waiver_signed, me.meeting_attended, mediaOk];
       const ready = gates.every(Boolean);
+      const DUES_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+      const LOA_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
       const gate = (ok, label, hint) =>
-        `<div class="pr-gate">${ok?"✅":"⬜"} <b>${label}</b>${ok?"":` <small>· ${hint}</small>`}</div>`;
+        `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok||!hint?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
+      const duesGate = (ok) => ok
+        ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} dues paid</span></div>`
+        : `<div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} dues</span>
+            <a class="pr-pay" href="${DUES_PAY_URL}" target="_blank" rel="noopener">☘ Pay member dues</a>
+            <div class="pr-pay-alt">On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>
+            · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
+          </div>`;
+      const mediaGate = mediaOk
+        ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1</span></div>`
+        : `<div class="pr-gate need"><span class="pr-mark">⬜</span><span class="pr-label">Photo &amp; Image Release</span> <span class="pr-hint">· required before posting photos or videos</span></div>`;
       el.innerHTML =
         `<div class="pr-pill ${ready?"ok":""}">${ready
           ? "🎗️ PARADE READY! Pick up your wristband at the next meeting."
-          : "☘ " + gates.filter(Boolean).length + " of 3 requirements complete"}</div>`
-        + gate(me.dues_paid, SEASON + " dues paid", "see the treasurer to settle up")
+          : "☘ " + gates.filter(Boolean).length + " of 4 requirements complete"}</div>`
+        + `<div class="pr-list">`
+        + duesGate(me.dues_paid)
         + gate(me.waiver_signed, "Liability waiver signed", "sign below; it takes ten seconds")
         + gate(me.meeting_attended, "Mandatory meeting attended", "scan the check-in QR at the next mandatory meeting")
+        + mediaGate
+        + `</div>`
         + (me.waiver_signed ? "" : waiverForm())
-        + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
+        + (mediaOk ? "" : `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`);
       renderHoursBar(me);
-      loadMediaConsent();
+      if(!mediaOk) loadMediaConsent();
     }
     function waiverForm(){
       const nm = esc(kosIdentity().name);
@@ -1053,17 +1365,23 @@
       if(!el || !_prMe) return;
       let ok = false;
       try{ const { data } = await supabase.rpc("has_media_consent"); ok = !!data; }catch(_){}
-      if(ok){
-        el.innerHTML = `<div class="pr-gate">✅ <b>Media / likeness consent signed</b> <small>· photos &amp; videos you post may appear on the site</small></div>`;
-        return;
-      }
+      if(ok){ el.innerHTML = ""; return; }
       const nm = esc(kosIdentity().name);
       el.innerHTML = `<div class="pr-waiver" style="margin-top:4px;">
-        <div class="pr-gate">⬜ <b>Media / likeness consent</b> <small>· required before posting photos or videos</small></div>
-        <p style="font-size:14px;color:var(--muted);margin:10px 0;">I grant the Krewe of Shamrock permission to display photos and videos I upload, and my likeness in krewe media on kreweofshamrock.com and related krewe channels, for nonprofit krewe purposes. I understand I can ask an officer to remove a specific post.</p>
+        <div class="media-release-scroll" style="max-height:220px;overflow:auto;margin:0 0 10px;padding:10px 12px;background:#fff;border:1px solid rgba(168,128,28,.35);border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.45;">
+          <p style="margin:0 0 10px;"><b>I grant the Krewe of Shamrock permission</b> to create, use, reproduce, display, and distribute photographs, video, audio, and other images or recordings that include me (and, if applicable, my minor child) for Krewe purposes.</p>
+          <p style="margin:0 0 8px;"><b>1. What this covers.</b> Media from Krewe activities including Gasparilla and other parades; St. Patrick’s Day and Irish heritage events; Tartan Ball and formal events; meetings, volunteer service, fundraisers, and social gatherings; and member-uploaded content to the Krewe website / member hub.</p>
+          <p style="margin:0 0 8px;"><b>2. How the Krewe may use the media.</b> Nonprofit krewe purposes only: kreweofshamrock.com (Photo Gallery, events, member features); official email/newsletters/social; print programs, flyers, posters, and banners; Inter-Krewe Council (IKC) and community listings; historical archives. The Krewe will <b>not</b> sell member likeness rights to unrelated third parties for commercial advertising without a separate written agreement.</p>
+          <p style="margin:0 0 8px;"><b>3. Ownership.</b> Media created by or for the Krewe may be retained as krewe records and promo materials. Member-uploaded photos and videos remain subject to this consent when posted to Krewe channels.</p>
+          <p style="margin:0 0 8px;"><b>4. No payment.</b> I will not receive payment for this consent or for the Krewe’s use of my likeness under this release.</p>
+          <p style="margin:0 0 8px;"><b>5. Removal requests.</b> I may ask Digital or the Secretary to remove a <b>specific</b> post or image from the public website or official social channels when reasonably practical. Printed materials already distributed, third-party shares, or archival backups may not always be removable.</p>
+          <p style="margin:0 0 8px;"><b>6. Duration.</b> This consent remains in effect for my membership and for reasonable archival use afterward, unless I revoke it in writing to digital@kreweofshamrock.com or secretary@kreweofshamrock.com. Revocation applies going forward.</p>
+          <p style="margin:0 0 8px;"><b>7. Minors.</b> If signing for a minor, I am the parent or legal guardian and grant the same permissions on their behalf.</p>
+          <p style="margin:0;">I have read this Photo &amp; Image Release, understand it, and sign it voluntarily. <a href="photo-image-release.html" target="_blank" rel="noopener">Open printable version</a>.</p>
+        </div>
         <label for="mcName">Type your full legal name to sign</label>
         <input id="mcName" value="${nm}" />
-        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign media consent</button>
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignMediaConsent()">✍️ Sign Photo &amp; Image Release</button>
         <div class="msg" id="mcMsg"></div>
       </div>`;
     }
@@ -1094,15 +1412,15 @@
     document.getElementById("vhForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       if(!_prMe){ show("vhMsg","Your account is not linked to a member record yet.","error"); return; }
-      const activity = (document.getElementById("vhActivity").value||"").trim();
       const hours = Number(document.getElementById("vhHours").value);
       const d = document.getElementById("vhDate").value;
-      if(activity.length < 2 || !(hours > 0)){ show("vhMsg","Add the activity and the hours.","error"); return; }
+      const activity = (document.getElementById("vhActivity").value||"Total hours since July 1").trim() || "Total hours since July 1";
+      if(!(hours > 0)){ show("vhMsg","Enter your Total hours since July 1 from TrackItForward.","error"); return; }
       const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours };
       if(d) row.worked_on = d;
       const { error } = await supabase.from("volunteer_hours").insert(row);
       if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
-      show("vhMsg","Logged! An officer will confirm them shortly.","success");
+      show("vhMsg","Saved! An officer will confirm your Total hours since July 1 shortly.","success");
       document.getElementById("vhForm").reset();
       loadParadeReady();
     });
@@ -1183,7 +1501,12 @@
       const { error } = await supabase.rpc("officer_upsert_meeting",
         { p_name:name, p_start:new Date(when).toISOString(), p_mandatory:mand });
       if(error){ show("mtMsg","Could not create the meeting. "+(error.message||""),"error"); return; }
-      runReport("meeting_checkin");
+      show("mtMsg","Meeting saved.","ok");
+      if(typeof window.kosRefreshQrMeetings==="function") window.kosRefreshQrMeetings();
+      else if(document.getElementById("hubQrStudio")){
+        try{ sessionStorage.setItem("kosOfficerTool","hubQrStudio"); }catch(e){}
+        if(typeof window.kosRefreshOfficerDesk==="function") window.kosRefreshOfficerDesk();
+      }
     };
     window.kosShowCheckinQR = async (eventId, btn)=>{
       const { data:code, error } = await supabase.rpc("officer_enable_checkin", { p_event:eventId });
@@ -1191,6 +1514,18 @@
       const url = location.origin + location.pathname + "?checkin=" + code;
       const slot = btn.parentElement.querySelector(".qr-slot");
       slot.innerHTML = `<canvas></canvas><div style="font-size:13px;color:var(--muted);margin-top:4px;">Members scan this, or use the link: <a href="${url}">${esc(url)}</a></div>`;
+      if(window.QRCode){
+        QRCode.toCanvas(slot.querySelector("canvas"), url, { width:220, margin:1, color:{ dark:"#14532d", light:"#ffffff" } });
+      } else {
+        slot.querySelector("canvas").replaceWith(Object.assign(document.createElement("p"),{ textContent:"QR library unavailable; share the link instead." }));
+      }
+    };
+    /* Static / deep-link QR helpers (dues, hours, etc.) */
+    window.kosShowLinkQR = (btn)=>{
+      const url = btn.getAttribute("data-qr-url") || "";
+      const slot = btn.parentElement.querySelector(".qr-slot");
+      if(!url || !slot){ alert("Missing QR link."); return; }
+      slot.innerHTML = `<canvas></canvas><div style="font-size:13px;color:var(--muted);margin-top:4px;word-break:break-all;">Scan or open: <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>`;
       if(window.QRCode){
         QRCode.toCanvas(slot.querySelector("canvas"), url, { width:220, margin:1, color:{ dark:"#14532d", light:"#ffffff" } });
       } else {
@@ -1348,34 +1683,8 @@
           return html;
         }},
 
-      { id:"meeting_checkin", cat:"Parade Readiness", icon:"📲", title:"Meeting Check-In QR", secure:true,
-        desc:"Schedule meetings and put a check-in QR on the screen; scans count toward Parade Ready.",
-        run: async()=>{
-          const since=new Date(Date.now()-86400000).toISOString();
-          const { data, error } = await supabase.from("events")
-            .select("id,name,start_time,is_mandatory").eq("event_type","meeting")
-            .gte("start_time",since).order("start_time",{ascending:true});
-          if(error) throw error;
-          const rows=data||[];
-          let html = `<div class="krewe-form" style="padding:0 0 14px;">
-            <h3 class="rpt-cat" style="margin-top:0;">➕ Schedule a meeting</h3>
-            <div class="row">
-              <div><label for="mtName">Meeting name</label><input id="mtName" placeholder="e.g. February parade briefing" /></div>
-              <div><label for="mtWhen">Date &amp; time</label><input id="mtWhen" type="datetime-local" /></div>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;font-weight:400;"><input type="checkbox" id="mtMand" checked style="width:auto;" /> Mandatory (counts toward Parade Ready)</label>
-            <button type="button" class="btn btn-primary" onclick="kosCreateMeeting()">☘ Create meeting</button>
-            <div class="msg" id="mtMsg"></div></div>
-            <h3 class="rpt-cat">📲 Upcoming meetings</h3>`;
-          if(!rows.length) html += '<p class="empty">No upcoming meetings yet. Create one above.</p>';
-          else html += rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed rgba(168,128,28,.3);">
-              <b>${esc(r.name)}</b> <span>${fmtDate(r.start_time)}</span> ${r.is_mandatory?'<span class="rank-pill">mandatory</span>':""}
-              <button class="rpt-btn ok" type="button" onclick="kosShowCheckinQR('${r.id}', this)">Show check-in QR</button>
-              <div class="qr-slot" style="flex-basis:100%;"></div>
-            </div>`).join("");
-          return html;
-        }},
-
+      
+      
       /* ---- Events & Attendance ---- */
       { id:"events_upcoming", cat:"Events & Attendance", icon:"📅", title:"Upcoming Events",
         desc:"Every scheduled event with date and location.",
@@ -1431,7 +1740,7 @@
       /* ---- Membership ---- */
 
       { id:"secretary_engagement", cat:"Membership", icon:"📣", title:"Secretary engagement (board)", secure:true,
-        desc:"Who is active, light, or quiet — RSVPs, attendance, volunteer hours, season/lifetime Clovers, rank, and badges for the board secretary.",
+        desc:"Who is active, light, or quiet. RSVPs, attendance, volunteer hours, season/lifetime Clovers, rank, and badges for the board secretary.",
         run: async()=>{
           const { data, error } = await supabase.from("v_secretary_engagement").select("*");
           if(error) throw error;
@@ -1451,7 +1760,7 @@
             {l:"Light",v:light.length},
             {l:"Quiet",v:quiet.length}
           ]);
-          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP, no approved volunteer hours, and no Clovers this year. Columns for <b>season Clovers</b>, <b>lifetime</b>, <b>badges</b>, and <b>rank</b> are ready — they fill as the Craic Cup ledger records activity.</p>';
+          html += '<p class="rpt-note">Built for the <b>secretary / board</b>: who is showing up versus drifting. Quiet = no RSVP, no approved volunteer hours, and no Clovers this year. Columns for <b>season Clovers</b>, <b>lifetime</b>, <b>badges</b>, and <b>rank</b> are ready. they fill as the Craic Cup ledger records activity.</p>';
           html += '<h3 class="rpt-cat">😴 Quiet (reach out)</h3>';
           const rowCols = r => [
             `${r.first_name||""} ${r.last_name||""}`.trim(),
@@ -1467,7 +1776,7 @@
           const headers = ["Name","RSVPs","Attended","Vol hrs","Season 🍀","Lifetime 🍀","Rank","Badges","Last RSVP"];
           html += quiet.length
             ? rTable(["Name","Email","Status","Season 🍀","Lifetime 🍀","Rank","Last RSVP"],
-                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||"—", r.membership_status||"—", String(r.season_clovers||0), String(r.lifetime_clovers||0), `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`, fmtLast(r.last_rsvp_at)]))
+                quiet.map(r=>[`${r.first_name||""} ${r.last_name||""}`.trim(), r.email||". ", r.membership_status||". ", String(r.season_clovers||0), String(r.lifetime_clovers||0), `${r.rank_icon||"🌱"} ${r.rank_name||"Newcomer"}`, fmtLast(r.last_rsvp_at)]))
             : '<p class="empty">Nobody is fully quiet — nice.</p>';
           html += '<h3 class="rpt-cat">🌤️ Light engagement</h3>';
           html += light.length
@@ -1656,23 +1965,45 @@
 
     function buildReportGrid(){
       const grid=document.getElementById("reportGrid");
-      grid.innerHTML = CATS.map(cat=>{
+      let opts = `<option value="">Select a tool or report…</option>`;
+      CATS.forEach(cat=>{
         const items=REPORTS.filter(r=>r.cat===cat);
-        return `<div class="rpt-cat">${esc(cat)}</div><div class="rpt-grid">${
-          items.map(r=>`<div class="rpt-card" role="button" tabindex="0" data-id="${r.id}">
-            <div class="t">${r.icon||"📈"} ${esc(r.title)}</div>
-            <div class="d">${esc(r.desc)}</div>
-            ${r.secure?'<span class="lock">🔒 Officers only</span>':''}
-          </div>`).join("")}</div>`;
-      }).join("");
-      grid.querySelectorAll(".rpt-card").forEach(c=>{
-        const go=()=>runReport(c.getAttribute("data-id"));
-        c.addEventListener("click",go);
-        c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+        if(!items.length) return;
+        opts += `<optgroup label="${esc(cat)}">`;
+        items.forEach(r=>{
+          const lock = r.secure ? " 🔒" : "";
+          opts += `<option value="${esc(r.id)}" data-desc="${esc(r.desc)}">${r.icon||"📈"} ${esc(r.title)}${lock}</option>`;
+        });
+        opts += `</optgroup>`;
       });
+      grid.innerHTML = `<div class="rpt-picker">
+        <label for="reportSelect">Choose a report</label>
+        <select id="reportSelect" aria-describedby="reportSelectDesc">${opts}</select>
+        <p class="rpt-pick-desc" id="reportSelectDesc">Pick from the list, then open it. No long scroll of cards.</p>
+        <div class="rpt-pick-actions">
+          <button type="button" class="btn btn-primary" id="reportSelectGo">☘ Open</button>
+        </div>
+      </div>`;
+      const sel = document.getElementById("reportSelect");
+      const desc = document.getElementById("reportSelectDesc");
+      const goBtn = document.getElementById("reportSelectGo");
+      const syncDesc = ()=>{
+        const opt = sel.options[sel.selectedIndex];
+        const d = opt && opt.getAttribute("data-desc");
+        desc.textContent = d || "Pick from the list, then open it. No long scroll of cards.";
+      };
+      const go = ()=>{ if(sel.value) runReport(sel.value); };
+      sel.addEventListener("change", syncDesc);
+      sel.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+      goBtn.addEventListener("click", go);
+      syncDesc();
     }
 
-    window.openReports=()=>{
+    window.openReports=async ()=>{
+      if(!(await isOfficer())){
+        alert("Reports are for officers only. Open Officer desk if you have access.");
+        return;
+      }
       const m=document.getElementById("reportsModal");
       if(!document.getElementById("reportGrid").childElementCount) buildReportGrid();
       showReportGrid();
@@ -1700,6 +2031,7 @@
       try { body.innerHTML = await def.run(); }
       catch(err){ body.innerHTML='<p class="msg error">Could not load this report. '+esc(err.message||"")+'</p>'; }
     }
+    window.REPORTS=REPORTS;
     window.runReport=runReport;
     document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeReports(); });
   </script>
@@ -1768,7 +2100,7 @@
       ]);
       if(e1||e2){ box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       const yr=new Date().getFullYear();
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">The friendly contest to see who brings the most craic. Earn <b>Clovers 🍀</b> by showing up, volunteering, and pitching in. Standings reset each season, so it's always anyone's game.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. Standings reset each season, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${yr} Season Standings</h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -1786,7 +2118,7 @@
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Loading…</p>';
       const { data:badges } = await sb.from("badge_defs").select("*").order("sort",{ascending:true});
-      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Clovers add up to <b>ranks</b> and unlock <b>badges</b>. It's all in good fun: recognition, bragging rights, and a wee bit of friendly rivalry to fill our events and volunteer shifts.</p>`;
+      let html=`<p style="margin:0 0 14px;color:#3a3a2e;">Every time you take part you earn <b>Clovers 🍀</b>. Stack them to climb <b>ranks</b> and unlock <b>badges</b>. Think recognition with a wink: bragging rights, a nudge to fill the room, and rivalry that’s always kind.</p>`;
       html+=`<h3 class="rpt-cat">🍀 How to earn Clovers</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
         POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
@@ -1877,32 +2209,41 @@
     async function route(){
       if(awaitingNewPassword){ showStage("setpassword"); return; }
       const { data:{ session } } = await sb.auth.getSession();
-      if(!session){ showStage("auth"); return; }
+      if(!session){
+        showStage("auth");
+        try{
+          if(sessionStorage.getItem("kos_hub_intent")==="hours"){
+            var gp=document.querySelector("#authStage .gate-card p");
+            if(gp) gp.textContent="Sign in to open the volunteer hours form.";
+            var gh=document.querySelector("#authStage .gate-card h1");
+            if(gh) gh.textContent="Log volunteer hours";
+          }
+        }catch(e){}
+        return;
+      }
       let prof=null;
       try{ const { data } = await sb.rpc("get_my_krewe_profile"); prof=data; }catch(e){}
       window.kosProfile = prof || {};
-      if(!prof || !prof.profile_complete){
-        showStage("profile");
+      window.kosNeedsProfile = !(prof && prof.profile_complete);
+      window.kosPrefillProfile = function(){
         try{
-          var pf=prof||{};
-          function setIf(id, v){ var el=document.getElementById(id); if(el && !el.value && v!=null && v!=="") el.value = v; }
+          var pf=window.kosProfile||{};
+          function setIf(id, v){ var el=document.getElementById(id); if(el && v!=null && v!=="") el.value = v; }
           setIf("pfFirst", pf.first_name);
           setIf("pfLast", pf.last_name);
           setIf("pfPhone", pf.phone);
-          setIf("pfBio", pf.bio);
           setIf("pfHometown", pf.hometown);
-          setIf("pfSince", pf.parade_since);
-          setIf("pfBirthday", pf.birthday);
-          setIf("pfAnniversary", pf.anniversary);
+          setIf("pfStreet", pf.street_address);
+          setIf("pfCity", pf.city);
+          setIf("pfState", pf.state);
+          setIf("pfZip", pf.zip);
           setIf("pfHobbies", pf.hobbies);
-          setIf("pfInterests", pf.interests);
           setIf("pfMemory", pf.favorite_memory);
           setIf("pfFact", pf.fun_fact);
           if(pf.photo_url){
             var av=document.getElementById("pfAvatarPreview");
             if(av) av.innerHTML = '<img src="'+String(pf.photo_url).replace(/"/g,'&quot;')+'" alt="" style="width:100%;height:100%;object-fit:cover;" />';
           }
-          // Roster-matched members: expand role section so board/committee is obvious
           if(pf.roster_matched || pf.member_id){
             var hr=document.getElementById("pfHasRole");
             var panel=document.getElementById("pfRolePanel");
@@ -1910,8 +2251,12 @@
             if(panel){ panel.style.display = "block"; }
           }
         }catch(e){}
-        return;
-      }
+      };
+      window.kosOpenProfileStage = function(){
+        window.kosPrefillProfile && window.kosPrefillProfile();
+        showStage("profile");
+      };
+      // First-time members land on the hub/desk first (waivers before profile).
       /* A members-only page sent this visitor to the door with ?next=; now that
          they're signed in, send them back there (the stash expires after 15 minutes). */
       try{
@@ -1926,40 +2271,107 @@
       }catch(e){}
       showStage("none");
       if(window.kosUnlock) window.kosUnlock();
-      maybeTour();
+      try{
+          if(!localStorage.getItem("kosLepWelcomeSeen")){
+            localStorage.setItem("kosLepWelcome","1");
+          }
+        }catch(_){ }
+        setTimeout(function(){
+          try{
+            var hours = false;
+            try{ hours = sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
+            if(hours) return;
+            if(window.kosShowLepWelcome) window.kosShowLepWelcome(); else maybeTour();
+          }catch(_){ maybeTour(); }
+        }, 400);
     }
     document.getElementById("signinForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const email=document.getElementById("siEmail").value.trim();
       const password=document.getElementById("siPassword").value;
       const msg=document.getElementById("signinMsg");
-      if(!email || !password){ msg.style.color=""; msg.textContent="Please enter your email and password."; return; }
-      msg.style.color=""; msg.textContent="Signing in…";
+      if(!email){ msg.style.color=""; msg.textContent="Please enter the email on the krewe roster."; return; }
+      msg.style.color=""; msg.textContent="Checking the member list…";
+      const { data: door, error: doorErr } = await sb.rpc("hub_door_status", { p_email: email });
+      if(doorErr || !door){
+        msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com.";
+        return;
+      }
+      if(door.status==="not_on_roster" || door.status==="invalid" || door.status==="rate_limited"){
+        msg.textContent=door.message; return;
+      }
+      if(door.status==="needs_invite"){
+        await requestPasswordMail(email, msg, "signin", door);
+        return;
+      }
+      if(!password){
+        msg.textContent="You're on the roster and already have a Hub login. Enter your Hub password, or tap Forgot your password.";
+        return;
+      }
+      msg.textContent="Signing in…";
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error){ msg.textContent="Couldn't sign in: "+error.message; return; }
+      if(error){
+        msg.textContent="That password isn't right. Old Wild Apricot passwords do not work here. Tap Forgot your password if you need a reset.";
+        return;
+      }
       msg.textContent="";
     });
-    document.getElementById("createForm").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const email=document.getElementById("cpEmail2").value.trim();
-      const msg=document.getElementById("createMsg");
+    async function requestPasswordMail(email, msg, kind, doorHint){
       if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
-      msg.style.color=""; msg.textContent="Sending…";
+      msg.style.color=""; msg.textContent="Checking the member list…";
+      var door = doorHint || null;
+      var doorErr = null;
+      if(!door){
+        var checked = await sb.rpc("hub_door_status", { p_email: email });
+        door = checked.data;
+        doorErr = checked.error;
+      }
+      if(doorErr || !door){ msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com."; return; }
+      if(door.status==="invalid" || door.status==="rate_limited" || door.status==="not_on_roster"){
+        msg.textContent=door.message; return;
+      }
+      if(door.status==="needs_invite"){
+        msg.textContent="You're on the roster. Sending a first-login link…";
+        try{
+          const res = await fetch("https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/hub-password-mail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "apikey": "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS" },
+            body: JSON.stringify({ email })
+          });
+          const body = await res.json().catch(()=>({}));
+          if(body && body.send_reset){
+            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+            if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+            msg.style.color="#14532d";
+            msg.textContent="Check that inbox for a password link, then click it on this device.";
+            return;
+          }
+          if(!res.ok || !body.ok){
+            msg.textContent=body.message || "You're on the roster, but the invite did not send. Write digital@kreweofshamrock.com.";
+            return;
+          }
+          msg.style.color="#14532d";
+          msg.textContent="You're on the roster. We emailed a first-login link to create your password. Check that inbox (and spam), then click it on this device.";
+        }catch(err){
+          msg.textContent="You're on the roster, but the invite did not send. Write digital@kreweofshamrock.com.";
+        }
+        return;
+      }
+      msg.textContent="Sending…";
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
       if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
-      msg.textContent="✓ Check your email for a link to create your password, then click it on this device.";
+      msg.textContent = kind==="create"
+        ? "Check that inbox for a link to create your password, then click it on this device."
+        : "Check that inbox for a password reset link, then click it on this device.";
+    }
+    document.getElementById("createForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      await requestPasswordMail(document.getElementById("cpEmail2").value.trim(), document.getElementById("createMsg"), "create");
     });
     document.getElementById("forgotForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const email=document.getElementById("fpEmail").value.trim();
-      const msg=document.getElementById("forgotMsg");
-      if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
-      msg.style.color=""; msg.textContent="Sending…";
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
-      msg.style.color="#14532d";
-      msg.textContent="✓ Check your email for a password reset link, then click it on this device.";
+      await requestPasswordMail(document.getElementById("fpEmail").value.trim(), document.getElementById("forgotMsg"), "forgot");
     });
     document.getElementById("setPasswordForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -1974,6 +2386,12 @@
     });
     document.getElementById("showForgot").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("forgot"); });
     document.getElementById("showCreate").addEventListener("click",(e)=>{ e.preventDefault(); showAuthPanel("create"); });
+    document.getElementById("showCreateBtn").addEventListener("click",()=>{
+      var em=document.getElementById("siEmail");
+      var dest=document.getElementById("cpEmail2");
+      if(dest && em && em.value) dest.value=em.value;
+      showAuthPanel("create");
+    });
     document.getElementById("guideCreateBtn").addEventListener("click",()=>{
       showAuthPanel("create");
       var cg=document.getElementById("castleGuide"); if(cg) cg.removeAttribute("open");
@@ -2046,6 +2464,10 @@
         p_phone: v("pfPhone") || null,
         p_bio: null,
         p_hometown: v("pfHometown") || null,
+        p_street_address: v("pfStreet") || null,
+        p_city: v("pfCity") || null,
+        p_state: v("pfState") || null,
+        p_zip: v("pfZip") || null,
         p_parade_since: null,
         p_interests: null,
         p_photo_url: photoUrl,
@@ -2057,7 +2479,22 @@
         p_profile_visible: !!(document.getElementById("pfVisible")||{}).checked
       });
       if(error){ msg.textContent="Couldn't save: "+error.message; return; }
-      // Role claims go to the officers' in-hub Approvals queue; membership with
+      
+        (function wireRoleCommitteeUi(){
+          var panel=document.getElementById("pfCommitteeWrap");
+          var other=document.getElementById("pfCommitteeOther");
+          var sel=document.getElementById("pfCommittee");
+          function sync(){
+            var checked=!!document.querySelector('.pfRole[value="committee"]:checked');
+            if(panel) panel.style.display=checked?"block":"none";
+            if(other&&sel) other.style.display=sel.value==="Other"?"block":"none";
+          }
+          document.querySelectorAll(".pfRole").forEach(function(cb){ cb.addEventListener("change", sync); });
+          if(sel) sel.addEventListener("change", sync);
+          sync();
+        })();
+
+        // Role claims go to the officers' in-hub Approvals queue; membership with
       // a roster email match needs no approval at all.
       const roles=[...document.querySelectorAll(".pfRole:checked")].map(c=>c.value);
       if(roles.length){
@@ -2066,7 +2503,15 @@
             p_claimed_member: document.getElementById("pfIsMember").checked,
             p_roles: roles,
             p_answers: {
-              committee: document.getElementById("pfCommittee").value.trim() || null,
+              committee: (function(){
+                var sel=document.getElementById("pfCommittee");
+                var v=(sel&&sel.value||"").trim();
+                if(v==="Other"){
+                  var o=(document.getElementById("pfCommitteeOther")||{}).value||"";
+                  return o.trim()||"Other";
+                }
+                return v||null;
+              })(),
               note: document.getElementById("pfRoleNote").value.trim() || null
             }
           });
@@ -2076,13 +2521,61 @@
         }catch(err){ /* the profile is saved; a failed role request can be retried from the hub */ }
       }
       localStorage.removeItem("kosTourDone");
+      try{ localStorage.setItem("kosLepWelcome","1"); }catch(_){}
       await route();
+      setTimeout(()=>{ try{
+        var hours=false;
+        try{ hours=sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
+        if(hours) return;
+        if(window.kosShowLepWelcome) window.kosShowLepWelcome();
+      }catch(_){} }, 500);
     });
     function maybeTour(){
       if(localStorage.getItem("kosTourDone")==="1") return;
       const o=document.getElementById("tourOverlay"); if(o) o.classList.add("open");
     }
     window.kosCloseTour=()=>{ localStorage.setItem("kosTourDone","1"); const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
+    
+    window.kosShowLepWelcome=()=>{
+      try{
+        if(localStorage.getItem("kosLepWelcome")!=="1") return;
+        if(localStorage.getItem("kosLepWelcomeSeen")==="1" && localStorage.getItem("kosLepWelcome")!=="1") return;
+      }catch(_){ return; }
+      const who=(document.getElementById("memberWho")?.textContent||"").replace(/^SIGNED IN AS\s+/i,"").trim();
+      const first=(who.split(/\s+/)[0]||"friend");
+      const nice=first.charAt(0).toUpperCase()+first.slice(1).toLowerCase();
+      const body=document.getElementById("lepBody");
+      if(body){
+        body.innerHTML=
+          "<p><b>Top o' the mornin', "+nice+"!</b> A wee leprechaun just sprang onto your landing page to welcome you home.</p>"+
+          "<p>Your time is treasure to this krewe. Every hour you give advances our mission: Irish heritage, parade magic, and looking after one another in Tampa Bay. Thank you for bringing your heart to Shamrock.</p>"+
+          "<p><b>Start here so every feature opens smoothly:</b></p>"+
+          "<ol style=\"margin:8px 0 12px;padding-left:1.2em;line-height:1.55;\">"+
+          "<li><b>Member desk</b> (begin on this tab)</li>"+
+          "<li><b>Parade Ready</b>: sign the liability waiver and the Photo &amp; Image Release</li>"+
+          "<li><b>My Krewe profile</b>: photo and a few friendly details</li>"+
+          "<li><b>Volunteer hours</b>: enter <b>Total hours since July 1</b> from TrackItForward</li>"+
+          "</ol>"+
+          "<p style=\"margin:0;\">Then you are ready to connect: Craic Cup, events, Share, lockers, and the rest of the castle.</p>"+
+          "<p style=\"margin:10px 0 0;color:var(--muted);font-size:13px;\">Sláinte, and may your Clovers multiply. ☘️</p>";
+      }
+      const o=document.getElementById("lepOverlay");
+      if(o){ o.classList.add("open"); o.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; }
+    };
+    window.kosCloseLepWelcome=()=>{
+      try{ localStorage.removeItem("kosLepWelcome"); localStorage.setItem("kosLepWelcomeSeen","1"); }catch(_){ }
+      const o=document.getElementById("lepOverlay");
+      if(o){ o.classList.remove("open"); o.setAttribute("aria-hidden","true"); }
+      document.body.style.overflow="";
+    };
+    document.getElementById("lepLater")?.addEventListener("click",()=>{ window.kosCloseLepWelcome(); maybeTour(); });
+    document.getElementById("lepGoDesk")?.addEventListener("click",()=>{
+      window.kosCloseLepWelcome();
+      try{ if(window.showHubTab) window.showHubTab("parade"); }catch(_){ }
+      const desk=document.getElementById("hubHoursCard")||document.getElementById("prCard");
+      if(desk?.scrollIntoView) desk.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+
     window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
     sb.auth.onAuthStateChange((event)=>{
       if(event==="PASSWORD_RECOVERY"){ awaitingNewPassword=true; }
@@ -2092,6 +2585,7 @@
   </script>
 
   <!-- ============== RAFFLES ============== -->
+  <!-- raffle-module v=20260909r2 -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -2099,20 +2593,32 @@
     window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
     window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
     async function renderRaffles(){
-      const box=document.getElementById("raffleBody"); box.innerHTML='<p class="empty">Loading raffles…</p>';
-      const [{data:events,error:e1},{data:baskets},{data:mine}] = await Promise.all([
-        rb.from("v_raffle_events_public").select("*").order("event_date",{ascending:true,nullsFirst:false}),
-        rb.from("v_raffle_baskets_public").select("*"),
-        rb.rpc("get_my_raffle_summary")
+      const box=document.getElementById("raffleBody"); if(!box) return; box.innerHTML='<p class="empty">Loading raffles…</p>';
+      const wrapCall = (p) => Promise.resolve(p).then(r => ({data: r && r.data != null ? r.data : null, error: r && r.error ? r.error : null})).catch(e => ({data:null, error:e}));
+      const [evRes, baskRes, mineRes] = await Promise.all([
+        wrapCall(rb.from("v_raffle_events_public").select("*").order("event_date",{ascending:true,nullsFirst:false})),
+        wrapCall(rb.from("v_raffle_baskets_public").select("*")),
+        wrapCall(rb.rpc("get_my_raffle_summary"))
       ]);
-      if(e1){ box.innerHTML='<p class="msg error">Could not load raffles.</p>'; return; }
-      if(!events || !events.length){ box.innerHTML='<p class="empty">No raffles are running right now. Check back soon! 🍀</p>'; return; }
+      const events = evRes.data;
+      const baskets = baskRes.data;
+      const mine = mineRes.data;
+      const e1 = evRes.error;
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      let html='<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>\ud83e\uddfa <b>Basket raffle:</b> buy tickets for the specific basket(s) you want \u2014 each ticket is one entry in that basket, and one ticket per basket is drawn at the end. \ud83d\udcb0 <b>50/50:</b> all tickets share one pot; one ticket wins half the pot. Tickets are paid in person \u2014 settle up with a volunteer. You can also scan the QR code on any basket to enter from your phone.</div>';
-      for(const e of events){
+      const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events — enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      if(e1){
+        box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>';
+        await renderManage();
+        try{ await renderOfficerTools(events||[], baskets||[]); }catch(_){ }
+        return;
+      }
+      let html=howHtml;
+      if(events && events.length) for(const e of events){
         html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
         if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
+        if(e.charity_blurb) html+=`<p style="margin:0 0 10px;color:#14532b;font-size:14px;">💚 ${RE(e.charity_blurb)}</p>`;
+        if(e.audience && e.audience!=='both') html+=`<p style="margin:0 0 8px;font-size:12px;color:var(--muted);">Audience: ${RE(e.audience)}</p>`;
         if(e.raffle_type==='fifty_fifty'){
           html+=`<div class="van-card"><div class="seats">50/50 Pot</div>
             <div style="font-size:14px;color:var(--muted);">${e.pot_tickets} tickets in${e.ticket_price?` · $${e.ticket_price} each`:''}</div>`;
@@ -2125,6 +2631,7 @@
           html+=`<div class="dir-grid">`;
           for(const b of bs){
             html+=`<div class="dir-card"><div class="nm">${RE(b.name)}</div>`;
+            if(b.contents) html+=`<div class="rl" style="margin-top:4px;"><b>Inside:</b> ${RE(b.contents)}</div>`;
             if(b.description) html+=`<div class="rl">${RE(b.description)}</div>`;
             if(b.estimated_value) html+=`<div class="rl">~$${b.estimated_value}</div>`;
             html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets} tickets in · you: <b>${myB[b.id]||0}</b></div>`;
@@ -2137,9 +2644,10 @@
         }
         html+=`</div>`;
       }
+      if(!events || !events.length){ html+='<p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>'; }
       box.innerHTML=html;
-      renderOfficerTools(events,baskets);
-      renderManage();
+      await renderManage();
+      try{ await renderOfficerTools(events||[],baskets||[]); }catch(_){ }
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
         ev.preventDefault(); const id=f.getAttribute("data-basket"); const q=parseInt(f.q.value||"1",10);
         const { error}=await rb.rpc("enter_basket_as_member",{p_basket_id:id,p_tickets:q});
@@ -2154,12 +2662,14 @@
 
     async function renderOfficerTools(events, baskets){
       const box=document.getElementById("raffleBody"); if(!box) return;
-      let off=false; try{ const {data}=await rb.rpc("is_krewe_officer"); off=!!data; }catch(_){}
+      let off=false; try{ const {data}=await rb.rpc("can_manage_raffles"); off=!!data; }catch(_){
+        try{ const {data}=await rb.rpc("is_krewe_officer"); off=!!data; }catch(__){ off=false; }
+      }
       if(!off) return;
       const PUB = location.origin + "/raffle.html";
       let h='<div class="raffle-event" style="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;">';
       h+='<h3 class="rpt-cat" style="margin-top:0;">\ud83d\udd11 Officer tools</h3>';
-      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Only krewe officers see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
+      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Officers and Social/Charity committee see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
       h+='<p style="margin:0 0 12px;"><a class="btn btn-green" href="raffle-qr-sheet.html" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Print basket QR codes</a> <a class="btn" href="'+PUB+'" target="_blank" rel="noopener">\u2197 Public raffle page</a></p>';
       for(const e of events){
         h+='<div style="margin:10px 0;"><b>'+(e.raffle_type==='fifty_fifty'?'\ud83d\udcb0':'\ud83e\uddfa')+' '+RE(e.name)+'</b>';
@@ -2209,15 +2719,15 @@
     function mrInput(label,html){ return '<label style="display:block;font-size:13px;color:#3a3a2e;margin:8px 0 2px;font-weight:600;">'+label+'</label>'+html; }
     function makeBasketForm(eventId, b){
       var IS='__IS__';
-      var box=document.createElement('div'); box.className='dir-card'; box.style.marginTop='8px';
+      var box=document.createElement('div'); box.className='raffle-panel'; box.style.marginTop='8px';
       box.innerHTML =
-        mrInput('Basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
-        mrInput('Approximate worth ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
-        mrInput('Contents (what’s inside)','<textarea class="bfContents" rows="2" '+IS+'>'+(b&&b.contents?RE(b.contents):'')+'</textarea>')+
-        mrInput('Details / description','<textarea class="bfDesc" rows="2" '+IS+'>'+(b&&b.description?RE(b.description):'')+'</textarea>')+
-        mrInput('Photo of the basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
+        mrInput('Gift basket title','<input class="bfName" '+IS+' maxlength="90" value="'+(b?RE(b.name):'')+'" />')+
+        mrInput('Approximate gift value ($)','<input class="bfVal" type="number" min="0" step="1" '+IS+' value="'+(b&&b.estimated_value!=null?b.estimated_value:'')+'" />')+
+        mrInput('Donated contents (what’s inside — themes, bottles, or a single item)','<textarea class="bfContents" rows="2" '+IS+' placeholder="e.g. Irish whiskey, tartan throw, tea towels — note donors if known">'+(b&&b.contents?RE(b.contents):'')+'</textarea>')+
+        mrInput('Gift presentation / details','<textarea class="bfDesc" rows="2" '+IS+' placeholder="Theme, wrapping, display notes for the planning board">'+(b&&b.description?RE(b.description):'')+'</textarea>')+
+        mrInput('Photo of the finished gift basket'+(b&&b.image_url?' (uploading a new one replaces it)':''),'<input class="bfPhoto" type="file" accept="image/*" '+IS+' />')+
         (b&&b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="margin-top:8px;max-width:120px;border-radius:8px;" />':'')+
-        '<div style="margin-top:10px;"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
+        '<div class="raffle-form-actions"><button class="btn btn-green bfSave" type="button">'+(b?'Save changes':'Add basket')+'</button> <button class="btn bfCancel" type="button">Cancel</button></div>'+
         '<div class="msg bfMsg"></div>';
       box.innerHTML=box.innerHTML.split('__IS__').join('style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"');
       box.querySelector('.bfCancel').onclick=function(){ box.remove(); };
@@ -2240,26 +2750,34 @@
     }
     async function renderManage(){
       var box=document.getElementById("raffleBody"); if(!box) return;
-      var mine=[]; try{ var r=await rb.rpc("get_my_raffles"); mine=r.data||[]; }catch(e){}
-      var w=document.createElement("div"); w.className="raffle-event";
-      w.style.cssText="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;";
+      var mine=[];
+      try{
+        var r=await rb.rpc("get_my_raffles");
+        if(r && r.error){ mine=[]; }
+        else { mine=(r && r.data) || []; }
+      }catch(e){ mine=[]; }
+      if(!Array.isArray(mine)) mine=[];
+      var w=document.createElement("div"); w.className="raffle-event"; w.id="mrCreateManage";
+      w.style.cssText="border-bottom:2px dashed var(--gold);margin:0 0 18px;padding:0 0 14px;";
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
-        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create your own basket or 50/50 raffle and build its baskets. You own and manage what you create.</p>'+
+        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create a gift-basket or 50/50 raffle for charity. Use baskets as a planning board for donated contents, then draw winners in person at the event.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
-      box.appendChild(w);
-      document.getElementById("mrNew").onclick=showCreateForm;
-      renderMine(mine);
+      if(box.firstChild) box.insertBefore(w, box.firstChild); else box.appendChild(w);
+      var btn=document.getElementById("mrNew"); if(btn) btn.onclick=showCreateForm;
+      try{ renderMine(mine); }catch(_){ var L=document.getElementById("mrList"); if(L) L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; }
     }
     function showCreateForm(){
       var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
-      f.innerHTML='<div class="dir-card">'+
-        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" />')+
-        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🧺 Basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
-        mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+'></textarea>')+
+      f.innerHTML='<div class="raffle-panel">'+
+        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" placeholder="e.g. St. Patrick\'s Day Gift Baskets" />')+
+        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🎁 Gift basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
+        mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+' placeholder="Theme night, event, or planning notes"></textarea>')+
+        mrInput('Charity / cause (optional)','<textarea id="crCharity" rows="2" '+IS+' placeholder="Where the proceeds go"></textarea>')+
+        mrInput('Audience','<select id="crAudience" '+IS+'><option value="both">Internal + external</option><option value="internal">Internal (members only)</option><option value="external">External (public)</option></select>')+
         mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
-        mrInput('Draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
-        '<div style="margin-top:10px;"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
+        mrInput('Event / draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
+        '<div class="raffle-form-actions"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
         '<div class="msg" id="crMsg"></div></div>';
       document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
       document.getElementById("crSave").onclick=async function(){
@@ -2267,7 +2785,7 @@
         var name=document.getElementById("crName").value.trim();
         if(!name){ msg.className='msg error'; msg.textContent='Please enter a raffle name.'; return; }
         btn.disabled=true; msg.className='msg'; msg.textContent='Creating…';
-        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null});
+        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null,p_audience:(document.getElementById("crAudience")||{}).value||"both",p_charity_blurb:(document.getElementById("crCharity")||{}).value||null});
         if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; btn.disabled=false; return; }
         renderRaffles();
       };
@@ -2277,7 +2795,7 @@
       if(!list.length){ L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; return; }
       L.innerHTML='';
       list.forEach(function(e){
-        var card=document.createElement('div'); card.className='dir-card'; card.style.marginBottom='12px';
+        var card=document.createElement('div'); card.className='raffle-panel'; card.style.marginBottom='12px';
         var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+RE(e.name)+'</b>'+
           '<span style="font-size:12px;color:var(--muted);">'+(e.is_active?'live':'hidden')+(e.mine?'':' · (officer)')+'</span></div>';
         var body='';
@@ -2299,6 +2817,7 @@
             row.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid rgba(168,128,28,.25);border-radius:10px;padding:8px;';
             row.innerHTML=(b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;" />':'<div style="width:54px;height:54px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;">🧺</div>')+
               '<div style="flex:1;min-width:0;"><div style="font-weight:600;">'+RE(b.name)+'</div>'+
+              (b.contents?'<div style="font-size:12px;color:#3a3a2e;margin-top:2px;"><b>Inside:</b> '+RE(b.contents)+'</div>':'')+
               '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' tix'+(b.winner_name?' · 🏆 '+RE(b.winner_name):'')+'</div></div>'+
               '<div style="display:flex;flex-direction:column;gap:4px;">'+
                 '<button class="btn mrEditB" type="button" style="padding:3px 8px;font-size:12px;">Edit</button>'+
@@ -2321,9 +2840,11 @@
     document.addEventListener("keydown",e=>{ if(e.key==="Escape" && window.closeRaffles) closeRaffles(); });
   </script>
 
-<script src="assets/members-desk.js" defer></script>
-  <script src="assets/kos-event-studio.js" defer></script>
-  <script src="assets/kos-shop-studio.js" defer></script>
+<script src="assets/members-desk.js?v=20260913h1" defer></script>
+  <script src="assets/kos-event-studio.js?v=20260911f1" defer></script>
+  <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
+<script src="assets/kos-qr-studio.js?v=20260909b"></script>
   <script src="assets/kos-reports.js" defer></script>
+  <script src="assets/kos-all-krewe-messages.js" defer></script>
 </body>
 </html>

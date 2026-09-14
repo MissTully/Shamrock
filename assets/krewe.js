@@ -167,11 +167,55 @@
   else init();
 })();
 
+
 (function () {
-  var path = (location.pathname.split("/").pop() || "").toLowerCase();
-  if (path !== "members.html") return;
-  var s = document.createElement("script");
-  s.src = "assets/members-desk.js";
-  s.defer = true;
-  document.head.appendChild(s);
+  var PUBLIC_GROUP_URL = "https://www.facebook.com/groups/kreweofshamrock";
+  var SECRETARY = "secretary@kreweofshamrock.com";
+  function fixFooters() {
+    var foots = document.querySelectorAll("footer.krewe-foot, footer.site-footer");
+    for (var i = 0; i < foots.length; i++) {
+      var foot = foots[i];
+      // Contact row: replace Report/Contact Gmail/digital lines with secretary only
+      var links = foot.querySelectorAll(".flinks");
+      var contactRow = null;
+      for (var j = 0; j < links.length; j++) {
+        var t = (links[j].textContent || "").toLowerCase();
+        var html = (links[j].innerHTML || "").toLowerCase();
+        if (t.indexOf("report") !== -1 || t.indexOf("contact") !== -1 || html.indexOf("mailto:") !== -1) {
+          // skip nav flinks (Home/Events…) — those have many nav anchors and no mailto usually
+          if (html.indexOf("mailto:") !== -1 || t.indexOf("report") !== -1 || t.indexOf("contact:") !== -1) {
+            contactRow = links[j];
+            break;
+          }
+        }
+      }
+      if (contactRow) {
+        contactRow.setAttribute("data-kos-contact", "1");
+        contactRow.innerHTML = '<a href="mailto:' + SECRETARY + '">Contact: ' + SECRETARY + "</a>";
+      } else if (!foot.querySelector("[data-kos-contact]")) {
+        var row = document.createElement("div");
+        row.className = "flinks";
+        row.setAttribute("data-kos-contact", "1");
+        row.style.marginBottom = "8px";
+        row.innerHTML = '<a href="mailto:' + SECRETARY + '">Contact: ' + SECRETARY + "</a>";
+        var slainte = foot.querySelector(".slainte");
+        if (slainte) foot.insertBefore(row, slainte);
+        else foot.appendChild(row);
+      }
+      // Public Facebook Group only
+      if (!foot.querySelector("[data-kos-social]")) {
+        var srow = document.createElement("div");
+        srow.className = "flinks";
+        srow.setAttribute("data-kos-social", "1");
+        srow.style.marginBottom = "8px";
+        srow.innerHTML = '<a href="' + PUBLIC_GROUP_URL + '" target="_blank" rel="noopener noreferrer">Facebook Group</a>';
+        var contact = foot.querySelector("[data-kos-contact]");
+        var before = contact || foot.querySelector(".slainte");
+        if (before) foot.insertBefore(srow, before);
+        else foot.appendChild(srow);
+      }
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fixFooters);
+  else fixFooters();
 })();

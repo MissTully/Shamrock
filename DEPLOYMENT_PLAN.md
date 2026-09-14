@@ -417,7 +417,7 @@ emails will fire and sample people will appear in the directory/leaderboards.
 
 ### 5.5 Custom domain (optional but recommended)
 The design doc plans a custom domain (~$12–20/yr). It also unlocks a clean Resend
-sending domain (e.g. `events@kreweofshamrock.org`) for better deliverability than
+sending domain (e.g. `events@kreweofshamrock.com`) for better deliverability than
 a shared vercel.app URL.
 
 ### 5.6 Member onboarding flow (once B-1/B-2 are fixed)

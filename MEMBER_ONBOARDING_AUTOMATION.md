@@ -86,9 +86,10 @@ trigger, with a backfill in the migration; her roster record also carries
 `member_role = 'board'`). Create that account first and the Approvals queue is
 immediately usable. No invented passwords anywhere.
 
-The shared `kreweofshamrocktampa@gmail.com` mailbox remains the **public
-contact address** (Contact / Report a website problem links) only — it is not
-the administrator account.
+Public contact routing (see `CONTACT_EMAILS.md`): `secretary@kreweofshamrock.com`
+is the **public contact address** for general information, and
+`digital@kreweofshamrock.com` receives "Report a website problem" and other
+technical website issues. Neither is the administrator account.
 
 ## 6. Database objects added
 

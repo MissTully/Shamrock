@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260909m2" />
 <style>
 .mem-glance{padding:20px 26px 4px;}
 .mem-glance h2{font-family:var(--display);color:var(--green-800);text-align:center;margin:0 0 6px;}
@@ -19,6 +19,13 @@
 .mem-table thead th{background:var(--green-800);color:#f6efdc;font-family:var(--display);letter-spacing:.4px;}
 .mem-table td:first-child{font-weight:600;color:var(--green-800);}
 .mg-note{font-size:14px;color:var(--muted);margin:12px 0 4px;}
+</style>
+<style>
+/* MOBILE MEMBERSHIP APP */
+@media (max-width:680px){
+  .krewe-form .row{ flex-direction:column; gap:0; }
+  form.krewe-form{ padding:20px 16px 24px; }
+}
 </style>
 </head>
 <body>
@@ -122,6 +129,23 @@
         <label for="phone">Phone <span class="hint">(optional)</span></label>
         <input id="phone" type="tel" autocomplete="tel" />
 
+        <label for="street">Mailing address</label>
+        <input id="street" type="text" required autocomplete="street-address" placeholder="Street" />
+        <div class="row">
+          <div>
+            <label for="city">City</label>
+            <input id="city" type="text" required autocomplete="address-level2" />
+          </div>
+          <div>
+            <label for="state">State</label>
+            <input id="state" type="text" required autocomplete="address-level1" maxlength="20" placeholder="FL" />
+          </div>
+          <div>
+            <label for="zip">ZIP</label>
+            <input id="zip" type="text" required autocomplete="postal-code" maxlength="16" />
+          </div>
+        </div>
+
         <label for="notes">Tell us a bit about yourself <span class="hint">(optional)</span></label>
         <textarea id="notes" placeholder="Why you'd like to join, how you heard about us, your interests..."></textarea>
 
@@ -150,7 +174,7 @@
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
 </div>
-    <div class="flinks" style="margin-bottom:8px;"><a href="mailto:kreweofshamrocktampa@gmail.com?subject=Website%20issue%20report">Report a website problem</a> · <a href="mailto:kreweofshamrocktampa@gmail.com">Contact</a></div>
+    <div class="flinks" style="margin-bottom:8px;"><a href="mailto:secretary@kreweofshamrock.com">Contact: secretary@kreweofshamrock.com</a></div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
     <div class="fine">© Krewe of Shamrock. Celebrating Irish heritage all year round.</div>
   </footer>
@@ -183,6 +207,10 @@
         p_last_name: document.getElementById("lastName").value.trim(),
         p_email: document.getElementById("email").value.trim(),
         p_phone: document.getElementById("phone").value.trim() || null,
+        p_street_address: document.getElementById("street").value.trim(),
+        p_city: document.getElementById("city").value.trim(),
+        p_state: document.getElementById("state").value.trim(),
+        p_zip: document.getElementById("zip").value.trim(),
         p_notes: document.getElementById("notes").value.trim() || null
       });
       btn.disabled = false; btn.textContent = "☘ Submit application";
