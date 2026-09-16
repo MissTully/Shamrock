@@ -34,12 +34,10 @@
   .doc-table th{background:#fbf6e9;font-family:var(--display);color:var(--green-800);font-size:.85rem;font-weight:600;}
   .doc-actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 18px;}
   .doc-actions a{min-height:44px;display:inline-flex;align-items:center;}
-  .doc-pdf-frame{width:100%;min-height:70vh;height:720px;border:1px solid rgba(168,128,28,.35);border-radius:12px;background:#fff;}
-  .doc-pdf-fallback{margin:10px 0 0;font-size:.95rem;color:var(--muted);}
+  .doc-card[id],.doc-toc a{scroll-margin-top:84px;}
   @media (max-width:640px){
     .doc-sheet{padding:20px 14px 40px;}
     .doc-sheet h1{font-size:1.4rem;}
-    .doc-pdf-frame{min-height:60vh;height:520px;}
   }
 </style>
 </head>
@@ -305,18 +303,6 @@
       <li>05 June 2025</li>
     </ul>
   </article>
-
-  <div class="doc-card" id="official-pdf">
-    <h2 style="margin-top:0;">Official PDF</h2>
-    <p>The typeset original is stored with these Member Hub documents. Open it in a new tab if you want the printed layout, or read the full text in the sections above.</p>
-    <div class="doc-actions" style="margin-bottom:12px;">
-      <a class="btn btn-primary" href="krewe-of-shamrock-bylaws.pdf" target="_blank" rel="noopener">Open / download official PDF</a>
-    </div>
-    <object class="doc-pdf-frame" data="krewe-of-shamrock-bylaws.pdf" type="application/pdf" aria-label="Official Krewe of Shamrock bylaws PDF">
-      <p class="doc-pdf-fallback">This browser cannot display the PDF on the page. <a href="krewe-of-shamrock-bylaws.pdf" target="_blank" rel="noopener">Open the official PDF</a> instead. The full bylaws text is also in the sections above.</p>
-    </object>
-    <p class="doc-pdf-fallback">On some phones the in-page viewer is limited. Use <a href="krewe-of-shamrock-bylaws.pdf" target="_blank" rel="noopener">Open / download official PDF</a> if the viewer is blank.</p>
-  </div>
 
   <div class="doc-actions">
     <a class="btn btn-primary" href="krewe-of-shamrock-bylaws.pdf" target="_blank" rel="noopener">Open / download official PDF</a>
