@@ -15,6 +15,7 @@
     "Treasurer",
     "Secretary",
     "Board Member",
+    "Board",
     "Committee Chair of Finance",
     "Committee Chair of Bylaws",
     "Committee Chair of Charity",

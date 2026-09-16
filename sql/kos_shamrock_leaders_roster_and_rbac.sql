@@ -43,7 +43,7 @@ AS $$
     WHEN btrim(coalesce(p_title, '')) ~* '\S.+\s+Committee Chair$' THEN
       btrim(substring(btrim(p_title) from '(?i)^(.*)\s+Committee Chair$'))
     WHEN btrim(coalesce(p_title, '')) ~* '\S.+\s+Chair$'
-         AND btrim(p_title) !~* '^(President|Vice President|Treasurer|Secretary|Board Member)$' THEN
+         AND btrim(p_title) !~* '^(President|Vice President|Treasurer|Secretary|Board Member|Board)$' THEN
       btrim(substring(btrim(p_title) from '(?i)^(.*)\s+Chair$'))
     ELSE NULL
   END;
@@ -93,7 +93,8 @@ BEGIN
     ON CONFLICT (user_id, role) DO NOTHING;
   END IF;
 
-  -- Display titles (President, Treasurer, Board Member, Committee Chair of X)
+  -- Display titles: President / Treasurer / Secretary / Board Member|Board /
+  -- "Committee Chair of X" and "Chair of X" (Douglas Tully).
   FOREACH t IN ARRAY regexp_split_to_array(coalesce(rec.officer_title, ''), '\s*·\s*')
   LOOP
     t := btrim(t);
@@ -115,10 +116,24 @@ BEGIN
       CROSS JOIN (VALUES ('secretary'), ('officer')) AS x(r)
       WHERE p.member_id = p_member
       ON CONFLICT (user_id, role) DO NOTHING;
-    ELSIF t ILIKE 'Board Member' THEN
+    ELSIF t ILIKE 'Board Member' OR t ILIKE 'Board' THEN
       INSERT INTO public.member_roles (user_id, role)
       SELECT p.id, 'board' FROM public.profiles p WHERE p.member_id = p_member
       ON CONFLICT (user_id, role) DO NOTHING;
+    ELSIF t ~* '^Committee Chair of\s+\S' OR t ~* '^Chair of\s+\S' THEN
+      v_committee := coalesce(
+        nullif(public.kos_committee_from_chair_title(t), ''),
+        btrim(substring(t from '(?i)^(?:Committee\s+)?Chair of\s+(.*)$'))
+      );
+      IF v_committee IS NOT NULL AND v_committee <> '' THEN
+        INSERT INTO public.member_roles (user_id, role, committee)
+        SELECT p.id, 'committee', v_committee
+        FROM public.profiles p
+        WHERE p.member_id = p_member
+        ON CONFLICT (user_id, role) DO UPDATE
+          SET committee = coalesce(excluded.committee, public.member_roles.committee),
+              granted_at = now();
+      END IF;
     ELSE
       v_committee := public.kos_committee_from_chair_title(t);
       IF v_committee IS NOT NULL AND v_committee <> '' THEN
@@ -219,7 +234,7 @@ BEGIN
       v_extra := array_cat(v_extra, ARRAY['treasurer','officer']);
     ELSIF v_title ILIKE 'Secretary' THEN
       v_extra := array_cat(v_extra, ARRAY['secretary','officer']);
-    ELSIF v_title ILIKE 'Board Member' THEN
+    ELSIF v_title ILIKE 'Board Member' OR v_title ILIKE 'Board' THEN
       v_extra := array_append(v_extra, 'board');
     ELSIF public.kos_committee_from_chair_title(v_title) IS NOT NULL THEN
       v_extra := array_append(v_extra, 'committee');

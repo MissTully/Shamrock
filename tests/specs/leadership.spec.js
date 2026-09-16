@@ -71,6 +71,14 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
   });
   expect(occupiedTech).toEqual(["Douglas Tully"]);
   expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Chair of Technology"))).toEqual(["committee"]);
+  expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Board"))).toEqual(["board"]);
+  const boardAlias = await page.evaluate(() => {
+    const grouped = window.KOS_LEADERSHIP.groupLeaders([
+      { member_id: "m", first_name: "Melissa", last_name: "Tully", officer_title: "Board" }
+    ]);
+    return grouped.board.map((x) => x.name);
+  });
+  expect(boardAlias).toContain("Melissa Tully");
 
   const html = await page.content();
   expect(html).not.toMatch(/Mandy Franklin|Dayna Olmsted/);

@@ -1,9 +1,8 @@
--- Recognize "Chair of X" (Douglas Tully = Chair of Technology) in
--- kos_sync_roster_role_grants, then apply grants for every linked Auth user.
--- Does not change display titles. Does not invent emails or people.
--- Does not demote Doug. Does not reintroduce Mandy Franklin or Dayna Olmsted.
--- Tim stays President; Patrick stays Treasurer · Committee Chair of Finance.
--- Applied to oazwkwflgbthojvnclfc as shamrock_leaders_chair_grants.
+-- kos_sync_roster_role_grants: match both "Committee Chair of X" and "Chair of X"
+-- (Doug’s live title), and treat "Board" like "Board Member" (Melissa).
+-- Does not rewrite display titles. Does not invent people. Does not reintroduce
+-- Mandy Franklin or Dayna Olmsted. Tim stays President; Patrick stays Treasurer.
+-- Applied to oazwkwflgbthojvnclfc as shamrock_leaders_sync_chair_of_and_board.
 
 CREATE OR REPLACE FUNCTION public.kos_committee_from_chair_title(p_title text)
 RETURNS text
@@ -138,8 +137,6 @@ $$;
 
 REVOKE ALL ON FUNCTION public.kos_sync_roster_role_grants(uuid) FROM PUBLIC, anon, authenticated;
 
--- Apply grants for every linked Auth user with a roster title or access role.
--- Does not UPDATE members (titles stay as confirmed).
 SELECT public.kos_sync_roster_role_grants(m.id)
   FROM public.members m
  WHERE m.merged_into IS NULL
@@ -149,25 +146,3 @@ SELECT public.kos_sync_roster_role_grants(m.id)
      coalesce(m.officer_title, '') <> ''
      OR m.member_role IN ('officer', 'board', 'captain')
    );
-
--- Explicit: Douglas Tully keeps "Chair of Technology" (not rewritten to
--- Committee Chair of Technology). member_role officer → officer grant;
--- kos_committee_from_chair_title('Chair of Technology') → committee=Technology.
-INSERT INTO public.member_roles (user_id, role)
-SELECT p.id, 'officer'
-FROM public.profiles p
-JOIN public.members m ON m.id = p.member_id
-WHERE m.merged_into IS NULL
-  AND lower(m.email) = lower('Dougtully@protonmail.com')
-ON CONFLICT (user_id, role) DO NOTHING;
-
-INSERT INTO public.member_roles (user_id, role, committee)
-SELECT p.id, 'committee', 'Technology'
-FROM public.profiles p
-JOIN public.members m ON m.id = p.member_id
-WHERE m.merged_into IS NULL
-  AND lower(m.email) = lower('Dougtully@protonmail.com')
-  AND public.kos_committee_from_chair_title(coalesce(m.officer_title, '')) ILIKE 'Technology'
-ON CONFLICT (user_id, role) DO UPDATE
-  SET committee = 'Technology',
-      granted_at = now();

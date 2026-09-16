@@ -66,7 +66,8 @@
   }
 
   function isBoardTitle(title) {
-    return String(title || "").trim().toLowerCase() === "board member";
+    var t = String(title || "").trim().toLowerCase();
+    return t === "board member" || t === "board";
   }
 
   function rolesForTitle(title) {
