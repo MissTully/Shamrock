@@ -19,6 +19,7 @@
     "Committee Chair of Bylaws",
     "Committee Chair of Charity",
     "Committee Chair of Technology",
+    "Chair of Technology",
     "Committee Chair of Membership",
     "Committee Chair of Social",
     "Committee Chair of Float",

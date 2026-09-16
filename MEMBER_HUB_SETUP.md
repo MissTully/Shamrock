@@ -113,3 +113,8 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   do not list them as Social or Technology chair, and run
   `sql/kos_shamrock_leaders_remove_departed.sql` if those seed rows exist.
 - Do not invent a Parade, Social, or Technology chair or any email/phone.
+  Douglas Tully already holds **Chair of Technology** — keep that display
+  title; `kos_sync_roster_role_grants()` recognizes `Chair of X` as well as
+  `Committee Chair of X` and writes officer + `committee:Technology` for his
+  linked Auth user without demoting him. Run
+  `sql/kos_shamrock_leaders_chair_grants.sql` if that grant is still missing.

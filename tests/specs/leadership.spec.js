@@ -70,6 +70,7 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
     return grouped.chairs.filter((x) => x.committee === "Technology").map((x) => x.name + (x.vacant ? "|vacant" : ""));
   });
   expect(occupiedTech).toEqual(["Douglas Tully"]);
+  expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Chair of Technology"))).toEqual(["committee"]);
 
   const html = await page.content();
   expect(html).not.toMatch(/Mandy Franklin|Dayna Olmsted/);

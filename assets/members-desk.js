@@ -742,12 +742,17 @@
     if (!who) return;
     var p = window.kosProfile || {};
     var nm = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "").toString().trim();
+    var title = (p.officer_title || "").toString().trim();
     who.classList.add("hub-signed-pill");
     if (!who.querySelector(".dot")) {
       who.innerHTML = '<span class="dot" aria-hidden="true"></span><span class="hub-signed-label"></span>';
     }
     var label = who.querySelector(".hub-signed-label");
-    if (label) label.textContent = nm ? ("Signed in as " + nm) : "Signed in";
+    if (label) {
+      if (nm && title) label.textContent = "Signed in as " + nm + " · " + title;
+      else if (nm) label.textContent = "Signed in as " + nm;
+      else label.textContent = "Signed in";
+    }
     who.classList.add("is-on");
     who.setAttribute("aria-live", "polite");
   }

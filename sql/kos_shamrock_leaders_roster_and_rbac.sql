@@ -27,6 +27,30 @@ ALTER TABLE public.members
 COMMENT ON COLUMN public.members.officer_title IS
   'Display title(s) shown on the profile and directory, joined with · when a person holds more than one. Chair / treasurer / secretary phrases are also used by can_manage_* RBAC helpers.';
 
+-- Parse "Committee Chair of X", "Chair of X", "X Committee Chair", "X Chair".
+-- Used so Douglas Tully's existing "Chair of Technology" grant-syncs without
+-- rewriting his display title. Does not invent a Technology chair.
+CREATE OR REPLACE FUNCTION public.kos_committee_from_chair_title(p_title text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE
+    WHEN btrim(coalesce(p_title, '')) ~* '^Committee Chair of\s+\S' THEN
+      btrim(substring(btrim(p_title) from '(?i)^Committee Chair of\s+(.*)$'))
+    WHEN btrim(coalesce(p_title, '')) ~* '^Chair of\s+\S' THEN
+      btrim(substring(btrim(p_title) from '(?i)^Chair of\s+(.*)$'))
+    WHEN btrim(coalesce(p_title, '')) ~* '\S.+\s+Committee Chair$' THEN
+      btrim(substring(btrim(p_title) from '(?i)^(.*)\s+Committee Chair$'))
+    WHEN btrim(coalesce(p_title, '')) ~* '\S.+\s+Chair$'
+         AND btrim(p_title) !~* '^(President|Vice President|Treasurer|Secretary|Board Member)$' THEN
+      btrim(substring(btrim(p_title) from '(?i)^(.*)\s+Chair$'))
+    ELSE NULL
+  END;
+$$;
+
+REVOKE ALL ON FUNCTION public.kos_committee_from_chair_title(text) FROM PUBLIC, anon, authenticated;
+
 -- Canonical title → grant mapping used at signup, profile save, and seed.
 CREATE OR REPLACE FUNCTION public.kos_sync_roster_role_grants(p_member uuid)
 RETURNS void
@@ -95,9 +119,9 @@ BEGIN
       INSERT INTO public.member_roles (user_id, role)
       SELECT p.id, 'board' FROM public.profiles p WHERE p.member_id = p_member
       ON CONFLICT (user_id, role) DO NOTHING;
-    ELSIF t ~* '^Committee Chair of ' THEN
-      v_committee := btrim(substring(t from '(?i)^Committee Chair of\s+(.*)$'));
-      IF v_committee <> '' THEN
+    ELSE
+      v_committee := public.kos_committee_from_chair_title(t);
+      IF v_committee IS NOT NULL AND v_committee <> '' THEN
         INSERT INTO public.member_roles (user_id, role, committee)
         SELECT p.id, 'committee', v_committee
         FROM public.profiles p
@@ -197,7 +221,7 @@ BEGIN
       v_extra := array_cat(v_extra, ARRAY['secretary','officer']);
     ELSIF v_title ILIKE 'Board Member' THEN
       v_extra := array_append(v_extra, 'board');
-    ELSIF v_title ~* '^Committee Chair of ' THEN
+    ELSIF public.kos_committee_from_chair_title(v_title) IS NOT NULL THEN
       v_extra := array_append(v_extra, 'committee');
     END IF;
   END LOOP;
@@ -445,10 +469,17 @@ BEGIN
 
   -- Authoritative officer split: Tim = President (drop leftover Treasurer
   -- grant). Patrick = Treasurer + Finance chair (ensure treasurer grant).
-  PERFORM public.kos_sync_roster_role_grants(id)
-    FROM public.members
-   WHERE merged_into IS NULL
-     AND lower(email) IN ('tim.fitzpatrick@lumen.com', 'ppustay1@gmail.com');
+  -- Also grant-sync every other linked leader (including Douglas Tully,
+  -- Chair of Technology) without rewriting their display titles.
+  PERFORM public.kos_sync_roster_role_grants(m.id)
+    FROM public.members m
+   WHERE m.merged_into IS NULL
+     AND coalesce(m.membership_status, 'active') IN ('active', 'pending-renewal')
+     AND EXISTS (SELECT 1 FROM public.profiles p WHERE p.member_id = m.id)
+     AND (
+       coalesce(m.officer_title, '') <> ''
+       OR m.member_role IN ('officer', 'board', 'captain')
+     );
 END $$;
 
 -- Melissa 2026-09-16: departed members must not remain in the directory.
