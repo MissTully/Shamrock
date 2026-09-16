@@ -95,3 +95,14 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
 ## Enable Email + Password provider
 - Supabase Dashboard → Authentication → Providers → Email: enable Email, disable “magic link only” if still forced.
 - Confirm email confirmations policy matches board preference (invite-only vs open create-password).
+
+## Shamrock Leaders roster (directory + RBAC)
+- Canonical officer / board / committee-chair titles match the public
+  "Shamrock Leaders" page. The Member Hub directory and the first-login
+  questionnaire use the same labels (`assets/kos-leadership.js`).
+- Apply `sql/kos_shamrock_leaders_roster_and_rbac.sql` (idempotent) to upsert
+  named leaders onto existing roster emails, insert Dayna Olmsted and Mandy
+  Franklin **without invented contact fields**, leave Parade chair vacant
+  (`Open`), and sync `member_roles` grants for any already-linked Auth users.
+  Highest role wins (officer > board > committee).
+- Do not invent a Parade chair or any email/phone.
