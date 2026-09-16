@@ -110,3 +110,32 @@ test("code-of-conduct.html publishes the official Code of Conduct, not a placeho
   const back = page.getByRole("link", { name: /Back to Documents/i }).first();
   await expect(back).toHaveAttribute("href", "../../members.html#docs");
 });
+
+test("members.html #docs shows a Documents card with Bylaws and Code of Conduct", async ({ page }) => {
+  await page.goto("/members.html#docs");
+  await expect(page.locator("#docs")).toBeAttached();
+  await expect(page.locator("#docs h2")).toHaveText(/^Documents$/i);
+  await expect(page.locator("#docs")).toContainText("Governing documents");
+  await expect(page.locator("#docs")).not.toContainText("Awaiting officer upload");
+  await expect(page.locator('#docs a[href="assets/docs/bylaws.html"]')).toHaveText(/Bylaws/);
+  await expect(page.locator('#docs a[href="assets/docs/code-of-conduct.html"]')).toHaveText(/Code of Conduct/);
+
+  await page.evaluate(() => {
+    const auth = document.getElementById("authStage");
+    if (auth) auth.style.display = "none";
+    const content = document.getElementById("memberContent");
+    if (content) content.style.display = "block";
+    if (window.kosRevealDocs) window.kosRevealDocs();
+    else if (window.__hubShowTab) window.__hubShowTab("parade", { skipScroll: true });
+  });
+  await expect.poll(async () => page.evaluate(() => {
+    const card = document.getElementById("docs");
+    const panel = card && card.closest("[data-hub-panel]");
+    return !!(card && panel && panel.classList.contains("hub-on") && panel.getAttribute("data-hub-panel") === "parade");
+  }), { timeout: 8000 }).toBe(true);
+
+  await expect(page.locator("#docs")).toBeVisible();
+  await expect(page.locator("#prCard")).toBeVisible();
+  await expect(page.locator("[data-hub-panel='krewe'] .hub-docs a[href='assets/docs/bylaws.html']")).toBeAttached();
+  await expect(page.locator("[data-hub-panel='krewe'] .hub-docs a[href='assets/docs/code-of-conduct.html']")).toBeAttached();
+});
