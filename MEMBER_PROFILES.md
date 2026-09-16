@@ -12,6 +12,4 @@ On `members.html` after sign-in:
 
 Canonical titles and the role mapping live in `assets/kos-leadership.js`. The roster upsert + RBAC sync is `sql/kos_shamrock_leaders_roster_and_rbac.sql`.
 
-Highest role wins when someone holds more than one title (officer > board > committee chair). Parade chair is vacant (`Open`) until a person is named — do not invent one.
-
-Dayna Olmsted and Mandy Franklin were not on the imported Wild Apricot roster; they are directory rows with **no invented email or phone**. They can be linked when those addresses are known.
+Highest role wins when someone holds more than one title (officer > board > committee chair). Parade and Social chairs are vacant (`Open`) until a person is named — do not invent replacements. Technology is vacant unless a current roster title already names a chair; do not list Dayna Olmsted or Mandy Franklin.

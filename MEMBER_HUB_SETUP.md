@@ -101,8 +101,10 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   "Shamrock Leaders" page. The Member Hub directory and the first-login
   questionnaire use the same labels (`assets/kos-leadership.js`).
 - Apply `sql/kos_shamrock_leaders_roster_and_rbac.sql` (idempotent) to upsert
-  named leaders onto existing roster emails, insert Dayna Olmsted and Mandy
-  Franklin **without invented contact fields**, leave Parade chair vacant
-  (`Open`), and sync `member_roles` grants for any already-linked Auth users.
-  Highest role wins (officer > board > committee).
-- Do not invent a Parade chair or any email/phone.
+  named leaders onto existing roster emails, leave Parade and Social chairs
+  vacant (`Open`), and sync `member_roles` grants for any already-linked Auth
+  users. Highest role wins (officer > board > committee).
+- Mandy Franklin and Dayna Olmsted are **not** in the Krewe: do not seed them,
+  do not list them as Social or Technology chair, and run
+  `sql/kos_shamrock_leaders_remove_departed.sql` if those seed rows exist.
+- Do not invent a Parade, Social, or Technology chair or any email/phone.

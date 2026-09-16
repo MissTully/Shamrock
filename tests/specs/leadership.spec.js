@@ -45,7 +45,9 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
       highest: L.highestMemberRole(["committee", "treasurer", "officer"]),
       officers: grouped.officers.map((x) => x.title + ": " + x.name),
       chairs: grouped.chairs.map((x) => x.name + "|" + x.committee + (x.vacant ? "|vacant" : "")),
-      paradeVacant: grouped.chairs.some((x) => x.vacant && x.committee === "Parade")
+      paradeVacant: grouped.chairs.some((x) => x.vacant && x.committee === "Parade"),
+      socialVacant: grouped.chairs.some((x) => x.vacant && x.committee === "Social"),
+      technologyVacant: grouped.chairs.some((x) => x.vacant && x.committee === "Technology")
     };
   });
 
@@ -57,6 +59,20 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
   expect(catalog.officers).toContain("Treasurer: Patrick Pustay");
   expect(catalog.chairs).toContain("Patrick Pustay|Finance");
   expect(catalog.paradeVacant).toBe(true);
+  expect(catalog.socialVacant).toBe(true);
+  expect(catalog.technologyVacant).toBe(true);
+  expect(catalog.chairs.join(" ")).not.toMatch(/Mandy|Dayna/);
+
+  const occupiedTech = await page.evaluate(() => {
+    const grouped = window.KOS_LEADERSHIP.groupLeaders([
+      { member_id: "9", first_name: "Douglas", last_name: "Tully", officer_title: "Chair of Technology" }
+    ]);
+    return grouped.chairs.filter((x) => x.committee === "Technology").map((x) => x.name + (x.vacant ? "|vacant" : ""));
+  });
+  expect(occupiedTech).toEqual(["Douglas Tully"]);
+
+  const html = await page.content();
+  expect(html).not.toMatch(/Mandy Franklin|Dayna Olmsted/);
 
   assertHealthy(expect, report, "leadership titles");
 });

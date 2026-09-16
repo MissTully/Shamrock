@@ -7,9 +7,12 @@
 -- committee) and the roster member_role column. Highest role wins.
 --
 -- Safe to run more than once. Does not invent emails or phones: known leaders
--- are matched to existing Wild Apricot roster rows by email; Dayna Olmsted
--- and Mandy Franklin (not on the imported roster) are inserted with NULL
--- email. Parade chair is left vacant (no person row).
+-- are matched to existing Wild Apricot roster rows by email. Parade, Social,
+-- and Technology chairs are left vacant unless another named roster person
+-- already holds that chair. Do not invent replacements.
+--
+-- Melissa (2026-09-16): Mandy Franklin and Dayna Olmsted are no longer in the
+-- Krewe — they are not seeded and any prior seed rows are removed.
 --
 -- Applied to project oazwkwflgbthojvnclfc as migration
 -- shamrock_leaders_roster_and_rbac.
@@ -357,11 +360,9 @@ BEGIN
     ('lscuseny@gmail.com',        'Leslie',  'Skrodzki',    'board',   'Board Member'),
     ('tahubbell@hotmail.com',     'Tim',     'Hubbell',     'board',   'Board Member'),
     ('chuckdavis9508@hotmail.com','Chuck',   'Davis',       'board',   'Board Member'),
-    (NULL,                        'Dayna',   'Olmsted',     'board',   'Board Member · Committee Chair of Technology'),
     ('lsugrue99@gmail.com',       'Lisa',    'Sugrue',      'board',   'Board Member · Committee Chair of Membership'),
     ('bweinercrna@me.com',        'Bruce',   'Weiner',      'board',   'Board Member · Committee Chair of Float'),
     ('jcarney1218@gmail.com',     'Jeff',    'Carney',      'board',   'Board Member · Committee Chair of Charity'),
-    (NULL,                        'Mandy',   'Franklin',    'member',  'Committee Chair of Social'),
     ('debrski1@gmail.com',        'Deb',     'Rutkowski',   'member',  'Committee Chair of Merchandise'),
     ('tammymillerkos@gmail.com',  'Tammy',   'Miller',      'member',  'Committee Chair of Merchandise');
 
@@ -423,6 +424,22 @@ BEGIN
     PERFORM public.kos_sync_roster_role_grants(v_id);
   END LOOP;
 END $$;
+
+-- Melissa 2026-09-16: departed members must not remain in the directory.
+DELETE FROM public.possible_duplicates pd
+ USING public.members m
+ WHERE (pd.member_a = m.id OR pd.member_b = m.id)
+   AND (
+     (lower(m.first_name) = 'dayna' AND lower(m.last_name) = 'olmsted')
+     OR (lower(m.first_name) = 'mandy' AND lower(m.last_name) = 'franklin')
+   );
+
+DELETE FROM public.members
+ WHERE email IS NULL
+   AND (
+     (lower(first_name) = 'dayna' AND lower(last_name) = 'olmsted')
+     OR (lower(first_name) = 'mandy' AND lower(last_name) = 'franklin')
+   );
 
 REVOKE ALL ON FUNCTION public.submit_role_request(boolean, text[], jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.submit_role_request(boolean, text[], jsonb) TO authenticated;

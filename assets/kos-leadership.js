@@ -44,12 +44,20 @@
   }
 
   function committeeFromChairTitle(title) {
-    var m = String(title || "").match(/^committee\s+chair\s+of\s+(.+)$/i);
-    return m ? m[1].trim() : "";
+    var t = String(title || "").trim();
+    var m = t.match(/^committee\s+chair\s+of\s+(.+)$/i);
+    if (m) return m[1].trim();
+    m = t.match(/^chair\s+of\s+(.+)$/i);
+    if (m) return m[1].trim();
+    m = t.match(/^(.+?)\s+committee\s+chair$/i);
+    if (m) return m[1].trim();
+    m = t.match(/^(.+?)\s+chair$/i);
+    if (m) return m[1].trim();
+    return "";
   }
 
   function isChairTitle(title) {
-    return /^committee\s+chair\s+of\s+/i.test(String(title || "").trim());
+    return !!committeeFromChairTitle(title);
   }
 
   function isOfficerTitle(title) {
@@ -148,7 +156,7 @@
     var officers = [];
     var board = [];
     var chairs = [];
-    var seenParade = false;
+    var held = {};
     (rows || []).forEach(function (m) {
       var titles = splitTitles(m.officer_title);
       if (!titles.length) return;
@@ -169,22 +177,23 @@
           var committee = committeeFromChairTitle(title);
           card.committee = committee;
           chairs.push(card);
-          if (String(committee).toLowerCase() === "parade") seenParade = true;
+          if (committee) held[committee.toLowerCase()] = true;
         }
       });
     });
-    if (!seenParade) {
+    COMMITTEES.forEach(function (committee) {
+      if (held[committee.toLowerCase()]) return;
       chairs.push({
         member_id: null,
         first_name: "Open",
         last_name: "",
         name: "Open",
-        title: chairTitle("Parade"),
-        committee: "Parade",
+        title: chairTitle(committee),
+        committee: committee,
         photo_url: null,
         vacant: true
       });
-    }
+    });
     return { officers: officers, board: board, chairs: chairs };
   }
 
