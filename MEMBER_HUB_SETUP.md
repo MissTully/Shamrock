@@ -120,3 +120,8 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   same as **Board Member**. Run
   `sql/kos_shamrock_leaders_sync_chair_of_and_board.sql` if those grants are
   still missing.
+- Tammy Miller (`tammymillerkos@gmail.com`) is **Chair of Merchandise**
+  (short form, same as Doug’s Chair of Technology), `member_role = member`
+  so Shop Studio stays scoped. Deb Rutkowski remains Merchandise co-chair
+  (`Co-Chair of Merchandise` on live) until Melissa says otherwise — do not
+  remove her.

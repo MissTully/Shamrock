@@ -25,7 +25,9 @@
     "Committee Chair of Social",
     "Committee Chair of Float",
     "Committee Chair of Parade",
-    "Committee Chair of Merchandise"
+    "Committee Chair of Merchandise",
+    "Chair of Merchandise",
+    "Co-Chair of Merchandise"
   ];
 
   var ACCESS_LABEL = {

@@ -13,6 +13,8 @@ AS $$
   SELECT CASE
     WHEN btrim(coalesce(p_title, '')) ~* '^Committee Chair of\s+\S' THEN
       btrim(substring(btrim(p_title) from '(?i)^Committee Chair of\s+(.*)$'))
+    WHEN btrim(coalesce(p_title, '')) ~* '^(Committee\s+)?Co[- ]?Chair of\s+\S' THEN
+      btrim(substring(btrim(p_title) from '(?i)^(?:Committee\s+)?Co[- ]?Chair of\s+(.*)$'))
     WHEN btrim(coalesce(p_title, '')) ~* '^Chair of\s+\S' THEN
       btrim(substring(btrim(p_title) from '(?i)^Chair of\s+(.*)$'))
     WHEN btrim(coalesce(p_title, '')) ~* '\S.+\s+Committee Chair$' THEN
@@ -91,10 +93,10 @@ BEGIN
       INSERT INTO public.member_roles (user_id, role)
       SELECT p.id, 'board' FROM public.profiles p WHERE p.member_id = p_member
       ON CONFLICT (user_id, role) DO NOTHING;
-    ELSIF t ~* '^Committee Chair of\s+\S' OR t ~* '^Chair of\s+\S' THEN
+    ELSIF t ~* '^(Committee\s+)?(Co[- ]?)?Chair of\s+\S' THEN
       v_committee := coalesce(
         nullif(public.kos_committee_from_chair_title(t), ''),
-        btrim(substring(t from '(?i)^(?:Committee\s+)?Chair of\s+(.*)$'))
+        btrim(substring(t from '(?i)^(?:Committee\s+)?(?:Co[- ]?)?Chair of\s+(.*)$'))
       );
       IF v_committee IS NOT NULL AND v_committee <> '' THEN
         INSERT INTO public.member_roles (user_id, role, committee)
