@@ -104,6 +104,11 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   named leaders onto existing roster emails, leave Parade and Social chairs
   vacant (`Open`), and sync `member_roles` grants for any already-linked Auth
   users. Highest role wins (officer > board > committee).
+- Tim Fitzpatrick (`tim.fitzpatrick@lumen.com`) is **President**,
+  `member_role = officer` — **not** Treasurer. Patrick Pustay
+  (`ppustay1@gmail.com`) is **Treasurer · Committee Chair of Finance**,
+  `member_role = officer`. Run `sql/kos_shamrock_leaders_president_treasurer.sql`
+  if a leftover Treasurer grant is still on Tim or missing on Patrick.
 - Mandy Franklin and Dayna Olmsted are **not** in the Krewe: do not seed them,
   do not list them as Social or Technology chair, and run
   `sql/kos_shamrock_leaders_remove_departed.sql` if those seed rows exist.

@@ -108,6 +108,23 @@ BEGIN
       END IF;
     END IF;
   END LOOP;
+
+  -- Drop leftover treasurer/secretary grants when the display title no longer
+  -- includes those offices (President must not keep a Treasurer grant).
+  IF coalesce(rec.officer_title, '') !~* 'treasurer' THEN
+    DELETE FROM public.member_roles r
+     USING public.profiles p
+     WHERE r.user_id = p.id
+       AND p.member_id = p_member
+       AND r.role = 'treasurer';
+  END IF;
+  IF coalesce(rec.officer_title, '') !~* 'secretary' THEN
+    DELETE FROM public.member_roles r
+     USING public.profiles p
+     WHERE r.user_id = p.id
+       AND p.member_id = p_member
+       AND r.role = 'secretary';
+  END IF;
 END;
 $$;
 
@@ -352,8 +369,10 @@ BEGIN
   ) ON COMMIT DROP;
 
   INSERT INTO kos_leaders (match_email, first_name, last_name, member_role, officer_title) VALUES
+    -- Authoritative: Tim Fitzpatrick is President (not Treasurer).
     ('tim.fitzpatrick@lumen.com', 'Tim',     'Fitzpatrick', 'officer', 'President'),
     ('jimsugruemtm@gmail.com',    'Jim',     'Sugrue',      'officer', 'Vice President · Committee Chair of Bylaws'),
+    -- Authoritative: Patrick Pustay is Treasurer + Finance chair.
     ('ppustay1@gmail.com',        'Patrick', 'Pustay',      'officer', 'Treasurer · Committee Chair of Finance'),
     ('dgfitzpa@gmail.com',        'Debbie',  'Fitzpatrick', 'officer', 'Secretary'),
     ('sharon83stevens@gmail.com', 'Sharon',  'Stevens',     'board',   'Board Member'),
@@ -423,6 +442,13 @@ BEGIN
 
     PERFORM public.kos_sync_roster_role_grants(v_id);
   END LOOP;
+
+  -- Authoritative officer split: Tim = President (drop leftover Treasurer
+  -- grant). Patrick = Treasurer + Finance chair (ensure treasurer grant).
+  PERFORM public.kos_sync_roster_role_grants(id)
+    FROM public.members
+   WHERE merged_into IS NULL
+     AND lower(email) IN ('tim.fitzpatrick@lumen.com', 'ppustay1@gmail.com');
 END $$;
 
 -- Melissa 2026-09-16: departed members must not remain in the directory.
