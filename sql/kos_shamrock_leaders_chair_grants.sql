@@ -135,3 +135,25 @@ SELECT public.kos_sync_roster_role_grants(m.id)
      coalesce(m.officer_title, '') <> ''
      OR m.member_role IN ('officer', 'board', 'captain')
    );
+
+-- Explicit: Douglas Tully keeps "Chair of Technology" (not rewritten to
+-- Committee Chair of Technology). member_role officer → officer grant;
+-- kos_committee_from_chair_title('Chair of Technology') → committee=Technology.
+INSERT INTO public.member_roles (user_id, role)
+SELECT p.id, 'officer'
+FROM public.profiles p
+JOIN public.members m ON m.id = p.member_id
+WHERE m.merged_into IS NULL
+  AND lower(m.email) = lower('Dougtully@protonmail.com')
+ON CONFLICT (user_id, role) DO NOTHING;
+
+INSERT INTO public.member_roles (user_id, role, committee)
+SELECT p.id, 'committee', 'Technology'
+FROM public.profiles p
+JOIN public.members m ON m.id = p.member_id
+WHERE m.merged_into IS NULL
+  AND lower(m.email) = lower('Dougtully@protonmail.com')
+  AND public.kos_committee_from_chair_title(coalesce(m.officer_title, '')) ILIKE 'Technology'
+ON CONFLICT (user_id, role) DO UPDATE
+  SET committee = 'Technology',
+      granted_at = now();
