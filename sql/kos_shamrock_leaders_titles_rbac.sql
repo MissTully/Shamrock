@@ -72,20 +72,16 @@ UPDATE public.members SET
   updated_at = now()
 WHERE id = '1e449202-b472-43b1-93b9-18c4f55b36cc'; -- Bruce Weiner
 
--- Merchandise: Tammy Miller alone is Chair of Merchandise (member_role member).
--- Melissa 2026-09-16: Deb Rutkowski is not Merchandise chair — clear that title.
+-- Merchandise co-chairs: Tammy Miller and Deb Rutkowski, both Chair of Merchandise.
+-- member_role stays member so Shop Studio remains shopOnly.
 UPDATE public.members SET
   officer_title = 'Chair of Merchandise',
   updated_at = now()
-WHERE id = '2a2355ce-44e7-46fa-a064-bbc39c584483' -- Tammy Miller
-  AND email ILIKE 'tammymillerkos@gmail.com';
-
-UPDATE public.members SET
-  officer_title = NULL,
-  updated_at = now()
-WHERE id = '02e85f52-7a8e-4cb9-b8ed-675d6f6e40e6' -- Deb Rutkowski
-  AND email ILIKE 'debrski1@gmail.com'
-  AND coalesce(officer_title, '') ~* 'merchandise';
+WHERE id IN (
+  '2a2355ce-44e7-46fa-a064-bbc39c584483', -- Tammy Miller
+  '02e85f52-7a8e-4cb9-b8ed-675d6f6e40e6'  -- Deb Rutkowski
+)
+AND email ILIKE ANY (ARRAY['tammymillerkos@gmail.com', 'debrski1@gmail.com']);
 
 -- 2) Grants from display titles (Chair of X included). Does not invent people.
 DO $$

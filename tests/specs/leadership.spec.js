@@ -74,11 +74,12 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
   expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Chair of Merchandise"))).toEqual(["committee"]);
   const occupiedMerch = await page.evaluate(() => {
     const grouped = window.KOS_LEADERSHIP.groupLeaders([
-      { member_id: "t", first_name: "Tammy", last_name: "Miller", officer_title: "Chair of Merchandise" }
+      { member_id: "t", first_name: "Tammy", last_name: "Miller", officer_title: "Chair of Merchandise" },
+      { member_id: "d", first_name: "Deb", last_name: "Rutkowski", officer_title: "Chair of Merchandise" }
     ]);
     return grouped.chairs.filter((x) => x.committee === "Merchandise").map((x) => x.name + (x.vacant ? "|vacant" : ""));
   });
-  expect(occupiedMerch).toEqual(["Tammy Miller"]);
+  expect(occupiedMerch).toEqual(["Tammy Miller", "Deb Rutkowski"]);
   expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Board"))).toEqual(["board"]);
   const boardAlias = await page.evaluate(() => {
     const grouped = window.KOS_LEADERSHIP.groupLeaders([

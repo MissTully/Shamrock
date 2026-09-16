@@ -120,7 +120,7 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   same as **Board Member**. Run
   `sql/kos_shamrock_leaders_sync_chair_of_and_board.sql` if those grants are
   still missing.
-- Tammy Miller (`tammymillerkos@gmail.com`) is **Chair of Merchandise**
-  (short form, same as Doug’s Chair of Technology), `member_role = member`
-  so Shop Studio stays scoped. Deb Rutkowski is **not** Merchandise chair —
-  do not seed her as co-chair.
+- Tammy Miller (`tammymillerkos@gmail.com`) and Deb Rutkowski
+  (`debrski1@gmail.com`) are both **Chair of Merchandise** (co-chairs;
+  short form, same as Doug’s Chair of Technology), `member_role = member`
+  so Shop Studio stays scoped. Do not drop Deb from the seed.
