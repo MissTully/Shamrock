@@ -72,10 +72,13 @@ test("member login questionnaire lists Shamrock Leaders titles", async ({ page }
   expect(occupiedTech).toEqual(["Douglas Tully"]);
   expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Chair of Technology"))).toEqual(["committee"]);
   expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Chair of Merchandise"))).toEqual(["committee"]);
+  expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Co-Chair of Merchandise"))).toEqual(["committee"]);
+  expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Co Chair of Merchandise"))).toEqual(["committee"]);
+  expect(await page.evaluate(() => window.KOS_LEADERSHIP.rolesForTitle("Committee Co-Chair of Merchandise"))).toEqual(["committee"]);
   const occupiedMerch = await page.evaluate(() => {
     const grouped = window.KOS_LEADERSHIP.groupLeaders([
-      { member_id: "t", first_name: "Tammy", last_name: "Miller", officer_title: "Chair of Merchandise" },
-      { member_id: "d", first_name: "Deb", last_name: "Rutkowski", officer_title: "Chair of Merchandise" }
+      { member_id: "t", first_name: "Tammy", last_name: "Miller", officer_title: "Co-Chair of Merchandise" },
+      { member_id: "d", first_name: "Deb", last_name: "Rutkowski", officer_title: "Co-Chair of Merchandise" }
     ]);
     return grouped.chairs.filter((x) => x.committee === "Merchandise").map((x) => x.name + (x.vacant ? "|vacant" : ""));
   });

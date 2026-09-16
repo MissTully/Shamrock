@@ -1,4 +1,5 @@
--- Recognize "Chair of X" (Douglas Tully = Chair of Technology) in
+-- Recognize "Chair of X" and "Co-Chair of X" (Douglas Tully = Chair of
+-- Technology; Tammy Miller and Deb Rutkowski = Co-Chair of Merchandise) in
 -- kos_sync_roster_role_grants, then apply grants for every linked Auth user.
 -- Does not change display titles. Does not invent emails or people.
 -- Does not demote Doug. Does not reintroduce Mandy Franklin or Dayna Olmsted.

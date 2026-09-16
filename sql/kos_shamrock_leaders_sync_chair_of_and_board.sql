@@ -1,5 +1,5 @@
--- kos_sync_roster_role_grants: match both "Committee Chair of X" and "Chair of X"
--- (Doug’s live title), and treat "Board" like "Board Member" (Melissa).
+-- kos_sync_roster_role_grants: match "Committee Chair of X", "Co-Chair of X",
+-- and "Chair of X" (Doug’s live title), and treat "Board" like "Board Member".
 -- Does not rewrite display titles. Does not invent people. Does not reintroduce
 -- Mandy Franklin or Dayna Olmsted. Tim stays President; Patrick stays Treasurer.
 -- Applied to oazwkwflgbthojvnclfc as shamrock_leaders_sync_chair_of_and_board.

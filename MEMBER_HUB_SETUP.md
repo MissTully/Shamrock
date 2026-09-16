@@ -121,6 +121,6 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   `sql/kos_shamrock_leaders_sync_chair_of_and_board.sql` if those grants are
   still missing.
 - Tammy Miller (`tammymillerkos@gmail.com`) and Deb Rutkowski
-  (`debrski1@gmail.com`) are both **Chair of Merchandise** (co-chairs;
-  short form, same as Doug’s Chair of Technology), `member_role = member`
-  so Shop Studio stays scoped. Do not drop Deb from the seed.
+  (`debrski1@gmail.com`) are both **Co-Chair of Merchandise**,
+  `member_role = member` so Shop Studio stays scoped. `kos_sync` and the
+  directory treat `Co-Chair of X` like `Chair of X` / `Committee Chair of X`.

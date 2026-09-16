@@ -47,7 +47,7 @@
     var t = String(title || "").trim();
     var m = t.match(/^committee\s+chair\s+of\s+(.+)$/i);
     if (m) return m[1].trim();
-    m = t.match(/^(?:committee\s+)?co-?chair\s+of\s+(.+)$/i);
+    m = t.match(/^(?:committee\s+)?co[- ]?chair\s+of\s+(.+)$/i);
     if (m) return m[1].trim();
     m = t.match(/^chair\s+of\s+(.+)$/i);
     if (m) return m[1].trim();

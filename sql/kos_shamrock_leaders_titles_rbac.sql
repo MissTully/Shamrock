@@ -72,10 +72,10 @@ UPDATE public.members SET
   updated_at = now()
 WHERE id = '1e449202-b472-43b1-93b9-18c4f55b36cc'; -- Bruce Weiner
 
--- Merchandise co-chairs: Tammy Miller and Deb Rutkowski, both Chair of Merchandise.
+-- Merchandise co-chairs: Tammy Miller and Deb Rutkowski, both Co-Chair of Merchandise.
 -- member_role stays member so Shop Studio remains shopOnly.
 UPDATE public.members SET
-  officer_title = 'Chair of Merchandise',
+  officer_title = 'Co-Chair of Merchandise',
   updated_at = now()
 WHERE id IN (
   '2a2355ce-44e7-46fa-a064-bbc39c584483', -- Tammy Miller

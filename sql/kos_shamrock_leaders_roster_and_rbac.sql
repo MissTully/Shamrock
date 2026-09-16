@@ -27,9 +27,10 @@ ALTER TABLE public.members
 COMMENT ON COLUMN public.members.officer_title IS
   'Display title(s) shown on the profile and directory, joined with · when a person holds more than one. Chair / treasurer / secretary phrases are also used by can_manage_* RBAC helpers.';
 
--- Parse "Committee Chair of X", "Chair of X", "X Committee Chair", "X Chair".
--- Used so Douglas Tully's existing "Chair of Technology" grant-syncs without
--- rewriting his display title. Does not invent a Technology chair.
+-- Parse "Committee Chair of X", "Co-Chair of X", "Chair of X",
+-- "X Committee Chair", "X Chair". Used so Douglas Tully's existing
+-- "Chair of Technology" and Tammy/Deb's "Co-Chair of Merchandise"
+-- grant-sync without rewriting those display titles.
 CREATE OR REPLACE FUNCTION public.kos_committee_from_chair_title(p_title text)
 RETURNS text
 LANGUAGE sql
@@ -96,7 +97,7 @@ BEGIN
   END IF;
 
   -- Display titles: President / Treasurer / Secretary / Board Member|Board /
-  -- "Committee Chair of X" and "Chair of X" (Douglas Tully).
+  -- "Committee Chair of X", "Co-Chair of X", and "Chair of X".
   FOREACH t IN ARRAY regexp_split_to_array(coalesce(rec.officer_title, ''), '\s*·\s*')
   LOOP
     t := btrim(t);
@@ -423,8 +424,8 @@ BEGIN
     ('lsugrue99@gmail.com',       'Lisa',    'Sugrue',      'board',   'Board Member · Committee Chair of Membership'),
     ('bweinercrna@me.com',        'Bruce',   'Weiner',      'board',   'Board Member · Committee Chair of Float'),
     ('jcarney1218@gmail.com',     'Jeff',    'Carney',      'board',   'Board Member · Committee Chair of Charity'),
-    ('debrski1@gmail.com',        'Deb',     'Rutkowski',   'member',  'Chair of Merchandise'),
-    ('tammymillerkos@gmail.com',  'Tammy',   'Miller',      'member',  'Chair of Merchandise');
+    ('debrski1@gmail.com',        'Deb',     'Rutkowski',   'member',  'Co-Chair of Merchandise'),
+    ('tammymillerkos@gmail.com',  'Tammy',   'Miller',      'member',  'Co-Chair of Merchandise');
 
   FOR r IN SELECT * FROM kos_leaders LOOP
     v_id := NULL;

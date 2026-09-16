@@ -26,7 +26,9 @@ and has been applied to the project as migrations
      Social / Float / Parade / Merchandise) and an optional note for the board.
      These labels match the Member Hub directory. Douglas Tully's roster
      title **Chair of Technology** is the same Technology chair (not a
-     vacant seat and not a Dayna replacement). The client maps them onto
+     vacant seat and not a Dayna replacement). Tammy Miller and Deb
+     Rutkowski are both **Co-Chair of Merchandise** — the directory and
+     `kos_sync` treat `Co-Chair of X` like `Chair of X`. The client maps them onto
      the existing `member_roles` enums (`officer`, `board`, `treasurer`,
      `secretary`, `committee`). Highest role wins when someone holds more than
      one title.
