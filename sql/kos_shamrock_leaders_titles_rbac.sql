@@ -72,9 +72,8 @@ UPDATE public.members SET
   updated_at = now()
 WHERE id = '1e449202-b472-43b1-93b9-18c4f55b36cc'; -- Bruce Weiner
 
--- Merchandise chairs: keep member_role member so Shop Studio stays scoped (shopOnly).
--- Tammy: Melissa 2026-09-16 — Chair of Merchandise (short form, same as Doug).
--- Deb remains Merchandise co-chair until Melissa says otherwise.
+-- Merchandise: Tammy Miller alone is Chair of Merchandise (member_role member).
+-- Melissa 2026-09-16: Deb Rutkowski is not Merchandise chair — clear that title.
 UPDATE public.members SET
   officer_title = 'Chair of Merchandise',
   updated_at = now()
@@ -82,7 +81,7 @@ WHERE id = '2a2355ce-44e7-46fa-a064-bbc39c584483' -- Tammy Miller
   AND email ILIKE 'tammymillerkos@gmail.com';
 
 UPDATE public.members SET
-  officer_title = coalesce(nullif(btrim(officer_title), ''), 'Chair of Merchandise'),
+  officer_title = NULL,
   updated_at = now()
 WHERE id = '02e85f52-7a8e-4cb9-b8ed-675d6f6e40e6' -- Deb Rutkowski
   AND email ILIKE 'debrski1@gmail.com'

@@ -122,6 +122,5 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   still missing.
 - Tammy Miller (`tammymillerkos@gmail.com`) is **Chair of Merchandise**
   (short form, same as Doug’s Chair of Technology), `member_role = member`
-  so Shop Studio stays scoped. Deb Rutkowski remains Merchandise co-chair
-  (`Co-Chair of Merchandise` on live) until Melissa says otherwise — do not
-  remove her.
+  so Shop Studio stays scoped. Deb Rutkowski is **not** Merchandise chair —
+  do not seed her as co-chair.

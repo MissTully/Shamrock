@@ -423,7 +423,6 @@ BEGIN
     ('lsugrue99@gmail.com',       'Lisa',    'Sugrue',      'board',   'Board Member · Committee Chair of Membership'),
     ('bweinercrna@me.com',        'Bruce',   'Weiner',      'board',   'Board Member · Committee Chair of Float'),
     ('jcarney1218@gmail.com',     'Jeff',    'Carney',      'board',   'Board Member · Committee Chair of Charity'),
-    ('debrski1@gmail.com',        'Deb',     'Rutkowski',   'member',  'Co-Chair of Merchandise'),
     ('tammymillerkos@gmail.com',  'Tammy',   'Miller',      'member',  'Chair of Merchandise');
 
   FOR r IN SELECT * FROM kos_leaders LOOP
@@ -483,6 +482,20 @@ BEGIN
 
     PERFORM public.kos_sync_roster_role_grants(v_id);
   END LOOP;
+
+  -- Melissa 2026-09-16: Deb Rutkowski is not Merchandise chair. Clear that
+  -- title if a prior seed left it; do not delete her member row.
+  UPDATE public.members
+     SET officer_title = NULL,
+         updated_at    = now()
+   WHERE merged_into IS NULL
+     AND lower(email) = lower('debrski1@gmail.com')
+     AND coalesce(officer_title, '') ~* 'merchandise';
+
+  PERFORM public.kos_sync_roster_role_grants(id)
+    FROM public.members
+   WHERE merged_into IS NULL
+     AND lower(email) = lower('debrski1@gmail.com');
 
   -- Authoritative officer split: Tim = President (drop leftover Treasurer
   -- grant). Patrick = Treasurer + Finance chair (ensure treasurer grant).
