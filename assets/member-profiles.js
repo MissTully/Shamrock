@@ -1,4 +1,4 @@
-/* Krewe of Shamrock — member profiles, officer titles, role-aware home.
+/* Krewe of Shamrock - member profiles, officer titles, role-aware home.
    Loaded only on members.html. Comments are for a beginner reading the file. */
 (function () {
   "use strict";
