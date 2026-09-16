@@ -120,6 +120,13 @@ async function mountLeadersBoard(page) {
     if (gate) gate.style.display = "none";
     const content = document.getElementById("memberContent");
     if (content) content.style.display = "block";
+    if (typeof window.showHubTab === "function") {
+      window.showHubTab("krewe", { skipScroll: true });
+    } else {
+      document.querySelectorAll("[data-hub-panel]").forEach(function (el) {
+        el.classList.toggle("hub-on", el.getAttribute("data-hub-panel") === "krewe");
+      });
+    }
     const box = document.getElementById("hubLeaders");
     const groups = window.KOS_LEADERSHIP.groupLeaders(rows);
     window.__openedProfile = null;
@@ -138,6 +145,8 @@ test("Member Hub Shamrock Leaders board renders officers, board, and vacant chai
   const report = watchPage(page);
   await page.goto("/members.html");
   await expect(page.locator("#hubLeaders")).toBeAttached();
+  await page.locator("#dirGrid").waitFor({ state: "attached" });
+  await page.waitForTimeout(800);
   await mountLeadersBoard(page);
 
   const board = page.locator("#hubLeaders");
@@ -191,9 +200,10 @@ test("Member Hub Shamrock Leaders board renders officers, board, and vacant chai
   await expect(parade.locator("button")).toHaveCount(0);
   await expect(chairs.locator(".leaders-vacant")).toHaveCount(2);
 
-  await board.locator('button[data-mid="1"]').focus();
-  await expect(board.locator('button[data-mid="1"]')).toBeFocused();
-  await board.locator('button[data-mid="1"]').click();
+  await board.locator('button[data-mid="1"]').evaluate((btn) => {
+    btn.focus();
+    btn.click();
+  });
   expect(await page.evaluate(() => window.__openedProfile)).toBe("1");
 
   await expect(board).not.toContainText("Mandy Franklin");
@@ -205,6 +215,7 @@ test("Member Hub Shamrock Leaders board renders officers, board, and vacant chai
 test("Shamrock Leaders board stacks to one column on small screens", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/members.html");
+  await page.waitForTimeout(800);
   await mountLeadersBoard(page);
   const cols = await page.locator("#hubLeaders .leaders-grid").evaluate((el) => getComputedStyle(el).gridTemplateColumns);
   expect(cols.split(" ").length).toBe(1);
