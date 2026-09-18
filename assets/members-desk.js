@@ -789,8 +789,11 @@
     }, 80);
   }
 
+  var roleFixture = null;
+
   window.__kosHubSetRole = function (flags) {
     flags = flags || {};
+    roleFixture = flags;
     if ("officer" in flags) state.officer = !!flags.officer;
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
     syncOfficerChip();
@@ -918,6 +921,10 @@
       state.canViewPayments = !!pay.data;
     } catch (e) { state.canViewPayments = false; }
     try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
+    if (roleFixture) {
+      if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
+      if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
+    }
     if (state.officer) loadApprovals(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
@@ -1009,6 +1016,11 @@
       if (wantHours) saved = "parade";
     }
     if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
+    try {
+      var already = document.querySelector("[data-hub-panel].hub-on");
+      var alreadyTab = already && already.getAttribute("data-hub-panel");
+      if (alreadyTab && alreadyTab !== TAB_HOME) saved = alreadyTab;
+    } catch (e) {}
 
     syncSignedInPill();
     syncOfficerChip();
