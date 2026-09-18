@@ -79,9 +79,78 @@ const resolveAmountCents = (payment: JsonObject): number | undefined => {
   return Math.round(amount);
 };
 
-const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
+const itemBlob = (item: JsonObject): string =>
+  [
+    item.name,
+    item.title,
+    item.product,
+    item.productName,
+    item.product_name,
+    item.rate_title,
+    item.rateTitle,
+    item.description,
+    item.sku,
+    item.type,
+    item.kind,
+    item.product_kind,
+    text(asObject(item.metadata).kind, asObject(item.metadata).product_kind),
+  ].filter(Boolean).join(" ").toLowerCase();
+
+const itemQuantity = (item: JsonObject): number => {
+  const qty = numberValue(item.quantity ?? item.qty ?? item.count ?? item.number);
+  if (qty !== undefined && qty > 0) return Math.round(qty);
+  return 1;
+};
+
+const isRaffleItem = (item: JsonObject): boolean => {
+  const explicit = text(
+    item.kind,
+    item.product_kind,
+    asObject(item.metadata).kind,
+    asObject(item.metadata).product_kind,
+  )?.toLowerCase();
+  if (explicit === "raffle") return true;
+  const blob = itemBlob(item);
+  return /\braffle\b|\b50\s*\/\s*50\b|\bfifty[\s-]?fifty\b|\bdrawing\b|\blottery\b/.test(blob);
+};
+
+const isAdmissionItem = (item: JsonObject): boolean => {
+  if (isRaffleItem(item)) return false;
+  const blob = itemBlob(item);
+  if (/\b(donation|donor|merch|merchandise|shirt|tee|hat|kilt|apparel)\b/.test(blob)) return false;
+  const t = text(item.type)?.toLowerCase();
+  if (!t || t === "ticket" || t === "tickets" || t === "admission" || t === "add-on" || t === "addon") {
+    return /\b(ticket|admission|attendee|entry|golf|lunch|gala|ball)\b/.test(blob) || !t || t === "ticket";
+  }
+  return false;
+};
+
+/** Split Zeffy line items into admission vs raffle. Quantity on a raffle line is ticket count. */
+const classifyItems = (payment: JsonObject): { admissionQty: number; raffleQty: number } => {
+  const items = asArray(payment.items);
+  let admissionQty = 0;
+  let raffleQty = 0;
+  for (const raw of items) {
+    const item = asObject(raw);
+    const qty = itemQuantity(item);
+    if (isRaffleItem(item)) raffleQty += qty;
+    else if (isAdmissionItem(item)) admissionQty += qty;
+  }
+  const meta = asObject(payment.metadata ?? payment.meta);
+  const metaRaffle = numberValue(meta.raffle_qty ?? meta.raffleQty ?? payment.raffle_qty);
+  if (metaRaffle !== undefined && metaRaffle > 0 && raffleQty === 0) raffleQty = Math.round(metaRaffle);
+  return { admissionQty, raffleQty };
+};
+
+const inferKind = (
+  metadata: JsonObject,
+  payment: JsonObject,
+  classified?: { admissionQty: number; raffleQty: number },
+): string => {
   const explicit = text(metadata.kind, metadata.product_kind, payment.product_kind)?.toLowerCase();
   if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
+    // Mixed cart: admission + raffle add-on is still an event ticket purchase for RSVP.
+    if (explicit === "raffle" && classified && classified.admissionQty > 0) return "event";
     return explicit;
   }
   const campaignType = text(
@@ -108,13 +177,16 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     payment.rate_title,
   ].filter(Boolean).join(" ").toLowerCase();
   if (/\b(dues|membership)\b/.test(description)) return "dues";
-  if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
+  // Admission in the cart wins over raffle in the campaign name so RSVP still runs.
+  if (classified && classified.admissionQty > 0) return "event";
+  if (/\braffle|drawing|lottery\b/.test(description) || (classified && classified.raffleQty > 0 && classified.admissionQty === 0)) {
+    return "raffle";
+  }
   if (/\bdonation|donor|gift\b/.test(description)) return "donation";
   if (/\bevent|ticket|ticketing|admission|gala|ball|parade|golf|lunch|book club\b/.test(description)) {
     return "event";
   }
   if (/\b(store|merch|merchandise|shirt|tee|hat|kilt|apparel)\b/.test(description)) return "store";
-  // Ticket line items imply an event purchase.
   const items = asArray(payment.items);
   if (items.some((it) => text(asObject(it).type)?.toLowerCase() === "ticket")) return "event";
   return "other";
@@ -241,13 +313,25 @@ Deno.serve(async (req: Request) => {
   const campaignSlug = slugFromText(
     text(payment.campaign_slug, metadata.campaign_slug, description),
   );
+  const classified = classifyItems(payment);
+  let raffleQty = classified.raffleQty;
+  let admissionQty = classified.admissionQty;
+  const kind = inferKind(metadata, payment, classified);
+  if (kind === "raffle" && raffleQty === 0) {
+    raffleQty = Math.max(1, Math.round(numberValue(payment.quantity) ?? 1));
+  }
+
   const ticketItems = asArray(payment.items).filter((it) => {
-    const t = text(asObject(it).type)?.toLowerCase();
+    const item = asObject(it);
+    if (isRaffleItem(item)) return false;
+    const t = text(item.type)?.toLowerCase();
     return !t || t === "ticket";
   });
-  const ticketCount = ticketItems.length > 0
-    ? ticketItems.length
-    : Math.max(1, Math.round(numberValue(payment.quantity) ?? 1));
+  const ticketCount = admissionQty > 0
+    ? admissionQty
+    : (ticketItems.length > 0
+      ? ticketItems.reduce((sum, it) => sum + itemQuantity(asObject(it)), 0)
+      : (kind === "raffle" ? 0 : Math.max(1, Math.round(numberValue(payment.quantity) ?? 1))));
 
   const membershipYear = numberValue(
     metadata.membership_year ?? metadata.membershipYear ?? payment.membership_year,
@@ -265,10 +349,12 @@ Deno.serve(async (req: Request) => {
     payer_emails: emails,
     attendee_emails: emails,
     ticket_count: ticketCount,
+    admission_qty: admissionQty,
+    raffle_qty: raffleQty,
     campaign_slug: campaignSlug,
     campaign_id: text(payment.campaign_id, payment.campaignId),
     description,
-    product_kind: inferKind(metadata, payment),
+    product_kind: kind,
     ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
     raw: envelope,
   };

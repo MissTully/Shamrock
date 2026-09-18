@@ -8,7 +8,7 @@ Event Studio lives in the authenticated Member Hub under **Officer desk**. Membe
 2. Open **Officer desk**, then **Event Studio**.
 3. Choose **New / clear** for a new event, or **Edit** beside an existing Krewe event.
 4. Enter the name and start time, then add the location, description, capacity, event type, visibility, mandatory flag, status, flyer, and ticket details.
-5. Save. The list refreshes from `officer_list_events()`.
+5. Save. The list refreshes from `officer_list_events()`. If a raffle is linked to the event (Member Hub → Raffles), **Raffle QR** opens that night’s enter/cash page. **RSVP QR** is on the same row.
 
 IKC-sourced events are read-only. The database authorization is enforced again by `officer_upsert_event`, so hiding the UI is not the security boundary.
 
@@ -22,4 +22,4 @@ The public sign-up page (`event-signup.html`) features the earliest upcoming **p
 
 ## Paid tickets
 
-Create a Stripe Payment Link for the event, set Payment Link metadata `kind=event`, and paste the link into **Ticket payment URL**. Enter the customer-facing ticket label and dollar price; Event Studio converts dollars to cents for the `events.ticket_price_cents` column. Payment reconciliation remains handled by the Stripe webhook and payments ledger. See `PAYMENTS_SETUP.md` for the Stripe runbook.
+Create a Zeffy ticketing campaign with admission plus an optional raffle add-on (any quantity, priced per ticket). Paste the public link into **Ticket payment URL**. See `PAYMENTS_SETUP.md` and `RAFFLE_EVENT_TICKETS.md`.

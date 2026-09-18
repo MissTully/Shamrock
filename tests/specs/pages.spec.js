@@ -47,6 +47,16 @@ test("raffle-qr-sheet.html (standalone print sheet) renders", async ({ page }) =
   expect(report.failedLocal).toEqual([]);
 });
 
+test("raffle.html night-of deep link renders", async ({ page }) => {
+  const report = watchPage(page);
+  await page.goto("/raffle.html?event=00000000-0000-0000-0000-000000000000");
+  await expect(page).toHaveTitle(/Raffle/);
+  await expect(page.locator("#raffleRoot")).toBeAttached();
+  await expect(page.locator("#rfPay")).toContainText(/Only paid tickets/i);
+  await page.waitForTimeout(1200);
+  assertHealthy(expect, report, "raffle deep link");
+});
+
 test("internal links across pages point at real pages", async ({ request }) => {
   // Crawl every same-origin href of each page over plain HTTP — no browser,
   // so external resources can't slow this down.

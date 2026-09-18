@@ -2820,7 +2820,7 @@
   </script>
 
   <!-- ============== RAFFLES ============== -->
-  <!-- raffle-module v=20260909r2 -->
+  <!-- raffle-module v=20260918r1 -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -2841,7 +2841,7 @@
       const e1 = evRes.error;
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events - enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets filled with donated contents. \ud83d\udcb0 <b>50/50:</b> any quantity, priced per ticket; winner takes half. 🎫 <b>Hybrid pay:</b> add raffle tickets on the Zeffy event checkout (online), or night-of by QR (card on Zeffy) / cash at the table. Cash phone-entries stay unpaid until a volunteer marks them paid. <b>Only paid tickets are drawn.</b></div>';
       if(e1){
         box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>';
         await renderManage();
@@ -2856,7 +2856,7 @@
         if(e.audience && e.audience!=='both') html+=`<p style="margin:0 0 8px;font-size:12px;color:var(--muted);">Audience: ${RE(e.audience)}</p>`;
         if(e.raffle_type==='fifty_fifty'){
           html+=`<div class="van-card"><div class="seats">50/50 Pot</div>
-            <div style="font-size:14px;color:var(--muted);">${e.pot_tickets} tickets in${e.ticket_price?` · $${e.ticket_price} each`:''}</div>`;
+            <div style="font-size:14px;color:var(--muted);">${e.pot_tickets||0} paid in the drum${e.unpaid_tickets?` · ${e.unpaid_tickets} unpaid`:''}${e.ticket_price?` · $${e.ticket_price} each (any qty)`:''}${e.linked_event_name?` · ${RE(e.linked_event_name)}`:''}</div>`;
           if(e.drawn_at){ html+=`<div style="margin-top:8px;"><b>🏆 Winner:</b> ${RE(e.winner_name||'TBD')}</div>`; }
           else { html+=`<div style="margin-top:6px;font-size:14px;">You have <b>${myP[e.id]||0}</b> tickets</div>
             <form class="mini-form" data-pot="${e.id}" style="grid-template-columns:1fr auto;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Buy tickets</button></form>`; }
@@ -2869,7 +2869,7 @@
             if(b.contents) html+=`<div class="rl" style="margin-top:4px;"><b>Inside:</b> ${RE(b.contents)}</div>`;
             if(b.description) html+=`<div class="rl">${RE(b.description)}</div>`;
             if(b.estimated_value) html+=`<div class="rl">~$${b.estimated_value}</div>`;
-            html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets} tickets in · you: <b>${myB[b.id]||0}</b></div>`;
+            html+=`<div style="font-size:13px;color:var(--muted);margin-top:4px;">${b.tickets||0} paid in the draw${b.unpaid_tickets?` · ${b.unpaid_tickets} unpaid`:''} · you: <b>${myB[b.id]||0}</b></div>`;
             if(e.drawn_at){ html+=`<div style="margin-top:6px;"><b>🏆 ${RE(b.winner_name||'TBD')}</b></div>`; }
             else { html+=`<form class="mini-form" data-basket="${b.id}" style="grid-template-columns:1fr auto;margin-top:8px;"><input name="q" type="number" min="1" value="1" /><button class="btn btn-green" type="submit">Enter</button></form>`; }
             html+=`</div>`;
@@ -2895,6 +2895,59 @@
       }));
     }
 
+    function paintRaffleQR(slot, url){
+      if(!slot || !url) return;
+      slot.innerHTML='<canvas></canvas><div style="font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all;"><a href="'+RE(url)+'" target="_blank" rel="noopener">'+RE(url)+'</a></div>';
+      if(window.QRCode){
+        QRCode.toCanvas(slot.querySelector("canvas"), url, { width:180, margin:1, color:{ dark:"#14532d", light:"#ffffff" } });
+      }
+    }
+    function raffleEnterUrl(id){ return location.origin + "/raffle.html?event=" + id; }
+    function raffleSheetUrl(id){ return location.origin + "/raffle-qr-sheet.html?event=" + id; }
+    function raffleCardUrl(e){ return e.zeffy_payment_url || e.linked_event_ticket_url || ""; }
+    async function loadKreweEvents(){
+      try{
+        const r=await rb.rpc("list_events_for_raffle_link");
+        if(r && !r.error && Array.isArray(r.data)) return r.data;
+      }catch(_){}
+      return [];
+    }
+    function kreweEventOptions(events, selected){
+      const opts=['<option value="">— Not linked —</option>'];
+      (events||[]).forEach(function(ev){
+        const when=ev.start_time? new Date(ev.start_time).toLocaleDateString([], {month:"short", day:"numeric"}):"";
+        opts.push('<option value="'+RE(ev.id)+'"'+(selected===ev.id?' selected':'')+'>'+RE(ev.name)+(when?' ('+when+')':'')+'</option>');
+      });
+      return opts.join("");
+    }
+    async function showSettlement(host, raffleId){
+      host.innerHTML='<p class="empty">Loading paid vs unpaid…</p>';
+      const res=await rb.rpc("get_raffle_settlement",{p_raffle_id:raffleId});
+      if(res.error){ host.innerHTML='<p class="msg error">'+RE(res.error.message)+'</p>'; return; }
+      const d=res.data||{};
+      const entries=d.entries||[];
+      let html='<div style="font-size:14px;margin:6px 0 8px;"><b>'+(d.paid_tickets||0)+' paid in the drum</b> · '+(d.unpaid_tickets||0)+' unpaid (not drawn)</div>';
+      if(!entries.length){ html+='<p class="empty" style="margin:0;">No entries yet.</p>'; host.innerHTML=html; return; }
+      html+='<div style="display:grid;gap:6px;max-height:260px;overflow:auto;">';
+      entries.forEach(function(row){
+        html+='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px;border:1px solid rgba(168,128,28,.25);border-radius:8px;padding:6px 8px;">';
+        html+='<span>'+(row.paid?'✅':'⏳')+' '+RE(row.name)+' · '+row.tickets+' tix'+(row.basket_name?' · '+RE(row.basket_name):'')+(row.payment_id?' · Zeffy':'')+'</span>';
+        if(!row.paid){
+          html+='<button class="btn btn-green mrMarkPaid" type="button" data-kind="'+RE(row.kind)+'" data-id="'+RE(row.id)+'" style="padding:3px 8px;font-size:12px;">Mark paid</button>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+      host.innerHTML=html;
+      host.querySelectorAll('.mrMarkPaid').forEach(function(btn){
+        btn.onclick=async function(){
+          btn.disabled=true;
+          const r=await rb.rpc('set_raffle_entry_paid',{p_kind:btn.dataset.kind,p_entry_id:btn.dataset.id,p_paid:true});
+          if(r.error){ alert(r.error.message); btn.disabled=false; return; }
+          showSettlement(host, raffleId);
+        };
+      });
+    }
     async function renderOfficerTools(events, baskets){
       const box=document.getElementById("raffleBody"); if(!box) return;
       let off=false; try{ const {data}=await rb.rpc("can_manage_raffles"); off=!!data; }catch(_){
@@ -2904,18 +2957,31 @@
       const PUB = location.origin + "/raffle.html";
       let h='<div class="raffle-event" style="border-top:2px dashed var(--gold);margin-top:18px;padding-top:14px;">';
       h+='<h3 class="rpt-cat" style="margin-top:0;">\ud83d\udd11 Officer tools</h3>';
-      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Officers and Social/Charity committee see this. Draw winners (weighted by tickets) and print the basket QR codes.</p>';
-      h+='<p style="margin:0 0 12px;"><a class="btn btn-green" href="raffle-qr-sheet.html" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Print basket QR codes</a> <a class="btn" href="'+PUB+'" target="_blank" rel="noopener">\u2197 Public raffle page</a></p>';
+      h+='<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Link each night’s raffle to a krewe event, print the QR, mark cash entries paid, then draw. Unpaid tickets never go in the drum.</p>';
+      h+='<p style="margin:0 0 12px;"><a class="btn btn-green" href="raffle-qr-sheet.html" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Print raffle QR sheet</a> <a class="btn" href="'+PUB+'" target="_blank" rel="noopener">\u2197 Public raffle page</a></p>';
       for(const e of events){
-        h+='<div style="margin:10px 0;"><b>'+(e.raffle_type==='fifty_fifty'?'\ud83d\udcb0':'\ud83e\uddfa')+' '+RE(e.name)+'</b>';
+        const enter=raffleEnterUrl(e.id);
+        const zeffy=raffleCardUrl(e);
+        h+='<div style="margin:10px 0;padding:10px;border:1px solid rgba(168,128,28,.25);border-radius:10px;">';
+        h+='<b>'+(e.raffle_type==='fifty_fifty'?'\ud83d\udcb0':'\ud83e\uddfa')+' '+RE(e.name)+'</b>';
+        if(e.linked_event_name) h+=' <span style="font-size:12px;color:var(--muted);">· '+RE(e.linked_event_name)+'</span>';
+        else h+=' <span style="font-size:12px;color:#9a3412;">· not linked to a krewe event</span>';
+        h+='<div style="font-size:13px;color:var(--muted);margin:4px 0 8px;">'+(e.pot_tickets||e.basket_tickets||0)+' paid in the drum · '+(e.unpaid_tickets||e.unpaid_basket_tickets||0)+' unpaid</div>';
+        h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">';
+        h+='<button class="btn mrShowEnterQR" type="button" data-url="'+RE(enter)+'">Night-of enter / cash QR</button>';
+        if(zeffy) h+='<button class="btn mrShowEnterQR" type="button" data-url="'+RE(zeffy)+'">Card (Zeffy) QR</button>';
+        h+='<a class="btn" href="'+RE(raffleSheetUrl(e.id))+'" target="_blank" rel="noopener">Print this raffle</a>';
+        h+='<button class="btn mrSettle" type="button" data-id="'+e.id+'">Paid vs unpaid list</button>';
         if(e.raffle_type==='fifty_fifty'){
-          if(e.drawn_at){ h+=' \u2014 <span style="color:#14532b;font-weight:600;">\ud83c\udfc6 '+RE(e.winner_name||'TBD')+'</span>'; }
-          else { h+=' <button class="btn btn-green draw5050" data-id="'+e.id+'" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
-        } else {
+          if(e.drawn_at){ h+='<span style="color:#14532b;font-weight:600;">\ud83c\udfc6 '+RE(e.winner_name||'TBD')+'</span>'; }
+          else { h+='<button class="btn btn-green draw5050" data-id="'+e.id+'" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
+        }
+        h+='</div><div class="qr-slot" style="display:none;margin:6px 0;"></div><div class="settle-slot" style="display:none;"></div>';
+        if(e.raffle_type!=='fifty_fifty'){
           const bs=(baskets||[]).filter(b=>b.raffle_event_id===e.id).sort((a,b)=>(a.display_order||0)-(b.display_order||0));
           h+='<div style="display:grid;gap:6px;margin-top:6px;">';
           for(const b of bs){
-            h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;"><span>'+RE(b.name)+' \u00b7 '+(b.tickets||0)+' tix</span>';
+            h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;"><span>'+RE(b.name)+' \u00b7 '+(b.tickets||0)+' paid'+(b.unpaid_tickets?' · '+b.unpaid_tickets+' unpaid':'')+'</span>';
             if(b.winner_name){ h+='<span style="color:#14532b;font-weight:600;">\ud83c\udfc6 '+RE(b.winner_name)+'</span>'; }
             else { h+='<button class="btn btn-green drawbasket" data-id="'+b.id+'" style="padding:4px 10px;">Draw</button>'; }
             h+='</div>';
@@ -2926,15 +2992,31 @@
       }
       h+='</div>';
       const wrap=document.createElement('div'); wrap.innerHTML=h; box.appendChild(wrap);
+      wrap.querySelectorAll('.mrShowEnterQR').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const slot=btn.closest('div').parentElement.querySelector('.qr-slot') || btn.parentElement.parentElement.querySelector('.qr-slot');
+          if(!slot) return;
+          slot.style.display='block';
+          paintRaffleQR(slot, btn.getAttribute('data-url'));
+        });
+      });
+      wrap.querySelectorAll('.mrSettle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const slot=btn.closest('div').parentElement.querySelector('.settle-slot') || btn.parentElement.parentElement.querySelector('.settle-slot');
+          if(!slot) return;
+          slot.style.display='block';
+          showSettlement(slot, btn.dataset.id);
+        });
+      });
       wrap.querySelectorAll('.drawbasket').forEach(btn=>btn.addEventListener('click',async()=>{
-        if(!confirm('Draw a winner for this basket now? This is final.')) return;
+        if(!confirm('Draw a winner from PAID tickets only? Unpaid cash entries stay out of the drum.')) return;
         btn.disabled=true;
         const {data,error}=await rb.rpc('draw_basket_winner',{p_basket_id:btn.dataset.id,p_redraw:false});
         if(error){ alert(error.message); btn.disabled=false; return; }
         alert('\ud83c\udfc6 Winner: '+(data&&data.winner_name)); renderRaffles();
       }));
       wrap.querySelectorAll('.draw5050').forEach(btn=>btn.addEventListener('click',async()=>{
-        if(!confirm('Draw the 50/50 winner now? This is final.')) return;
+        if(!confirm('Draw the 50/50 winner from PAID tickets only? Unpaid cash entries stay out of the drum.')) return;
         btn.disabled=true;
         const {data,error}=await rb.rpc('draw_5050_winner',{p_event_id:btn.dataset.id,p_redraw:false});
         if(error){ alert(error.message); btn.disabled=false; return; }
@@ -2995,23 +3077,26 @@
       var w=document.createElement("div"); w.className="raffle-event"; w.id="mrCreateManage";
       w.style.cssText="border-bottom:2px dashed var(--gold);margin:0 0 18px;padding:0 0 14px;";
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
-        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create a gift-basket or 50/50 raffle for charity. Use baskets as a planning board for donated contents, then draw winners in person at the event.</p>'+
+        '<p style="font-size:13px;color:var(--muted);margin:0 0 10px;">Create a 50/50 (recommended for Zeffy any-qty) or gift-basket raffle, then <b>link it to that night’s krewe event</b> so online tickets and night-of QR match.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
       if(box.firstChild) box.insertBefore(w, box.firstChild); else box.appendChild(w);
       var btn=document.getElementById("mrNew"); if(btn) btn.onclick=showCreateForm;
-      try{ renderMine(mine); }catch(_){ var L=document.getElementById("mrList"); if(L) L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; }
+      try{ await renderMine(mine); }catch(_){ var L=document.getElementById("mrList"); if(L) L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; }
     }
-    function showCreateForm(){
+    async function showCreateForm(){
       var f=document.getElementById("mrForm"); var IS='style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;"';
+      var krewe=await loadKreweEvents();
       f.innerHTML='<div class="raffle-panel">'+
-        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" placeholder="e.g. St. Patrick\'s Day Gift Baskets" />')+
-        mrInput('Type','<select id="crType" '+IS+'><option value="basket">🎁 Gift basket raffle</option><option value="fifty_fifty">💰 50/50 cash raffle</option></select>')+
+        mrInput('Raffle name','<input id="crName" '+IS+' maxlength="80" placeholder="e.g. Mini Golf 50/50" />')+
+        mrInput('Type','<select id="crType" '+IS+'><option value="fifty_fifty">💰 50/50 cash raffle (Zeffy any-qty)</option><option value="basket">🎁 Gift basket raffle</option></select>')+
+        mrInput('Link to krewe event','<select id="crKrewe" '+IS+'>'+kreweEventOptions(krewe, '')+'</select>')+
         mrInput('Description (optional)','<textarea id="crDesc" rows="2" '+IS+' placeholder="Theme night, event, or planning notes"></textarea>')+
         mrInput('Charity / cause (optional)','<textarea id="crCharity" rows="2" '+IS+' placeholder="Where the proceeds go"></textarea>')+
         mrInput('Audience','<select id="crAudience" '+IS+'><option value="both">Internal + external</option><option value="internal">Internal (members only)</option><option value="external">External (public)</option></select>')+
-        mrInput('Ticket price ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
+        mrInput('Price per ticket ($)','<input id="crPrice" type="number" min="0" step="0.5" value="1" '+IS+' />')+
         mrInput('Event / draw date (optional)','<input id="crDate" type="date" '+IS+' />')+
+        mrInput('Zeffy raffle URL (optional — night-of card; leave blank to use the event ticket link)','<input id="crZeffy" type="url" '+IS+' placeholder="https://www.zeffy.com/en-US/ticketing/..." />')+
         '<div class="raffle-form-actions"><button class="btn btn-green" id="crSave" type="button">Create raffle</button> <button class="btn" id="crCancel" type="button">Cancel</button></div>'+
         '<div class="msg" id="crMsg"></div></div>';
       document.getElementById("crCancel").onclick=function(){ f.innerHTML=""; };
@@ -3020,22 +3105,44 @@
         var name=document.getElementById("crName").value.trim();
         if(!name){ msg.className='msg error'; msg.textContent='Please enter a raffle name.'; return; }
         btn.disabled=true; msg.className='msg'; msg.textContent='Creating…';
-        var res=await rb.rpc("create_raffle",{p_name:name,p_type:document.getElementById("crType").value,p_description:document.getElementById("crDesc").value,p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),p_event_date:document.getElementById("crDate").value||null,p_audience:(document.getElementById("crAudience")||{}).value||"both",p_charity_blurb:(document.getElementById("crCharity")||{}).value||null});
+        var kreweId=(document.getElementById("crKrewe")||{}).value||null;
+        var res=await rb.rpc("create_raffle",{
+          p_name:name,
+          p_type:document.getElementById("crType").value,
+          p_description:document.getElementById("crDesc").value,
+          p_ticket_price:parseFloat(document.getElementById("crPrice").value||"1"),
+          p_event_date:document.getElementById("crDate").value||null,
+          p_audience:(document.getElementById("crAudience")||{}).value||"both",
+          p_charity_blurb:(document.getElementById("crCharity")||{}).value||null,
+          p_krewe_event_id:kreweId||null,
+          p_zeffy_payment_url:(document.getElementById("crZeffy")||{}).value||null
+        });
         if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; btn.disabled=false; return; }
         renderRaffles();
       };
     }
-    function renderMine(list){
+    async function renderMine(list){
       var L=document.getElementById("mrList"); if(!L) return;
       if(!list.length){ L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; return; }
+      var krewe=await loadKreweEvents();
       L.innerHTML='';
       list.forEach(function(e){
         var card=document.createElement('div'); card.className='raffle-panel'; card.style.marginBottom='12px';
         var head='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>'+(e.raffle_type==='fifty_fifty'?'💰':'🧺')+' '+RE(e.name)+'</b>'+
           '<span style="font-size:12px;color:var(--muted);">'+(e.is_active?'live':'hidden')+(e.mine?'':' · (officer)')+'</span></div>';
         var body='';
+        body+=mrInput('Linked krewe event','<select class="mrKrewe" style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;">'+kreweEventOptions(krewe, e.krewe_event_id||'')+'</select>');
+        body+=mrInput('Zeffy raffle URL (optional)','<input class="mrZeffy" type="url" style="width:100%;padding:9px;border:1px solid rgba(168,128,28,.45);border-radius:8px;box-sizing:border-box;" value="'+RE(e.zeffy_payment_url||'')+'" placeholder="Blank = use the event ticket Zeffy link" />');
+        body+='<div class="raffle-form-actions"><button class="btn btn-green mrSaveLink" type="button">Save event link</button></div><div class="msg mrLinkMsg"></div>';
+        body+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">'+
+          '<button class="btn mrShowQR" type="button" data-url="'+RE(raffleEnterUrl(e.id))+'">Night-of enter QR</button>'+
+          (raffleCardUrl(e)?'<button class="btn mrShowQR" type="button" data-url="'+RE(raffleCardUrl(e))+'">Zeffy QR</button>':'')+
+          '<a class="btn" href="'+RE(raffleSheetUrl(e.id))+'" target="_blank" rel="noopener">Print QR sheet</a>'+
+          '<button class="btn mrMineSettle" type="button">Paid vs unpaid</button></div>'+
+          '<div class="qr-slot" style="display:none;"></div><div class="settle-slot" style="display:none;"></div>';
         if(e.raffle_type==='fifty_fifty'){
-          body+='<div style="font-size:14px;margin:6px 0;">'+(e.pot_tickets||0)+' tickets in';
+          body+='<div style="font-size:14px;margin:6px 0;">'+(e.pot_tickets||0)+' paid in the drum';
+          if(e.unpaid_tickets) body+=' · '+e.unpaid_tickets+' unpaid';
           if(e.drawn_at){ body+=' · 🏆 '+RE(e.winner_name||'TBD'); }
           body+='</div>';
           if(!e.drawn_at){ body+='<button class="btn btn-green mrDraw5050" data-id="'+e.id+'" type="button" style="padding:5px 12px;">Draw 50/50 winner</button>'; }
@@ -3044,7 +3151,27 @@
           body+='<button class="btn mrAddBasket" data-id="'+e.id+'" type="button">➕ Add a basket</button>';
         }
         card.innerHTML=head+body;
-        // baskets
+        card.querySelector('.mrSaveLink').onclick=async function(){
+          var msg=card.querySelector('.mrLinkMsg');
+          var res=await rb.rpc('update_raffle',{p_id:e.id,p:{
+            krewe_event_id:card.querySelector('.mrKrewe').value||'',
+            zeffy_payment_url:card.querySelector('.mrZeffy').value||''
+          }});
+          if(res.error){ msg.className='msg error'; msg.textContent=res.error.message; return; }
+          renderRaffles();
+        };
+        card.querySelectorAll('.mrShowQR').forEach(function(btn){
+          btn.onclick=function(){
+            var slot=card.querySelector('.qr-slot');
+            slot.style.display='block';
+            paintRaffleQR(slot, btn.getAttribute('data-url'));
+          };
+        });
+        card.querySelector('.mrMineSettle').onclick=function(){
+          var slot=card.querySelector('.settle-slot');
+          slot.style.display='block';
+          showSettlement(slot, e.id);
+        };
         if(e.raffle_type!=='fifty_fifty'){
           var bw=card.querySelector('.mrBaskets');
           (e.baskets||[]).forEach(function(b){
@@ -3053,21 +3180,21 @@
             row.innerHTML=(b.image_url?'<img src="'+RE(b.image_url)+'" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;" />':'<div style="width:54px;height:54px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;">🧺</div>')+
               '<div style="flex:1;min-width:0;"><div style="font-weight:600;">'+RE(b.name)+'</div>'+
               (b.contents?'<div style="font-size:12px;color:#3a3a2e;margin-top:2px;"><b>Inside:</b> '+RE(b.contents)+'</div>':'')+
-              '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' tix'+(b.winner_name?' · 🏆 '+RE(b.winner_name):'')+'</div></div>'+
+              '<div style="font-size:12px;color:var(--muted);">'+(b.estimated_value!=null?'~'+mrMoney(b.estimated_value)+' · ':'')+(b.tickets||0)+' paid'+(b.unpaid_tickets?' · '+b.unpaid_tickets+' unpaid':'')+(b.winner_name?' · 🏆 '+RE(b.winner_name):'')+'</div></div>'+
               '<div style="display:flex;flex-direction:column;gap:4px;">'+
                 '<button class="btn mrEditB" type="button" style="padding:3px 8px;font-size:12px;">Edit</button>'+
                 (b.winner_name?'':'<button class="btn btn-green mrDrawB" type="button" style="padding:3px 8px;font-size:12px;">Draw</button>')+
-                ((b.tickets||0)>0?'':'<button class="btn mrDelB" type="button" style="padding:3px 8px;font-size:12px;">Delete</button>')+
+                (((b.tickets||0)+(b.unpaid_tickets||0))>0?'':'<button class="btn mrDelB" type="button" style="padding:3px 8px;font-size:12px;">Delete</button>')+
               '</div>';
             row.querySelector('.mrEditB').onclick=function(){ var fm=makeBasketForm(e.id,b); row.parentNode.insertBefore(fm,row.nextSibling); };
-            var dr=row.querySelector('.mrDrawB'); if(dr) dr.onclick=async function(){ if(!confirm('Draw a winner for "'+b.name+'" now? This is final.')) return; var res=await rb.rpc('draw_basket_winner',{p_basket_id:b.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 Winner: '+(res.data&&res.data.winner_name)); renderRaffles(); };
+            var dr=row.querySelector('.mrDrawB'); if(dr) dr.onclick=async function(){ if(!confirm('Draw a winner for "'+b.name+'" from PAID tickets only?')) return; var res=await rb.rpc('draw_basket_winner',{p_basket_id:b.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 Winner: '+(res.data&&res.data.winner_name)); renderRaffles(); };
             var de=row.querySelector('.mrDelB'); if(de) de.onclick=async function(){ if(!confirm('Delete "'+b.name+'"?')) return; var res=await rb.rpc('delete_basket',{p_basket_id:b.id}); if(res.error){ alert(res.error.message); return; } renderRaffles(); };
             bw.appendChild(row);
           });
           if(!(e.baskets||[]).length){ bw.innerHTML='<p class="empty" style="margin:0;">No baskets yet. Add your first below.</p>'; }
           card.querySelector('.mrAddBasket').onclick=function(){ var fm=makeBasketForm(e.id,null); card.appendChild(fm); fm.scrollIntoView({behavior:'smooth',block:'center'}); };
         } else {
-          var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=async function(){ if(!confirm('Draw the 50/50 winner now? This is final.')) return; var res=await rb.rpc('draw_5050_winner',{p_event_id:e.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 50/50 Winner: '+(res.data&&res.data.winner_name)+' · Pot: $'+(res.data&&res.data.pot)); renderRaffles(); };
+          var d5=card.querySelector('.mrDraw5050'); if(d5) d5.onclick=async function(){ if(!confirm('Draw the 50/50 winner from PAID tickets only?')) return; var res=await rb.rpc('draw_5050_winner',{p_event_id:e.id,p_redraw:false}); if(res.error){ alert(res.error.message); return; } alert('🏆 50/50 Winner: '+(res.data&&res.data.winner_name)+' · Pot: $'+(res.data&&res.data.pot)); renderRaffles(); };
         }
         L.appendChild(card);
       });
@@ -3078,7 +3205,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260918pwa1"></script>
 <script src="assets/members-desk.js?v=20260918pwa2" defer></script>
-  <script src="assets/kos-event-studio.js?v=20260918review1" defer></script>
+  <script src="assets/kos-event-studio.js?v=20260918raffle1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260909b"></script>
   <script src="assets/kos-reports.js?v=20260914t1" defer></script>
