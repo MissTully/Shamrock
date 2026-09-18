@@ -10,11 +10,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Krewe of Shamrock · Raffle</title>
-<meta name="description" content="Krewe of Shamrock charity gift-basket and 50/50 raffles. Browse themed donated baskets, enter tickets digitally, and pay in person at the event." />
+<meta name="description" content="Krewe of Shamrock charity gift-basket and 50/50 raffles. Enter any quantity on your phone, pay by card on Zeffy or cash with a volunteer. Only paid tickets are drawn." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260918raffle1" />
 <style>
   .rf-wrap{ max-width:1040px; margin:0 auto; padding:26px 20px 60px; }
   .rf-hero{ text-align:center; padding:30px 18px 6px; }
@@ -133,8 +133,8 @@
     </div>
 
     <div class="rf-pay" id="rfPay">
-      <b>Paying:</b> Tickets are tracked digitally; payment is in person. Settle up with any Krewe volunteer at the table (cash or card).
-      Your entries are recorded when you submit — a volunteer confirms payment before the draw. Sláinte! 🍀
+      <b>Paying:</b> Buy any number of tickets — priced per ticket. Pay by card on Zeffy, or enter here and settle cash with a volunteer.
+      Digital cash entries stay <b>unpaid</b> until a volunteer marks them paid. <b>Only paid tickets go in the draw.</b> Sláinte! 🍀
     </div>
 
     <div id="raffleRoot"><p class="empty">Loading raffles…</p></div>
@@ -155,11 +155,22 @@
     const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const params = new URLSearchParams(location.search);
     const wantBasket = params.get('basket');
+    const wantRaffle = params.get('event') || params.get('raffle');
+    const wantKrewe = params.get('krewe') || params.get('krewe_event');
     const fmt = (n)=> '$'+Number(n||0).toFixed(2);
+
+    function cardUrl(ev){
+      return ev.zeffy_payment_url || ev.linked_event_ticket_url || '';
+    }
+    function payHint(ev){
+      const url = cardUrl(ev);
+      if(!url) return '';
+      return '<p style="margin:8px 0 0;font-size:14px;">💳 <a href="'+E(url)+'" target="_blank" rel="noopener">Pay by card on Zeffy</a> (any quantity, priced per ticket)</p>';
+    }
 
     function basketCard(b){
       const won = b.winner_name ? `<div class="won">🏆 Winner: ${E(b.winner_name)}</div>` : `
-        <div class="count">🎟️ ${b.tickets||0} ticket${(b.tickets===1)?'':'s'} in this basket</div>
+        <div class="count">🎟️ ${b.tickets||0} paid ticket${(b.tickets===1)?'':'s'} in the draw</div>
         <form class="buyform" data-basket="${b.id}">
           <input name="name" placeholder="Your name" required maxlength="80" />
           <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
@@ -182,26 +193,42 @@
         sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
       ]);
       if(e1||e2){ root.innerHTML='<p class="rf-empty-note">Could not load the raffle right now. Please try again.</p>'; return; }
-      const active=(events||[]).filter(e=>e.is_active && (e.audience||'both')!=='internal');
+      let active=(events||[]).filter(e=>e.is_active && (e.audience||'both')!=='internal');
+      if(wantRaffle){
+        const hit=(events||[]).find(e=>e.id===wantRaffle);
+        active = hit ? [hit] : [];
+      } else if(wantKrewe){
+        active=(events||[]).filter(e=>e.krewe_event_id===wantKrewe && (e.audience||'both')!=='internal');
+      }
       const basketEvents=active.filter(e=>e.raffle_type==='basket');
       const potEvents=active.filter(e=>e.raffle_type==='fifty_fifty');
+      if(wantRaffle || wantKrewe){
+        const focus=active[0];
+        if(focus){
+          document.getElementById('rfTitle').textContent=focus.name||'Tonight’s raffle';
+          if(focus.linked_event_name) document.getElementById('rfSub').textContent='For '+focus.linked_event_name;
+        }
+      }
       if(!basketEvents.length && !potEvents.length){ root.innerHTML='<p class="rf-empty-note">No public raffles are running right now. Check back soon! 🍀</p>'; return; }
       let html='';
       for(const ev of basketEvents){
         const bs=(baskets||[]).filter(b=>b.raffle_event_id===ev.id);
-        html+=`<h2 class="rf-section-title">${E(ev.name)} <small>${ev.basket_tickets||0} tickets in${ev.event_date?` · draws ${E(ev.event_date)}`:''}</small></h2>`;
+        html+=`<h2 class="rf-section-title" id="e_${ev.id}">${E(ev.name)} <small>${ev.basket_tickets||0} paid ticket${(ev.basket_tickets===1)?'':'s'} in the draw${ev.event_date?` · draws ${E(ev.event_date)}`:''}${ev.linked_event_name?` · ${E(ev.linked_event_name)}`:''}</small></h2>`;
         if(ev.description) html+=`<p style="color:#4a4a3e;margin:2px 0 6px;">${E(ev.description)}</p>`;
         if(ev.charity_blurb) html+=`<p style="color:#14532b;margin:2px 0 8px;font-weight:600;">💚 ${E(ev.charity_blurb)}</p>`;
+        html+=payHint(ev);
         html+='<div class="basket-grid">'+ (bs.length?bs.map(basketCard).join(''):'<p class="empty">No baskets added yet.</p>') +'</div>';
       }
       for(const pe of potEvents){
         if(pe.winner_name){
-          html+=`<div class="fifty"><h3>${E(pe.name)}</h3><div class="won">🏆 Winner: ${E(pe.winner_name)}</div></div>`;
+          html+=`<div class="fifty" id="e_${pe.id}"><h3>${E(pe.name)}</h3><div class="won">🏆 Winner: ${E(pe.winner_name)}</div></div>`;
         } else {
           const pot=(pe.pot_tickets||0)*Number(pe.ticket_price||0);
-          html+=`<div class="fifty"><h3>${E(pe.name)}</h3>
+          html+=`<div class="fifty" id="e_${pe.id}"><h3>${E(pe.name)}</h3>
+            ${pe.linked_event_name?`<div class="pot" style="margin-bottom:6px;">${E(pe.linked_event_name)}</div>`:''}
             ${pe.description?`<div class="pot" style="margin-bottom:6px;">${E(pe.description)}</div>`:''}
-            <div class="pot">${pe.pot_tickets||0} tickets in · pot so far ${fmt(pot)} · winner takes ${fmt(pot/2)} · ${fmt(pe.ticket_price)} per ticket</div>
+            <div class="pot">${pe.pot_tickets||0} paid ticket${(pe.pot_tickets===1)?'':'s'} in the drum · pot so far ${fmt(pot)} · winner takes ${fmt(pot/2)} · ${fmt(pe.ticket_price)} per ticket (any quantity)</div>
+            ${payHint(pe)}
             <form class="buyform" data-pot="${pe.id}" style="margin-top:12px;">
               <input name="name" placeholder="Your name" required maxlength="80" />
               <input name="email" type="email" placeholder="Email (optional)" maxlength="120" />
@@ -214,6 +241,7 @@
       root.innerHTML=html;
       wireForms();
       if(wantBasket){ const el=document.getElementById('b_'+wantBasket); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+      else if(wantRaffle){ const el=document.getElementById('e_'+wantRaffle); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
     }
 
     function wireForms(){
@@ -228,7 +256,7 @@
           if(f.dataset.basket){ ({data:res,error:err} = await sb.rpc('enter_basket_public',{p_basket_id:f.dataset.basket,p_qty:qty,p_name:name,p_email:email||null})); }
           else { ({data:res,error:err} = await sb.rpc('buy_5050_public',{p_event_id:f.dataset.pot,p_qty:qty,p_name:name,p_email:email||null})); }
           if(err){ msg.className='rf-msg err'; msg.textContent='Sorry, '+(err.message||'something went wrong.'); btn.disabled=false; return; }
-          msg.className='rf-msg ok'; msg.textContent=`You're in! ${qty} ticket${qty===1?'':'s'} added. Pay a volunteer to confirm. 🍀`;
+          msg.className='rf-msg ok'; msg.textContent=`You're on the list with ${qty} ticket${qty===1?'':'s'}. Pay a volunteer (cash) or use Zeffy (card) — you are not in the draw until marked paid. 🍀`;
           setTimeout(load, 900);
         });
       });

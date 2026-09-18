@@ -17,7 +17,8 @@ Create in studio  →  Save  →  Show QR  →  Print / project / tape on the do
 1. Create or edit the event and **Save**.
 2. In the event list, tap:
    - **RSVP QR** — flyer / table tent → `event-signup.html?event=…` (Sign me up / volunteer).
-   - **Door check-in QR** — projector at the door → members scan to check in (Parade Ready meetings).
+   - **Raffle QR** — when a raffle is linked to that event in Member Hub → Raffles → `raffle.html?event=…` (enter / cash). Print **Print this raffle** for the Zeffy card square too.
+   - **Door check-in QR** — projector at the door → members scan to check in (Parade Ready meetings). Use QR Code Studio for meeting check-in.
 3. Put the square on the wall or print it.
 
 ### 2. Shop Studio (Officer desk)
@@ -32,8 +33,8 @@ Handy squares that aren’t one event/product:
 - Whole store, members Facebook, secretary help
 
 ### Already live elsewhere
-- **Raffle basket QRs** — raffle print sheet
-- **Meeting check-in** — also available per event in Event Studio
+- **Raffle QRs** — Event Studio (when linked) and the raffle print sheet (`raffle-qr-sheet.html?event=…`)
+- **Meeting check-in** — QR Code Studio and per-event check-in
 
 ---
 
@@ -52,7 +53,8 @@ That was roadmap language for: *door check-in that also marks volunteer hours*.
 | Members meeting door | Event **Door check-in QR** | Checked in / Parade Ready |
 | Merch table | Product **Shop QR** | Zeffy buy link |
 | Dues reminder slide | Dues QR from “How QR codes work” | Zeffy membership pay |
+| Night-of 50/50 table | Raffle **enter / cash QR** (and Zeffy QR for card) | That night’s raffle; unpaid cash stays out of the draw |
 
 ---
 
-*Updated 2026-09-09 — studio-first, not roadmap-first.*
+*Updated 2026-09-18 — raffle QR is the linked event’s square, not a separate app.*

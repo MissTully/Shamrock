@@ -29,7 +29,7 @@
 <body>
   <div class="qr-top">
     <h1>Raffle QR Codes</h1>
-    <p>Print this page, cut out each card, and tape it to the matching basket. Guests scan to enter from their phones.</p>
+    <p>Print this page. Night-of: tape the <b>enter / cash</b> square at the table. Card buyers scan the Zeffy square when a payment link is set. Guests choose any quantity; only paid tickets are drawn.</p>
     <div class="qr-actions"><button class="btn btn-primary" onclick="window.print()">🖨️ Print</button> <a class="btn" href="members.html">← Back to Members</a></div>
   </div>
   <div id="qrGrid" class="qr-grid"><p style="text-align:center;grid-column:1/-1;">Loading…</p></div>
@@ -40,10 +40,13 @@
     const sb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const E=(s)=>(s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
     const ORIGIN = location.origin;
+    const params = new URLSearchParams(location.search);
+    const wantRaffle = params.get('event') || params.get('raffle');
+    const wantKrewe = params.get('krewe') || params.get('krewe_event');
     const grid=document.getElementById('qrGrid');
     function card(title, sub, url, cls){
       const d=document.createElement('div'); d.className='qr-card'+(cls?' '+cls:'');
-      d.innerHTML='<h2>'+E(title)+'</h2><div class="sub">'+E(sub)+'</div><canvas></canvas><div class="scan">📷 Scan to enter</div>';
+      d.innerHTML='<h2>'+E(title)+'</h2><div class="sub">'+E(sub)+'</div><canvas></canvas><div class="scan">📷 Scan to open</div>';
       grid.appendChild(d);
       QRCode.toCanvas(d.querySelector('canvas'), url, {width:230, margin:1, color:{dark:'#0c3b21',light:'#ffffff'}});
     }
@@ -53,12 +56,31 @@
         sb.from("v_raffle_baskets_public").select("*").order("display_order",{ascending:true})
       ]);
       grid.innerHTML='';
-      const basketEvent=(events||[]).find(x=>x.raffle_type==='basket');
-      const list=(baskets||[]).filter(b=>!basketEvent||b.raffle_event_id===basketEvent.id);
-      for(const b of list){ card(b.name, 'Basket Raffle'+(b.estimated_value?' · ~$'+b.estimated_value:''), ORIGIN+'/raffle.html?basket='+b.id); }
-      const pot=(events||[]).find(x=>x.raffle_type==='fifty_fifty');
-      if(pot){ card(pot.name||'50/50 Cash Raffle', 'Winner takes half the pot', ORIGIN+'/raffle.html?event='+pot.id, 'fifty'); }
-      if(!grid.children.length){ grid.innerHTML='<p style="text-align:center;grid-column:1/-1;">No baskets to show yet.</p>'; }
+      let list=(events||[]).filter(e=>e.is_active);
+      if(wantRaffle) list=(events||[]).filter(e=>e.id===wantRaffle);
+      else if(wantKrewe) list=(events||[]).filter(e=>e.krewe_event_id===wantKrewe);
+      for(const ev of list){
+        const enterUrl = ORIGIN+'/raffle.html?event='+ev.id;
+        const zeffy = ev.zeffy_payment_url || ev.linked_event_ticket_url || '';
+        if(ev.raffle_type==='fifty_fifty'){
+          card(ev.name||'50/50 Cash Raffle', (ev.linked_event_name?ev.linked_event_name+' · ':'')+'Enter any qty · cash at table', enterUrl, 'fifty');
+          if(zeffy) card('Pay 50/50 by card', 'Zeffy · any quantity · per ticket', zeffy, 'fifty');
+        } else {
+          const bs=(baskets||[]).filter(b=>b.raffle_event_id===ev.id);
+          card(ev.name||'Basket raffle', 'Enter / cash for this raffle', enterUrl);
+          if(zeffy) card('Pay raffle by card', 'Zeffy · any quantity · per ticket', zeffy);
+          for(const b of bs){ card(b.name, 'Basket Raffle'+(b.estimated_value?' · ~$'+b.estimated_value:''), ORIGIN+'/raffle.html?basket='+b.id); }
+        }
+      }
+      if(!grid.children.length){
+        // Fallback: original “all live raffles” sheet when nothing matched a filter.
+        const basketEvent=(events||[]).find(x=>x.raffle_type==='basket' && x.is_active);
+        const blist=(baskets||[]).filter(b=>!basketEvent||b.raffle_event_id===basketEvent.id);
+        for(const b of blist){ card(b.name, 'Basket Raffle'+(b.estimated_value?' · ~$'+b.estimated_value:''), ORIGIN+'/raffle.html?basket='+b.id); }
+        const pot=(events||[]).find(x=>x.raffle_type==='fifty_fifty' && x.is_active);
+        if(pot){ card(pot.name||'50/50 Cash Raffle', 'Winner takes half the pot', ORIGIN+'/raffle.html?event='+pot.id, 'fifty'); }
+      }
+      if(!grid.children.length){ grid.innerHTML='<p style="text-align:center;grid-column:1/-1;">No raffles to show yet. Link a raffle to a krewe event in Member Hub.</p>'; }
     })();
   </script>
 <p style="margin:8px 0 0;"><a href="mailto:secretary@kreweofshamrock.com" style="color:var(--gold-light);">Contact: secretary@kreweofshamrock.com</a></p>

@@ -37,6 +37,7 @@ test("event sign-up: form renders with event picker and required fields", async 
 
   // the calendar shell renders even before/without backend data
   await expect(page.locator("#krewe-calendar")).toBeAttached();
+  await expect(page.locator("#raffleTickets")).toHaveAttribute("type", "number");
 
   assertHealthy(expect, report, "event sign-up form");
 });

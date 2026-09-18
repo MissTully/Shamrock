@@ -104,3 +104,9 @@ when the campaign links to a krewe event (`ticket_payment_url` / name). The memb
 self-serve **"My ticket is already purchased"** checkbox on `event-signup.html`
 (still calling `rsvp_to_event` with `p_note`) is unchanged.
 
+A mixed Zeffy cart (admission + raffle add-on, any quantity) still auto-RSVPs from
+the admission line and credits **paid** raffle entries from the raffle line. See
+`RAFFLE_EVENT_TICKETS.md` for Patrick’s campaign setup and the night-of QR/cash path.
+Apply `sql/kos_event_raffle_tickets.sql` in the Supabase SQL editor, then redeploy
+the `zeffy-webhook` Edge Function so line-item quantities are passed through.
+

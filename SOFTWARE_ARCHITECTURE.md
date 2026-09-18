@@ -168,7 +168,8 @@ Current Shamrock Leaders titles (directory + questionnaire) are in
 | Hours | `volunteer_hours` |
 | Content | `content_items`, `media_consents` |
 | Shop | `shop_products` (+ Zeffy URL attach flow) |
-| Payments | `payments` (+ `kos_record_payment`) |
+| Payments | `payments` (+ `kos_record_payment`; raffle line items → paid raffle entries) |
+| Raffles | `raffle_events` (`krewe_event_id` → `events`), `raffle_5050_entries.paid` |
 | Craic Cup | `clover_ledger`, `badge_defs`, `member_badges`, `craic_rank()`, `get_member_game_card()` |
 | Ops | Tartan Ball orders/guests, dues reminder log, outbound email queue |
 

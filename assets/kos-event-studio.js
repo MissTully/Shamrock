@@ -16,7 +16,7 @@
     ".hub-event-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:11px 12px;margin:8px 0;background:#fffdf4;}",
     ".hub-event-row b{font-family:var(--display);color:var(--green-800);}",
     ".hub-event-row .muted{color:var(--muted);font-size:13px;line-height:1.45;}",
-    ".hub-event-row .hub-appr-btns{flex:none;}",
+    ".hub-event-row .hub-appr-btns{flex:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;}",
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
     ".hub-flyer-note{font-size:12px;color:var(--muted);margin:4px 0 0;}",
@@ -107,16 +107,16 @@
       '<div class="wide" style="grid-column:1/-1;"><div class="hub-event-checks" style="margin:0;">' +
       '<label><input type="checkbox" id="hubEventCollectGuests" checked /> Ask for guest count</label>' +
       '<label><input type="checkbox" id="hubEventCollectGuestNames" checked /> Ask for guest names</label>' +
-      '<label><input type="checkbox" id="hubEventCollectRaffle" checked /> Ask for raffle ticket qty</label></div>' +
-      '<p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">Defaults match Mini Golf style (guests + raffle). Collected on the website before Zeffy checkout so officer reports show the same data Wild Apricot had.</p></div>' +
-      '<div><label for="hubEventRaffleOptions">Raffle qty choices</label><input id="hubEventRaffleOptions" placeholder="0,1,5,15" value="0,1,5,15" /></div>' +
+      '<label><input type="checkbox" id="hubEventCollectRaffle" checked /> Ask for raffle ticket qty (website reminder)</label></div>' +
+      '<p style="font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;">Buyers pick <b>any quantity</b> of raffle tickets on Zeffy (priced per ticket — not packs of 5/10). Link a 50/50 raffle to this event in Member Hub → Raffles so the webhook creates paid entries. Cash at the door is marked paid by a volunteer.</p></div>' +
+      '<div><label for="hubEventRaffleOptions">Raffle qty reminder (optional)</label><input id="hubEventRaffleOptions" placeholder="any, or 0,1,5,15" value="any" /></div>' +
       '<div class="wide"><label for="hubEventFlyerUrl">Event image / PDF URL</label><input id="hubEventFlyerUrl" type="url" placeholder="https://… or upload a file below" /></div>' +
       '<div class="wide"><label for="hubEventFlyerFile">Upload event image or PDF</label>' +
       '<input id="hubEventFlyerFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />' +
       '<p class="hub-flyer-note" id="hubEventFlyerNote" aria-live="polite">' + FLYER_NOTE_DEFAULT + '</p>' +
       '<div class="hub-flyer-preview" id="hubEventFlyerPreview" aria-live="polite"></div>' +
       '<button class="btn" type="button" id="hubEventFlyerClear" style="margin-top:8px;">Clear image / PDF</button></div></div>' +
-      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create a Zeffy ticketing campaign and paste the public share link here. Sign me up / RSVP will open that checkout. See PAYMENTS_SETUP.md. Save stores a draft and does not publish. After a successful save, review the saved name, date and time, location, and ticket price. Publish appears only after you confirm those details. Cancel that review and the event is not published and nobody is notified. If the event was already public, saving moves it back to a draft until you publish again. Each paid event needs its own Zeffy link.</p>' +
+      '<p style="font-size:13px;color:var(--muted);margin:10px 0 0;">For paid tickets, create one Zeffy ticketing campaign with <b>admission</b> plus a <b>raffle add-on priced per ticket with free quantity</b>. Paste the public share link here. See RAFFLE_EVENT_TICKETS.md. Save stores a draft and does not publish. After a successful save, review the saved name, date and time, location, and ticket price. Publish appears only after you confirm those details. Cancel that review and the event is not published and nobody is notified. If the event was already public, saving moves it back to a draft until you publish again. Each paid event needs its own Zeffy link.</p>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
       '<button class="btn btn-primary" type="button" id="hubEventPublish" hidden style="display:none">Publish</button>' +
       '<button class="btn" type="button" id="hubEventNew">New / clear</button></div><p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form></div>';
@@ -173,7 +173,7 @@
     var cg = document.getElementById("hubEventCollectGuests"); if (cg) cg.checked = true;
     var cn = document.getElementById("hubEventCollectGuestNames"); if (cn) cn.checked = true;
     var cr = document.getElementById("hubEventCollectRaffle"); if (cr) cr.checked = true;
-    var ro = document.getElementById("hubEventRaffleOptions"); if (ro) ro.value = "0,1,5,15";
+    var ro = document.getElementById("hubEventRaffleOptions"); if (ro) ro.value = "any";
     var rcClear = document.getElementById("hubEventRegCloses"); if (rcClear) rcClear.value = "";
     document.getElementById("hubEventStatus").value = "draft";
     var payClear = document.getElementById("hubEventPaymentUrl"); if (payClear) payClear.value = "";
@@ -208,7 +208,7 @@
     var cg = get("hubEventCollectGuests"); if (cg) cg.checked = event.collect_guests !== false;
     var cn = get("hubEventCollectGuestNames"); if (cn) cn.checked = event.collect_guest_names !== false;
     var cr = get("hubEventCollectRaffle"); if (cr) cr.checked = event.collect_raffle !== false;
-    var ro = get("hubEventRaffleOptions"); if (ro) ro.value = event.raffle_options || "0,1,5,15";
+    var ro = get("hubEventRaffleOptions"); if (ro) ro.value = event.raffle_options || "any";
     get("hubEventFlyerUrl").value = event.flyer_url || "";
     syncFlyerPreview();
     get("hubEventFormTitle").textContent = "Edit event";
@@ -216,6 +216,27 @@
     var wrap = document.getElementById("hubEventFormWrap");
     if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  function paintStudioQR(slot, url) {
+    if (!slot || !url) return;
+    slot.style.display = "block";
+    slot.innerHTML = '<canvas></canvas><div style="font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all;">' +
+      '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(url) + "</a></div>";
+    if (window.QRCode) {
+      QRCode.toCanvas(slot.querySelector("canvas"), url, {
+        width: 180, margin: 1, color: { dark: "#14532d", light: "#ffffff" }
+      });
+    }
+  }
+
+  function raffleQrBtn(event) {
+    var raffles = event.linked_raffles || [];
+    if (!raffles.length) {
+      return '<span class="muted" style="font-size:12px;align-self:center;">No raffle linked — set it in Raffles</span>';
+    }
+    return '<button class="btn" type="button" data-event-raffle-qr="' + esc(raffles[0].id) + '">Raffle QR</button>';
+  }
+
   function renderEventList(list) {
     var target = document.getElementById("hubEventList");
     if (!target) return;
@@ -243,7 +264,11 @@
         (event.is_featured ? " · Featured" : "") +
         (flyer ? " · has image/PDF" : " · add image/PDF") +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
-        (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button></div>') + '</div>';
+        (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button>' +
+        '<button class="btn" type="button" data-event-rsvp-qr="' + esc(event.id) + '">RSVP QR</button>' +
+        raffleQrBtn(event) +
+        '</div>') + '</div>' +
+        '<div class="qr-slot" data-event-qr-slot="' + esc(event.id) + '" style="display:none;padding:0 12px 12px;"></div>';
     });
     target.innerHTML = html;
     target.querySelectorAll("[data-event-edit]").forEach(function (button) {
@@ -251,6 +276,23 @@
         var id = button.getAttribute("data-event-edit");
         var event = list.find(function (row) { return String(row.id) === String(id); });
         if (event && String(event.source || "").toLowerCase() !== "ikc") fillEventForm(event);
+      });
+    });
+    target.querySelectorAll("[data-event-rsvp-qr]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-rsvp-qr");
+        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
+        var origin = (location.origin || "").replace(/\/$/, "");
+        paintStudioQR(slot, origin + "/event-signup.html?event=" + encodeURIComponent(id));
+      });
+    });
+    target.querySelectorAll("[data-event-raffle-qr]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var rid = button.getAttribute("data-event-raffle-qr");
+        var row = button.closest(".hub-event-row");
+        var slot = row && row.nextElementSibling;
+        var origin = (location.origin || "").replace(/\/$/, "");
+        paintStudioQR(slot, origin + "/raffle.html?event=" + encodeURIComponent(rid));
       });
     });
   }
@@ -441,7 +483,7 @@
       collect_guests: !!(document.getElementById("hubEventCollectGuests") && document.getElementById("hubEventCollectGuests").checked),
       collect_guest_names: !!(document.getElementById("hubEventCollectGuestNames") && document.getElementById("hubEventCollectGuestNames").checked),
       collect_raffle: !!(document.getElementById("hubEventCollectRaffle") && document.getElementById("hubEventCollectRaffle").checked),
-      raffle_options: value("hubEventRaffleOptions") || "0,1,5,15",
+      raffle_options: value("hubEventRaffleOptions") || "any",
       registration_closes_at: (function () {
         var rv = value("hubEventRegCloses");
         if (!rv) return null;
