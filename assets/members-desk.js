@@ -1745,7 +1745,7 @@
       '<div><label for="hubEventRaffleOptions">Raffle qty choices</label><input id="hubEventRaffleOptions" placeholder="0,1,5,15" value="0,1,5,15" /></div>' +
       '<div><label for="hubEventRafflePrice">Raffle ticket price (dollars)</label><input id="hubEventRafflePrice" type="number" min="0" step="0.01" placeholder="Officer enters the price" /></div>' +
       '<div style="grid-column:1/-1;"><label for="hubEventRaffleEvent">Attach existing raffle</label>' +
-      '<select id="hubEventRaffleEvent"><option value="">None. Enter a price above to create one, or leave blank to only collect qty.</option></select>' +
+      '<select id="hubEventRaffleEvent"><option value="">None (qty only, or enter a price to create one)</option></select>' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Qty is saved with the signup. A price or an existing raffle links raffle_events.ticket_price. There is no hardcoded dollar amount.</p></div></div></div>' +
       '<div class="wide hub-event-optional" id="hubEventMealBox">' +
       '<h4>Meal choice (optional)</h4>' +
@@ -1826,7 +1826,7 @@
   function fillRaffleEventSelect(selectedId) {
     var sel = document.getElementById("hubEventRaffleEvent");
     if (!sel) return;
-    var html = '<option value="">None. Enter a price above to create one, or leave blank to only collect qty.</option>';
+    var html = '<option value="">None (qty only, or enter a price to create one)</option>';
     eventRaffles.forEach(function (r) {
       if (!r || !r.id) return;
       var label = (r.name || "Raffle") + (r.is_active === false ? " (inactive)" : "");
