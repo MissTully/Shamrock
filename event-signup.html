@@ -359,6 +359,36 @@
 
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
 
+    const TARTAN_BALL_TABLE_LABEL = "Table of 8";
+    const TARTAN_BALL_TABLE_PRICE = "$1,040";
+
+    function isMainTartanBall(ev) {
+      const n = ((ev && ev.name) || "").toLowerCase();
+      return n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
+    }
+
+    function formatTicketPrice(cents) {
+      if (cents == null || cents === "") return "";
+      const n = Number(cents) / 100;
+      if (!Number.isFinite(n)) return "";
+      return "$" + n.toLocaleString("en-US", {
+        minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // Published ticket_label / ticket_price_cents first. For Tartan Ball, Jeff
+    // Carney confirmed a table of 8 is $1,040 (2026-09-17). If a per-person
+    // price is already stored, keep it and add the table option beside it.
+    function ticketPricingBits(ev) {
+      const published = [ev.ticket_label, formatTicketPrice(ev.ticket_price_cents)].filter(Boolean).join(" · ");
+      if (!isMainTartanBall(ev)) return published;
+      const tableBits = TARTAN_BALL_TABLE_LABEL + " · " + TARTAN_BALL_TABLE_PRICE;
+      if (!published) return tableBits;
+      const alreadyHasTable = /table of 8/i.test(published) || Number(ev.ticket_price_cents) === 104000;
+      if (alreadyHasTable) return published;
+      return published + " · " + tableBits;
+    }
 
     function isRegistrationClosed(ev) {
       if (!ev || !ev.registration_closes_at) return false;
@@ -367,9 +397,7 @@
     }
 
     function ticketCheckoutUrlFor(ev) {
-      const n = (ev.name || "").toLowerCase();
-      const isBall = n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
-      if (isBall) return ev.ticket_payment_url || ev.external_url || "http://www.tampabaytartanball.com/home.html";
+      if (isMainTartanBall(ev)) return ev.ticket_payment_url || ev.external_url || "http://www.tampabaytartanball.com/home.html";
       if (ev.ticket_payment_url) return ev.ticket_payment_url;
       const ext = (ev.external_url || "").toLowerCase();
       if (ext.includes("zeffy.com")) return ev.external_url;
@@ -392,8 +420,7 @@
       const end = event.end_time ? new Date(event.end_time) : null;
       const until = end && !isNaN(end) ? " · ends " + timeStr(end) : "";
       const payFeat = ticketCheckoutUrlFor(event);
-      const price = event.ticket_price_cents != null ? "$" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
-      const ticketBits = [event.ticket_label, price].filter(Boolean).join(" · ");
+      const ticketBits = ticketPricingBits(event);
       let media = "";
       if (event.flyer_url) {
         const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
@@ -442,8 +469,7 @@
         const d = new Date(ev.start_time);
         const when = !isNaN(d) ? (hasTime(d) ? dateStrShort(d) + ", " + timeStr(d) : dateStrShort(d)) : "Date TBD";
         const pay = ticketCheckoutUrlFor(ev);
-        const price = ev.ticket_price_cents != null ? "$" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
-        const ticketBits = [ev.ticket_label, price].filter(Boolean).join(" · ");
+        const ticketBits = ticketPricingBits(ev);
         let media;
         if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) {
           media = '<img src="' + esc(ev.flyer_url) + '" alt="" loading="lazy" />';
@@ -521,10 +547,6 @@
       const ours = data.filter((ev)=> ev.source !== "ikc");
       if (ours.length === 0) { eventSelect.innerHTML = '<option value="">No upcoming events</option>'; }
       const TARTAN_BALL_TICKETS = "http://www.tampabaytartanball.com/home.html";
-      function isMainTartanBall(ev) {
-        const n = (ev.name || "").toLowerCase();
-        return n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
-      }
       // Paid checkout: Zeffy ticket_payment_url (or Tartan Ball's external site).
       function ticketCheckoutUrl(ev) {
         if (isMainTartanBall(ev)) return ev.ticket_payment_url || ev.external_url || TARTAN_BALL_TICKETS;
@@ -639,7 +661,7 @@
         if (opt && opt.dataset.redirect) {
           btn.textContent = "☘ Buy Tickets";
           if (opt.dataset.checkoutKind === "tartan") {
-            showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
+            showMessage("A table of 8 is $1,040. Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
           } else {
             showMessage("Tickets for this event are sold on Zeffy. Tap Buy Tickets to continue checkout. Someone already bought your ticket? Check the box above.", "success");
           }
@@ -702,9 +724,17 @@
             "address": { "@type": "PostalAddress", "addressRegion": "FL", "addressCountry": "US" } };
         }
         if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) item.image = ev.flyer_url;
-        if (ev.ticket_payment_url) {
-          item.offers = { "@type": "Offer", "url": ev.ticket_payment_url,
+        const payUrl = ticketCheckoutUrlFor(ev);
+        if (payUrl) {
+          item.offers = { "@type": "Offer", "url": payUrl,
             "availability": "https://schema.org/InStock", "priceCurrency": "USD" };
+          if (isMainTartanBall(ev)) {
+            item.offers.name = TARTAN_BALL_TABLE_LABEL;
+            item.offers.price = "1040.00";
+          } else if (ev.ticket_price_cents != null) {
+            item.offers.price = (Number(ev.ticket_price_cents) / 100).toFixed(2);
+            if (ev.ticket_label) item.offers.name = ev.ticket_label;
+          }
         }
         return item;
       });

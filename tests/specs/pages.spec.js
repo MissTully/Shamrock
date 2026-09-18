@@ -88,6 +88,22 @@ test("bylaws.html publishes the official bylaws, not a placeholder", async ({ pa
   await expect(back).toHaveAttribute("href", "../../members.html#docs");
 });
 
+test("tartan-ball.html publishes table of 8 pricing at $1,040", async ({ page }) => {
+  const report = watchPage(page);
+  await page.goto("/tartan-ball.html");
+
+  const pricing = page.locator(".ball-pricing");
+  await expect(pricing).toBeVisible();
+  await expect(pricing).toContainText("$1,040");
+  await expect(pricing).toContainText(/table of 8/i);
+  await expect(page.locator("body")).toContainText("A table of 8 is $1,040");
+
+  const ld = await page.locator('script[type="application/ld+json"]').first().textContent();
+  expect(ld).toMatch(/Table of 8/);
+  expect(ld).toMatch(/1040/);
+  assertHealthy(expect, report, "tartan-ball pricing");
+});
+
 test("code-of-conduct.html publishes the official Code of Conduct, not a placeholder", async ({ page, request }) => {
   await page.goto("/assets/docs/code-of-conduct.html");
   await expect(page).toHaveTitle(/Code of Conduct/);

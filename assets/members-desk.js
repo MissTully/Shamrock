@@ -1730,7 +1730,10 @@
       if (event.start_time) details.push(eventLocalDisplay(event.start_time) + (event.end_time ? " - " + eventLocalDisplay(event.end_time) : ""));
       if (event.location) details.push(event.location);
       if (event.registration_closes_at) details.push("Regs close " + eventLocalDisplay(event.registration_closes_at));
-      var ticket = event.ticket_price_cents != null ? " · $" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
+      var ticketParts = [];
+      if (event.ticket_label) ticketParts.push(event.ticket_label);
+      if (event.ticket_price_cents != null) ticketParts.push("$" + (Number(event.ticket_price_cents) / 100).toFixed(2));
+      var ticket = ticketParts.length ? " · " + ticketParts.join(" · ") : "";
       var readOnly = String(event.source || "").toLowerCase() === "ikc";
       var eid = esc(event.id);
       var flyer = event.flyer_url || "";

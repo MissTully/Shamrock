@@ -27,7 +27,14 @@
     "address": { "@type": "PostalAddress", "addressLocality": "Tampa", "addressRegion": "FL", "addressCountry": "US" }
   },
   "organizer": { "@type": "Organization", "name": "Krewe of Shamrock", "url": "https://krewe-of-shamrock.vercel.app/" },
-  "offers": { "@type": "Offer", "url": "http://www.tampabaytartanball.com/home.html", "availability": "https://schema.org/InStock", "priceCurrency": "USD" }
+  "offers": {
+    "@type": "Offer",
+    "name": "Table of 8",
+    "price": "1040.00",
+    "priceCurrency": "USD",
+    "url": "http://www.tampabaytartanball.com/home.html",
+    "availability": "https://schema.org/InStock"
+  }
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +53,41 @@
   .ball-facts .fact .ic{ font-size:32px; display:block; margin-bottom:8px; }
   .ball-facts .fact h3{ margin:0 0 6px; color:var(--gold-light); font-family:var(--display); font-size:18px; letter-spacing:.5px; }
   .ball-facts .fact p{ margin:0; color:#f1ead4; font-size:16px; }
-  @media (max-width:760px){ .ball-facts{ grid-template-columns:1fr; } }
+  .ball-pricing{
+    margin-top:28px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(236,208,126,.5);
+    border-radius:16px;
+    padding:22px 20px;
+    text-align:center;
+  }
+  .ball-pricing h3{
+    margin:0 0 8px;
+    color:var(--gold-light);
+    font-family:var(--display);
+    font-size:20px;
+    letter-spacing:.5px;
+  }
+  .ball-pricing .ball-price{
+    margin:0;
+    color:#fff;
+    font-family:var(--display);
+    font-size:42px;
+    font-weight:700;
+    line-height:1.15;
+    letter-spacing:.4px;
+  }
+  .ball-pricing .ball-price-label{
+    margin:8px 0 12px;
+    color:#f1ead4;
+    font-size:18px;
+  }
+  .ball-pricing p{ margin:0 0 14px; color:#f1ead4; font-size:16px; line-height:1.45; }
+  @media (max-width:760px){
+    .ball-facts{ grid-template-columns:1fr; }
+    .ball-pricing{ padding:20px 16px; }
+    .ball-pricing .ball-price{ font-size:36px; }
+  }
 </style>
 </head>
 <body>
@@ -161,6 +202,14 @@
         </div>
       </div>
 
+      <div class="ball-pricing" id="tables">
+        <h3>Tables</h3>
+        <p class="ball-price">$1,040</p>
+        <p class="ball-price-label">A table of 8</p>
+        <p>Reserve a table for eight on the Tampa Bay Tartan Ball site.</p>
+        <a class="btn btn-primary" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>
+      </div>
+
       <!-- EVENING SCHEDULE -->
       <div class="section-title" style="margin-top:42px;">
         <h2 style="color:#fff;">The Evening&rsquo;s Program</h2>
@@ -229,7 +278,7 @@
       <span class="crest float" role="img" aria-label="Shamrock crest"></span>
       <div class="section-title">
         <h2 style="color:#fff;">Will You Join Us?</h2>
-        <p class="sub">Seats are limited, so reserve early</p>
+        <p class="sub">A table of 8 is $1,040. Seats are limited, so reserve early.</p>
       </div>
       <div class="btns" style="margin-top:22px;">
         <a class="btn btn-primary" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets at Tampa Bay Tartan Ball</a>

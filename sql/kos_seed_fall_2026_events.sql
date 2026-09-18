@@ -30,18 +30,31 @@ WHERE NOT EXISTS (
   WHERE name ILIKE '%Basket-Making%' AND start_time::date = DATE '2026-10-17'
 );
 
-INSERT INTO public.events (name, event_type, start_time, location, is_public, notes)
+INSERT INTO public.events (name, event_type, start_time, location, is_public, notes, ticket_label, ticket_price_cents)
 SELECT
   'Tartan Ball',
   'ball',
   '2026-10-24 18:00:00-04',
   'Higgins Hall, Tampa, FL',
   true,
-  'Season ball. Crowning of the new King and Queen. 6-10 PM per the published program.'
+  'Season ball. Crowning of the new King and Queen. 6-10 PM per the published program.',
+  'Table of 8',
+  104000
 WHERE NOT EXISTS (
   SELECT 1 FROM public.events
   WHERE name = 'Tartan Ball' AND start_time::date = DATE '2026-10-24'
 );
+
+-- Jeff Carney, 2026-09-17 (confirmed by Melissa): a table of 8 is $1,040.
+-- Only fill ticket fields when they are still empty so a later Event Studio
+-- per-person price is not overwritten.
+UPDATE public.events
+SET ticket_label = 'Table of 8',
+    ticket_price_cents = 104000
+WHERE name = 'Tartan Ball'
+  AND start_time::date = DATE '2026-10-24'
+  AND ticket_label IS NULL
+  AND ticket_price_cents IS NULL;
 
 INSERT INTO public.events (name, event_type, start_time, location, is_public, notes)
 SELECT

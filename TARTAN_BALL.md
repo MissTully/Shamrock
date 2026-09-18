@@ -1,7 +1,7 @@
 # Tartan Ball seating, meals & Avery labels
 
 Formal-event playbook for the October Tartan Ball (Higgins Hall).
-Ticket sales: tampabaytartanball.com / Jotform. Member Hub: caterer counts, table numbers, Avery #18660 labels.
+Ticket sales: tampabaytartanball.com / Jotform. Published table price: a table of 8 is $1,040 (Jeff Carney, 2026-09-17). Member Hub: caterer counts, table numbers, Avery #18660 labels.
 
 ## Meal to jewel map (provisional)
 
