@@ -15,10 +15,10 @@ Create in studio  →  Save  →  Show QR  →  Print / project / tape on the do
 
 ### 1. Event Studio (Officer desk)
 1. Create or edit the event and **Save**.
-2. In the event list, tap:
-   - **RSVP QR** — flyer / table tent → `event-signup.html?event=…` (Sign me up / volunteer).
-   - **Door check-in QR** — projector at the door → members scan to check in (Parade Ready meetings).
+2. In the event list, tap **Door check-in QR** — projector at the door → logged-in members scan to check in (meetings and socials).
 3. Put the square on the wall or print it.
+
+RSVP QR is backburner and is not shown in Event Studio. Public sign-up remains `event-signup.html?event=…` if you share that link by hand.
 
 ### 2. Shop Studio (Officer desk)
 1. Create the product, attach the **Zeffy checkout URL**, **Save**.
@@ -48,8 +48,8 @@ That was roadmap language for: *door check-in that also marks volunteer hours*.
 
 | Situation | What you print | What they scan into |
 |-----------|----------------|---------------------|
-| Flyer for Mini Golf | Event **RSVP QR** | Sign-up for that event |
-| Members meeting door | Event **Door check-in QR** | Checked in / Parade Ready |
+| Flyer for Mini Golf | Share `event-signup.html?event=…` | Sign-up for that event |
+| Members meeting or social door | Event **Door check-in QR** | Checked in (Parade Ready if mandatory meeting) |
 | Merch table | Product **Shop QR** | Zeffy buy link |
 | Dues reminder slide | Dues QR from “How QR codes work” | Zeffy membership pay |
 

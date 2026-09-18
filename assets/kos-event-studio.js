@@ -84,6 +84,35 @@
     return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
   }
 
+  function studioAbs(path) {
+    var origin = (location.origin || "").replace(/\/$/, "");
+    return origin + "/" + String(path || "").replace(/^\//, "");
+  }
+
+  function studioPaintQR(slot, url, label) {
+    if (!slot) return;
+    slot.innerHTML = '<canvas></canvas><div style="font-size:15px;color:var(--muted);margin-top:6px;word-break:break-all;">' +
+      esc(label || "Scan or open") + ': <a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(url) + "</a></div>";
+    if (window.QRCode) {
+      QRCode.toCanvas(slot.querySelector("canvas"), url, { width: 220, margin: 1, color: { dark: "#14532d", light: "#ffffff" } });
+    } else {
+      slot.querySelector("canvas").replaceWith(Object.assign(document.createElement("p"), { textContent: "QR library unavailable - use the link." }));
+    }
+  }
+
+  async function studioShowEventCheckinQR(eventId, slot) {
+    var client = window.__kosSb;
+    if (!client) { slot.innerHTML = '<p class="empty">Sign-in client not ready. Refresh and try again.</p>'; return; }
+    slot.innerHTML = '<p class="empty">Making check-in QR…</p>';
+    try {
+      var res = await client.rpc("officer_enable_checkin", { p_event: eventId });
+      if (res.error || !res.data) throw res.error || new Error("No check-in code returned.");
+      studioPaintQR(slot, studioAbs("members.html?checkin=" + encodeURIComponent(res.data)), "Door check-in");
+    } catch (e) {
+      slot.innerHTML = '<p class="empty">Couldn’t make a check-in QR. ' + esc((e && e.message) || "Try again.") + "</p>";
+    }
+  }
+
   function eventStudioFormHtml() {
     return '<div class="hub-event-form" id="hubEventFormWrap">' +
       '<h3 id="hubEventFormTitle">New event</h3>' +
@@ -336,7 +365,7 @@
     var target = document.getElementById("hubEventList");
     if (!target) return;
     if (!list.length) {
-      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below.</p>';
+      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below. After you save, you can make a door check-in QR here.</p>';
       return;
     }
     var html = "";
@@ -362,7 +391,11 @@
         (event.is_online || event.event_type === "online" ? " · online" : "") +
         (flyer ? " · has image/PDF" : " · add image/PDF") +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
-        (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button></div>') + '</div>';
+        (readOnly ? "" : '<div class="hub-appr-btns">' +
+          '<button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button>' +
+          '<button class="btn btn-primary" type="button" data-event-checkin-qr="' + esc(event.id) + '">▦ Door check-in QR</button>' +
+        '</div>') +
+        '<div class="qr-slot" data-event-qr-slot="' + esc(event.id) + '" style="flex-basis:100%;margin-top:8px;"></div></div>';
     });
     target.innerHTML = html;
     target.querySelectorAll("[data-event-edit]").forEach(function (button) {
@@ -370,6 +403,13 @@
         var id = button.getAttribute("data-event-edit");
         var event = list.find(function (row) { return String(row.id) === String(id); });
         if (event && String(event.source || "").toLowerCase() !== "ikc") fillEventForm(event);
+      });
+    });
+    target.querySelectorAll("[data-event-checkin-qr]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-checkin-qr");
+        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
+        studioShowEventCheckinQR(id, slot);
       });
     });
   }
@@ -630,8 +670,8 @@
       else panel.appendChild(card);
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create and edit krewe events. Save stores a draft. Publish only after you review.</small></div></div>' +
-      '<div class="app-body"><p style="font-size:14px;color:var(--muted);margin:0 0 12px;line-height:1.45;">Tap <b>Edit event</b> to change location, dates, or Close registrations on. Then Save event. Saving stores a draft and does not publish.</p><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
+      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create and edit krewe events, then make a door check-in QR. Save stores a draft. Publish only after you review.</small></div></div>' +
+      '<div class="app-body"><p style="font-size:14px;color:var(--muted);margin:0 0 12px;line-height:1.45;">Tap <b>Edit event</b> to change location, dates, or Close registrations on. How QR works: <b>save the event</b>, then tap <b>Door check-in QR</b> (projector at the door). Members scan it on their phone to check in. Saving stores a draft and does not publish.</p><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
       eventStudioFormHtml() + '</div>';
     document.getElementById("hubEventForm").addEventListener("submit", function (e) {
       e.preventDefault(); saveEventStudio(client);

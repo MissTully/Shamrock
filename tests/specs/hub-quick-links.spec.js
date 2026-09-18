@@ -62,6 +62,9 @@ test.describe("Member Hub Quick Links", () => {
     await expect(page.locator("[data-hub-panel='officer']")).toHaveClass(/hub-on/);
     await expect(page.locator("#hubEventStudio")).toBeVisible();
     await expect(page.locator("#hubEventStudio h2")).toHaveText(/Event Studio/i);
+    await expect(page.locator("#hubEventStudio")).toContainText("Door check-in QR");
+    await expect(page.locator("#hubEventStudio")).not.toContainText("RSVP QR");
+    await expect(page.locator("[data-event-rsvp-qr]")).toHaveCount(0);
     assertHealthy(expect, report, "event studio quick link");
   });
 

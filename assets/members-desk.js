@@ -1685,8 +1685,7 @@
       var url = studioAbs("members.html?checkin=" + encodeURIComponent(code));
       studioPaintQR(slot, url, "Door check-in");
     } catch (e) {
-      slot.innerHTML = '<p class="empty">Couldn’t make a check-in QR. ' + esc((e && e.message) || "Try again.") +
-        " (Check-in codes work for krewe meetings/events the officer check-in system knows.)</p>";
+      slot.innerHTML = '<p class="empty">Couldn’t make a check-in QR. ' + esc((e && e.message) || "Try again.") + "</p>";
     }
   }
 
@@ -1954,7 +1953,7 @@
     var target = document.getElementById("hubEventList");
     if (!target) return;
     if (!list.length) {
-      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below. After you save, you can make RSVP and door check-in QR codes here.</p>';
+      target.innerHTML = '<p class="empty">No Krewe events yet. Create the first one below. After you save, you can make a door check-in QR here.</p>';
       return;
     }
     var html = "";
@@ -1983,7 +1982,6 @@
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
         (readOnly ? "" : '<div class="hub-appr-btns">' +
           '<button class="btn btn-primary" type="button" data-event-edit="' + eid + '">Edit event</button>' +
-          '<button class="btn" type="button" data-event-rsvp-qr="' + eid + '">▦ RSVP QR</button>' +
           '<button class="btn btn-primary" type="button" data-event-checkin-qr="' + eid + '">▦ Door check-in QR</button>' +
         '</div>') +
         '<div class="qr-slot" data-event-qr-slot="' + eid + '" style="flex-basis:100%;margin-top:8px;"></div></div>';
@@ -1994,14 +1992,6 @@
         var id = button.getAttribute("data-event-edit");
         var event = list.find(function (row) { return String(row.id) === String(id); });
         if (event && String(event.source || "").toLowerCase() !== "ikc") fillEventForm(event);
-      });
-    });
-    target.querySelectorAll("[data-event-rsvp-qr]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var id = button.getAttribute("data-event-rsvp-qr");
-        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
-        var url = studioAbs("event-signup.html?event=" + encodeURIComponent(id));
-        studioPaintQR(slot, url, "RSVP / Sign me up");
       });
     });
     target.querySelectorAll("[data-event-checkin-qr]").forEach(function (button) {
@@ -2247,7 +2237,7 @@
       await refreshEventStudio(client);
       await loadEventRaffles(client);
       if (save) { save.disabled = false; save.textContent = "☘ Save event"; }
-      finishSavedReview(msg, res, payload, cleared, "You can make an RSVP QR or a Door check-in QR from the list above.");
+      finishSavedReview(msg, res, payload, cleared, "You can make a Door check-in QR from the list above.");
     } catch (e) { if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e); }
     if (save) { save.disabled = false; save.textContent = "☘ Save event"; }
   }
@@ -2268,9 +2258,9 @@
       else panel.appendChild(card);
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Add or edit events, then make RSVP and door check-in QR codes. Save stores a draft. Publish only after you review.</small></div></div>' +
+      '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Add or edit events, then make a door check-in QR. Save stores a draft. Publish only after you review.</small></div></div>' +
       '<div class="app-body">' +
-      '<p style="font-size:16px;color:var(--muted);margin:0 0 12px;">Tap <b>Edit event</b> on any published row to change address, start/end, or registration close. How QR works: <b>save the event</b>, then tap <b>RSVP QR</b> (flyer/table tent) or <b>Door check-in QR</b> (projector at the door). The square is just that link. Saving stores a draft and does not publish.</p>' +
+      '<p style="font-size:16px;color:var(--muted);margin:0 0 12px;">Tap <b>Edit event</b> on any published row to change address, start/end, or registration close. How QR works: <b>save the event</b>, then tap <b>Door check-in QR</b> (projector at the door). Members scan it on their phone to check in. The square is just that link. Saving stores a draft and does not publish.</p>' +
       '<div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
       eventStudioFormHtml() + '</div>';
     document.getElementById("hubEventForm").addEventListener("submit", function (e) {
@@ -2383,7 +2373,7 @@
   var OFFICER_TOOL_META = {
     hubApprovals: { title: "Approvals", desc: "Roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Payments", desc: "Dues and payment records", icon: "💳", section: "Money" },
-    hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
+    hubEventStudio: { title: "Event Studio", desc: "Add or edit events, door check-in QR", icon: "📅", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },

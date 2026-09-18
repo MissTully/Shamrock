@@ -206,7 +206,7 @@
       '<div class="app-body">' +
       '<p style="font-size:14px;color:var(--muted);margin:0 0 14px;line-height:1.45;">' +
       "A QR code is just a link drawn as a square. Create the thing first, then make its square. " +
-      "<b>Event Studio</b> has RSVP / door QR. <b>Shop Studio</b> has product QR. " +
+      "<b>Event Studio</b> has door check-in QR. <b>Shop Studio</b> has product QR. " +
       "This studio covers meeting check-in and tonight&rsquo;s handy links.</p>" +
       '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid rgba(168,128,28,.25);">' +
       '<h3 style="font-family:var(--display);color:var(--green-800);margin:0 0 10px;">➕ Schedule a meeting</h3>' +
