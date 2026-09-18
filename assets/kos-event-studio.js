@@ -108,8 +108,40 @@
       var res = await client.rpc("officer_enable_checkin", { p_event: eventId });
       if (res.error || !res.data) throw res.error || new Error("No check-in code returned.");
       studioPaintQR(slot, studioAbs("members.html?checkin=" + encodeURIComponent(res.data)), "Door check-in");
+      slot.insertAdjacentHTML("beforeend",
+        '<p style="font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4;">Members who scan this while signed in are marked <b>checked in / attended</b>. Tap <b>Who checked in</b> to see them.</p>');
     } catch (e) {
       slot.innerHTML = '<p class="empty">Couldn’t make a check-in QR. ' + esc((e && e.message) || "Try again.") + "</p>";
+    }
+  }
+
+  async function studioShowEventCheckins(eventId, slot) {
+    var client = window.__kosSb;
+    if (!client) { slot.innerHTML = '<p class="empty">Sign-in client not ready. Refresh and try again.</p>'; return; }
+    slot.innerHTML = '<p class="empty">Loading who checked in…</p>';
+    try {
+      var res = await client.rpc("officer_event_checkins", { p_event: eventId });
+      if (res.error) throw res.error;
+      var data = res.data || {};
+      if (data.ok === false) throw new Error(data.message || "Not authorized.");
+      var people = data.members || [];
+      var html = '<p style="margin:0 0 8px;font-weight:700;color:var(--green-800);">' +
+        esc(String(data.count != null ? data.count : people.length)) + " checked in" +
+        (data.event ? " · " + esc(data.event) : "") + "</p>";
+      if (!people.length) {
+        html += '<p class="empty">Nobody has scanned the door QR yet. When a signed-in member scans it, they appear here as attended.</p>';
+      } else {
+        html += '<ul style="margin:0;padding-left:1.2em;line-height:1.55;">' + people.map(function (p) {
+          var nm = (p && p.name) ? String(p.name).trim() : "";
+          if (!nm) nm = (p && p.email) || "Member";
+          return "<li><b>" + esc(nm) + "</b>" +
+            (p && p.email ? ' <span style="color:var(--muted);font-size:13px;">' + esc(p.email) + "</span>" : "") +
+            "</li>";
+        }).join("") + "</ul>";
+      }
+      slot.innerHTML = html;
+    } catch (e) {
+      slot.innerHTML = '<p class="empty">Couldn’t load check-ins. ' + esc((e && e.message) || "Try again.") + "</p>";
     }
   }
 
@@ -394,6 +426,7 @@
         (readOnly ? "" : '<div class="hub-appr-btns">' +
           '<button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button>' +
           '<button class="btn btn-primary" type="button" data-event-checkin-qr="' + esc(event.id) + '">▦ Door check-in QR</button>' +
+          '<button class="btn" type="button" data-event-checkins="' + esc(event.id) + '">Who checked in</button>' +
         '</div>') +
         '<div class="qr-slot" data-event-qr-slot="' + esc(event.id) + '" style="flex-basis:100%;margin-top:8px;"></div></div>';
     });
@@ -410,6 +443,13 @@
         var id = button.getAttribute("data-event-checkin-qr");
         var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
         studioShowEventCheckinQR(id, slot);
+      });
+    });
+    target.querySelectorAll("[data-event-checkins]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-checkins");
+        var slot = target.querySelector('[data-event-qr-slot="' + id + '"]');
+        studioShowEventCheckins(id, slot);
       });
     });
   }
@@ -671,7 +711,7 @@
     }
     card.innerHTML =
       '<div class="app-head"><span class="ic">📅</span><div><h2>Event Studio</h2><small>Create and edit krewe events, then make a door check-in QR. Save stores a draft. Publish only after you review.</small></div></div>' +
-      '<div class="app-body"><p style="font-size:14px;color:var(--muted);margin:0 0 12px;line-height:1.45;">Tap <b>Edit event</b> to change location, dates, or Close registrations on. How QR works: <b>save the event</b>, then tap <b>Door check-in QR</b> (projector at the door). Members scan it on their phone to check in. Saving stores a draft and does not publish.</p><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
+      '<div class="app-body"><p style="font-size:14px;color:var(--muted);margin:0 0 12px;line-height:1.45;">Tap <b>Edit event</b> to change location, dates, or Close registrations on. How door check-in works: <b>save the event</b>, tap <b>Door check-in QR</b> (projector at the door), and members scan it while signed in. That marks them attended. Tap <b>Who checked in</b> to see the list. Saving stores a draft and does not publish.</p><div class="hub-event-list"><h3>Events</h3><div id="hubEventList"><p class="empty">Loading events…</p></div></div>' +
       eventStudioFormHtml() + '</div>';
     document.getElementById("hubEventForm").addEventListener("submit", function (e) {
       e.preventDefault(); saveEventStudio(client);

@@ -13,7 +13,7 @@ Event Studio lives in the authenticated Member Hub under **Officer desk**. Membe
    - **Meal choice.** Turn it on and list meal options (one per line). Members pick one at signup; the choice is stored on `event_signups.meal_choice`.
    - **Online meeting.** Set type to Online or check "This is an online event" and paste the join URL. Signup emails that link only to the member who just registered, through `enqueue_email` / `outbound_emails`.
 6. Save. The list refreshes from `officer_list_events()`. Published events stay editable (address, dates, Close registrations on).
-7. On a saved row, tap **Door check-in QR**. Project or print that square at the door. Logged-in members scan `members.html?checkin=…` and are marked attended for that event (meetings and socials such as Book Club / Basket-Making Happy Hour). **RSVP QR is not offered** in Event Studio.
+7. On a saved row, tap **Door check-in QR**. Project or print that square at the door. Logged-in members scan `members.html?checkin=…` and are marked **attended / checked in** for that event. Tap **Who checked in** on that row (or Officer desk → Reports → Event report) to see them. **RSVP QR is not offered** in Event Studio.
 
 Schema for raffle/meal/online extras is `sql/kos_event_studio_raffle_meal_online.sql`. Door check-in RPCs are `sql/kos_door_checkin.sql` (applied live; safe to re-run). Melissa does not need to run SQL in the dashboard for this.
 

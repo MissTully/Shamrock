@@ -87,7 +87,7 @@
         '<td style="text-align:center;">' + guestCell + '</td>' +
         '<td style="text-align:center;">' + raffleCell + '</td>' +
         '<td style="text-align:right;">' + (a.amount_cents != null ? dollars(a.amount_cents) : "") + '</td>' +
-        '<td style="text-align:center;">' + (a.checked_in ? "✔" : "") + '</td>' +
+        '<td style="text-align:center;">' + (a.checked_in ? "Yes" : "—") + '</td>' +
         '<td>' + esc(a.source || "") + '</td></tr>';
     }).join("");
     target.innerHTML =
@@ -100,7 +100,7 @@
       '</div>' +
       (rows
         ? '<div class="hub-report-tablewrap"><table class="hub-report-table"><thead><tr>' +
-          '<th>Name</th><th>Email</th><th>Ticket / role</th><th>Status</th><th>Guests</th><th>Raffle</th><th>Paid</th><th>In</th><th>Source</th>' +
+          '<th>Name</th><th>Email</th><th>Ticket / role</th><th>Status</th><th>Guests</th><th>Raffle</th><th>Paid</th><th>Checked in</th><th>Source</th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
           '<div style="margin-top:10px;"><button class="btn" type="button" id="hubReportEventCsv">⬇ Download attendee list (CSV)</button></div>'
         : '<p class="empty">No sign-ups recorded for this event yet.</p>');
@@ -233,7 +233,7 @@
       '<div class="app-body">' +
       '<div class="hub-report-section" style="border-top:0;padding-top:0;margin-top:0;">' +
       '<h3>Event report</h3>' +
-      '<p class="sub">Website RSVPs and old-site (Wild Apricot) registrations together: attendees, guests, check-ins, and money raised.</p>' +
+      '<p class="sub">Website RSVPs, door check-ins, and old-site (Wild Apricot) registrations together: attendees, guests, who is checked in, and money raised.</p>' +
       '<div class="hub-report-controls">' +
       '<div style="flex:1;min-width:240px;"><label for="hubReportEvent">Event</label>' +
       '<select id="hubReportEvent" style="width:100%;"><option value="">Loading events…</option></select></div>' +

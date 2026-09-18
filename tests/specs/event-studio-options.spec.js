@@ -32,6 +32,7 @@ test.describe("Event Studio optional fields", () => {
     await expect(page.locator("#hubEventStart")).toBeVisible();
     await expect(page.locator("#hubEventRegCloses")).toBeVisible();
     await expect(page.locator("#hubEventStudio")).toContainText("Door check-in QR");
+    await expect(page.locator("#hubEventStudio")).toContainText("Who checked in");
     await expect(page.locator("#hubEventStudio")).not.toContainText("RSVP QR");
     await expect(page.locator("[data-event-rsvp-qr]")).toHaveCount(0);
     assertHealthy(expect, report, "event studio optional fields");

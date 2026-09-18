@@ -1680,18 +1680,32 @@
       try{ code = localStorage.getItem("kos_checkin"); }catch(_){}
       if(!code) return;
       const { data, error } = await supabase.rpc("meeting_check_in", { p_code: code });
-      try{ localStorage.removeItem("kos_checkin"); }catch(_){}
       const ok = data && data.ok;
-      const bar = document.getElementById("memberBar");
-      if(bar){
-        const note = document.createElement("div");
-        note.textContent = ok
-          ? "✅ Checked in to " + (data.event||"the meeting") + ". Fáilte!"
-          : "⚠️ Check-in failed: " + ((data && data.error) || (error && error.message) || "unknown error");
-        note.style.cssText = "flex:1;font-weight:600;color:" + (ok ? "#14532d" : "#b3452e") + ";";
-        bar.prepend(note);
+      if(ok){
+        try{ localStorage.removeItem("kos_checkin"); }catch(_){}
       }
-      if(ok) loadParadeReady();
+      const text = ok
+        ? "✅ Checked in to " + (data.event||"the event") + ". You’re marked attended."
+        : "⚠️ Check-in failed: " + ((data && data.error) || (error && error.message) || "unknown error");
+      function paintBanner(host, id){
+        if(!host) return;
+        let note = document.getElementById(id);
+        if(!note){
+          note = document.createElement("div");
+          note.id = id;
+          note.setAttribute("role","status");
+          host.insertBefore(note, host.firstChild);
+        }
+        note.textContent = text;
+        note.style.cssText = "flex:1 1 100%;font-weight:700;padding:10px 12px;border-radius:10px;margin:4px 0 8px;background:" +
+          (ok ? "#e8f5e9" : "#fdecea") + ";color:" + (ok ? "#14532d" : "#b3452e") + ";";
+      }
+      paintBanner(document.getElementById("memberBar"), "kosCheckinBanner");
+      paintBanner(document.getElementById("hubRoot"), "kosCheckinBannerHub");
+      if(ok){
+        setTimeout(function(){ paintBanner(document.getElementById("hubRoot"), "kosCheckinBannerHub"); }, 700);
+        loadParadeReady();
+      }
     }
 
     /* ---- Officer actions used by the Parade Readiness reports ---- */
@@ -1871,10 +1885,11 @@
               const hrsCell = isVol
                 ? `<input id="attHrs-${r.id}" type="number" min="0.5" max="24" step="0.5" value="${esc(r.volunteer_hours_planned != null ? String(r.volunteer_hours_planned) : "2")}" style="width:72px;" />`
                 : "-";
+              const stLabel = r.status==="attended" ? "checked in" : (r.status||"-");
               const actions = r.status==="attended"
                 ? `<button class="rpt-btn" type="button" onclick="kosConfirmAttendance('${r.id}',false)">Undo</button>`
                 : `<button class="rpt-btn ok" type="button" onclick="kosConfirmAttendance('${r.id}',true)">${isVol?"Confirm + hours":"Confirm attended"}</button>`;
-              return `<tr><td>${esc(nm[r.member_id]||"?")}</td><td>${esc(r.signup_role||"attendee")}</td><td>${esc(r.status||"-")}</td><td>${esc(planned)}</td><td>${hrsCell}</td><td>${actions}</td></tr>`;
+              return `<tr><td>${esc(nm[r.member_id]||"?")}</td><td>${esc(r.signup_role||"attendee")}</td><td>${esc(stLabel)}</td><td>${esc(planned)}</td><td>${hrsCell}</td><td>${actions}</td></tr>`;
             }).join("");
             html += '</tbody></table></div>';
           }
@@ -3077,11 +3092,11 @@
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260918pwa1"></script>
-<script src="assets/members-desk.js?v=20260918door1" defer></script>
-  <script src="assets/kos-event-studio.js?v=20260918door1" defer></script>
+<script src="assets/members-desk.js?v=20260918door2" defer></script>
+  <script src="assets/kos-event-studio.js?v=20260918door2" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918door1"></script>
-  <script src="assets/kos-reports.js?v=20260914t1" defer></script>
+  <script src="assets/kos-reports.js?v=20260918door2" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
   <script src="assets/kos-email-invoices.js?v=20260915ei1" defer></script>
 </body>
