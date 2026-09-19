@@ -18,10 +18,12 @@ built into the site and database, and what Melissa needs to do to go live.
 | Sponsorship | Price | Inventory | How it is built |
 |---|---|---|---|
 | Moon Coin Band Sponsor | $350 | 1 (exclusive) | Tier with `inventory_limit = 1`; hidden from the public page the moment it is claimed, so it cannot be double-booked |
-| Photography Sponsor | $300–$350 → seeded at $350 as a **draft** | 1 (exclusive) | Same exclusive mechanics; stays invisible until the final price is confirmed and the tier is published |
+| Photography Sponsor | $350 (confirmed 2026-09-19) | 1 (exclusive) | Same exclusive mechanics as the band sponsorship |
 | Irish Dancers Sponsor | $300 | 1 (exclusive) | Tier with `inventory_limit = 1`, hidden when claimed |
 | Liquor Wagon Sponsor | $50 | Unlimited | Multi-quantity tier (`max_per_order = 10`); a member can sponsor several $50 increments in one order |
-| Corporate Gold / Silver / Bronze | To be defined | To be defined | Seeded as **drafts** with `tier_group = 'corporate'` and no price; invisible until the board sets pricing and perks |
+| Corporate Bronze Sponsor | $500 | Unlimited | `tier_group = 'corporate'`; default perks seeded, editable any time |
+| Corporate Silver Sponsor | $1,000 | Unlimited | `tier_group = 'corporate'`; default perks seeded, editable any time |
+| Corporate Gold Sponsor | $1,500 | Unlimited | `tier_group = 'corporate'`; default perks seeded, editable any time |
 
 Everything lives in two tables plus one view:
 
@@ -54,8 +56,8 @@ unwanted files.
    run `sql/kos_tartan_ball_sponsorships.sql`. Safe to re-run. It requires the
    earlier Event Studio scripts and the Fall 2026 seed (already applied).
 2. **Verify the seed.** `select name, price_cents, status from sponsorship_tiers;`
-   should show the three exclusive tiers, the Liquor Wagon, and the three
-   corporate drafts.
+   should show all seven tiers published: Band $350, Photography $350, Dancers
+   $300, Liquor Wagon $50, Corporate Bronze $500 / Silver $1,000 / Gold $1,500.
 3. **Create Zeffy payment forms** (Patrick) — one per priced tier, following
    `PAYMENTS_SETUP.md`. Set metadata `kind` to `donation` (sponsorships are
    charitable support; Zeffy also issues the donor receipt). Then paste each
@@ -68,20 +70,10 @@ unwanted files.
 
    Until a `payment_url` is set, sponsors still reserve their tier and the
    confirmation email says an officer will follow up about payment.
-4. **Confirm the Photography price** ($300 or $350 — currently seeded at $350),
-   then publish it:
-
-   ```sql
-   update sponsorship_tiers
-   set price_cents = 35000, status = 'published'  -- adjust price if $300
-   where name = 'Photography Sponsor';
-   ```
-5. **Define the corporate packages.** When the board sets Gold/Silver/Bronze
-   pricing and perks, fill in `price_cents` and `perks` (one perk per line)
-   and set `status = 'published'`. They will then appear on the page grouped
-   with the rest, and the "packages are being finalized" note disappears
-   automatically.
-6. **Point the domain.** Link or redirect `tampabaytartanball.com` to
+4. **Review the corporate perks.** The Bronze/Silver/Gold perk lists are
+   sensible defaults; adjust the wording any time (`perks` is one perk per
+   line) via `officer_upsert_sponsorship_tier` or the SQL editor.
+5. **Point the domain.** Link or redirect `tampabaytartanball.com` to
    `tartan-ball-sponsors.html` (or to `tartan-ball.html`, which links to it).
 
 ## Officer workflow after launch
@@ -103,9 +95,8 @@ unwanted files.
   by email. Deadline in every confirmation email: **Friday, October 9, 2026**,
   two weeks before the ball.
 
-## Open decisions carried from the plan
+## Decision log
 
-1. **Photography Sponsor final price** — seeded at $350, held as a draft until
-   confirmed (step 4 above).
-2. **Corporate tier pricing and perks** — Gold/Silver/Bronze exist as drafts
-   awaiting board definition (step 5 above).
+- **2026-09-19** — Photography Sponsor confirmed at **$350**; corporate
+  packages confirmed at **Bronze $500, Silver $1,000, Gold $1,500**. All seven
+  tiers now seed as published.

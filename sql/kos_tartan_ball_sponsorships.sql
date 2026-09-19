@@ -8,9 +8,8 @@
 --     tier disappears from the public view so it cannot be double-booked.
 --   * The $50 Liquor Wagon sponsorship is an unlimited multi-quantity tier
 --     (members may sponsor several increments in one order).
---   * Corporate packages (Gold / Silver / Bronze) are seeded as drafts with no
---     price; they stay invisible to the public until the board sets pricing
---     and perks and an officer publishes them.
+--   * Corporate packages: Bronze $500, Silver $1,000, Gold $1,500
+--     (pricing confirmed 2026-09-19).
 -- Requires: public.events + can_manage_events() (sql/kos_event_studio.sql),
 --           enqueue_email (sql/kos_public_events_and_rsvp.sql),
 --           the Tartan Ball event row (sql/kos_seed_fall_2026_events.sql).
@@ -426,11 +425,9 @@ create policy "Event managers delete sponsor logos"
   using (bucket_id = 'sponsor-logos' and public.can_manage_events());
 
 -- 7. Seed the Tartan Ball 2026 tiers -----------------------------------------
--- Prices from the sponsorship plan. Photography is seeded as a DRAFT at the
--- $350 top of its quoted $300-$350 range: confirm the final price, then set
--- status to 'published' (officer_upsert_sponsorship_tier or the SQL editor).
--- Corporate Gold/Silver/Bronze are DRAFTS with no price until the board
--- defines pricing and perks.
+-- Confirmed pricing (2026-09-19): Photography $350; Corporate Bronze $500,
+-- Silver $1,000, Gold $1,500. Corporate perks below are sensible defaults —
+-- edit them any time via officer_upsert_sponsorship_tier or the SQL editor.
 
 do $$
 declare
@@ -457,7 +454,7 @@ begin
     ('Photography Sponsor',
      'Sponsor the evening''s professional photography so every royal moment is captured.',
      E'Exclusive: only one photography sponsor\nLogo or name on event signage\nThank-you mention during the 7:00 PM dinner presentations\nSocial media shoutout',
-     35000, 1, 1, null, 20, 'draft'),
+     35000, 1, 1, null, 20, 'published'),
     ('Irish Dancers Sponsor',
      'Bring the Irish dancers to the floor for the ball.',
      E'Exclusive: only one dancers sponsor\nLogo or name on event signage\nThank-you mention during the 7:00 PM dinner presentations\nSocial media shoutout',
@@ -467,17 +464,48 @@ begin
      E'Name listed on the liquor wagon signage\nThank-you in the event program\nDrawn and awarded at 10:00 PM',
      5000, null, 10, null, 40, 'published'),
     ('Corporate Gold Sponsor',
-     'Top corporate package. Pricing and perks to be defined by the board.',
-     null, null, null, 1, 'corporate', 50, 'draft'),
+     'Our top corporate package: put your company at the front of the season''s grandest evening.',
+     E'Premier logo placement on event signage\nFeatured thank-you during the 7:00 PM dinner presentations\nThank-you in the event program\nDedicated social media spotlight',
+     150000, null, 1, 'corporate', 50, 'published'),
     ('Corporate Silver Sponsor',
-     'Mid corporate package. Pricing and perks to be defined by the board.',
-     null, null, null, 1, 'corporate', 60, 'draft'),
+     'A prominent corporate presence at the Tartan Ball.',
+     E'Company logo on event signage\nThank-you mention during the 7:00 PM dinner presentations\nThank-you in the event program\nSocial media shoutout',
+     100000, null, 1, 'corporate', 60, 'published'),
     ('Corporate Bronze Sponsor',
-     'Entry corporate package. Pricing and perks to be defined by the board.',
-     null, null, null, 1, 'corporate', 70, 'draft')
+     'A great way for a company to support the ball and be seen doing it.',
+     E'Company name on event signage\nThank-you in the event program\nSocial media shoutout',
+     50000, null, 1, 'corporate', 70, 'published')
   ) as x(name, description, perks, price_cents, inventory_limit, max_per_order, tier_group, sort_order, status)
   where not exists (
     select 1 from public.sponsorship_tiers t
     where t.event_id = v_event_id and t.name = x.name
   );
+
+  -- 8. Confirmed pricing (2026-09-19), for databases where an earlier version
+  -- of this file already seeded these tiers as drafts. Only touches rows still
+  -- in 'draft', so officer customizations are never overwritten.
+  update public.sponsorship_tiers
+  set status = 'published', updated_at = now()
+  where event_id = v_event_id and name = 'Photography Sponsor'
+    and status = 'draft';
+
+  update public.sponsorship_tiers t
+  set price_cents = x.price_cents,
+      description = x.description,
+      perks = x.perks,
+      status = 'published',
+      updated_at = now()
+  from (values
+    ('Corporate Gold Sponsor', 150000,
+     'Our top corporate package: put your company at the front of the season''s grandest evening.',
+     E'Premier logo placement on event signage\nFeatured thank-you during the 7:00 PM dinner presentations\nThank-you in the event program\nDedicated social media spotlight'),
+    ('Corporate Silver Sponsor', 100000,
+     'A prominent corporate presence at the Tartan Ball.',
+     E'Company logo on event signage\nThank-you mention during the 7:00 PM dinner presentations\nThank-you in the event program\nSocial media shoutout'),
+    ('Corporate Bronze Sponsor', 50000,
+     'A great way for a company to support the ball and be seen doing it.',
+     E'Company name on event signage\nThank-you in the event program\nSocial media shoutout')
+  ) as x(name, price_cents, description, perks)
+  where t.event_id = v_event_id and t.name = x.name
+    and t.status = 'draft';
 end $$;

@@ -316,7 +316,9 @@
               ? '<span class="sp-remaining">Exclusive — only one available</span>'
               : t.remaining != null
                 ? `<span class="sp-remaining">${t.remaining} of ${t.inventory_limit} remaining</span>`
-                : '<span class="sp-remaining">Unlimited — every bit helps</span>';
+                : t.max_per_order > 1
+                  ? '<span class="sp-remaining">Unlimited — every bit helps</span>'
+                  : '<span class="sp-remaining">Open to multiple sponsors</span>';
           const cta = t.sold_out
             ? ""
             : `<div class="sp-cta"><a class="btn btn-primary" href="#sponsorForm" data-tier="${t.id}">☘ Sponsor this</a></div>`;
