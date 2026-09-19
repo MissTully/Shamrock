@@ -18,7 +18,7 @@ Questions about anything in this document go to the treasurer at
 | Field | Doug Tully | Melissa Tully |
 |---|---|---|
 | Season | 2026–2027 | 2026–2027 |
-| Membership year (database value) | 2027 | 2027 |
+| Membership year (database value) | 2026 | 2026 |
 | Standard dues rate (Full Krewe Membership, see PAYMENTS_SETUP.md) | $375.00 | $375.00 |
 | Amount charged after waiver | **$0.00** | **$0.00** |
 | Amount collected | **$0.00** | **$0.00** |
@@ -30,7 +30,17 @@ update to this file so the approval travels with the record:
 
 - Approved by: ______________________ (officer name and title)
 - Approval reference: ______________________ (board meeting date or motion, if any)
-- Date recorded in the database: ______________________
+- Date recorded in the database: **September 19, 2026** (migration
+  `kos_volunteer_dues_waiver`, applied to the live Krewe of Shamrock Supabase
+  project; verified in `dues_payments` and absent from `v_outstanding_dues`)
+
+**Roster note (September 19, 2026):** the members table held two Douglas
+Tully rows at recording time — one with a Proton Mail address and one with a
+theonefor.ai address. Both rows received the $0.00 waiver so neither can
+receive a dues reminder. When the duplicate is merged with the officer
+roster-merge tool, the surviving member keeps a waiver row and the
+duplicate's row is removed with it; the money totals are unaffected either
+way because both rows are $0.00.
 
 Recording the waiver in the database (section 4) does not replace filling in
 the approval lines above; the database says *what* was recorded, this document
@@ -96,9 +106,15 @@ with an amount, a paid flag, a payment method, and a notes field.
 2. Open the file `sql/kos_volunteer_dues_waiver.sql` from this repository,
    copy its full contents into the editor, and read the comment at the top of
    the `do $$` block: the script records the waiver for **membership year
-   2027** (the 2026–2027 season, matching the live Zeffy dues campaigns).
-   If the roster's existing dues rows use a different year, change the
-   `v_year` value before running.
+   2026** (the current season's dues cycle — verified against the live
+   database, whose season dues rows all use 2026). If a future season's rows
+   use a different year, change the `v_year` value before running.
+
+   **Already done for this season:** this script was applied to the live
+   database on September 19, 2026 as the migration `kos_volunteer_dues_waiver`
+   (using the members' verified row identifiers). The steps below remain as
+   the reference procedure for re-running it or repeating it in a future
+   season.
 3. Click **Run**. The script does three things, in order:
    - Extends the allowed payment methods on `dues_payments` to include
      `waiver` (the original list was cash, check, card, paypal, square,
@@ -129,7 +145,7 @@ new record:
    ```sql
    insert into public.dues_payments
      (member_id, membership_year, amount, paid, paid_date, payment_method, notes)
-   select id, 2027, 0, true, current_date, 'waiver',
+   select id, 2026, 0, true, current_date, 'waiver',
           'Volunteer Dues Waiver — service in lieu of dues. Approved [who, when].'
      from public.members
     where lower(first_name) = 'firstname' and lower(last_name) = 'lastname'

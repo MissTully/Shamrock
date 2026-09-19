@@ -1,8 +1,15 @@
 -- Volunteer Dues Waiver (Service in Lieu of Dues) — Doug and Melissa Tully
 -- Companion document: VOLUNTEER_DUES_WAIVER.md (read it before running this).
 -- Safe to re-run. Extends dues_payments with a 'waiver' payment method and
--- records the two waived dues rows so finance, dues reminders, and the
+-- records the waived dues rows so finance, dues reminders, and the
 -- parade-ready check all see these members as settled at $0.00.
+--
+-- APPLIED to the live Krewe of Shamrock project (oazwkwflgbthojvnclfc) on
+-- 2026-09-19 as migration 'kos_volunteer_dues_waiver', with v_year = 2026 and
+-- the member rows matched by their verified ids. The roster held a duplicate
+-- Douglas Tully row at the time (two email addresses); both rows received the
+-- waiver so neither can get a dues reminder, and the expected-match warning
+-- below fires on 3 instead of 2 until the duplicate is merged.
 
 -- 1) Allow 'waiver' as an official payment method ------------------------------
 -- The original check constraint only allowed cash/check/card/paypal/square/other.
@@ -21,11 +28,12 @@ alter table public.dues_payments
 -- the member drops out of v_outstanding_dues so reminder emails never go to them.
 do $$
 declare
-  v_year integer := 2027;  -- membership year of the current dues cycle.
-                           -- The live Zeffy dues campaigns (see PAYMENTS_SETUP.md)
-                           -- run through June 30 and use membership_year 2027.
-                           -- If your roster's existing dues rows use a different
-                           -- year, change this value to match before running.
+  v_year integer := 2026;  -- membership year of the current dues cycle.
+                           -- Verified against the live database on 2026-09-19:
+                           -- the current season's unpaid dues rows all use
+                           -- membership_year 2026. If a future season's rows
+                           -- use a different year, change this value to match
+                           -- before running.
   v_note text := 'Volunteer Dues Waiver — service in lieu of dues. '
               || 'Standard dues waived in full; amount due and collected: $0.00. '
               || 'See VOLUNTEER_DUES_WAIVER.md in the repository for the approval '
