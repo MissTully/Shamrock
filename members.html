@@ -497,6 +497,8 @@
   .cup-st.registered,.cup-st.confirmed{ background:#fdf3d8; color:var(--gold-text); }
   .cup-st.paid{ background:var(--cup-gold); color:var(--cup-ink); border-color:var(--cup-gold); }
   .cup-st.cancelled,.cup-st.denied{ background:#f3d9cf; color:var(--cup-crimson); }
+  /* Same purple the public calendar uses for Inter-Krewe Council events */
+  .cup-st.ikc{ background:#7c5cae; color:#fff; border-color:#5f4390; }
   /* Events inside the Cup */
   .cup-remind{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:linear-gradient(180deg,#fdf6dd,#f6ecc9); border:1px solid var(--cup-gold); border-left:6px solid var(--cup-red); border-radius:12px; padding:12px 16px; margin:0 0 14px; font-size:15.5px; color:var(--cup-ink); }
   .cup-remind b{ color:var(--cup-green); font-family:var(--display); }
@@ -2598,13 +2600,22 @@
       setConn(true);
       const list=(evs.data||[]).filter(function(e){
         const st=String(e.status||"published").toLowerCase();
-        return st==="published"||st==="live";
+        if(st!=="published"&&st!=="live") return false;
+        // Our own events sometimes echo back through the IKC calendar sync.
+        // Those are KOS events, not "another krewe's" - the krewe-sourced row
+        // already carries the RSVP, so skip the IKC duplicate.
+        if(String(e.source||"").toLowerCase()==="ikc" && /shamrock/i.test(String(e.name||""))) return false;
+        return true;
       });
       let html='<div class="cup-remind">📣 <div><b>Don’t let easy Clovers pass you by!</b> Every RSVP is an automatic <b>+5 🍀</b> and showing up earns the real points. Check back here, or browse the full calendar on the <a href="event-signup.html">Events page</a>.</div></div>';
       if(!list.length){
         html+='<p class="empty">No upcoming events on the calendar just now. New ones land here as soon as officers post them - keep an eye on the <a href="event-signup.html">Events page</a>.</p>';
       }else{
         html+=list.map(function(ev){
+          /* IKC non-KOS events (synced from the Inter-Krewe Council calendar)
+             cannot be RSVP'd here - the reward is +25 🍀 for attending, claimed
+             through the Claim Clovers form after the event. */
+          const isIkc = String(ev.source||"").toLowerCase()==="ikc";
           const price = ev.ticket_price_cents ? ("$"+(ev.ticket_price_cents/100).toFixed(2)+(ev.ticket_label?(" · "+ev.ticket_label):"")) : null;
           const where = ev.member_address || ev.location || (ev.is_online ? "Online" : "");
           const detailBits=[];
@@ -2618,24 +2629,66 @@
             if(!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> "+E(rc.toLocaleDateString([], {month:"long", day:"numeric"})));
           }
           detailBits.push('<div class="ce-detail">'+facts.join("<br>")+'</div>');
+          if(isIkc) detailBits.push('<div class="ce-detail">Hosted by another Inter-Krewe Council (IKC) krewe, not the Krewe of Shamrock, so there is no RSVP here. Go support the krewe family, then claim your <b>+25 🍀</b> with the button below - an officer will credit you.</div>');
           if(ev.flyer_url) detailBits.push('<div class="ce-detail"><a href="'+E(ev.flyer_url)+'" target="_blank" rel="noopener">Open the event flyer ↗</a></div>');
           const rsvpHref="event-signup.html?event="+encodeURIComponent(ev.id||"");
-          let btns='<a class="ce-rsvp" href="'+rsvpHref+'">🍀 RSVP · +5 Clovers</a>';
-          if(ev.ticket_payment_url) btns+='<a class="ce-reg" href="'+E(ev.ticket_payment_url)+'" target="_blank" rel="noopener">🎟️ Buy tickets / register ↗</a>';
-          else if(ev.external_url) btns+='<a class="ce-reg" href="'+E(ev.external_url)+'" target="_blank" rel="noopener">🔗 Event page ↗</a>';
+          let btns;
+          if(isIkc){
+            const ikcHref = ev.external_url || "https://interkrewe.com/Calendar";
+            btns='<a class="ce-rsvp" href="#fun" data-ikc-claim="'+E(ev.name||"IKC krewe event")+'">🍀 I attended · Claim +25 Clovers</a>'+
+              '<a class="ce-reg" href="'+E(ikcHref)+'" target="_blank" rel="noopener">🔗 Krewe’s IKC page ↗</a>';
+          }else{
+            btns='<a class="ce-rsvp" href="'+rsvpHref+'">🍀 RSVP · +5 Clovers</a>';
+            if(ev.ticket_payment_url) btns+='<a class="ce-reg" href="'+E(ev.ticket_payment_url)+'" target="_blank" rel="noopener">🎟️ Buy tickets / register ↗</a>';
+            else if(ev.external_url) btns+='<a class="ce-reg" href="'+E(ev.external_url)+'" target="_blank" rel="noopener">🔗 Event page ↗</a>';
+          }
+          const hint = isIkc
+            ? '🤝 Attend an IKC non-KOS event · +25 🍀 when you attend'
+            : '+5 🍀 to RSVP · +20 🍀 when you attend';
           return '<div class="cup-event"><div class="ce-top">'+
             cupDateChip(ev.start_time)+
             '<div style="flex:1;min-width:200px;">'+
-            '<div class="ce-nm">'+E(ev.name||"Krewe event")+(ev.members_only?' <span class="cup-st">members only</span>':'')+'</div>'+
+            '<div class="ce-nm">'+E(ev.name||"Krewe event")+(isIkc?' <span class="cup-st ikc">IKC</span>':'')+(ev.members_only?' <span class="cup-st">members only</span>':'')+'</div>'+
             '<div class="ce-meta">'+E(cupWhen(ev))+(where?(" · "+E(where)):"")+'</div>'+
-            '<div class="ce-hint">+5 🍀 to RSVP · +20 🍀 when you attend</div>'+
+            '<div class="ce-hint">'+hint+'</div>'+
             '<details><summary>View details</summary>'+detailBits.join("")+'</details>'+
             '<div class="ce-btns">'+btns+'</div>'+
             '</div></div></div>';
         }).join("");
       }
-      html+='<div class="cup-remind" style="margin-top:14px;">🤝 <div><b>Cheering on the krewe family?</b> Attending another IKC krewe’s event earns <b>+25 🍀</b>. Close this window and use <b>Claim Clovers</b> on the Craic Cup tab afterward - an officer will credit you.</div></div>';
+      html+='<div class="cup-remind" style="margin-top:14px;">🤝 <div><b>Cheering on the krewe family?</b> Attending an <b>IKC non-KOS event</b> - another krewe’s event, not one of ours - earns <b>+25 🍀</b>. Purple <b>IKC</b> events above have a claim button, or use <b>Claim Clovers</b> on the Craic Cup tab afterward - an officer will credit you.</div></div>';
       box.innerHTML=html;
+      box.querySelectorAll("a[data-ikc-claim]").forEach(function(a){
+        a.addEventListener("click",function(e){
+          e.preventDefault();
+          cupClaimIkc(a.getAttribute("data-ikc-claim")||"");
+        });
+      });
+    }
+
+    /* An IKC event card's claim button: leave the game, land on the hub's
+       Craic Cup tab, and hand the member the Claim Clovers form with
+       "Attend another IKC krewe's event" (+25 🍀) already picked and the
+       event's name filled in. Setting the hash to #fun closes the game
+       (the Cup's hashchange handler) and shows the tab (the hub's). */
+    function cupClaimIkc(eventName){
+      if(location.hash==="#fun"){
+        if(typeof window.showHubTab==="function") window.showHubTab("fun");
+        if(gameIsOpen()) gameUiClose();
+      }else{
+        location.hash="#fun";
+      }
+      setTimeout(function(){
+        const act=document.getElementById("hubClaimActivity");
+        if(act){
+          act.value="attend_ikc_event";
+          try{ act.dispatchEvent(new Event("change",{bubbles:true})); }catch(e){}
+        }
+        const evInput=document.getElementById("hubClaimEvent");
+        if(evInput && eventName) evInput.value=eventName;
+        const card=document.getElementById("hubClaimCard");
+        if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
+      },260);
     }
 
     async function renderHowto(){
