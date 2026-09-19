@@ -25,11 +25,12 @@ Questions about anything in this document go to the treasurer at
 | How dues were satisfied | Volunteer service in lieu of dues | Volunteer service in lieu of dues |
 | Status in the database | Paid, method `waiver` | Paid, method `waiver` |
 
-**Approval details** — the treasurer completes these lines and commits the
-update to this file so the approval travels with the record:
+**Approval details:**
 
-- Approved by: ______________________ (officer name and title)
-- Approval reference: ______________________ (board meeting date or motion, if any)
+- Approved by: **Tim Fitzpatrick, President** (confirmed September 19, 2026;
+  also recorded in the notes field of both waiver rows in `dues_payments`)
+- Approval reference: ______________________ (board meeting date or motion,
+  if any — optional, add if one exists)
 - Date recorded in the database: **September 19, 2026** (migration
   `kos_volunteer_dues_waiver`, applied to the live Krewe of Shamrock Supabase
   project; verified in `dues_payments` and absent from `v_outstanding_dues`)

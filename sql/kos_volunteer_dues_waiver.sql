@@ -35,6 +35,7 @@ declare
                            -- use a different year, change this value to match
                            -- before running.
   v_note text := 'Volunteer Dues Waiver — service in lieu of dues. '
+              || 'Approved by Tim Fitzpatrick, President. '
               || 'Standard dues waived in full; amount due and collected: $0.00. '
               || 'See VOLUNTEER_DUES_WAIVER.md in the repository for the approval '
               || 'record and the finance and accounting treatment.';
