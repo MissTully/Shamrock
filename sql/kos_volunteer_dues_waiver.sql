@@ -7,9 +7,9 @@
 -- APPLIED to the live Krewe of Shamrock project (oazwkwflgbthojvnclfc) on
 -- 2026-09-19 as migration 'kos_volunteer_dues_waiver', with v_year = 2026 and
 -- the member rows matched by their verified ids. The roster held a duplicate
--- Douglas Tully row at the time (two email addresses); both rows received the
--- waiver so neither can get a dues reminder, and the expected-match warning
--- below fires on 3 instead of 2 until the duplicate is merged.
+-- Douglas Tully row at the time; both rows received the waiver, and the
+-- duplicate was then merged the same day (migration
+-- 'kos_merge_duplicate_doug_tully'), leaving one waiver row per person.
 
 -- 1) Allow 'waiver' as an official payment method ------------------------------
 -- The original check constraint only allowed cash/check/card/paypal/square/other.
@@ -46,6 +46,7 @@ begin
       from public.members
      where lower(last_name) = 'tully'
        and lower(first_name) in ('doug', 'douglas', 'melissa')
+       and merged_into is null  -- skip roster records retired by a merge
   loop
     insert into public.dues_payments
       (member_id, membership_year, amount, paid, paid_date, payment_method, notes)

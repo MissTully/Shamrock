@@ -36,11 +36,16 @@ update to this file so the approval travels with the record:
 
 **Roster note (September 19, 2026):** the members table held two Douglas
 Tully rows at recording time — one with a Proton Mail address and one with a
-theonefor.ai address. Both rows received the $0.00 waiver so neither can
-receive a dues reminder. When the duplicate is merged with the officer
-roster-merge tool, the surviving member keeps a waiver row and the
-duplicate's row is removed with it; the money totals are unaffected either
-way because both rows are $0.00.
+theonefor.ai address. Both rows initially received the $0.00 waiver so
+neither could receive a dues reminder. Later the same day the duplicate was
+merged (migration `kos_merge_duplicate_doug_tully`), following the club's
+roster-merge convention: the Proton Mail record was kept as the active
+member with its waiver row; the theonefor.ai record was retired (marked
+merged, never deleted) and its redundant $0.00 dues row removed, so the
+books hold exactly one waiver row per person; and theonefor.ai was saved as
+an email alias on the kept record so future payments from that address
+still match Doug. Money totals were unaffected throughout because every row
+involved was $0.00.
 
 Recording the waiver in the database (section 4) does not replace filling in
 the approval lines above; the database says *what* was recorded, this document
