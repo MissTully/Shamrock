@@ -1,6 +1,6 @@
 -- Scheduled krewe emails for events (Event Studio).
--- Apply to the Krewe of Shamrock project (oazwkwflgbthojvnclfc) as migration
--- kos_event_scheduled_emails via the Supabase SQL editor. Safe to re-run.
+-- Applied to the Krewe of Shamrock project (oazwkwflgbthojvnclfc) on
+-- 2026-09-19 as migration kos_event_scheduled_emails. Safe to re-run.
 --
 -- WHAT IT DOES: an officer creating or editing an event in Event Studio can
 -- schedule up to three automatic emails to active members about that event:

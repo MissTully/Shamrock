@@ -50,10 +50,12 @@ Other behavior worth knowing:
 ## Deploying (one-time)
 
 The schema, RPCs, worker, trigger, and cron job all live in
-**`sql/kos_event_scheduled_emails.sql`**. Run that file in the Supabase SQL
-editor on project `oazwkwflgbthojvnclfc` (same as the other Event Studio
-scripts). Safe to re-run. Until it is applied, the rest of Event Studio keeps
-working; only the email-schedule panel will report that its save failed.
+**`sql/kos_event_scheduled_emails.sql`**. It was applied to the live project
+`oazwkwflgbthojvnclfc` on 2026-09-19 as migration
+`kos_event_scheduled_emails` (cron job id 3, running as `postgres`). Safe to
+re-run from the Supabase SQL editor if it ever needs to be reapplied. If the
+SQL were ever missing, the rest of Event Studio keeps working; only the
+email-schedule panel would report that its save failed.
 
 What the script creates:
 
