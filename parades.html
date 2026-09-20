@@ -68,6 +68,13 @@
   .safety-list li{ position:relative; padding-left:30px; font-size:16px; }
   .safety-list li::before{ content:"☘"; position:absolute; left:0; top:1px; color:var(--green-600); font-size:18px; }
   @media (max-width:720px){ .rules-grid,.safety-list{ grid-template-columns:1fr; } }
+  .page-head{ padding:40px 22px 34px; }
+  #parade-season > .wrap{ padding-top:32px; padding-bottom:40px; }
+  #parade-season .parade-lead{ max-width:760px; margin:0 auto 14px; text-align:center; font-size:17px; }
+  @media (max-width:720px){
+    .page-head{ padding:32px 14px 28px; }
+    #parade-season > .wrap{ padding-top:24px; }
+  }
 </style>
 </head>
 <body>
@@ -135,17 +142,15 @@
         <p class="sub">Every Shamrock march this season</p>
       </div>
       <div class="knot-divider"><span class="knot"></span></div>
-      <p style="text-align:center;font-size:17px;max-width:760px;margin:0 auto 18px;">
-        As Tampa's original kilted krewe, we bring pipes, kilts, and a whole lot of good craic
-        to the biggest routes in the bay. Full membership includes a place in every krewe parade
-        of the season. March RSVP and staging stay in the Member Hub.
+      <p class="parade-lead">
+        Full membership includes a place in every krewe parade of the season.
+        March RSVP and staging stay in the Member Hub.
       </p>
-      <div class="btns" style="margin:0 0 22px;justify-content:center;display:flex;flex-wrap:wrap;gap:10px;">
+      <div class="btns" style="margin:0 0 16px;justify-content:center;display:flex;flex-wrap:wrap;gap:10px;">
         <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
         <a class="btn" href="members.html">Member Login</a>
         <a class="btn" href="#ikc-season">See the season</a>
       </div>
-      <div class="parade-grid" id="paradeLiveGrid" hidden></div>
       <div class="parade-grid" id="paradeStaticGrid">
         <article class="parade-card">
           <div class="parade-media">
@@ -639,8 +644,7 @@
     }
 
     async function loadParades() {
-      const liveGrid = document.getElementById("paradeLiveGrid");
-      const staticGrid = document.getElementById("paradeStaticGrid");
+      const grid = document.getElementById("paradeStaticGrid");
       let { data, error } = await supabase
         .from("v_public_events")
         .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only")
@@ -662,18 +666,14 @@
         return;
       }
       renderGasparillaSpotlight(ours);
-      if (liveGrid) {
-        liveGrid.hidden = false;
-        liveGrid.innerHTML = ours.map(paradeCardHtml).join("");
-      }
-      if (staticGrid) {
+      if (grid) {
         const liveNames = ours.map((ev) => normalizeName(ev.name));
-        Array.from(staticGrid.querySelectorAll(".parade-card")).forEach((card) => {
+        Array.from(grid.querySelectorAll(".parade-card")).forEach((card) => {
           const h = card.querySelector("h3");
           const n = normalizeName(h && h.textContent);
           if (liveNames.some((live) => live === n || live.includes(n) || n.includes(live))) card.remove();
         });
-        if (!staticGrid.querySelector(".parade-card")) staticGrid.hidden = true;
+        grid.insertAdjacentHTML("afterbegin", ours.map(paradeCardHtml).join(""));
       }
       highlightIkcRows(ours);
     }
