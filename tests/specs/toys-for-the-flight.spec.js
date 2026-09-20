@@ -37,7 +37,7 @@ test("toys-for-the-flight.html is shareable and points to LifeLine", async ({ pa
   await expect(page.locator("body")).toContainText("LifeLine");
   await expect(page.locator("body")).toContainText("Santa Fest");
   await expect(page.locator("body")).toContainText("New only");
-  await expect(page.locator("body")).toContainText("loud electronics");
+  await expect(page.locator("body")).toContainText("Loud electronics");
 
   const lifeline = page.locator("#lifelineCta");
   await expect(lifeline).toHaveAttribute("href", LIFELINE);
