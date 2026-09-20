@@ -152,6 +152,18 @@
       '<label for="hubEventMeetingUrl">Meeting join URL</label>' +
       '<input id="hubEventMeetingUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://..." />' +
       '</div></div>' +
+      '<div class="hub-event-optional" id="hubEventParadeBox" hidden>' +
+      '<h4>Parade season</h4>' +
+      '<p class="hub-opt-hint">Keep a Parade public for parades.html recruiting cards, and Members only so there is no public march RSVP. Staging streets go in Private / member address.</p>' +
+      '<label for="hubEventLinkedMeeting">Mandatory meeting</label>' +
+      '<select id="hubEventLinkedMeeting"><option value="">None (no Door Check-In meeting gate)</option></select>' +
+      '<div class="hub-event-checks" style="margin:10px 0 8px;">' +
+      '<label><input type="checkbox" id="hubEventCreateMeeting" /> Create a new mandatory meeting with this parade</label></div>' +
+      '<div id="hubEventCreateMeetingFields" hidden>' +
+      '<label for="hubEventCreateMeetingName">Meeting name</label><input id="hubEventCreateMeetingName" placeholder="Parade briefing" />' +
+      '<label for="hubEventCreateMeetingStart">Meeting start</label><input id="hubEventCreateMeetingStart" type="datetime-local" />' +
+      '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventCreateMeetingMandatory" checked /> Meeting is mandatory</label></div>' +
+      '</div></div>' +
       '<div class="wide"><label for="hubEventFlyerUrl">Event image / PDF URL</label><input id="hubEventFlyerUrl" type="url" placeholder="https://… or upload a file below" /></div>' +
       '<div class="wide"><label for="hubEventFlyerFile">Upload event image or PDF</label>' +
       '<input id="hubEventFlyerFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />' +
@@ -255,6 +267,9 @@
     showEl("hubEventRaffleFields", raffleOn);
     showEl("hubEventMealFields", mealOn);
     showEl("hubEventOnlineFields", onlineOn);
+    var paradeOn = !!(typeEl && typeEl.value === "parade");
+    showEl("hubEventParadeBox", paradeOn);
+    showEl("hubEventCreateMeetingFields", paradeOn && !!(document.getElementById("hubEventCreateMeeting") && document.getElementById("hubEventCreateMeeting").checked));
     var loc = document.getElementById("hubEventLocation");
     var membersOnly = !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked);
     if (loc) {
@@ -809,6 +824,7 @@
       meal_options: collectMeals ? mealOptions : null,
       is_online: isOnline,
       meeting_url: isOnline ? (meetingUrl || null) : null,
+      linked_meeting_id: value("hubEventType") === "parade" ? (value("hubEventLinkedMeeting") || null) : null,
       registration_closes_at: (function () {
         var rv = value("hubEventRegCloses");
         if (!rv) return null;
@@ -817,6 +833,16 @@
         return rd.toISOString();
       })()
     };
+    if (payload.event_type === "parade" && document.getElementById("hubEventCreateMeeting") && document.getElementById("hubEventCreateMeeting").checked) {
+      var meetName = value("hubEventCreateMeetingName");
+      var meetStartVal = value("hubEventCreateMeetingStart");
+      var meetStart = meetStartVal ? new Date(meetStartVal) : null;
+      if (!meetName) { if (msg) msg.textContent = "Give the new mandatory meeting a name, or uncheck create meeting."; return; }
+      if (!meetStart || isNaN(meetStart.getTime())) { if (msg) msg.textContent = "Give the new mandatory meeting a start date and time."; return; }
+      payload.create_meeting_name = meetName;
+      payload.create_meeting_start = meetStart.toISOString();
+      payload.create_meeting_mandatory = !!(document.getElementById("hubEventCreateMeetingMandatory") && document.getElementById("hubEventCreateMeetingMandatory").checked);
+    }
     if (!payload.name) { if (msg) msg.textContent = "Event name is required."; return; }
     if (save) { save.disabled = true; save.textContent = "Saving…"; }
     if (msg) msg.textContent = "";
@@ -867,7 +893,7 @@
       eventForm.addEventListener("input", onEventFormEdited);
       eventForm.addEventListener("change", onEventFormEdited);
     }
-    ["hubEventType", "hubEventCollectRaffle", "hubEventCollectMeals", "hubEventOnline", "hubEventMembersOnly"].forEach(function (id) {
+    ["hubEventType", "hubEventCollectRaffle", "hubEventCollectMeals", "hubEventOnline", "hubEventMembersOnly", "hubEventCreateMeeting"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", syncOptionalEventFields);
     });

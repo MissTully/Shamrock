@@ -14,16 +14,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260909m3" />
+<link rel="stylesheet" href="assets/krewe.css?v=20260920p1" />
 <style>
   .parade-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:20px; }
-  .parade-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); }
+  .parade-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden; }
   .parade-card .mo{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-deep); }
   .parade-card h3{ color:var(--green-800); font-size:20px; margin:6px 0 8px; }
   .parade-card p{ font-size:15px; margin:0 0 12px; color:var(--ink); }
   .parade-card a{ font-family:var(--display); font-weight:600; color:var(--green-700); text-decoration:none; font-size:14px; }
   .parade-card a:hover{ color:var(--gold-deep); }
   .parade-card .dt{ font-weight:600; color:var(--green-800); font-size:15px; margin:-2px 0 10px; }
+  .parade-card .parade-media{ margin:-22px -22px 14px; aspect-ratio:16/10; background:linear-gradient(160deg,#1a3a24,#0d1f14); display:grid; place-items:center; overflow:hidden; color:#f5e6b8; font-family:var(--display); }
+  .parade-card .parade-media img{ width:100%; height:100%; object-fit:cover; }
+  .parade-card .parade-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+  .parade-card .parade-actions .btn{ font-size:14px; }
+  #featured-parade-content.feature{ align-items:start; }
+  #featured-parade-content .ft-text, #featured-parade-content .ft-media{ min-width:0; }
+  #featured-parade-content .feat-desc{ font-size:17px; line-height:1.6; white-space:pre-wrap; }
+  @media (max-width:680px){ #featured-parade .ft-text h2{ font-size:26px; } }
   .season-wrap{ overflow-x:auto; margin-top:34px; }
   table.season{ width:100%; min-width:560px; border-collapse:collapse; background:#fff;
     border:1px solid rgba(168,128,28,.28); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm); }
@@ -114,50 +122,91 @@
     <div class="banner-flourish" aria-hidden="true"></div>
     <p style="text-align:center;font-size:17px;">As Tampa's original kilted krewe, we bring music, kilts, and a whole lot of
        good craic to the biggest parades in the bay. Full membership includes a place in every krewe parade of the season,
-       and we turn out for community processions all year round.</p>
+       and we turn out for community processions all year round. March RSVP and staging stay in the Member Hub.</p>
+  </section>
+
+  <!-- FEATURED PARADE: Gasparilla in season, else the next march -->
+  <section class="wrap" id="featured-parade" style="padding-top:28px;">
+    <div class="section-title">
+      <h2 id="featured-parade-title">Featured Parade</h2>
+      <p class="sub" id="featured-parade-sub">The next Shamrock march</p>
+    </div>
+    <div class="banner-flourish" aria-hidden="true"></div>
+    <div class="feature" id="featured-parade-content">
+      <div class="ft-text">
+        <h2>Parade cards are loading</h2>
+        <p>Every parade the Krewe marches in will appear here for visitors who want to join us on the route.</p>
+        <a class="btn btn-primary" href="membership-application.html">☘ Join the Krewe</a>
+      </div>
+    </div>
   </section>
 
   <!-- PARADES WE MARCH IN -->
   <section class="band band-cream">
     <div class="wrap">
-      <div class="section-title"><h2>Parades We March In</h2><p class="sub">Our season, month by month</p></div>
+      <div class="section-title"><h2>Parades We March In</h2><p class="sub">Our season, month by month · join us on the route</p></div>
       <div class="knot-divider"><span class="knot"></span></div>
-      <div class="parade-grid">
+      <div class="parade-grid" id="paradeLiveGrid" hidden></div>
+      <div class="parade-grid" id="paradeStaticGrid">
         <div class="parade-card">
           <div class="mo">December</div><h3>SantaFest</h3>
           <p class="dt">Saturday, December 5, 2026</p>
           <p>Tampa's downtown holiday kickoff parade, a festive start to the krewe's marching season.</p>
-          <a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
         <div class="parade-card">
           <div class="mo">January</div><h3>Children's Gasparilla</h3>
           <p class="dt">Saturday, January 23, 2027</p>
           <p>The family-friendly, alcohol-free daytime parade along Bayshore: beads, pirates, and big smiles for the little ones.</p>
-          <a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
         <div class="parade-card">
           <div class="mo">January</div><h3>Gasparilla Parade of Pirates</h3>
           <p class="dt">Saturday, January 30, 2027</p>
           <p>The crown jewel: the legendary invasion and grand pirate parade down Bayshore Boulevard.</p>
-          <a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
         <div class="parade-card">
           <div class="mo">February</div><h3>Sant'Yago Knight Parade</h3>
           <p class="dt">Saturday, February 13, 2027</p>
           <p>The dazzling night parade through historic Ybor City: lights, floats, and Latin-quarter energy.</p>
-          <a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
         <div class="parade-card">
           <div class="mo">Spring</div><h3>Tampa Pride</h3>
           <p class="dt">Date to be announced</p>
           <p>Ybor City's joyful celebration of Tampa's LGBTQ+ community; the krewe rolls with pride.</p>
-          <a href="https://tampapride.org/" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://tampapride.org/" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
         <div class="parade-card">
           <div class="mo">March</div><h3>Rough Riders' St. Patrick's Day</h3>
           <p class="dt">March 2027 · date to be announced</p>
           <p>Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.</p>
-          <a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info →</a>
+          <div class="parade-actions">
+            <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+            <a class="btn" href="members.html">Member Login</a>
+            <a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info →</a>
+          </div>
         </div>
       </div>
       <!-- FULL IKC PARADE SEASON -->
@@ -167,7 +216,7 @@
       </div>
       <div class="knot-divider"><span class="knot"></span></div>
       <div class="season-wrap">
-        <table class="season">
+        <table class="season" id="ikcSeasonTable">
           <thead>
             <tr><th scope="col">Month</th><th scope="col">Parade</th><th scope="col">Date</th><th scope="col">Details</th></tr>
           </thead>
@@ -348,5 +397,186 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+    const TZ = "America/New_York";
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+    function publicWhere(ev) {
+      return (ev && ev.location) ? String(ev.location).trim() : "";
+    }
+
+    function monthLabel(d) {
+      if (!d || isNaN(d.getTime())) return "Season";
+      return MONTHS[d.getMonth()];
+    }
+
+    function dateLabel(ev) {
+      if (!ev || !ev.start_time) return "Date to be announced";
+      const d = new Date(ev.start_time);
+      if (isNaN(d.getTime())) return "Date to be announced";
+      const midnight = d.getHours() === 0 && d.getMinutes() === 0;
+      return midnight
+        ? d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: TZ })
+        : d.toLocaleString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: TZ });
+    }
+
+    function normalizeName(name) {
+      return String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    }
+
+    function isGasparillaFeature(ev) {
+      const n = normalizeName(ev && ev.name);
+      return n.includes("gasparilla") && !n.includes("children");
+    }
+
+    function pickFeaturedParade(parades) {
+      const now = new Date();
+      const published = (parades || []).filter((ev) =>
+        String(ev.status || "published").toLowerCase() === "published" && ev.start_time
+      );
+      const pinned = published.find((ev) => ev.is_featured);
+      if (pinned) return pinned;
+      const month = now.getMonth();
+      const inGasSeason = month === 11 || month === 0 || month === 1;
+      if (inGasSeason) {
+        const gas = published.find(isGasparillaFeature);
+        if (gas) return gas;
+      }
+      const upcoming = published
+        .filter((ev) => new Date(ev.start_time) >= now)
+        .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+      return upcoming[0] || published.sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0] || null;
+    }
+
+    function cardActions(ev) {
+      const info = ev.external_url
+        ? '<a href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">Parade info →</a>'
+        : "";
+      return '<div class="parade-actions">' +
+        '<a class="btn btn-primary" href="membership-application.html">☘ Join</a>' +
+        '<a class="btn" href="members.html">Member Login</a>' +
+        info + "</div>";
+    }
+
+    function cardMedia(ev) {
+      if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) {
+        return '<div class="parade-media"><img src="' + esc(ev.flyer_url) + '" alt="" loading="lazy" /></div>';
+      }
+      return "";
+    }
+
+    function paradeCardHtml(ev) {
+      const d = ev.start_time ? new Date(ev.start_time) : null;
+      const blurb = ev.description || "March with Tampa's original kilted krewe. Members RSVP in the Member Hub.";
+      return '<article class="parade-card">' +
+        cardMedia(ev) +
+        '<div class="mo">' + esc(monthLabel(d)) + "</div>" +
+        "<h3>" + esc(ev.name || "Krewe parade") + "</h3>" +
+        '<p class="dt">' + esc(dateLabel(ev)) + "</p>" +
+        (publicWhere(ev) ? "<p><b>Where:</b> " + esc(publicWhere(ev)) + "</p>" : "") +
+        "<p>" + esc(blurb) + "</p>" +
+        cardActions(ev) +
+        "</article>";
+    }
+
+    function renderFeatured(ev) {
+      const title = document.getElementById("featured-parade-title");
+      const sub = document.getElementById("featured-parade-sub");
+      const content = document.getElementById("featured-parade-content");
+      if (!title || !sub || !content) return;
+      if (!ev) {
+        title.textContent = "Featured Parade";
+        sub.textContent = "The next Shamrock march";
+        return;
+      }
+      title.textContent = "Featured Parade: " + (ev.name || "Upcoming march");
+      sub.textContent = isGasparillaFeature(ev)
+        ? "Gasparilla season with the Castle of Shenanigans"
+        : "The next parade the Krewe of Shamrock marches in";
+      let media;
+      if (ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url)) {
+        media = '<img src="' + esc(ev.flyer_url) + '" alt="Image for ' + esc(ev.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" />';
+      } else {
+        media = '<img src="assets/img/parade-crowd.jpg" alt="Krewe of Shamrock on the parade route" style="display:block;width:100%;height:auto;" />';
+      }
+      content.innerHTML =
+        '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + "</div></div>" +
+        '<div class="ft-text"><h2>' + esc(ev.name || "Upcoming parade") + "</h2>" +
+        "<p><b>" + esc(dateLabel(ev)) + "</b></p>" +
+        "<p><b>Where:</b> " + esc(publicWhere(ev) || "Route announced to members") + "</p>" +
+        (ev.description ? '<p class="feat-desc">' + esc(ev.description) + "</p>" : "<p class=\"feat-desc\">Join the Krewe of Shamrock and march with us. Members RSVP and see staging in the Member Hub.</p>") +
+        '<div style="display:flex;flex-wrap:wrap;gap:10px;">' +
+        '<a class="btn btn-primary" href="membership-application.html">☘ Join the Krewe</a>' +
+        '<a class="btn" href="members.html">Member Login</a>' +
+        (ev.external_url ? '<a class="btn" href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">Parade info</a>' : "") +
+        "</div></div>";
+    }
+
+    function highlightIkcRows(parades) {
+      const table = document.getElementById("ikcSeasonTable");
+      if (!table) return;
+      const names = (parades || []).map((p) => normalizeName(p.name)).filter(Boolean);
+      table.querySelectorAll("tbody tr").forEach((tr) => {
+        const cell = tr.cells && tr.cells[1] ? tr.cells[1].textContent : "";
+        const rowName = normalizeName(cell);
+        if (names.some((n) => rowName.includes(n) || n.includes(rowName))) {
+          tr.classList.add("ours");
+        }
+      });
+    }
+
+    async function loadParades() {
+      const liveGrid = document.getElementById("paradeLiveGrid");
+      const staticGrid = document.getElementById("paradeStaticGrid");
+      let { data, error } = await supabase
+        .from("v_public_events")
+        .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only")
+        .eq("event_type", "parade")
+        .order("start_time", { ascending: true });
+      if (error) {
+        ({ data, error } = await supabase
+          .from("events")
+          .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only")
+          .eq("is_public", true)
+          .eq("event_type", "parade")
+          .order("start_time", { ascending: true }));
+      }
+      if (error || !data || !data.length) {
+        renderFeatured(null);
+        return;
+      }
+      const ours = data.filter((ev) => ev.source !== "ikc" && String(ev.status || "published").toLowerCase() !== "cancelled");
+      if (!ours.length) {
+        renderFeatured(null);
+        return;
+      }
+      const featured = pickFeaturedParade(ours);
+      renderFeatured(featured);
+      if (liveGrid) {
+        liveGrid.hidden = false;
+        liveGrid.innerHTML = ours.map(paradeCardHtml).join("");
+      }
+      if (staticGrid) {
+        const liveNames = ours.map((ev) => normalizeName(ev.name));
+        Array.from(staticGrid.querySelectorAll(".parade-card")).forEach((card) => {
+          const h = card.querySelector("h3");
+          const n = normalizeName(h && h.textContent);
+          if (liveNames.some((live) => live === n || live.includes(n) || n.includes(live))) card.remove();
+        });
+        if (!staticGrid.querySelector(".parade-card")) staticGrid.hidden = true;
+      }
+      highlightIkcRows(ours);
+    }
+
+    loadParades();
+  </script>
 </body>
 </html>
