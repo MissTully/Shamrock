@@ -645,6 +645,7 @@
   }
 
   async function loadParadeSeason(client) {
+    if (window.__kosParadeSeasonLocked) return;
     if (!client) return;
     try {
       var res = await client.rpc("member_parade_season");

@@ -55,6 +55,7 @@ test("Member Hub Events tab shows parade season status", async ({ page }) => {
   await expect(page.locator("#hubParadeSeasonEvents")).toContainText("Parade season");
   await page.waitForFunction(() => typeof window.__kosRenderParadeSeason === "function");
   await page.evaluate(() => {
+    window.__kosParadeSeasonLocked = true;
     window.__kosRenderParadeSeason([{
       id: "parade-1",
       name: "Gasparilla Parade of Pirates",
@@ -77,7 +78,7 @@ test("Member Hub Events tab shows parade season status", async ({ page }) => {
   });
 
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Meeting not RSVP’d");
-  await expect(page.locator("#hubParadeSeasonList")).toContainText("Eligible");
+  await expect(page.locator("#hubParadeSeasonList")).toContainText("Not yet eligible");
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Door Check-In");
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Add parade to calendar");
   await expect(page.locator("#hubParadeSeasonList")).not.toContainText("123 Secret Staging");
