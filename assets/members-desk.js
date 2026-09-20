@@ -507,6 +507,7 @@
       '<div class="muted">' + esc(whenLabel(row.start_time)) + (row.members_only ? " · Members only" : "") + "</div>" +
       paradeWhere +
       (row.location && row.member_address ? '<div class="muted" style="margin-top:2px;">Public note: ' + esc(row.location) + "</div>" : "") +
+      (row.notes ? '<div style="margin:6px 0 0;"><b>Role notes:</b> ' + esc(row.notes) + "</div>" : "") +
       '<div class="hub-parade-status">' +
       statusPill(!!(meeting && meeting.rsvpd), "Meeting RSVP’d", meeting ? "Meeting not RSVP’d" : "No meeting linked") +
       statusPill(!!(meeting && meeting.checked_in), "Meeting checked in", meeting ? "Meeting not checked in" : "Meeting check-in n/a") +
@@ -623,6 +624,7 @@
         location: e.location,
         member_address: e.member_address,
         members_only: e.members_only,
+        notes: e.notes || "",
         linked_meeting_id: e.linked_meeting_id,
         parade_rsvpd: !!paradeStatus,
         parade_checked_in: paradeStatus === "attended",
@@ -656,7 +658,7 @@
     } catch (e) {}
     try {
       var evs = await client.from("events")
-        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source")
+        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes")
         .eq("source", "krewe")
         .order("start_time", { ascending: true })
         .limit(40);
@@ -2406,7 +2408,10 @@
       '</div></div>' +
       '<div class="wide hub-event-optional" id="hubEventParadeBox" hidden>' +
       '<h4>Parade season</h4>' +
-      '<p class="hub-opt-hint">A Parade is the krewe march. Keep it Public so it appears as a recruiting card on parades.html, and Members only so there is no public march RSVP. Public location teaser only — put staging streets in Private / member address. Description is the recruiting blurb on the Parades page.</p>' +
+      '<p class="hub-opt-hint">A Parade is the krewe march. Keep it Public so it appears as a recruiting card on parades.html, and Members only so there is no public march RSVP. Public teaser location only — put staging streets in Private staging address. Description is the recruiting blurb on the Parades page.</p>' +
+      '<label for="hubEventRoleNotes">Role notes</label>' +
+      '<textarea id="hubEventRoleNotes" placeholder="March, float, hospitality, etc."></textarea>' +
+      '<p class="hub-opt-hint" style="margin-top:6px;">Shown to signed-in members on the Hub parade card. Not shown on the public Parades page.</p>' +
       '<label for="hubEventLinkedMeeting">Mandatory meeting</label>' +
       '<select id="hubEventLinkedMeeting"><option value="">None (no Door Check-In meeting gate)</option></select>' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Members can still RSVP to the parade if they missed the meeting. Parade Door Check-In warns and stays blocked until they check in at this meeting.</p>' +
@@ -2684,12 +2689,23 @@
       if (moBox && !moBox.dataset.kosTouched) moBox.checked = true;
       membersOnly = !!(moBox && moBox.checked);
     }
+    setFieldLabel("hubEventStart", paradeOn ? "Muster / step-off start *" : "Start time *");
+    setFieldLabel("hubEventEnd", paradeOn ? "Step-off window end" : "End time");
+    setFieldLabel("hubEventLocation", paradeOn ? "Public teaser location" : "Public location teaser");
+    setFieldLabel("hubEventMemberAddress", paradeOn ? "Private staging address" : "Private / member address");
     if (loc) {
       if (onlineOn) loc.placeholder = "Optional for online events";
       else if (paradeOn) loc.placeholder = "Bayshore Boulevard, Tampa";
       else if (membersOnly) loc.placeholder = "Members home, Tampa";
       else loc.placeholder = "Venue name or city (public)";
     }
+    var addr = document.getElementById("hubEventMemberAddress");
+    if (addr) addr.placeholder = paradeOn ? "Staging street (Hub + RSVP email only)" : "Full street address";
+  }
+
+  function setFieldLabel(inputId, text) {
+    var lab = document.querySelector('label[for="' + inputId + '"]');
+    if (lab) lab.textContent = text;
   }
 
   function fillLinkedMeetingSelect(selectedId) {
@@ -2922,6 +2938,7 @@
     var cmn = document.getElementById("hubEventCreateMeetingName"); if (cmn) cmn.value = "";
     var cms = document.getElementById("hubEventCreateMeetingStart"); if (cms) cms.value = "";
     var cmm = document.getElementById("hubEventCreateMeetingMandatory"); if (cmm) cmm.checked = true;
+    var rn = document.getElementById("hubEventRoleNotes"); if (rn) rn.value = "";
     var rcClear = document.getElementById("hubEventRegCloses"); if (rcClear) rcClear.value = "";
     resetEventEmailFields();
     document.getElementById("hubEventStatus").value = "draft";
@@ -2979,6 +2996,7 @@
     var onl = get("hubEventOnline"); if (onl) onl.checked = !!event.is_online || typeVal === "online";
     var mu = get("hubEventMeetingUrl"); if (mu) mu.value = event.meeting_url || "";
     fillLinkedMeetingSelect(event.linked_meeting_id || "");
+    var rnFill = get("hubEventRoleNotes"); if (rnFill) rnFill.value = event.notes || "";
     var cmMeetFill = get("hubEventCreateMeeting"); if (cmMeetFill) cmMeetFill.checked = false;
     var cmnFill = get("hubEventCreateMeetingName"); if (cmnFill) cmnFill.value = "";
     var cmsFill = get("hubEventCreateMeetingStart"); if (cmsFill) cmsFill.value = "";
@@ -3322,6 +3340,7 @@
       meal_options: collectMeals ? mealOptions : null,
       is_online: isOnline,
       meeting_url: isOnline ? (meetingUrl || null) : null,
+      notes: value("hubEventRoleNotes") || null,
       linked_meeting_id: value("hubEventType") === "parade" ? (value("hubEventLinkedMeeting") || null) : null,
       registration_closes_at: (function () {
         var rv = value("hubEventRegCloses");

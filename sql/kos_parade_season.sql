@@ -726,6 +726,7 @@ begin
           e.is_public,
           e.status,
           e.external_url,
+          e.notes,
           e.linked_meeting_id,
           public.kos_member_rsvpd_event(v_mid, e.id) as parade_rsvpd,
           public.kos_member_attended_event(v_mid, e.id) as parade_checked_in,

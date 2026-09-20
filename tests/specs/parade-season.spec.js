@@ -29,6 +29,9 @@ test.describe("Event Studio parade season", () => {
     await expect(page.locator("#hubEventCreateMeetingName")).toBeVisible();
     await expect(page.locator("#hubEventCreateMeetingStart")).toBeVisible();
     await expect(page.locator("#hubEventCreateMeetingMandatory")).toBeChecked();
+    await expect(page.locator("#hubEventRoleNotes")).toBeVisible();
+    await expect(page.locator("#hubEventStudio")).toContainText("Role notes");
+    await expect(page.locator("#hubEventStudio")).toContainText("Muster / step-off start");
     await expect(page.locator("#hubEventStudio")).toContainText("parades.html");
     await expect(page.locator("#hubEventStudio")).toContainText("no public march RSVP");
     assertHealthy(expect, report, "event studio parade fields");
@@ -66,6 +69,7 @@ test("Member Hub Events tab shows parade season status", async ({ page }) => {
       parade_checked_in: false,
       eligible: false,
       soft_gate_checkin: true,
+      notes: "March the route; hospitality at the float.",
       meeting: {
         id: "meet-1",
         name: "Gasparilla briefing",
@@ -81,6 +85,8 @@ test("Member Hub Events tab shows parade season status", async ({ page }) => {
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Not yet eligible");
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Door Check-In");
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Add parade to calendar");
+  await expect(page.locator("#hubParadeSeasonList")).toContainText("Role notes");
+  await expect(page.locator("#hubParadeSeasonList")).toContainText("hospitality");
   await expect(page.locator("#hubParadeSeasonList")).not.toContainText("123 Secret Staging");
   assertHealthy(expect, report, "hub parade season status");
 });
@@ -99,6 +105,14 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   const report = watchPage(page);
   await page.goto("/parades.html");
   await expect(page.locator("#featured-parade")).toBeVisible();
+  await expect(page.locator("#featured-parade")).toContainText("Children's Gasparilla");
+  await expect(page.locator("#featured-parade")).toContainText("Parade of Pirates");
+  await expect(page.locator("#featured-parade")).toContainText("January 23, 2027");
+  await expect(page.locator("#featured-parade")).toContainText("January 30, 2027");
+  await expect(page.locator("#why-march")).toBeVisible();
+  await expect(page.locator("#why-march")).toContainText("Why March With Shamrock");
+  await expect(page.locator("body")).toContainText("See the season");
+  await expect(page.locator("#parade-season")).toBeVisible();
   await expect(page.locator("#paradeStaticGrid")).toBeVisible();
   await expect(page.locator("#ikcSeasonTable")).toBeVisible();
   await expect(page.locator("#ikcSeasonTable tr.ours")).toHaveCount(5);
