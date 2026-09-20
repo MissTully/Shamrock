@@ -49,9 +49,17 @@
     color:var(--gold-light); font-family:var(--display);
     font-size:13px; letter-spacing:.8px; text-transform:uppercase;
   }
-  .toys-promo .feature{ position:relative; }
-  .toys-promo .ft-text h2{ font-size:clamp(28px,4vw,40px); color:var(--green-800); }
+  .toys-promo .card-link{
+    display:block; border-radius:16px; overflow:hidden;
+    box-shadow:var(--shadow); background:
+      linear-gradient(135deg,var(--gold-light),var(--gold) 45%,var(--gold-deep));
+    padding:8px;
+  }
+  .toys-promo .card-link img{ width:100%; height:auto; display:block; border-radius:10px; }
+  .toys-promo-copy{ position:relative; margin-top:26px; text-align:center; max-width:760px; margin-left:auto; margin-right:auto; }
+  .toys-promo-copy h2{ font-size:clamp(28px,4vw,40px); color:var(--green-800); margin:0 0 10px; }
   .toys-promo .needles{ margin:0 0 18px; color:var(--muted); font-size:18px; font-family:var(--fancy); font-style:italic; }
+  .toys-promo-copy .btns{ justify-content:center; }
   @media (max-width:760px){ .charity-grid,.charity-grid.two,.impact,.past-list{ grid-template-columns:1fr; } }
 </style>
 </head>
@@ -115,22 +123,17 @@
 
   <section class="toys-promo" id="toys-for-the-flight" aria-labelledby="toysPromoTitle">
     <div class="wrap">
-      <div class="feature" style="align-items:center;">
-        <div class="ft-media">
-          <div class="framed ornate">
-            <span class="crn tr"></span><span class="crn bl"></span>
-            <img src="assets/img/toys-for-the-flight-ad.jpg" alt="Toys for the Flight: a Christmas toy drive for Johns Hopkins All Children's LifeLine Transport" />
-          </div>
-        </div>
-        <div class="ft-text">
-          <span class="season-pill">Christmas campaign · Collecting now</span>
-          <h2 id="toysPromoTitle">Toys for the Flight</h2>
-          <p>A Christmas toy drive for Johns Hopkins All Children's LifeLine Transport. Small, new, wipeable toys help comfort critically ill and injured children on ambulance, helicopter, and aircraft transports.</p>
-          <p class="needles">Gathering around Santa Fest · Sat, Dec 5, 2026. Drop and gather locations coming soon.</p>
-          <div class="btns" style="justify-content:flex-start;">
-            <a class="btn btn-primary" href="toys-for-the-flight.html">See the drive →</a>
-            <a class="btn btn-green" href="https://www.hopkinsmedicine.org/all-childrens-hospital/services/transport-team" target="_blank" rel="noopener noreferrer">Learn about LifeLine</a>
-          </div>
+      <a class="card-link" href="toys-for-the-flight.html">
+        <img src="assets/img/toys-for-the-flight-volunteer-card.jpg" alt="Toys for the Flight: a Christmas toy drive for Johns Hopkins All Children's LifeLine Transport" />
+      </a>
+      <div class="toys-promo-copy">
+        <span class="season-pill">Christmas campaign · Collecting now</span>
+        <h2 id="toysPromoTitle">Toys for the Flight</h2>
+        <p>A Christmas toy drive for Johns Hopkins All Children's LifeLine Transport. Small, new, wipeable toys help comfort critically ill and injured children on ambulance, helicopter, and aircraft transports.</p>
+        <p class="needles">Gathering around Santa Fest · Sat, Dec 5, 2026. Drop and gather locations coming soon.</p>
+        <div class="btns">
+          <a class="btn btn-primary" href="toys-for-the-flight.html">See the drive →</a>
+          <a class="btn btn-green" href="https://www.hopkinsmedicine.org/all-childrens-hospital/services/transport-team" target="_blank" rel="noopener noreferrer">Learn about LifeLine</a>
         </div>
       </div>
     </div>

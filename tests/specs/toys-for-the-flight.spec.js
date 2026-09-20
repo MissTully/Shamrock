@@ -12,7 +12,10 @@ test("volunteer.html promotes Toys for the Flight and links to LifeLine", async 
   const promo = page.locator("#toys-for-the-flight");
   await expect(promo).toBeVisible();
   await expect(promo.getByRole("heading", { name: "Toys for the Flight" })).toBeVisible();
-  await expect(promo.getByRole("img", { name: /Toys for the Flight/i })).toBeVisible();
+  await expect(promo.getByRole("img", { name: /Toys for the Flight/i })).toHaveAttribute(
+    "src",
+    /toys-for-the-flight-volunteer-card\.jpg/
+  );
   await expect(promo.getByRole("link", { name: /See the drive/i })).toHaveAttribute(
     "href",
     "toys-for-the-flight.html"
@@ -49,7 +52,8 @@ test("toys-for-the-flight.html is shareable and points to LifeLine", async ({ pa
   await page.locator("#shareCampaignBtn").click();
   await expect(page.locator("#shareStatus")).not.toHaveText("");
 
-  await expect(page.getByRole("img", { name: /sleigh basket/i })).toBeVisible();
+  await expect(page.getByRole("img", { name: /campaign banner/i })).toBeVisible();
   await expect(page.getByRole("img", { name: /Square campaign art/i })).toBeVisible();
+  await expect(page.locator(".toys-ad-hero img")).toHaveAttribute("src", /toys-for-the-flight-ad\.jpg/);
   assertHealthy(expect, report, "toys campaign page");
 });
