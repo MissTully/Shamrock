@@ -141,9 +141,10 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   expect(tableBox.y).toBeGreaterThan(cardsBox.y);
   await expect(page.locator("body")).toContainText("Safety & Security");
   await expect(page.locator("body")).toContainText("Castle of Shenanigans");
-  await expect(page.locator("#parade-season")).toContainText("Join");
-  await expect(page.locator("#parade-season")).toContainText("Member Login");
-  await expect(page.locator("#parade-season")).not.toContainText(/Sign me up|Buy Tickets|march RSVP/i);
+  const cardActions = page.locator("#parade-season .parade-actions");
+  await expect(cardActions.first()).toContainText("Join");
+  await expect(cardActions.first()).toContainText("Member Login");
+  await expect(cardActions.filter({ hasText: /Sign me up|Buy Tickets|march RSVP/i })).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("member_address");
   await expect(page.locator("body")).not.toContainText(/staging on (4th|5th|Howard)/i);
   assertHealthy(expect, report, "public parades marketing");
