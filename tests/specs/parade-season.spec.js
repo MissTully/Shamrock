@@ -53,24 +53,27 @@ test("Member Hub Events tab shows parade season status", async ({ page }) => {
   await expect(page.locator("[data-hub-panel='events']")).toHaveClass(/hub-on/);
   await expect(page.locator("#hubParadeSeasonList")).toBeVisible();
   await expect(page.locator("#hubParadeSeasonEvents")).toContainText("Parade season");
-
+  await page.waitForFunction(() => typeof window.__kosRenderParadeSeason === "function");
   await page.evaluate(() => {
-    const target = document.getElementById("hubParadeSeasonList");
-    if (!target) return;
-    target.innerHTML =
-      '<div class="hub-event-row" data-parade-card="parade-1">' +
-      "<div><b>Gasparilla Parade of Pirates</b>" +
-      '<div class="hub-parade-status">' +
-      "<span class=\"warn\">Meeting not RSVP’d</span>" +
-      "<span class=\"warn\">Meeting not checked in</span>" +
-      "<span class=\"warn\">Parade not RSVP’d</span>" +
-      "<span class=\"warn\">Not yet eligible</span>" +
-      "<span class=\"warn\">Parade not checked in</span></div>" +
-      '<p class="hub-parade-warn">Door Check-In for this parade will warn and stay blocked until you check in at the mandatory meeting. RSVP is still open.</p></div>' +
-      '<div class="hub-appr-btns">' +
-      '<button type="button" class="btn btn-primary">RSVP to meeting</button>' +
-      '<button type="button" class="btn" data-hub-ics="meet-1">Add meeting to calendar</button>' +
-      '<button type="button" class="btn" data-hub-ics="parade-1">Add parade to calendar</button></div></div>';
+    window.__kosRenderParadeSeason([{
+      id: "parade-1",
+      name: "Gasparilla Parade of Pirates",
+      start_time: "2027-01-30T19:00:00.000Z",
+      location: "Bayshore Boulevard, Tampa",
+      members_only: true,
+      parade_rsvpd: false,
+      parade_checked_in: false,
+      eligible: false,
+      soft_gate_checkin: true,
+      meeting: {
+        id: "meet-1",
+        name: "Gasparilla briefing",
+        start_time: "2027-01-28T23:00:00.000Z",
+        location: "Members home, Tampa",
+        rsvpd: false,
+        checked_in: false
+      }
+    }]);
   });
 
   await expect(page.locator("#hubParadeSeasonList")).toContainText("Meeting not RSVP’d");

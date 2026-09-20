@@ -559,6 +559,7 @@
       wireParadeSeasonList(target, rows);
     });
   }
+  window.__kosRenderParadeSeason = renderHubParadeSeason;
 
   async function hubRsvpParadeEvent(eventId, btn) {
     var client = window.__kosSb;
