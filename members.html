@@ -3180,7 +3180,7 @@
   </script>
 
   <!-- ============== RAFFLES ============== -->
-  <!-- raffle-module v=20260909r2 -->
+  <!-- raffle-module v=20260920r1 -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -3201,18 +3201,24 @@
       const e1 = evRes.error;
       const myB={}, myP={};
       if(mine){ (mine.baskets||[]).forEach(b=>myB[b.basket_id]=b.tickets); (mine.pot||[]).forEach(p=>myP[p.event_id]=p.tickets); }
-      const demoBanner = '<a href="raffle-demo.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#14532b,#0d3a1e);color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;text-decoration:none;">'
-        +'<span style="font-size:26px;" aria-hidden="true">🧪</span>'
-        +'<span style="min-width:0;"><b style="font-size:15.5px;">Try the Basket Raffle Demo</b><br><span style="font-size:13.5px;opacity:.92;">Pretend tickets, a live fundraising tally, and a practice drawing. See how raffles raise money - no real money involved.</span></span>'
-        +'<span style="margin-left:auto;background:var(--gold);color:#14532b;border-radius:999px;padding:8px 14px;font-weight:700;white-space:nowrap;font-size:13.5px;">Open demo →</span></a>';
-      const howHtml = demoBanner + '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events - enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      // Demo hero - the first thing members see when the studio opens.
+      const demoHero = '<a href="raffle-demo.html" target="_blank" rel="noopener" style="display:block;background:linear-gradient(135deg,#14532b,#0d3a1e);color:#fff;border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:18px;text-decoration:none;">'
+        +'<span style="display:inline-block;background:var(--gold);color:#14532b;border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Start here</span>'
+        +'<span style="display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap;">'
+        +'<span style="font-size:34px;" aria-hidden="true">🧪</span>'
+        +'<span style="flex:1;min-width:200px;"><b style="font-size:18px;display:block;">Try the Basket Raffle Demo</b><span style="font-size:14px;opacity:.92;display:block;margin-top:4px;">Pretend tickets, a live fundraising tally, and a practice drawing. See how raffles raise money - no real money involved.</span></span>'
+        +'<span style="background:var(--gold);color:#14532b;border-radius:999px;padding:10px 18px;font-weight:700;white-space:nowrap;font-size:14.5px;">Open demo →</span>'
+        +'</span></a>';
+      const howHtml = '<div style="background:#fbf6e9;border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#4a3f1e;line-height:1.5;"><b>How our raffles work</b><br>🎁 <b>Gift baskets:</b> themed, gift-ready baskets (or bottles / a single item) filled with <b>donated</b> contents. Members create a raffle, use the planning board to track who is bringing what, and raise money for charity. \ud83d\udcb0 <b>50/50:</b> one pot; winner takes half, the rest supports charity. 🎫 <b>In person:</b> draws happen at events - enter digitally (or via QR), settle payment with a volunteer at the table.</div>';
+      // Layout order: demo hero -> create & manage (filled by renderManage) -> live raffles -> how it works -> officer tools (appended last).
+      const layout = (liveHtml) => demoHero + '<div id="rfManage"></div>' + liveHtml + howHtml;
       if(e1){
-        box.innerHTML = howHtml + '<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>';
+        box.innerHTML = layout('<p class="msg error">Could not load raffles.</p><p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>');
         await renderManage();
         try{ await renderOfficerTools(events||[], baskets||[]); }catch(_){ }
         return;
       }
-      let html=howHtml;
+      let html='';
       if(events && events.length) for(const e of events){
         html+=`<div class="raffle-event"><h3 class="rpt-cat" style="margin-top:0;">${e.raffle_type==='fifty_fifty'?'💰':'🧺'} ${RE(e.name)} ${e.is_active?'':'<span class="badge available">closed</span>'}</h3>`;
         if(e.description) html+=`<p style="margin:0 0 10px;color:#3a3a2e;">${RE(e.description)}</p>`;
@@ -3244,7 +3250,7 @@
         html+=`</div>`;
       }
       if(!events || !events.length){ html+='<p class="empty">No raffles are running right now. Create one above to start planning gift baskets for charity. 🍀</p>'; }
-      box.innerHTML=html;
+      box.innerHTML=layout(html);
       await renderManage();
       try{ await renderOfficerTools(events||[],baskets||[]); }catch(_){ }
       box.querySelectorAll("form[data-basket]").forEach(f=>f.addEventListener("submit",async(ev)=>{
@@ -3358,11 +3364,13 @@
       if(!Array.isArray(mine)) mine=[];
       var w=document.createElement("div"); w.className="raffle-event"; w.id="mrCreateManage";
       w.style.cssText="border-bottom:2px dashed var(--gold);margin:0 0 18px;padding:0 0 14px;";
+      var slot=document.getElementById("rfManage");
       w.innerHTML='<h3 class="rpt-cat" style="margin-top:0;">🛠️ Create &amp; manage raffles</h3>'+
         '<p style="font-size:15px;color:var(--muted);margin:0 0 10px;">Create a gift-basket or 50/50 raffle for charity. Use baskets as a planning board for donated contents, then draw winners in person at the event.</p>'+
         '<button class="btn btn-primary" id="mrNew" type="button">➕ Create a raffle</button>'+
         '<div id="mrForm" style="margin-top:12px;"></div><div id="mrList" style="margin-top:14px;"></div>';
-      if(box.firstChild) box.insertBefore(w, box.firstChild); else box.appendChild(w);
+      if(slot){ slot.innerHTML=""; slot.appendChild(w); }
+      else if(box.firstChild) box.insertBefore(w, box.firstChild); else box.appendChild(w);
       var btn=document.getElementById("mrNew"); if(btn) btn.onclick=showCreateForm;
       try{ renderMine(mine); }catch(_){ var L=document.getElementById("mrList"); if(L) L.innerHTML='<p class="empty">You haven’t created any raffles yet.</p>'; }
     }
