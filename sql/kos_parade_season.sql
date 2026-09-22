@@ -787,36 +787,36 @@ begin
     select * from (values
       (
         'SantaFest',
-        'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season.',
-        timestamp '2026-12-05 10:00:00',
-        'Downtown Tampa',
+        'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. Shamrock marches about 5:00–9:00 PM. Exact step-off and staging post on the Member Hub closer to the date.',
+        timestamp '2026-12-05 17:00:00',
+        'Downtown Tampa, FL',
         'https://www.friendsoftamparec.org/santa-fest--tree-lighting.html',
         'assets/img/parades/santafest.webp',
         false
       ),
       (
         'Children''s Gasparilla',
-        'The family-friendly, alcohol-free daytime parade along Bayshore: beads, pirates, and big smiles for the little ones.',
-        timestamp '2027-01-23 10:00:00',
-        'Bayshore Boulevard, Tampa',
+        'The family-friendly, alcohol-free daytime parade along Bayshore. Shamrock marches about 9:00 AM–2:00 PM. Staging posts on the Member Hub.',
+        timestamp '2027-01-23 09:00:00',
+        'Bayshore Boulevard, Tampa, FL',
         'https://gasparillapiratefest.com/childrens-schedule-of-events/',
         'assets/img/parades/childrens-gasparilla.webp',
         false
       ),
       (
         'Gasparilla Parade of Pirates',
-        'The crown jewel: the legendary invasion and grand pirate parade down Bayshore Boulevard.',
-        timestamp '2027-01-30 14:00:00',
-        'Bayshore Boulevard, Tampa',
+        'The legendary pirate parade down Bayshore Boulevard, with the Castle of Shenanigans float. Shamrock marches about 12:00–6:00 PM. Staging posts on the Member Hub.',
+        timestamp '2027-01-30 12:00:00',
+        'Bayshore Boulevard, Tampa, FL',
         'https://gasparillapiratefest.com/pirate-fest-schedule-of-events/',
         'assets/img/parades/gasparilla-pirates.webp',
         false
       ),
       (
         'Sant''Yago Knight Parade',
-        'The dazzling night parade through historic Ybor City: lights, floats, and Latin-quarter energy.',
-        timestamp '2027-02-13 19:00:00',
-        'Ybor City, Tampa',
+        'The night parade through historic Ybor City. Shamrock marches about 6:00–11:00 PM. Staging posts on the Member Hub.',
+        timestamp '2027-02-13 18:00:00',
+        'Ybor City, Tampa, FL',
         'https://krewesantyago.org/knight-parade',
         'assets/img/parades/santyago-knight.webp',
         false
