@@ -1,4 +1,6 @@
 -- Inter-Krewe Council (IKC) calendar sync.
+-- The daily sync function below is the original. sql/kos_ikc_calendar_curated_events.sql
+-- replaces it so Krewe-curated rows (calendar_curated) survive the feed.
 -- Applied to the Krewe of Shamrock project (oazwkwflgbthojvnclfc) on 2026-09-03
 -- as migrations kos_ikc_calendar_sync, kos_rsvp_excludes_ikc_and_first_sync,
 -- and kos_ikc_sync_trim_names.

@@ -803,7 +803,7 @@
       for (let d = 1; d <= days; d++) {
         const evs = daysMap[d];
         if (evs && evs.length) {
-          const tip = evs.map((e)=> (hasTime(e.date) ? timeStr(e.date) + " · " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
+          const tip = evs.map((e)=> (nyHasTime(e.date) ? timeStr(e.date) + (e.end && nyHasTime(e.end) ? "–" + timeStr(e.end) : "") + " · " : "") + e.name + (e.location ? " (" + e.location + ")" : "")).join(" · ");
           const look = 'background:var(--gold);color:var(--green-900);box-shadow:0 0 0 2px rgba(169,128,28,.35);';
           html += '<div title="' + esc(tip) + '" data-kos-day="1" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;cursor:default;' + look + '">' + d + '</div>';
         } else {
@@ -818,16 +818,57 @@
       return String((ev && ev.source) || "").toLowerCase() === "ikc";
     }
 
+    function nyFields(d) {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      }).formatToParts(d);
+      const pick = (type) => {
+        const part = parts.find((p) => p.type === type);
+        return part ? Number(part.value) : 0;
+      };
+      return { y: pick("year"), m: pick("month") - 1, day: pick("day"), h: pick("hour"), min: pick("minute") };
+    }
+
+    function nyHasTime(d) {
+      const p = nyFields(d);
+      return !(p.h === 0 && p.min === 0);
+    }
+
     function groupByMonth(datedEvents) {
       const byYM = {};
       for (const ev of datedEvents) {
-        const y = ev.date.getFullYear(), m = ev.date.getMonth(), day = ev.date.getDate();
-        const key = y + "-" + m;
-        (byYM[key] = byYM[key] || { y, m, days: {} });
-        (byYM[key].days[day] = byYM[key].days[day] || []).push(ev);
+        const p = nyFields(ev.date);
+        const key = p.y + "-" + p.m;
+        (byYM[key] = byYM[key] || { y: p.y, m: p.m, days: {} });
+        (byYM[key].days[p.day] = byYM[key].days[p.day] || []).push(ev);
       }
       const keys = Object.keys(byYM).sort((a, b)=>{ const [ay, am] = a.split("-").map(Number), [by, bm] = b.split("-").map(Number); return (ay - by) || (am - bm); });
       return { byYM, keys };
+    }
+
+    function formatWhen(ev) {
+      const p = nyFields(ev.date);
+      const dateStr = MONTH_NAMES[p.m] + " " + p.day + ", " + p.y;
+      if (!nyHasTime(ev.date)) return dateStr;
+      let when = dateStr + " · " + timeStr(ev.date);
+      if (ev.end && !isNaN(ev.end.getTime()) && nyHasTime(ev.end)) {
+        const end = nyFields(ev.end);
+        if (end.y === p.y && end.m === p.m && end.day === p.day) when += "–" + timeStr(ev.end);
+      }
+      return when;
+    }
+
+    function undatedWhen(ev) {
+      const text = String((ev && ev.description) || "");
+      const m = text.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(20\d{2})\b/);
+      return m ? (m[1] + " " + m[2] + " · Date TBA") : "Date TBA";
+    }
+
+    function listDetail(ev) {
+      const text = String((ev && ev.description) || "").replace(/\s+/g, " ").trim();
+      if (!text || text.length > 240) return "";
+      return '<span style="display:block;font-size:13px;color:#f1ead4;opacity:.92;margin-top:2px;">' + esc(text) + "</span>";
     }
 
     function buildCalendar(events) {
@@ -835,19 +876,22 @@
       const listEl = document.getElementById("kcal-list");
       const yearEl = document.getElementById("kcal-year");
       const dated = (events || [])
-        .filter((e)=> e.start_time)
-        .map((e)=> ({ date: new Date(e.start_time), name: e.name, location: publicWhere(e), ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }))
+        .filter((e)=> e.start_time && String(e.status || "published").toLowerCase() !== "cancelled")
+        .map((e)=> ({ date: new Date(e.start_time), end: e.end_time ? new Date(e.end_time) : null, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }))
         .filter((e)=> !isNaN(e.date))
         .sort((a, b)=> a.date - b.date);
+      const undated = (events || [])
+        .filter((e)=> !e.start_time && String(e.status || "published").toLowerCase() === "published")
+        .map((e)=> ({ name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }));
       // Month grids are Krewe of Shamrock only. The list below keeps both.
       const kosDated = dated.filter((e)=> !e.ikc);
-      if (!dated.length) {
+      if (!dated.length && !undated.length) {
         if (gridsEl) gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No dated events on the calendar yet. Check back soon!</p>';
         if (listEl) listEl.innerHTML = '';
         return;
       }
       const yearSource = kosDated.length ? kosDated : dated;
-      const years = [...new Set(yearSource.map((e)=> e.date.getFullYear()))].sort();
+      const years = [...new Set(yearSource.map((e)=> nyFields(e.date).y))].sort();
       if (yearEl) yearEl.textContent = years.length === 1 ? years[0] : years[0] + "–" + years[years.length - 1];
       if (gridsEl) {
         if (!kosDated.length) {
@@ -858,9 +902,7 @@
         }
       }
       if (listEl) {
-        listEl.innerHTML = dated.map((ev)=>{
-          const dateStr = MONTH_NAMES[ev.date.getMonth()] + " " + ev.date.getDate() + ", " + ev.date.getFullYear();
-          const when = hasTime(ev.date) ? dateStr + " · " + timeStr(ev.date) : dateStr;
+        const row = (ev, when) => {
           const loc = ev.location ? ' <span style="color:var(--gold-light);">@ ' + esc(ev.location) + '</span>' : "";
           const chip = ev.ikc
             ? '<span style="background:#7c5cae;color:#fff;border-radius:6px;padding:1px 8px;margin-right:8px;font-size:11px;font-family:var(--display);letter-spacing:.5px;vertical-align:1px;">IKC</span>'
@@ -869,9 +911,11 @@
             ? '<a href="' + esc(ev.url) + '" target="_blank" rel="noopener" style="color:#cdb9ec;text-decoration:none;">' + esc(ev.name) + ' &#8599;</a>'
             : esc(ev.name);
           return '<li data-source="' + (ev.ikc ? "ikc" : "krewe") + '" style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
-                 '<span style="flex:0 0 150px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
-                 '<span style="flex:1;">' + chip + name + loc + '</span></li>';
-        }).join("");
+                 '<span style="flex:1 1 220px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
+                 '<span style="flex:1;">' + chip + name + loc + listDetail(ev) + '</span></li>';
+        };
+        listEl.innerHTML = dated.map((ev)=> row(ev, formatWhen(ev))).join("") +
+          undated.map((ev)=> row(ev, undatedWhen(ev))).join("");
       }
     }
 
