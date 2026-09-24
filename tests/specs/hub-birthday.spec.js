@@ -46,6 +46,13 @@ test.describe("Member Hub birthday card", () => {
     const order = await page.locator("#hubHomeTop").innerHTML();
     expect(order.indexOf("hubBirthdayCard")).toBeGreaterThanOrEqual(0);
     expect(order.indexOf("hubBirthdayCard")).toBeLessThan(order.indexOf("hubWelcomeCard"));
+
+    const art = page.locator("#hubBirthdayCard .hub-birthday-art");
+    await expect(art).toBeVisible();
+    const expectedSrc = await page.evaluate((today) => window.__kosBirthdayArtSrc(today), TODAY);
+    await expect(art).toHaveAttribute("src", expectedSrc);
+    const res = await page.request.get(expectedSrc);
+    expect(res.status(), expectedSrc).toBe(200);
     assertHealthy(expect, report, "birthday card");
   });
 
@@ -72,6 +79,7 @@ test.describe("Member Hub birthday card", () => {
       { first_name: "Nia", last_name: "Walsh", birthday: "2001-01-02", membership_status: "active" }
     ], today), TODAY);
     await expect(page.locator("#hubBirthdayCard")).toHaveCount(0);
+    await expect(page.locator(".hub-birthday-art")).toHaveCount(0);
     await expect(page.locator("#hubWelcomeCard")).toBeVisible();
     assertHealthy(expect, report, "no birthdays");
   });
@@ -99,5 +107,25 @@ test.describe("Member Hub birthday card", () => {
     expect(result.leapOn).toEqual(["Feb"]);
     expect(result.leapOff).toEqual([]);
     assertHealthy(expect, report, "birthday timezone");
+  });
+
+  test("rotates birthday art by the New York date and keeps that picture all day", async ({ page }) => {
+    const report = watchPage(page);
+    await openHome(page);
+    const result = await page.evaluate(() => {
+      const src = window.__kosBirthdayArtSrc;
+      const week = [];
+      for (let day = 1; day <= 6; day += 1) week.push(src({ year: 2026, month: 1, day: day }));
+      return {
+        stable: src({ year: 2026, month: 9, day: 24 }) === src({ year: 2026, month: 9, day: 24 }),
+        week: week,
+        nextYear: src({ year: 2027, month: 1, day: 1 })
+      };
+    });
+    expect(result.stable).toBe(true);
+    expect(new Set(result.week.slice(0, 5)).size).toBe(5);
+    expect(result.week[5]).toBe(result.week[0]);
+    expect(result.nextYear).not.toBe(result.week[4]);
+    assertHealthy(expect, report, "birthday art rotation");
   });
 });

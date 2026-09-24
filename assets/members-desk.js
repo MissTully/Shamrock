@@ -19,14 +19,16 @@
     ".hub-welcome h2{font-family:var(--display);color:var(--green-800);margin:0 0 12px;font-size:26px;}",
     ".hub-welcome .hub-hello{margin:0 0 4px;font-size:16px;color:var(--muted);}",
     ".hub-welcome .hub-chips{margin:0 0 10px;}",
-    ".hub-birthday{position:relative;overflow:hidden;background:linear-gradient(165deg,#fffdf4 0%,#f8f1d8 46%,#e7f3ea 100%);border:2px solid rgba(168,128,28,.55);border-radius:18px;padding:18px 20px 16px;box-shadow:var(--shadow-sm);}",
-    ".hub-birthday::before{content:'☘';position:absolute;top:-12px;right:8px;font-size:72px;opacity:.16;pointer-events:none;transform:rotate(14deg);}",
-    ".hub-birthday h3{position:relative;font-family:var(--display);color:var(--green-800);margin:0 0 8px;font-size:24px;line-height:1.25;}",
+    ".hub-birthday{display:grid;grid-template-columns:minmax(148px,240px) minmax(0,1fr);gap:12px 16px;align-items:center;position:relative;overflow:hidden;background:linear-gradient(165deg,#fffdf4 0%,#f8f1d8 46%,#e7f3ea 100%);border:2px solid rgba(168,128,28,.55);border-radius:18px;padding:14px;box-shadow:var(--shadow-sm);}",
+    ".hub-birthday-art{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:14px;border:1px solid rgba(168,128,28,.4);background:#e7f3ea;display:block;}",
+    ".hub-birthday-copy{min-width:0;}",
+    ".hub-birthday h3{font-family:var(--display);color:var(--green-800);margin:0 0 8px;font-size:24px;line-height:1.25;}",
     ".hub-birthday-rule{height:3px;background:linear-gradient(90deg,#a9801c,#d4af37,#ecd07e,#d4af37,#a9801c);border-radius:2px;margin:0 0 12px;}",
-    ".hub-birthday p{position:relative;margin:0 0 8px;font-size:16px;line-height:1.4;color:#3a3a2e;}",
+    ".hub-birthday p{margin:0 0 8px;font-size:16px;line-height:1.4;color:#3a3a2e;}",
     ".hub-birthday .hub-birthday-when{font-family:var(--display);color:var(--green-800);letter-spacing:.03em;margin:0 0 10px;}",
-    ".hub-birthday-names{position:relative;list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;}",
+    ".hub-birthday-names{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;}",
     ".hub-birthday-names li{background:var(--green-800);color:#f6efdc;border:1px solid rgba(212,175,55,.75);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:16px;line-height:1.2;}",
+    "@media (max-width:560px){.hub-birthday{grid-template-columns:1fr;padding:12px;}.hub-birthday-art{max-height:240px;}}",
     ".hub-craic{position:relative;overflow:hidden;background:repeating-linear-gradient(-45deg,rgba(201,162,39,.10) 0 10px,rgba(194,69,30,.09) 10px 20px,transparent 20px 34px),linear-gradient(165deg,#1d6b3e 0%,#14532d 55%,#0f3d22 100%);color:#f6efdc;border-radius:20px;padding:22px 22px 18px;box-shadow:0 6px 18px rgba(23,94,67,.25);border:2px solid #c9a227;}",
     ".hub-craic::before,.hub-craic::after{content:'☘';position:absolute;pointer-events:none;line-height:1;opacity:.16;z-index:0;}",
     ".hub-craic::before{top:-6px;left:8px;font-size:72px;transform:rotate(-18deg);}",
@@ -1203,23 +1205,55 @@
   var CURRENT_MEMBER_STATUSES = { active: true, "pending-renewal": true, "pending-new": true };
   var birthdayFixture = false;
 
-  function nyTodayParts(now) {
+  /* Melissa's five Shamrock birthday cards. The same picture shows for
+     everyone on a given America/New_York date: day-of-year modulo five. */
+  var BIRTHDAY_ART = [
+    "/assets/img/hub/birthday/leprechaun-in-cake.jpg",
+    "/assets/img/hub/birthday/felt-leprechaun-cake.jpg",
+    "/assets/img/hub/birthday/lego-white-cake.jpg",
+    "/assets/img/hub/birthday/happy-birthday-topper.jpg",
+    "/assets/img/hub/birthday/lego-green-cake.jpg"
+  ];
+
+  function nyCalendar(now) {
+    var year = 0;
     var month = 0;
     var day = 0;
     try {
       var fmt = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/New_York",
+        year: "numeric",
         month: "numeric",
         day: "numeric"
       });
       fmt.formatToParts(now || new Date()).forEach(function (p) {
+        if (p.type === "year") year = Number(p.value);
         if (p.type === "month") month = Number(p.value);
         if (p.type === "day") day = Number(p.value);
       });
     } catch (e) { /* fall through */ }
-    if (month && day) return { month: month, day: day };
+    if (year && month && day) return { year: year, month: month, day: day };
     var d = now || new Date();
-    return { month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+    return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+  }
+
+  function nyTodayParts(now) {
+    var c = nyCalendar(now);
+    return { month: c.month, day: c.day };
+  }
+
+  function birthdayArtIndex(today) {
+    var cal = nyCalendar();
+    var year = (today && today.year) || cal.year;
+    var month = (today && today.month) || cal.month;
+    var day = (today && today.day) || cal.day;
+    var doy = Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 86400000);
+    var n = BIRTHDAY_ART.length;
+    return ((doy % n) + n) % n;
+  }
+
+  function birthdayArtSrc(today) {
+    return BIRTHDAY_ART[birthdayArtIndex(today)];
   }
 
   function birthdayParts(value) {
@@ -1291,17 +1325,21 @@
       ? "The krewe raises a glass to you."
       : "The krewe raises a glass to today's celebrants.";
     var chips = names.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
+    var art = birthdayArtSrc(today);
     return '<section class="hub-birthday" id="hubBirthdayCard" aria-label="Happy Birthday">' +
+      '<img class="hub-birthday-art" src="' + esc(art) + '" alt="Shamrock birthday card" width="960" height="723" />' +
+      '<div class="hub-birthday-copy">' +
       "<h3>🎂 " + esc(lead) + "</h3>" +
       '<div class="hub-birthday-rule"></div>' +
       (when ? '<p class="hub-birthday-when">' + esc(when) + "</p>" : "") +
       "<p>" + esc(sub) + "</p>" +
       (one ? "" : '<ul class="hub-birthday-names">' + chips + "</ul>") +
-      "</section>";
+      "</div></section>";
   }
 
   window.__kosBirthdaysToday = birthdaysToday;
   window.__kosNyTodayParts = nyTodayParts;
+  window.__kosBirthdayArtSrc = birthdayArtSrc;
 
   /* ---- Welcome hero: the home page opens with the member, not the game.
      Greeting, standing chips, and the season checklist up top; the Craic
