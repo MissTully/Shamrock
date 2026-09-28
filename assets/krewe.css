@@ -878,6 +878,7 @@ table{ max-width:100%; }
 .hub .hub-find,
 .hub .hub-profile,
 .hub .hub-board,
+.hub .hub-desk-app,
 .hub .hub-install{
   border:1px solid #c9b57a;
   border-top:4px solid #14532d;

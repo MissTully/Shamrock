@@ -68,8 +68,11 @@ test.describe("Computer Hub on a wide screen", () => {
     await expect(page.locator("#hubGetAppBanner")).toHaveCount(0);
     await expect(page.locator("#hubWelcomeCard")).toBeVisible();
     await expect(page.locator("#hubWelcomeCard")).toContainText("Welcome home");
-    await expect(page.locator("#hubGetAppLink")).toBeVisible();
-    await expect(page.locator("#hubGetAppLink")).toHaveText("Get the App");
+    const card = page.locator("#hubDeskAppCard");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText("Get the Shamrock Hub mobile app");
+    await expect(page.locator("#hubGetAppLink")).toHaveText("See how to install");
+    await expect(page.locator("#hubGetAppQuick")).toHaveCount(0);
     await expect(page.locator('#hubTabs [data-hub-tab="hub"]')).toContainText("Home");
     await expect(page.locator('#hubTabs [data-hub-tab="fun"]')).toBeVisible();
     await expect(page.locator('#hubTabs .app-tab-ic').first()).toBeHidden();
@@ -104,7 +107,7 @@ test.describe("Computer Hub on a wide screen", () => {
     assertHealthy(expect, report, "desktop read more");
   });
 
-  test("#get-app opens the QR screen from the small link", async ({ page }) => {
+  test("#get-app opens the QR screen from the mobile app card", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page, { hash: "get-app" });
     await page.evaluate(() => {
@@ -120,8 +123,80 @@ test.describe("Computer Hub on a wide screen", () => {
     await page.locator("#appBack").click();
     await expect(page.locator("#appDrill")).toBeHidden();
     await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
+    await expect(page.locator("#hubDeskAppCard")).toBeVisible();
     await expect(page.locator("#hubGetAppLink")).toBeVisible();
     assertHealthy(expect, report, "desktop get-app");
+  });
+
+  test("the mobile app card is above the fold at 1440x900", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page);
+    await page.evaluate(() => {
+      if (typeof window.kosShowHub === "function") window.kosShowHub("hub");
+    });
+    await page.waitForFunction(() => {
+      const tabs = document.getElementById("hubTabs");
+      return !!(tabs && tabs.getBoundingClientRect().top < 12);
+    });
+    const card = page.locator("#hubDeskAppCard");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText("Get the Shamrock Hub mobile app");
+    await expect(card).toContainText("like an app, for iPhone and Android");
+    await expect(card).toContainText("nothing to download from an app store");
+    await expect(card).toContainText("You open it with one tap.");
+    await expect(card).toContainText("Scan with your phone's camera");
+    await expect(card.locator("img")).toBeVisible();
+    await expect(card.locator("img")).toHaveAttribute("src", "/assets/img/hub-install-qr.svg");
+    const copy = page.locator("#hubDeskAppCopy");
+    await expect(copy).toHaveAttribute("data-hub-url", "https://kreweofshamrock.com/members.html#get-app");
+    const url = page.locator("#hubDeskAppUrl");
+    await expect(url).toBeVisible();
+    await expect(url).toHaveText("kreweofshamrock.com/members.html#get-app");
+    await expect(url).toHaveAttribute("href", "https://kreweofshamrock.com/members.html#get-app");
+    const urlBox = await url.boundingBox();
+    const copyBox = await copy.boundingBox();
+    expect(urlBox.x).toBeGreaterThan(copyBox.x);
+    expect(Math.abs((urlBox.y + urlBox.height / 2) - (copyBox.y + copyBox.height / 2))).toBeLessThan(20);
+    const text = await card.innerText();
+    expect(text).not.toMatch(/[—–]/);
+    const box = await card.boundingBox();
+    const welcome = await page.locator("#hubWelcomeCard").boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(900);
+    expect(box.y).toBeGreaterThan(welcome.y);
+    await url.click();
+    await expect(page.locator("#appGetApp")).toBeVisible();
+    await expect(page).toHaveURL(/#get-app/);
+    assertHealthy(expect, report, "desktop app card above the fold");
+  });
+
+  test("dismissing the card leaves a Get the mobile app row in quick links", async ({ page }) => {
+    const report = watchPage(page);
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await unlockMemberHub(page);
+    const copy = page.locator("#hubDeskAppCopy");
+    await copy.click();
+    await expect(copy).toHaveText("Link copied");
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toBe("https://kreweofshamrock.com/members.html#get-app");
+
+    await page.locator("#hubDeskAppDismiss").click();
+    await expect(page.locator("#hubDeskAppCard")).toHaveCount(0);
+    const row = page.locator("#hubGetAppQuick");
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("Get the mobile app");
+    await expect(row.locator("svg")).toBeVisible();
+    const stored = await page.evaluate(() => localStorage.getItem("kosHubGetAppDismissed"));
+    expect(stored).toBe("1");
+
+    await page.reload();
+    await unlockMemberHub(page);
+    await expect(page.locator("#hubDeskAppCard")).toHaveCount(0);
+    await expect(page.locator("#hubGetAppQuick")).toBeVisible();
+    await page.locator("#hubGetAppQuick").click();
+    await expect(page.locator("#appGetApp")).toBeVisible();
+    await expect(page.locator("#appGetApp .app-qr img")).toBeVisible();
+    assertHealthy(expect, report, "dismiss desktop app card");
   });
 });
 
@@ -137,6 +212,8 @@ test.describe("Phone Hub stays the app", () => {
     await expect(page.locator("#appTop")).toBeVisible();
     await expect(page.locator("#appDash")).toBeVisible();
     await expect(page.locator("#hubGetAppBanner")).toBeVisible();
+    await expect(page.locator("#hubGetAppBanner")).toContainText("Get the mobile app");
+    await expect(page.locator("#hubDeskAppCard")).toHaveCount(0);
     await expect(page.locator("#hubGetAppLink")).toHaveCount(0);
     await expect(page.locator('#hubTabs [data-hub-tab="fun"]')).toBeHidden();
     const tabs = await page.locator("#hubTabs").boundingBox();
@@ -188,6 +265,7 @@ test.describe("Installed app keeps the phone shell on a wide screen", () => {
     await expect(page.locator("#appDash")).toBeVisible();
     await expect(page.locator("nav.krewe-nav")).toBeHidden();
     await expect(page.locator("#hubGetAppBanner")).toHaveCount(0);
+    await expect(page.locator("#hubDeskAppCard")).toHaveCount(0);
     assertHealthy(expect, report, "standalone wide app");
   });
 });
@@ -199,14 +277,18 @@ test.describe("Resizing across the breakpoint", () => {
     await unlockMemberHub(page);
     await expect(page.locator("body")).toHaveClass(/hub-desk/);
     await expect(page.locator("#hubWelcomeCard")).toBeVisible();
+    await expect(page.locator("#hubDeskAppCard")).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator("body")).toHaveClass(/hub-app/);
+    await expect(page.locator("#hubDeskAppCard")).toHaveCount(0);
+    await expect(page.locator("#hubGetAppBanner")).toBeVisible();
     await expect(page.locator("#appDash")).toBeVisible();
     await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(page.locator("body")).toHaveClass(/hub-desk/);
     await expect(page.locator("#appDash")).toHaveCount(0);
     await expect(page.locator("#hubWelcomeCard")).toBeVisible();
+    await expect(page.locator("#hubDeskAppCard")).toBeVisible();
     await expect(page.locator("nav.krewe-nav")).toBeVisible();
     assertHealthy(expect, report, "resize breakpoint");
   });
