@@ -1154,7 +1154,18 @@
   }
   .app-qr img{ width:220px; height:220px; }
   .app-qr p{ color:#14532d !important; text-align:center; margin:0 !important; font-size:15px; }
-  body.hub-app.app-getapp #appDrillActions:empty{ display:none !important; }
+  body.hub-app.app-getapp #appDrillActions:empty,
+  body.hub-app.app-ann #appDrillActions:empty{ display:none !important; }
+  .app-detail .app-ann{
+    background:#fbf7ec; color:#23291f; border-radius:22px; padding:16px 16px 20px;
+  }
+  .app-detail .app-ann h2{
+    margin:0 0 6px; font-family:var(--display); font-size:26px; line-height:1.2; color:#14532d;
+  }
+  .app-detail .app-ann .app-ann-meta{
+    margin:0 0 12px; font-family:var(--display); font-size:14px; color:#a9801c;
+  }
+  .app-detail .app-ann p{ color:#3a3a2e; margin:0 0 12px; line-height:1.5; font-size:16px; }
   @media (prefers-reduced-motion: reduce){
     body.hub-app.app-nav-push #appDrill,
     body.hub-app.app-nav-push.app-focus .hub-panel.hub-on,
@@ -3915,7 +3926,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928getapp1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260928getapp1" defer></script>
+<script src="assets/members-desk.js?v=20260928tidings1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
