@@ -215,6 +215,19 @@
     ".hub-officer-card:hover{filter:brightness(1.03);}",
     "@keyframes hubOfficerPulse{0%,100%{box-shadow:0 6px 18px rgba(166,124,0,.22)}40%{box-shadow:0 0 0 8px rgba(212,175,55,.55),0 6px 18px rgba(166,124,0,.22)}70%{box-shadow:0 0 0 3px rgba(212,175,55,.28),0 6px 18px rgba(166,124,0,.22)}}",
     ".hub-officer-card.hub-officer-pulse{animation:hubOfficerPulse 1.8s ease 2;}",
+    ".hub-apps-banner{margin-top:14px;width:100%;text-align:left;cursor:pointer;background:linear-gradient(145deg,#fffdf4 0%,#f3e3a4 55%,#e7f3ea 100%);color:#14532d;border-radius:18px;padding:16px 18px;display:flex;gap:14px;align-items:center;border:2px solid #a67c00;font:inherit;box-shadow:0 4px 14px rgba(166,124,0,.18);}",
+    ".hub-apps-banner:hover{filter:brightness(1.03);}",
+    ".hub-apps-banner .ic{font-size:36px;line-height:1;flex:none;}",
+    ".hub-apps-banner .copy{flex:1;min-width:0;}",
+    ".hub-apps-banner b{display:block;font-family:var(--display);font-size:24px;margin:0 0 4px;color:#14532d;}",
+    ".hub-apps-banner .sub{display:block;font-size:16px;line-height:1.4;color:#3d5a40;}",
+    ".hub-apps-banner .go{margin-left:auto;color:#7a5b00;font-family:var(--display);font-size:18px;font-weight:700;flex:none;}",
+    ".hub-app-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}",
+    ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
+    ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
+    ".hub-app-flash{background:#e7f3ea;border:1px solid rgba(29,107,62,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#14532d;line-height:1.45;}",
+    "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
     /* ---- Officer desk layout ---- */
     ".hub-officer-hero{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:18px;padding:18px 20px;margin:0 0 16px;}",
     ".hub-officer-hero h2{font-family:var(--display);color:var(--green-800);margin:0 0 6px;font-size:26px;}",
@@ -392,7 +405,26 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [] };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [] };
+  var applicationsFixture = null;
+
+  function canOpenOfficerDesk() {
+    return !!(state.officer || state.canManageEvents || state.canReviewApplications);
+  }
+
+  function newApplicationLabel(n) {
+    n = Number(n) || 0;
+    if (n === 1) return "1 new application";
+    if (n === 0) return "No new applications";
+    return n + " new applications";
+  }
+
+  function applicationsTileDesc() {
+    var n = Number(state.applicationCount) || 0;
+    if (n === 1) return "1 new join-form application waiting";
+    if (n === 0) return "No new join-form applications right now";
+    return n + " new join-form applications waiting";
+  }
   var hoursDeepLink = false;
 
   function hoursIntent() {
@@ -1400,11 +1432,11 @@
     }
     var officerPulse = "";
     try {
-      if ((state.officer || state.canManageEvents) && sessionStorage.getItem("kosOfficerDeskSeen") !== "1") {
+      if (canOpenOfficerDesk() && sessionStorage.getItem("kosOfficerDeskSeen") !== "1") {
         officerPulse = " hub-officer-pulse";
       }
     } catch (pe) {}
-    var officerCard = (state.officer || state.canManageEvents)
+    var officerCard = canOpenOfficerDesk()
       ? '<div class="hub-officer-card' + officerPulse + '" data-hub-action="officer" role="button" tabindex="0">' +
         '<div class="hub-officer-card-top">' +
         '<div class="ic" aria-hidden="true">🎖️</div>' +
@@ -1413,11 +1445,19 @@
         '<div class="hub-officer-inside-wrap">' +
         '<div style="font-family:var(--display);font-size:15px;margin:0 0 6px;color:#7a5b00;">What\'s inside</div>' +
         '<ul class="hub-officer-inside" aria-label="Officer desk tools">' +
+        (state.canReviewApplications ? '<li>Membership Applications</li>' : '') +
         '<li>Event Studio and calendar</li>' +
         '<li>Approvals (photos, videos, clovers)</li>' +
         '<li>Shop, member records, and money</li>' +
         '<li>Reports, QR tools, and messages</li>' +
         '</ul></div></div>'
+      : "";
+    var appsBanner = state.canReviewApplications
+      ? '<button type="button" class="hub-apps-banner" id="hubAppsHomeLink" data-hub-goto="applications">' +
+        '<span class="ic" aria-hidden="true">📝</span>' +
+        '<span class="copy"><b>' + esc(newApplicationLabel(state.applicationCount)) + '</b>' +
+        '<span class="sub">Membership Applications on your Officer desk. Approve, decline, or archive join-form applications.</span></span>' +
+        '<span class="go">Open</span></button>'
       : "";
     function quickTile(goto, icon, title, sub) {
       return '<button type="button" class="hub-action" data-hub-goto="' + goto + '">' +
@@ -1453,7 +1493,7 @@
     // celebrating, then greet the member and show their season standing,
     // then news from the board, then the officer's own desk, then the
     // Craic Cup game, then navigation, and housekeeping last.
-    top.innerHTML = birthdayCardHtml() + welcomeDeskHtml() + boardAnnouncementsHtml() + officerCard + craicHeroHtml() + findCards + installCardHtml();
+    top.innerHTML = birthdayCardHtml() + welcomeDeskHtml() + boardAnnouncementsHtml() + appsBanner + officerCard + craicHeroHtml() + findCards + installCardHtml();
 
     renderProfileCard();
 
@@ -1470,6 +1510,7 @@
       btn.addEventListener("click", function () {
         var go = btn.getAttribute("data-hub-goto");
         if (go === "directory") openDirectoryFromHome();
+        else if (go === "applications") openApplicationsFromHome();
         else if (go === "event-studio") openEventStudioFromHome();
         else if (go === "docs") revealDocsCard();
         else if (go === "events") gotoHubTabFromHome("events", "events");
@@ -1542,6 +1583,19 @@
     }, 80);
   }
 
+  function openApplicationsFromHome() {
+    if (!state.canReviewApplications) return;
+    try { history.replaceState(null, "", location.pathname + "#applications"); } catch (e) {}
+    try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e2) {}
+    showTab("officer", { skipScroll: true });
+    try { wireOfficerDeskPicker(); } catch (e3) {}
+    try { renderApplicationsFromState(); } catch (e4) {}
+    openOfficerTool("tool:hubApplications", true);
+    setTimeout(function () {
+      focusHubTarget(document.getElementById("hubApplications"));
+    }, 80);
+  }
+
   function openEventStudioFromHome() {
     if (!state.officer && !state.canManageEvents) return;
     try { history.replaceState(null, "", location.pathname + "#event-studio"); } catch (e) {}
@@ -1579,24 +1633,28 @@
     roleFixture = flags;
     if ("officer" in flags) state.officer = !!flags.officer;
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
+    applyApplicationFixture();
     syncOfficerChip();
     renderHome();
-    if (state.officer || state.canManageEvents) {
+    if (canOpenOfficerDesk()) {
       try { wireOfficerDeskPicker(); } catch (e) {}
+    }
+    if (state.canReviewApplications) {
+      try { renderApplicationsFromState(); } catch (e2) {}
     }
   };
 
   function showTab(name, opts) {
     var tab = name || TAB_HOME;
     opts = opts || {};
-    if (tab === "officer" && !state.officer && !state.canManageEvents) tab = TAB_HOME;
+    if (tab === "officer" && !canOpenOfficerDesk()) tab = TAB_HOME;
     document.querySelectorAll("[data-hub-panel]").forEach(function (el) {
       el.classList.toggle("hub-on", el.getAttribute("data-hub-panel") === tab);
     });
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       var id = btn.getAttribute("data-hub-tab");
       btn.classList.toggle("on", id === tab);
-      if (id === "officer") btn.style.display = (state.officer || state.canManageEvents) ? "" : "none";
+      if (id === "officer") btn.style.display = canOpenOfficerDesk() ? "" : "none";
     });
     syncOfficerChip();
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
@@ -1631,7 +1689,7 @@
       chip.addEventListener("click", function () { showTab("officer"); });
       bar.insertBefore(chip, bar.firstChild);
     }
-    var show = !!(state.officer || state.canManageEvents);
+    var show = canOpenOfficerDesk();
     chip.classList.toggle("show", show);
     chip.setAttribute("aria-hidden", show ? "false" : "true");
   }
@@ -1708,6 +1766,7 @@
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
     }
+    await refreshApplicationAccess(client);
     if (state.officer) loadApprovals(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
@@ -1818,6 +1877,7 @@
     var wantHours = hoursIntent();
     var wantDocs = false;
     var wantShare = false;
+    var wantApplications = false;
     try {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
       if (wantHours) {
@@ -1825,6 +1885,7 @@
         saved = "parade";
       } else if (hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
+      else if (hash === "applications") { saved = "officer"; wantApplications = true; }
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "docs") { saved = "parade"; wantDocs = true; }
       else if (hash === "share") { saved = "parade"; wantShare = true; }
@@ -1838,7 +1899,7 @@
     } catch (e) {
       if (wantHours) saved = "parade";
     }
-    if (saved === "officer" && !state.officer && !state.canManageEvents) saved = TAB_HOME;
+    if (saved === "officer" && !canOpenOfficerDesk()) saved = TAB_HOME;
     try {
       var already = document.querySelector("[data-hub-panel].hub-on");
       var alreadyTab = already && already.getAttribute("data-hub-panel");
@@ -1858,6 +1919,11 @@
       setTimeout(function () { revealDocsCard(); }, 280);
     } else if (wantShare) {
       setTimeout(function () { revealShareGroup(); }, 280);
+    } else if (wantApplications) {
+      setTimeout(function () { openApplicationsFromHome(); }, 280);
+    }
+    if (state.canReviewApplications) {
+      try { renderApplicationsFromState(); } catch (appPaint) {}
     }
   }
 
@@ -2222,6 +2288,283 @@
       if (res.data && Array.isArray(res.data)) rows = res.data;
     } catch (e) {}
     renderClaimForm(client, rows);
+  }
+
+  // ---- Membership Applications: join form (pending-new), separate from renewals ----
+  function applyApplicationFixture() {
+    if (!roleFixture) return;
+    if ("canReviewApplications" in roleFixture) state.canReviewApplications = !!roleFixture.canReviewApplications;
+    if (Array.isArray(roleFixture.applications)) {
+      applicationsFixture = roleFixture.applications;
+      state.applicationRows = roleFixture.applications.slice();
+      state.applicationRecent = Array.isArray(roleFixture.applicationRecent) ? roleFixture.applicationRecent : [];
+      syncApplicationFixtureCounts();
+    } else if ("applicationCount" in roleFixture) {
+      state.applicationCount = Number(roleFixture.applicationCount) || 0;
+    }
+  }
+
+  function syncApplicationFixtureCounts() {
+    var rows = applicationsFixture || state.applicationRows || [];
+    state.applicationCounts = {
+      "new": rows.filter(function (r) { return r && r.membership_status === "pending-new"; }).length,
+      renewal: rows.filter(function (r) { return r && r.membership_status === "pending-renewal"; }).length,
+      prospect: rows.filter(function (r) { return r && r.membership_status === "prospect"; }).length
+    };
+    state.applicationCount = state.applicationCounts["new"];
+  }
+
+  function applyApplicationPayload(data) {
+    if (!data || data.ok === false) {
+      state.applicationRows = [];
+      state.applicationLoadError = (data && data.message) || "Could not load membership applications.";
+      return;
+    }
+    state.applicationLoadError = "";
+    state.applicationRows = Array.isArray(data.applications) ? data.applications : [];
+    state.applicationCounts = data.counts || state.applicationCounts;
+    if (data.counts && data.counts["new"] != null) state.applicationCount = Number(data.counts["new"]) || 0;
+    state.applicationRecent = Array.isArray(data.recent) ? data.recent : [];
+    if (data.bucket) state.applicationBucket = data.bucket;
+  }
+
+  async function refreshApplicationAccess(client) {
+    var fixtureLocks = roleFixture && ("canReviewApplications" in roleFixture || Array.isArray(roleFixture.applications));
+    if (!fixtureLocks && client) {
+      try {
+        var can = await client.rpc("can_review_applications");
+        state.canReviewApplications = !!(can && can.data);
+      } catch (e) { state.canReviewApplications = false; }
+    }
+    applyApplicationFixture();
+    if (!state.canReviewApplications || applicationsFixture || !client) return;
+    try {
+      var listed = await client.rpc("list_membership_applications", { p_bucket: state.applicationBucket || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyApplicationPayload(listed && listed.data);
+    } catch (e2) {
+      state.applicationLoadError = "Could not load membership applications. If this stays blank, the database update may not be applied yet.";
+    }
+  }
+
+  function formatAppliedEt(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(d) + " ET";
+    } catch (e) {
+      return String(iso).slice(0, 16);
+    }
+  }
+
+  function applicationAddress(row) {
+    var street = (row.street_address || "").trim();
+    var city = (row.city || "").trim();
+    var st = (row.state || "").trim();
+    var zip = (row.zip || "").trim();
+    var line2 = [city, st].filter(Boolean).join(", ");
+    if (zip) line2 = line2 ? (line2 + " " + zip) : zip;
+    return [street, line2].filter(Boolean).join(", ");
+  }
+
+  function applicationBucketRows() {
+    var bucket = state.applicationBucket || "new";
+    var rows = state.applicationRows || [];
+    return rows.filter(function (r) {
+      if (!r) return false;
+      if (bucket === "renewal") return r.membership_status === "pending-renewal";
+      if (bucket === "prospect") return r.membership_status === "prospect";
+      return r.membership_status === "pending-new";
+    });
+  }
+
+  function applicationCountOf(bucket) {
+    var counts = state.applicationCounts || {};
+    if (counts[bucket] != null) return Number(counts[bucket]) || 0;
+    return 0;
+  }
+
+  function applicationActionWord(action) {
+    if (action === "decline") return "Declined";
+    if (action === "archive") return "Archived";
+    return "Approved";
+  }
+
+  async function reloadApplications(client) {
+    if (applicationsFixture) {
+      syncApplicationFixtureCounts();
+      renderApplicationsFromState();
+      renderHome();
+      return;
+    }
+    if (!client) client = window.__kosSb || null;
+    if (!client) return;
+    try {
+      var listed = await client.rpc("list_membership_applications", { p_bucket: state.applicationBucket || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyApplicationPayload(listed && listed.data);
+    } catch (e) {
+      state.applicationLoadError = "Could not refresh the list.";
+    }
+    renderApplicationsFromState();
+    renderHome();
+    try { wireOfficerDeskPicker(); } catch (e2) {}
+    openOfficerTool("tool:hubApplications", false);
+  }
+
+  async function decideApplication(client, action, id, note, btn) {
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      var keep = (applicationsFixture || []).filter(function (r) { return String(r.id) !== String(id); });
+      applicationsFixture = keep;
+      if (roleFixture) roleFixture.applications = keep;
+      state.applicationRows = keep.slice();
+      syncApplicationFixtureCounts();
+      if (action === "approve") {
+        state.applicationFlash = "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
+      } else if (action === "decline") {
+        state.applicationFlash = "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
+      } else {
+        state.applicationFlash = "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
+      }
+      renderHome();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    var fn = action === "approve" ? "approve_membership_application"
+      : action === "decline" ? "decline_membership_application"
+      : "archive_membership_application";
+    var args = action === "approve" ? { p_member_id: id } : { p_member_id: id, p_note: note || null };
+    try {
+      var res = await client.rpc(fn, args);
+      if (res.error) throw res.error;
+      var payload = res.data || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not update that application.");
+      state.applicationFlash = payload.message || "Saved.";
+    } catch (e) {
+      alert("Could not update that application: " + ((e && e.message) || e));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadApplications(client);
+  }
+
+  function renderApplicationsFromState() {
+    if (!state.canReviewApplications) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = ensureOfficerToolCard("hubApplications");
+    if (!card) return;
+    var bucket = state.applicationBucket || "new";
+    var counts = state.applicationCounts || {};
+    var rows = applicationBucketRows();
+    var intro = bucket === "renewal"
+      ? "These are renewals, not new join-form applications."
+      : bucket === "prospect"
+        ? "These are event RSVP prospects, not new join-form applications."
+        : "These people asked to join on the membership form. Newest first.";
+    var empty = bucket === "renewal"
+      ? "No pending renewals."
+      : bucket === "prospect"
+        ? "No event prospects in this list."
+        : "No new applications right now. When someone submits the join form, they will show up here.";
+    var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
+      '<small>Join-form applications. Renewals and event prospects stay in their own lists.</small></div></div>' +
+      '<div class="app-body" id="hubApplicationsBody">';
+    if (state.applicationFlash) {
+      html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
+    }
+    html += '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
+      '<button type="button" data-app-bucket="new"' + (bucket === "new" ? ' class="on"' : "") + ">New applications (" + applicationCountOf("new") + ")</button>" +
+      '<button type="button" data-app-bucket="renewal"' + (bucket === "renewal" ? ' class="on"' : "") + ">Renewals (" + (Number(counts.renewal) || 0) + ")</button>" +
+      '<button type="button" data-app-bucket="prospect"' + (bucket === "prospect" ? ' class="on"' : "") + ">Event prospects (" + (Number(counts.prospect) || 0) + ")</button>" +
+      "</div>" +
+      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
+    if (state.applicationLoadError && !rows.length) {
+      html += '<p class="empty">' + esc(state.applicationLoadError) + "</p>";
+    } else if (!rows.length) {
+      html += '<p class="empty">' + esc(empty) + "</p>";
+    } else {
+      rows.forEach(function (row) {
+        var name = ((row.first_name || "") + " " + (row.last_name || "")).trim() || "Applicant";
+        var addr = applicationAddress(row);
+        var when = formatAppliedEt(row.created_at);
+        html += '<div class="hub-appr" data-app-id="' + esc(row.id) + '">' +
+          "<div><b>" + esc(name) + "</b>" +
+          (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
+          (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
+          (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
+          (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
+          (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(row.interests) + "</div>" : "") +
+          (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(row.notes) + "</div>" : '<div class="muted">Their note: none</div>') +
+          '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + esc(row.id) + '">Optional note for the record</label>' +
+          '<textarea class="hub-app-note" id="hubAppNote-' + esc(row.id) + '" data-app-note maxlength="1000" placeholder="Only if you want a note saved with this decision"></textarea>' +
+          "</div>" +
+          '<div class="hub-appr-btns">' +
+          '<button type="button" class="btn btn-primary" data-app-approve="' + esc(row.id) + '">Approve</button>' +
+          '<button type="button" class="btn" data-app-decline="' + esc(row.id) + '">Decline</button>' +
+          '<button type="button" class="btn" data-app-archive="' + esc(row.id) + '">Archive</button>' +
+          "</div></div>";
+      });
+    }
+    var recent = state.applicationRecent || [];
+    if (recent.length) {
+      html += '<h3 class="hub-appr-h">Recent decisions</h3>';
+      recent.forEach(function (r) {
+        var when = formatAppliedEt(r.created_at);
+        html += '<div class="hub-appr"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
+          (r.applicant ? " · " + esc(r.applicant) : "") +
+          '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") +
+          (when ? " · " + esc(when) : "") + "</div>" +
+          (r.note ? '<div class="muted">Note: ' + esc(r.note) + "</div>" : "") +
+          "</div></div>";
+      });
+    }
+    html += "</div>";
+    card.innerHTML = html;
+    var body = card.querySelector("#hubApplicationsBody");
+    if (!body) return;
+    body.querySelectorAll("[data-app-bucket]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.applicationBucket = btn.getAttribute("data-app-bucket") || "new";
+        state.applicationFlash = "";
+        if (applicationsFixture) renderApplicationsFromState();
+        else reloadApplications(window.__kosSb || null);
+      });
+    });
+    function noteFor(id) {
+      var el = document.getElementById("hubAppNote-" + id);
+      return el ? (el.value || "").trim() : "";
+    }
+    body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
+        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), null, btn);
+      });
+    });
+    body.querySelectorAll("[data-app-decline]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-decline");
+        if (!confirm("Decline this application? Their record stays on file. They leave the new-application list.")) return;
+        decideApplication(window.__kosSb || null, "decline", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-archive]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-archive");
+        if (!confirm("Archive this application? Their record stays on file. Nothing is deleted.")) return;
+        decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
+      });
+    });
   }
 
   // ---- Officer Approvals queue: role requests + duplicate-record merges + media ----
@@ -3679,6 +4022,7 @@
         var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
         if (hash === "docs") revealDocsCard();
         else if (hash === "directory") openDirectoryFromHome();
+        else if (hash === "applications") openApplicationsFromHome();
         else if (hash === "event-studio") openEventStudioFromHome();
         else if (hash.indexOf("craic") === 0) return; /* the Craic Cup handles its own hashes */
         else if (HASH_TABS[hash]) showTab(HASH_TABS[hash]);
@@ -3704,6 +4048,9 @@
         } else if (hash === "directory") {
           ev.preventDefault();
           openDirectoryFromHome();
+        } else if (hash === "applications") {
+          ev.preventDefault();
+          openApplicationsFromHome();
         } else if (hash === "event-studio") {
           ev.preventDefault();
           openEventStudioFromHome();
@@ -3714,6 +4061,7 @@
 
   
   var OFFICER_TOOL_ORDER = [
+    "hubApplications",
     "hubApprovals",
     "hubPayments",
     "hubEventStudio",
@@ -3727,6 +4075,7 @@
   ];
 
   var OFFICER_TOOL_META = {
+    hubApplications: { title: "Membership Applications", desc: "Review join-form applications", icon: "📝", section: "Membership" },
     hubApprovals: { title: "Approvals", desc: "Roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Payments", desc: "Dues and payment records", icon: "💳", section: "Money" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
@@ -3740,6 +4089,7 @@
   };
 
   var OFFICER_SECTION_ORDER = [
+    "Membership",
     "Events",
     "Approvals",
     "Documents",
@@ -3752,6 +4102,7 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
+    "Membership": { icon: "📝", sub: "Join-form applications waiting for a yes, a no, or an archive." },
     "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Members' photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
@@ -3816,12 +4167,19 @@
 
   function currentOfficerToolOrder() {
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (state.shopOnly && state.socialOnly) {
+    if (!state.officer && state.canReviewApplications && !state.canManageEvents && !state.shopOnly && !state.socialOnly) {
+      toolOrder = ["hubApplications"];
+    } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
     } else if (state.shopOnly) {
       toolOrder = ["hubShopStudio"];
     } else if (state.socialOnly) {
       toolOrder = ["hubEventStudio", "hubReports"];
+    }
+    if (!state.canReviewApplications) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubApplications"; });
+    } else if (toolOrder.indexOf("hubApplications") === -1) {
+      toolOrder.unshift("hubApplications");
     }
     return toolOrder;
   }
@@ -3977,11 +4335,13 @@
         '<div class="desk-group-rule"></div>' +
         '<div class="hub-officer-tiles">';
       bySection[sec].forEach(function (item) {
+        var desc = item.meta.desc || "";
+        if (item.id === "hubApplications") desc = applicationsTileDesc();
         h +=
           '<button type="button" class="hub-officer-tile" data-tool="tool:' + item.id + '">' +
           '<span class="tic" aria-hidden="true">' + (item.meta.icon || "☘") + "</span>" +
           "<b>" + item.meta.title + "</b>" +
-          "<span>" + (item.meta.desc || "") + "</span></button>";
+          "<span>" + desc + "</span></button>";
       });
       return h + "</div></div>";
     }
@@ -4057,7 +4417,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (limited && toolOrder.indexOf(card.id) === -1) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }

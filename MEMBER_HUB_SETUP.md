@@ -159,3 +159,16 @@ Official routing lives in `CONTACT_EMAILS.md` (the single source of truth):
   (`debrski1@gmail.com`) are both **Co-Chair of Merchandise**,
   `member_role = member` so Shop Studio stays scoped. `kos_sync` and the
   directory treat `Co-Chair of X` like `Chair of X` / `Committee Chair of X`.
+
+## Membership Applications (Officer desk)
+
+Join-form applications (`membership_status = 'pending-new'`) are reviewed in
+the Member Hub under **Membership Applications**, not in the read-only Pending
+Applications report. Home shows a count for the same people who can open the
+tool: Membership Chair, President, Secretary, Chair of Technology, and the
+bootstrap site admin. The Membership Chair needs no extra grant.
+
+Apply `sql/kos_membership_applications.sql` in the Supabase SQL editor
+(project `oazwkwflgbthojvnclfc`) before the tool can load. Details, approve
+and decline behavior, and the Membership Chair notification are in
+`MEMBERSHIP_APPLICATIONS.md`.

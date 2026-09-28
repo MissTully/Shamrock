@@ -35,6 +35,10 @@ plus Playwright browser tests that load every page.
 - **`specs/leadership.spec.js`** — first-login questionnaire lists Shamrock
   Leaders titles (officers, board, committee chairs) and the client catalog
   maps titles onto existing RBAC enums, leaving Parade chair vacant.
+- **`specs/hub-applications.spec.js`**: Membership Applications is hidden from
+  officers who cannot review them. Reviewers see the home count, mailing
+  address, escaped notes, and a separate renewals list. Approve shows the
+  Hub login next step.
 
 External services (Supabase, CDNs, Google Fonts) are treated as optional:
 the suite passes offline, and only same-origin failures or genuine script
