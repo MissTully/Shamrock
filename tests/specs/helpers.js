@@ -94,6 +94,7 @@ const PAGES = [
   { file: "videos.html", title: /Video/ },
   { file: "share.html", title: /Share/ },
   { file: "volunteer.html", title: /Service|Charity|Volunteer/ },
+  { file: "faq.html", title: /Member FAQ|Frequently Asked/ },
   { file: "store.html", title: /Shop/ },
   { file: "members.html", title: /Members/ },
   { file: "membership-application.html", title: /Membership Application/ },
