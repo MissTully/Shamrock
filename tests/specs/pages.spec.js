@@ -76,6 +76,23 @@ test("internal links across pages point at real pages", async ({ request }) => {
   expect(seen.size).toBeGreaterThan(10);
 });
 
+test("faq.html keeps Lisa Sugrue's member facts", async ({ page }) => {
+  await page.goto("/faq.html");
+  const body = page.locator("body");
+  await expect(page.locator("h1")).toHaveText(/Frequently Asked Questions/);
+  await expect(body).toContainText("12 volunteer hours are required per member or $12 per hour");
+  await expect(body).toContainText("This does change year to year");
+  await expect(body).toContainText("No More Umbrellas");
+  await expect(body).toContainText("New Life Warehouse");
+  await expect(body).toContainText("CDC Tampa");
+  await expect(body).toContainText("60 dozen of the standard 33' beads");
+  await expect(body).toContainText("We will be participating unless the parade is cancelled");
+  await expect(body).not.toContainText("Toys for the Flight");
+  await expect(page.locator('a[href="https://kreweofshamrock2025.itemorder.com/shop/home/"]')).toBeVisible();
+  await expect(page.locator('a[href="https://studio19shop.com/shop/ols/categories/krewe-of-shamrock"]')).toBeVisible();
+  await expect(page.locator('a[href="http://www.buccaneerbeads.net"]')).toBeVisible();
+});
+
 test("bylaws.html publishes the official bylaws, not a placeholder", async ({ page, request }) => {
   await page.goto("/assets/docs/bylaws.html");
   await expect(page).toHaveTitle(/Bylaws/);
