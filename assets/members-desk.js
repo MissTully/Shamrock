@@ -444,7 +444,9 @@
     try { sessionStorage.removeItem("kos_hub_intent"); } catch (re) {}
     try {
       var h = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (h === "hours" || h === "volunteer") history.replaceState(null, "", location.pathname);
+      if ((h === "hours" || h === "volunteer") && !(history.state && history.state.kosHub)) {
+        history.replaceState(null, "", location.pathname);
+      }
     } catch (he) {}
   }
 
@@ -494,18 +496,42 @@
       (extra || "") + "</button>";
   }
 
+  var BACK_ICO = svgIcon('<path d="M15 5 8 12l7 7"/>');
+  /* Filled in after showTab exists. Clicks before that still switch panels. */
+  var appNavApi = {
+    ready: false,
+    openTab: function (tab) { showTab(tab); },
+    openEvent: function () {},
+    openFocus: function (tab) { showTab(tab); },
+    openCard: function () { openMemberCard(); },
+    openFun: function () { showTab("fun"); },
+    back: function () { try { history.back(); } catch (e) {} },
+    boot: function () {},
+    sync: function () {},
+    onHash: function () {}
+  };
+
   function appChromeHtml() {
     return '<header class="app-top" id="appTop">' +
+      '<div class="app-rootbar" id="appRootBar">' +
       '<div class="app-av" id="appAv" aria-hidden="true">☘</div>' +
       '<div class="app-top-copy"><p class="app-greet" id="appGreet">Good afternoon</p>' +
       '<h1 id="appPageTitle">Home</h1></div>' +
       '<button type="button" class="app-bell" id="appBell" aria-label="Notes from the officers">' +
       APP_ICO.bell + '<span class="app-bell-dot" id="appBellDot" hidden></span></button>' +
+      '</div>' +
+      '<div class="app-backbar" id="appBackBar" hidden>' +
+      '<button type="button" class="app-back" id="appBack">' + BACK_ICO + ' Back</button>' +
+      '<h1 id="appBackTitle">Back</h1></div>' +
       '<div class="app-bell-panel" id="appBellPanel" hidden></div></header>' +
       '<div class="app-sheet" id="appSheet" hidden>' +
       '<div class="app-sheet-card" role="dialog" aria-modal="true" aria-labelledby="appSheetTitle">' +
+      '<div class="app-sheet-grab" aria-hidden="true"></div>' +
       '<button type="button" class="app-sheet-x" id="appSheetClose">Close</button>' +
       '<div id="appSheetBody"></div></div></div>' +
+      '<div id="appDrill" hidden>' +
+      '<div class="app-drill-scroll" id="appDrillScroll"></div>' +
+      '<div class="app-drill-actions" id="appDrillActions"></div></div>' +
       '<div class="app-toast" id="appToast" hidden role="status"></div>';
   }
 
@@ -568,14 +594,17 @@
       var where = addr
         ? ('<div style="margin:4px 0 0;"><b>Address:</b> ' + esc(addr) + '</div>')
         : (teaser ? ('<div style="margin:4px 0 0;">' + esc(teaser) + '</div>') : "");
-      var href = "event-signup.html?event=" + encodeURIComponent(ev.id || "");
-      return '<div class="hub-event-row" style="margin:10px 0;">' +
-        '<div style="flex:1;min-width:0;"><b>' + esc(ev.name || "Krewe event") + '</b>' +
-        '<div class="muted">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</div>' +
+      var bits = appEventBits(ev.start_time);
+      var dateBlock = bits
+        ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
+        : '<span class="app-date"><b>TBD</b><span></span></span>';
+      return '<button type="button" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
+        dateBlock +
+        '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
+        '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         where +
-        (teaser && addr ? '<div class="muted" style="margin-top:2px;">Public note: ' + esc(teaser) + '</div>' : "") +
-        '</div>' +
-        '<div class="hub-appr-btns"><a class="btn btn-primary" href="' + href + '">RSVP</a></div></div>';
+        (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
+        '</span><span class="app-rsvp">RSVP</span></button>';
     }).join("");
   }
 
@@ -1713,12 +1742,11 @@
     } else {
       var bits = appEventBits(ev.start_time) || { month: "TBD", day: "", line: "Date to be announced" };
       var loc = ev.member_address || ev.location || "";
-      var href = ev.id ? ("event-signup.html?event=" + encodeURIComponent(ev.id)) : "event-signup.html";
-      next = '<article class="app-event">' +
+      next = '<article class="app-event" data-app-event="' + esc(ev.id || "") + '">' +
         '<div class="app-date"><b>' + esc(bits.month) + "</b><span>" + esc(bits.day) + "</span></div>" +
         '<div class="app-event-copy"><h3>' + esc(ev.name || "Krewe event") + "</h3><p>" + esc(bits.line) + "</p>" +
         (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
-        '</div><a class="app-rsvp" href="' + href + '">RSVP</a></article>';
+        '</div><button type="button" class="app-rsvp" data-app-event="' + esc(ev.id || "") + '">RSVP</button></article>';
     }
     return '<div id="appDash">' +
       '<section class="app-hero" style="background-image:url(\'' + photo + '\')">' +
@@ -1741,27 +1769,19 @@
   }
 
   function handleAppGo(go) {
-    if (go === "events") { showTab("events"); return; }
-    if (go === "parade" || go === "desk") { showTab("parade"); return; }
-    if (go === "fun") { showTab("fun"); return; }
+    if (go === "events") { appNavApi.openTab("events"); return; }
+    if (go === "parade" || go === "desk") { appNavApi.openTab("parade"); return; }
+    if (go === "fun") { appNavApi.openFun(); return; }
     if (go === "docs") { revealDocsCard(); return; }
     if (go === "directory") { openDirectoryFromHome(); return; }
-    if (go === "card") { openMemberCard(); return; }
+    if (go === "card") { appNavApi.openCard(); return; }
     if (go === "dues") { openPayDues(); return; }
     if (go === "chat") {
       showToast("Chat is coming soon. Members still gather in the krewe Facebook group.");
       return;
     }
-    if (go === "carpool") {
-      showTab("parade", { skipScroll: true });
-      setTimeout(function () { focusHubTarget(document.getElementById("carpoolCard")); }, 90);
-      return;
-    }
-    if (go === "volunteer") {
-      showTab("parade", { skipScroll: true });
-      setTimeout(function () { focusHubTarget(document.getElementById("hubHoursCard") || document.getElementById("vhForm")); }, 90);
-      return;
-    }
+    if (go === "carpool") { appNavApi.openFocus("parade", "carpoolCard", "Carpool"); return; }
+    if (go === "volunteer") { appNavApi.openFocus("parade", "hubHoursCard", "Volunteer hours"); return; }
     if (go === "shop") { location.href = "store.html"; return; }
     if (go === "photos") { location.href = "gallery.html"; return; }
     if (go === "tune") {
@@ -1780,6 +1800,15 @@
     if (!root) return;
     appChromeBound = true;
     root.addEventListener("click", function (ev) {
+      var hit = ev.target && ev.target.closest ? ev.target.closest("[data-app-event]") : null;
+      if (hit && root.contains(hit)) {
+        var eventId = hit.getAttribute("data-app-event");
+        if (eventId) {
+          ev.preventDefault();
+          appNavApi.openEvent(eventId);
+          return;
+        }
+      }
       var go = ev.target && ev.target.closest ? ev.target.closest("[data-app-go]") : null;
       if (!go || !root.contains(go)) return;
       ev.preventDefault();
@@ -1794,6 +1823,19 @@
     var closeBtn = document.getElementById("appSheetClose");
     if (closeBtn) closeBtn.addEventListener("click", closeSheet);
     if (sheet) sheet.addEventListener("click", function (ev) { if (ev.target === sheet) closeSheet(); });
+    var sheetCard = sheet && sheet.querySelector(".app-sheet-card");
+    if (sheetCard) {
+      var touchY = 0;
+      sheetCard.addEventListener("touchstart", function (ev) {
+        touchY = ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0;
+      }, { passive: true });
+      sheetCard.addEventListener("touchend", function (ev) {
+        var y = ev.changedTouches && ev.changedTouches[0] ? ev.changedTouches[0].clientY : touchY;
+        if (y - touchY > 72) closeSheet();
+      }, { passive: true });
+    }
+    var backBtn = document.getElementById("appBack");
+    if (backBtn) backBtn.addEventListener("click", function () { appNavApi.back(); });
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape") { closeSheet(); closeBell(); }
     });
@@ -1831,6 +1873,7 @@
     if (feed.membershipStatus) state.membershipStatus = feed.membershipStatus;
     renderHome();
     try { syncSignedInPill(); } catch (e3) {}
+    try { appNavApi.sync(); } catch (e4) {}
   }
 
   window.__kosHubSetFeed = function (feed) {
@@ -1963,11 +2006,11 @@
     renderProfileCard();
 
     top.querySelectorAll("[data-hub-action]").forEach(function (btn) {
-      btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
+      btn.addEventListener("click", function () { appNavApi.openTab(btn.getAttribute("data-hub-action")); });
       btn.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") {
           ev.preventDefault();
-          showTab(btn.getAttribute("data-hub-action"));
+          appNavApi.openTab(btn.getAttribute("data-hub-action"));
         }
       });
     });
@@ -2020,41 +2063,26 @@
     }
   }
 
-  function gotoHubTabFromHome(tab, hash) {
-    try { history.replaceState(null, "", location.pathname + "#" + hash); } catch (e) {}
-    showTab(tab);
+  function gotoHubTabFromHome(tab) {
+    appNavApi.openTab(tab);
   }
 
   function revealShareGroup() {
-    try { history.replaceState(null, "", location.pathname + "#share"); } catch (e) {}
-    showTab("parade", { skipScroll: true });
-    setTimeout(function () {
-      focusHubTarget(document.getElementById("deskShare") || document.getElementById("shareCard"));
-    }, 80);
+    appNavApi.openFocus("parade", "shareCard", "Share your media");
   }
 
   function revealDocsCard() {
-    try { history.replaceState(null, "", location.pathname + "#docs"); } catch (e) {}
-    showTab("parade", { skipScroll: true });
-    setTimeout(function () {
-      focusHubTarget(document.getElementById("docs"));
-    }, 80);
+    appNavApi.openFocus("parade", "docs", "Documents");
   }
 
   function openDirectoryFromHome() {
-    try { history.replaceState(null, "", location.pathname + "#directory"); } catch (e) {}
-    showTab("krewe", { skipScroll: true });
-    setTimeout(function () {
-      var card = document.getElementById("hubMemberDirectory") || document.getElementById("dirGrid");
-      focusHubTarget(card, document.getElementById("dirSearch"));
-    }, 80);
+    appNavApi.openFocus("krewe", "hubMemberDirectory", "Directory");
   }
 
   function openApplicationsFromHome() {
     if (!state.canReviewApplications) return;
-    try { history.replaceState(null, "", location.pathname + "#applications"); } catch (e) {}
     try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e2) {}
-    showTab("officer", { skipScroll: true });
+    appNavApi.openTab("officer");
     try { wireOfficerDeskPicker(); } catch (e3) {}
     try { renderApplicationsFromState(); } catch (e4) {}
     openOfficerTool("tool:hubApplications", true);
@@ -2065,8 +2093,7 @@
 
   function openEventStudioFromHome() {
     if (!state.officer && !state.canManageEvents) return;
-    try { history.replaceState(null, "", location.pathname + "#event-studio"); } catch (e) {}
-    showTab("officer", { skipScroll: true });
+    appNavApi.openTab("officer");
     try { wireOfficerDeskPicker(); } catch (e) {}
     openOfficerTool("tool:hubEventStudio", true);
     setTimeout(function () {
@@ -2201,6 +2228,7 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
+    if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
     state.shopOnly = false;
     state.socialOnly = false;
     // Committee desks without full board officer access
@@ -2391,7 +2419,9 @@
 
     // One settle: pick the tab once, skip scroll on first paint, then optionally
     // deep-link hours after layout is stable (prevents Home <-> desk snap).
-    showTab(saved, { skipScroll: true });
+    // If the member already moved (a tab tap can land while this load is in
+    // flight), leave that screen alone.
+    if (!(appNavApi.hasMoved && appNavApi.hasMoved())) showTab(saved, { skipScroll: true });
     if (saved !== "hub") renderHome();
     if (wantHours) {
       setTimeout(function () { openVolunteerHoursForm(false); }, 280);
@@ -2406,6 +2436,7 @@
       try { renderApplicationsFromState(); } catch (appPaint) {}
     }
     if (feedLock) applyFeedLock();
+    try { appNavApi.boot(); } catch (navBootErr) {}
   }
 
   function openVolunteerHoursForm(clearIntent) {
@@ -4474,40 +4505,690 @@
     wireOfficerDeskPicker();
   }
 
-  // Hub tabs are "pages": every tab click adds a history entry, so the
-  // browser's Back and Forward buttons walk between hub sections instead of
-  // dumping members out of the hub. Back/Forward changes the hash, the
-  // hashchange listener below re-shows the matching tab.
-  var HASH_TABS = { home: "hub", hub: "hub", krewe: "krewe", events: "events", parade: "parade", desk: "parade", fun: "fun", officer: "officer" };
+  // Each bottom tab keeps its own stack. History entries mirror the visible
+  // stack so the system back button, Android back, and the iOS edge swipe
+  // pop a screen instead of leaving the hub. Back from a tab root returns
+  // to Home. Back from Home is the browser's own back, and it does not sign out.
+  function installAppNav() {
+    var TAB_IDS = ["hub", "events", "parade", "krewe", "fun", "officer", "give"];
+    var appNav = {
+      tab: "hub",
+      stacks: null,
+      scroll: {},
+      depth: 0,
+      booted: false,
+      userMoved: false,
+      writing: false,
+      pending: null,
+      funFrom: "hub",
+      motion: ""
+    };
 
-  function pushTabHistory(tab) {
-    try {
-      var want = "#" + (tab === "hub" ? "home" : tab);
-      if (location.hash === want) return;
-      history.pushState({ kosHubTab: tab }, "", want);
-    } catch (e) {}
-  }
+    function freshStacks() {
+      var o = {};
+      TAB_IDS.forEach(function (t) { o[t] = [{ kind: "root" }]; });
+      return o;
+    }
 
-  function bindTabs() {
+    function ensure() {
+      if (!appNav.stacks) appNav.stacks = freshStacks();
+    }
+
+    function framesOf(tab) {
+      ensure();
+      if (!appNav.stacks[tab]) appNav.stacks[tab] = [{ kind: "root" }];
+      return appNav.stacks[tab];
+    }
+
+    function desiredDepth(tab, frames) {
+      var extra = Math.max(0, (frames ? frames.length : 1) - 1);
+      if (tab === "hub") return extra;
+      return 1 + extra;
+    }
+
+    function slim(frames) {
+      return (frames || []).map(function (fr) {
+        return { kind: fr.kind || "root", id: fr.id || "", title: fr.title || "" };
+      });
+    }
+
+    function hashFor(tab, frames) {
+      var top = frames && frames.length ? frames[frames.length - 1] : { kind: "root" };
+      if (top.kind === "event" && top.id) return "#events/" + encodeURIComponent(top.id);
+      if (top.kind === "focus") {
+        if (top.id === "docs") return "#docs";
+        if (top.id === "hubHoursCard") return "#hours";
+        if (top.id === "shareCard") return "#share";
+        if (top.id === "carpoolCard") return "#parade/carpool";
+        if (top.id === "hubMemberDirectory") return "#directory";
+        return "#parade";
+      }
+      if (top.kind === "card") return "#card";
+      if (tab === "hub") return "#home";
+      if (tab === "parade") return "#parade";
+      if (tab === "krewe") return "#krewe";
+      return "#" + tab;
+    }
+
+    function stateObj() {
+      return {
+        kosHub: {
+          tab: appNav.tab,
+          frames: slim(framesOf(appNav.tab)),
+          depth: appNav.depth,
+          funFrom: appNav.funFrom || "hub"
+        }
+      };
+    }
+
+    function writeHistory(method) {
+      appNav.writing = true;
+      try {
+        history[method](stateObj(), "", hashFor(appNav.tab, framesOf(appNav.tab)));
+      } catch (e) {}
+      setTimeout(function () { appNav.writing = false; }, 0);
+    }
+
+    function routeFromHash(raw) {
+      var h = "";
+      try { h = decodeURIComponent(String(raw || "").replace(/^#/, "")); } catch (e) { h = String(raw || "").replace(/^#/, ""); }
+      var lower = h.toLowerCase();
+      if (lower.indexOf("craic") === 0) return null;
+      if (!lower || lower === "home" || lower === "hub") return { tab: "hub", frames: [{ kind: "root" }] };
+      var evMatch = h.match(/^events\/(.+)$/i);
+      if (evMatch) return { tab: "events", frames: [{ kind: "root" }, { kind: "event", id: evMatch[1], title: "Event" }] };
+      if (lower === "events") return { tab: "events", frames: [{ kind: "root" }] };
+      if (lower === "parade" || lower === "desk") return { tab: "parade", frames: [{ kind: "root" }] };
+      if (lower === "docs") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
+      if (lower === "hours" || lower === "volunteer") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
+      if (lower === "share") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
+      if (lower === "parade/carpool" || lower === "carpool") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "carpoolCard", title: "Carpool" }] };
+      if (lower === "directory") return { tab: "krewe", frames: [{ kind: "root" }, { kind: "focus", id: "hubMemberDirectory", title: "Directory" }] };
+      if (lower === "krewe" || lower === "me") return { tab: "krewe", frames: [{ kind: "root" }] };
+      if (lower === "card") return { tab: "hub", frames: [{ kind: "root" }, { kind: "card", title: "Member card" }] };
+      if (lower === "fun") return { tab: "fun", frames: [{ kind: "root" }] };
+      if (lower === "officer") return { tab: "officer", frames: [{ kind: "root" }] };
+      if (lower === "applications") return { tab: "officer", frames: [{ kind: "root" }], tool: "applications" };
+      if (lower === "event-studio") return { tab: "officer", frames: [{ kind: "root" }], tool: "event-studio" };
+      return null;
+    }
+
+    function findHubEvent(id) {
+      var key = String(id || "");
+      if (!key) return null;
+      var pools = [state.hubEvents, state.nextEvents, state.paradeSeason];
+      if (state.nextEvent) pools.push([state.nextEvent]);
+      if (state.nextParade) pools.push([state.nextParade]);
+      var i, j, row, meet;
+      for (i = 0; i < pools.length; i++) {
+        var list = pools[i] || [];
+        for (j = 0; j < list.length; j++) {
+          row = list[j];
+          if (!row) continue;
+          if (String(row.id) === key) return row;
+          meet = row.meeting;
+          if (meet && String(meet.id) === key) return meet;
+        }
+      }
+      return null;
+    }
+
+    function saveScroll() {
+      if (document.body.classList.contains("app-screen")) return;
+      var panel = document.querySelector("[data-hub-panel].hub-on");
+      if (!panel) return;
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind !== "root") return;
+      appNav.scroll[appNav.tab] = panel.scrollTop || 0;
+    }
+
+    function restoreScroll(forceTop) {
+      var panel = document.querySelector('[data-hub-panel="' + appNav.tab + '"]');
+      if (!panel || document.body.classList.contains("app-screen") || document.body.classList.contains("app-focus")) return;
+      var y = forceTop ? 0 : (appNav.scroll[appNav.tab] || 0);
+      if (forceTop) appNav.scroll[appNav.tab] = 0;
+      try { panel.scrollTop = y; } catch (e) {}
+    }
+
+    function showBack(title) {
+      var back = document.getElementById("appBackBar");
+      var rootBar = document.getElementById("appRootBar");
+      var label = document.getElementById("appBackTitle");
+      if (back) back.hidden = false;
+      if (rootBar) rootBar.hidden = true;
+      if (label) label.textContent = title || "Back";
+    }
+
+    function showRootBar() {
+      var back = document.getElementById("appBackBar");
+      var rootBar = document.getElementById("appRootBar");
+      if (back) back.hidden = true;
+      if (rootBar) rootBar.hidden = false;
+    }
+
+    function clearFocusMarks() {
+      document.querySelectorAll(".app-focus-target").forEach(function (el) {
+        el.classList.remove("app-focus-target");
+      });
+    }
+
+    function markOriginTab() {
+      if (appNav.tab !== "fun") return;
+      var origin = appNav.funFrom || "hub";
+      document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
+        var id = btn.getAttribute("data-hub-tab");
+        var on = id === origin;
+        btn.classList.toggle("on", on);
+        if (on) btn.setAttribute("aria-current", "page");
+        else btn.removeAttribute("aria-current");
+      });
+    }
+
+    function addEventCalendar(ev) {
+      if (!ev || !ev.start_time) {
+        showToast("This event does not have a date yet.");
+        return;
+      }
+      if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
+        window.kosCalendar.download({
+          id: ev.id,
+          name: ev.name,
+          start_time: ev.start_time,
+          end_time: ev.end_time,
+          location: ev.location,
+          description: ev.description || ""
+        });
+        return;
+      }
+      showToast("Calendar download is not available in this browser.");
+    }
+
+    async function rsvpFromDetail(ev, btn) {
+      var client = window.__kosSb;
+      if (!client) {
+        showToast("RSVP needs a connection. The full signup form is linked below.");
+        return;
+      }
+      var p = window.kosProfile || {};
+      var email = p.email || "";
+      var last = p.last_name || "";
+      if (!email || !last) {
+        showToast("Your profile needs a first name, last name, and email to RSVP.");
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+      try {
+        var res = await client.rpc("rsvp_to_event", {
+          p_event_id: ev.id,
+          p_first_name: p.first_name || firstName(),
+          p_last_name: last,
+          p_email: email,
+          p_guests_count: 0,
+          p_signup_role: "attendee"
+        });
+        if (res.error) throw res.error;
+        if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not RSVP.");
+        if (btn) { btn.textContent = "You're going"; btn.disabled = true; }
+        showToast((res.data && res.data.message) || "You're signed up.");
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
+        showToast((err && err.message) || "Could not RSVP. Try again.");
+      }
+    }
+
+    function paintEvent(id) {
+      var scroll = document.getElementById("appDrillScroll");
+      var actions = document.getElementById("appDrillActions");
+      var ev = findHubEvent(id);
+      if (!scroll || !actions) return;
+      if (!ev) {
+        showBack("Event");
+        scroll.innerHTML = '<div class="app-detail"><p>That event is not on your calendar yet.</p></div>';
+        actions.innerHTML = "";
+        return;
+      }
+      showBack(ev.name || "Event");
+      var bits = appEventBits(ev.start_time);
+      var when = bits ? bits.line : whenLabel(ev.start_time);
+      var loc = ev.member_address || ev.location || "";
+      var desc = ev.description ? String(ev.description) : "";
+      var more = ev.id
+        ? '<p><a class="app-detail-more" href="event-signup.html?event=' + encodeURIComponent(ev.id) + '">Full signup form</a></p>'
+        : "";
+      scroll.innerHTML =
+        '<article class="app-detail" id="appEventDetail">' +
+        '<p class="app-detail-kicker">' + esc(String(ev.event_type || "event")) + "</p>" +
+        "<h2>" + esc(ev.name || "Krewe event") + "</h2>" +
+        "<p>" + esc(when) + (ev.members_only ? " · Members only" : "") + "</p>" +
+        (loc ? "<p>" + esc(loc) + "</p>" : "") +
+        (desc ? "<p>" + esc(desc) + "</p>" : "") +
+        more +
+        "<p>RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.</p>" +
+        "</article>";
+      actions.innerHTML =
+        '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
+        '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
+      var rsvpBtn = document.getElementById("appRsvpBtn");
+      var calBtn = document.getElementById("appCalBtn");
+      if (ev.parade_rsvpd || ev.rsvpd) {
+        if (rsvpBtn) { rsvpBtn.textContent = "You're going"; rsvpBtn.disabled = true; }
+      }
+      if (rsvpBtn) rsvpBtn.addEventListener("click", function () { rsvpFromDetail(ev, rsvpBtn); });
+      if (calBtn) calBtn.addEventListener("click", function () { addEventCalendar(ev); });
+    }
+
+    function paintCard() {
+      var scroll = document.getElementById("appDrillScroll");
+      var actions = document.getElementById("appDrillActions");
+      showBack("Member card");
+      if (actions) actions.innerHTML = "";
+      if (!scroll) return;
+      var p = window.kosProfile || {};
+      var name = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Krewe member").toString().trim();
+      var title = (p.officer_title || "").toString().trim();
+      var since = (p.parade_since || "").toString().trim();
+      var email = (p.email || "").toString().trim();
+      scroll.innerHTML =
+        '<div class="app-detail"><div class="app-pass">' +
+        '<img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />' +
+        '<p class="app-pass-kicker">Krewe of Shamrock</p>' +
+        "<h2>" + esc(name) + "</h2>" +
+        (title ? '<p class="app-pass-title">' + esc(title) + "</p>" : "") +
+        (email ? "<p>" + esc(email) + "</p>" : "") +
+        '<ul class="app-pass-facts"><li>' + esc(plainStanding()) + "</li><li>" + esc(plainParadeReady()) + "</li>" +
+        (since ? "<li>Marching since " + esc(since) + "</li>" : "") +
+        "</ul><p>Show this card at the float. It uses the profile and Parade Ready details already on your account.</p></div></div>";
+    }
+
+    function renderTop(motion) {
+      var top = framesOf(appNav.tab).slice(-1)[0] || { kind: "root" };
+      var drill = document.getElementById("appDrill");
+      document.body.classList.remove("app-screen", "app-focus", "app-nav-push", "app-nav-pop");
+      clearFocusMarks();
+      var skipHome = !(appNav.tab === "hub" && top.kind === "root");
+      showTab(appNav.tab, { skipScroll: true, skipHomeRender: skipHome });
+      if (top.kind === "root") {
+        if (drill) drill.hidden = true;
+        if (appNav.tab === "fun") showBack("Craic Cup");
+        else showRootBar();
+        markOriginTab();
+        paintAppHeader(appNav.tab === "fun" ? (appNav.funFrom || "hub") : appNav.tab);
+        restoreScroll(false);
+      } else if (top.kind === "focus") {
+        if (drill) drill.hidden = true;
+        var el = document.getElementById(top.id);
+        if (el) el.classList.add("app-focus-target");
+        /* Carpool and volunteer hours are single tools. Documents, share, and
+           the directory stay on the desk so the rest of that desk remains visible. */
+        if (top.id === "carpoolCard" || top.id === "hubHoursCard") document.body.classList.add("app-focus");
+        showBack(top.title || "Back");
+        var panel = document.querySelector("[data-hub-panel].hub-on");
+        if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
+        else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
+      } else if (top.kind === "event") {
+        if (drill) drill.hidden = false;
+        document.body.classList.add("app-screen");
+        paintEvent(top.id);
+      } else if (top.kind === "card") {
+        if (drill) drill.hidden = false;
+        document.body.classList.add("app-screen");
+        paintCard();
+      } else {
+        if (drill) drill.hidden = true;
+        showRootBar();
+      }
+      if (motion === "push" || motion === "pop") {
+        document.body.classList.add(motion === "push" ? "app-nav-push" : "app-nav-pop");
+      }
+      if (top.kind === "root" && appNav.tab === "hub") startCountdown();
+    }
+
+    function applyRoute(tab, frames, motion) {
+      ensure();
+      appNav.tab = tab;
+      appNav.stacks[tab] = frames && frames.length ? frames : [{ kind: "root" }];
+      appNav.depth = desiredDepth(tab, appNav.stacks[tab]);
+      renderTop(motion || "");
+    }
+
+    function seed(route) {
+      ensure();
+      var tab = route.tab;
+      var frames = route.frames && route.frames.length ? route.frames : [{ kind: "root" }];
+      var levels = [];
+      if (tab !== "hub" || frames.length > 1) levels.push({ tab: "hub", frames: [{ kind: "root" }] });
+      if (tab !== "hub") levels.push({ tab: tab, frames: [{ kind: "root" }] });
+      if (frames.length > 1 || (tab === "hub" && frames.length > 1)) levels.push({ tab: tab, frames: frames });
+      if (tab !== "hub" && frames.length > 1) {
+        /* the tab root level is already queued; the last push is the drill */
+      }
+      if (!levels.length) levels.push({ tab: "hub", frames: [{ kind: "root" }] });
+      /* Drop a duplicate root if the drill level repeats it. */
+      var seen = {};
+      levels = levels.filter(function (lv) {
+        var key = lv.tab + ":" + (lv.frames.length) + ":" + (lv.frames[lv.frames.length - 1].kind);
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+      levels.forEach(function (lv, i) {
+        appNav.tab = lv.tab;
+        appNav.stacks[lv.tab] = lv.frames;
+        appNav.depth = desiredDepth(lv.tab, lv.frames);
+        writeHistory(i === 0 ? "replaceState" : "pushState");
+      });
+      renderTop("");
+      if (route.tool === "applications") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e1) {}
+        try { wireOfficerDeskPicker(); } catch (e2) {}
+        try { openOfficerTool("tool:hubApplications", false); } catch (e3) {}
+      }
+      if (route.tool === "event-studio") {
+        try { wireOfficerDeskPicker(); } catch (e4) {}
+        try { openOfficerTool("tool:hubEventStudio", false); } catch (e5) {}
+      }
+    }
+
+    function sameFrames(a, b) {
+      a = a || [];
+      b = b || [];
+      if (a.length !== b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        if ((a[i].kind || "root") !== (b[i].kind || "root")) return false;
+        if (String(a[i].id || "") !== String(b[i].id || "")) return false;
+      }
+      return true;
+    }
+
+    function pushFrames(tab, frames, motion) {
+      ensure();
+      saveScroll();
+      if (tab !== appNav.tab && frames.length === 1 && frames[0].kind === "root") {
+        switchTab(tab);
+        return;
+      }
+      var cur = framesOf(appNav.tab);
+      if (tab === appNav.tab && sameFrames(cur, frames)) {
+        renderTop("");
+        return;
+      }
+      appNav.tab = tab;
+      appNav.stacks[tab] = frames;
+      appNav.depth = desiredDepth(tab, frames);
+      writeHistory("pushState");
+      renderTop(motion || "push");
+    }
+
+    function switchTab(tab) {
+      ensure();
+      if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
+      if (roleFixture && ("canManageEvents" in roleFixture)) state.canManageEvents = !!roleFixture.canManageEvents;
+      if (!tab) tab = "hub";
+      if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
+      if (tab !== "parade") clearHoursIntent();
+      if (tab === appNav.tab) {
+        var cur = framesOf(tab);
+        if (cur.length > 1) {
+          var drop = cur.length - 1;
+          appNav.stacks[tab] = [{ kind: "root" }];
+          appNav.scroll[tab] = 0;
+          if (appNav.depth >= drop) {
+            appNav.pending = { tab: tab, frames: [{ kind: "root" }], scrollTop: true };
+            try { history.go(-drop); } catch (e) { applyRoute(tab, [{ kind: "root" }], "pop"); }
+          } else {
+            appNav.depth = desiredDepth(tab, [{ kind: "root" }]);
+            writeHistory("replaceState");
+            applyRoute(tab, [{ kind: "root" }], "pop");
+            restoreScroll(true);
+          }
+          return;
+        }
+        appNav.scroll[tab] = 0;
+        var panel = document.querySelector("[data-hub-panel].hub-on");
+        if (panel) panel.scrollTop = 0;
+        try { window.scrollTo(0, 0); } catch (e2) {}
+        return;
+      }
+      saveScroll();
+      var dest = framesOf(tab).slice();
+      var want = desiredDepth(tab, dest);
+      if (appNav.depth > want) {
+        appNav.pending = { tab: tab, frames: dest };
+        try { history.go(-(appNav.depth - want)); } catch (e3) { applyRoute(tab, dest, ""); }
+        return;
+      }
+      if (appNav.depth < want) {
+        var built = [];
+        dest.forEach(function (fr) {
+          built.push(fr);
+          appNav.tab = tab;
+          appNav.stacks[tab] = built.slice();
+          var need = desiredDepth(tab, built);
+          if (need > appNav.depth) {
+            appNav.depth = need;
+            writeHistory("pushState");
+          } else {
+            appNav.depth = need;
+            writeHistory("replaceState");
+          }
+        });
+        renderTop("");
+        return;
+      }
+      appNav.tab = tab;
+      appNav.depth = want;
+      writeHistory("replaceState");
+      renderTop("");
+    }
+
+    function openEvent(id) {
+      if (!id) return;
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = framesOf(appNav.tab).slice();
+      var top = frames[frames.length - 1];
+      if (top && top.kind === "event" && String(top.id) === String(id)) return;
+      if (top && top.kind !== "root") frames = [{ kind: "root" }];
+      frames.push({ kind: "event", id: String(id), title: "Event" });
+      pushFrames(appNav.tab, frames, "push");
+    }
+
+    function openFocus(tab, id, title) {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = [{ kind: "root" }, { kind: "focus", id: id, title: title || "Back" }];
+      if (appNav.tab === tab && sameFrames(framesOf(tab), frames)) {
+        renderTop("");
+        return;
+      }
+      /* Opening a tool from another tab: land on that tab, then push the tool
+         so Back returns to the tab root, and another Back returns Home. */
+      if (appNav.tab !== tab) {
+        var rootFrames = [{ kind: "root" }];
+        var wantRoot = desiredDepth(tab, rootFrames);
+        if (appNav.depth < wantRoot) {
+          appNav.tab = tab;
+          appNav.stacks[tab] = rootFrames;
+          appNav.depth = wantRoot;
+          writeHistory("pushState");
+        } else if (appNav.depth > wantRoot) {
+          appNav.pending = { tab: tab, frames: frames, after: "focus" };
+          try { history.go(-(appNav.depth - wantRoot)); return; } catch (e) {}
+        } else {
+          appNav.tab = tab;
+          appNav.stacks[tab] = rootFrames;
+          appNav.depth = wantRoot;
+          writeHistory("replaceState");
+        }
+      }
+      pushFrames(tab, frames, "push");
+    }
+
+    function openCard() {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = framesOf(appNav.tab).slice();
+      var top = frames[frames.length - 1];
+      if (top && top.kind === "card") return;
+      if (top && top.kind !== "root") frames = [{ kind: "root" }];
+      frames.push({ kind: "card", title: "Member card" });
+      pushFrames(appNav.tab, frames, "push");
+    }
+
+    function openFun() {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      if (appNav.tab !== "fun") appNav.funFrom = appNav.tab;
+      pushFrames("fun", [{ kind: "root" }], "push");
+    }
+
+    function openTab(tab) {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      switchTab(tab || "hub");
+    }
+
+    function goBack() {
+      if (appNav.depth > 0) {
+        try { history.back(); return; } catch (e) {}
+      }
+      if (appNav.tab !== "hub") openTab("hub");
+    }
+
+    function onPop(e) {
+      ensure();
+      var pend = appNav.pending;
+      appNav.pending = null;
+      if (pend) {
+        if (pend.after === "focus") {
+          applyRoute(pend.tab, [{ kind: "root" }], "");
+          writeHistory("replaceState");
+          pushFrames(pend.tab, pend.frames, "push");
+          return;
+        }
+        applyRoute(pend.tab, pend.frames, "pop");
+        if (pend.scrollTop) {
+          appNav.scroll[pend.tab] = 0;
+          restoreScroll(true);
+        }
+        writeHistory("replaceState");
+        return;
+      }
+      var st = e.state && e.state.kosHub;
+      if (!st) {
+        if (!document.body.classList.contains("hub-app")) return;
+        appNav.tab = "hub";
+        appNav.stacks.hub = [{ kind: "root" }];
+        appNav.depth = 0;
+        renderTop("pop");
+        return;
+      }
+      ensure();
+      appNav.funFrom = st.funFrom || appNav.funFrom || "hub";
+      applyRoute(st.tab || "hub", st.frames, "pop");
+      appNav.depth = typeof st.depth === "number" ? st.depth : appNav.depth;
+    }
+
+    function onHash() {
+      if (appNav.writing) return;
+      ensure();
+      var route = routeFromHash(location.hash);
+      if (!route) return;
+      var st = history.state && history.state.kosHub;
+      if (st && hashFor(st.tab, st.frames) === location.hash) return;
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var prevDepth = st && typeof st.depth === "number" ? st.depth : appNav.depth;
+      appNav.tab = route.tab;
+      appNav.stacks[route.tab] = route.frames;
+      appNav.depth = prevDepth + (route.frames.length > 1 || route.tab !== "hub" ? 1 : 0);
+      writeHistory("replaceState");
+      renderTop("");
+      if (route.tool === "applications") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e) {}
+        try { wireOfficerDeskPicker(); } catch (e2) {}
+        try { openOfficerTool("tool:hubApplications", true); } catch (e3) {}
+      } else if (route.tool === "event-studio") {
+        try { wireOfficerDeskPicker(); } catch (e4) {}
+        try { openOfficerTool("tool:hubEventStudio", true); } catch (e5) {}
+      }
+    }
+
+    function boot() {
+      ensure();
+      if (!appNav.booted && !appNav.userMoved) {
+        appNav.booted = true;
+        var route = routeFromHash(location.hash) || { tab: "hub", frames: [{ kind: "root" }] };
+        if (history.state && history.state.kosHub) {
+          var st = history.state.kosHub;
+          applyRoute(st.tab || route.tab, st.frames || route.frames, "");
+        } else {
+          seed(route);
+        }
+      } else {
+        appNav.booted = true;
+      }
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind === "event") paintEvent(top.id);
+      var hashRoute = routeFromHash(location.hash);
+      if (hashRoute && hashRoute.frames.some(function (fr) { return fr.kind === "event"; })) {
+        var evId = hashRoute.frames[hashRoute.frames.length - 1].id;
+        if (!appNav.userMoved) {
+          applyRoute(hashRoute.tab, hashRoute.frames, "");
+        } else if (top && top.kind === "event") {
+          paintEvent(evId);
+        }
+      }
+    }
+
+    function sync() {
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind === "event") paintEvent(top.id);
+      else if (top && top.kind === "card") paintCard();
+      var hashRoute = routeFromHash(location.hash);
+      if (!appNav.userMoved && hashRoute && hashRoute.frames.some(function (fr) { return fr.kind === "event"; })) {
+        if (!(history.state && history.state.kosHub)) seed(hashRoute);
+        else applyRoute(hashRoute.tab, hashRoute.frames, "");
+      }
+    }
+
+    appNavApi.openTab = openTab;
+    appNavApi.openEvent = openEvent;
+    appNavApi.openFocus = openFocus;
+    appNavApi.openCard = openCard;
+    appNavApi.openFun = openFun;
+    appNavApi.back = goBack;
+    appNavApi.boot = boot;
+    appNavApi.sync = sync;
+    appNavApi.onHash = onHash;
+    appNavApi.hasMoved = function () { return !!appNav.userMoved; };
+    appNavApi.ready = true;
+    window.__kosHubSyncRoute = sync;
+
+    if (!window.__kosHubPopBound) {
+      window.__kosHubPopBound = true;
+      window.addEventListener("popstate", onPop);
+    }
+
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var tab = btn.getAttribute("data-hub-tab");
-        if (tab !== "parade") clearHoursIntent();
-        showTab(tab);
-        pushTabHistory(tab);
+        openTab(tab);
       });
     });
+  }
+
+  function bindTabs() {
+    installAppNav();
     if (!window.__hubDocsHashBound) {
       window.__hubDocsHashBound = true;
       window.addEventListener("hashchange", function () {
-        var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-        if (hash === "docs") revealDocsCard();
-        else if (hash === "directory") openDirectoryFromHome();
-        else if (hash === "applications") openApplicationsFromHome();
-        else if (hash === "event-studio") openEventStudioFromHome();
-        else if (hash.indexOf("craic") === 0) return; /* the Craic Cup handles its own hashes */
-        else if (HASH_TABS[hash]) showTab(HASH_TABS[hash]);
-        else if (hash === "") showTab(TAB_HOME); /* backed past the first tab entry */
+        appNavApi.onHash();
       });
     }
     if (!window.__hubSamePageBound) {

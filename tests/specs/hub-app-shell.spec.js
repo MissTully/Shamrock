@@ -59,7 +59,7 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator("#appCdDays")).not.toHaveText("");
     await expect(page.locator("#appNextUp")).toContainText("Tartan Ball Basket Social");
     await expect(page.locator("#appNextUp")).toContainText("Higgins Hall");
-    await expect(page.locator("#appNextUp .app-rsvp")).toHaveAttribute("href", /event-signup\.html\?event=evt-basket/);
+    await expect(page.locator("#appNextUp .app-rsvp")).toHaveAttribute("data-app-event", "evt-basket");
 
     const labels = ["Member Card", "RSVP", "Pay Dues", "Chat", "Carpool", "Volunteer", "Shop", "Photos"];
     for (const label of labels) {
@@ -101,15 +101,17 @@ test.describe("Member Hub phone app shell", () => {
     }, PARADE);
 
     await page.locator('.app-tile[data-app-go="card"]').click();
+    const card = page.locator("#appDrill");
+    await expect(card).toBeVisible();
+    await expect(page.locator("#appBack")).toBeVisible();
+    await expect(card).toContainText("Krewe of Shamrock");
+    await expect(card).toContainText("Maeve Kelly");
+    await expect(card).toContainText("Good standing");
+    await expect(card).toContainText("Parade Ready");
+    await expect(card).toContainText("Marching since 2014");
+    await page.locator("#appBack").click();
+    await expect(card).toBeHidden();
     const sheet = page.locator("#appSheet");
-    await expect(sheet).toBeVisible();
-    await expect(sheet).toContainText("Krewe of Shamrock");
-    await expect(sheet).toContainText("Maeve Kelly");
-    await expect(sheet).toContainText("Good standing");
-    await expect(sheet).toContainText("Parade Ready");
-    await expect(sheet).toContainText("Marching since 2014");
-    await page.locator("#appSheetClose").click();
-    await expect(sheet).toBeHidden();
 
     await page.locator('.app-tile[data-app-go="dues"]').click();
     await expect(sheet.locator('a[href*="krewe-of-shamrock-membership"]')).toHaveCount(2);

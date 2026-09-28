@@ -716,7 +716,7 @@
     height:100dvh;
     max-height:100dvh;
     overflow:hidden;
-    display:flex;
+    display:flex !important;
     flex-direction:column;
     background:
       radial-gradient(120% 42% at 50% -8%, rgba(226,193,90,.18), transparent 52%),
@@ -971,6 +971,123 @@
     min-width:16px; height:16px; padding:0 4px; border-radius:999px;
     background:#e23d3d; color:#fff; font-size:10px; line-height:16px; text-align:center;
     font-family:var(--body);
+  }
+  .app-rootbar{
+    display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center;
+  }
+  .app-backbar{
+    display:flex; align-items:center; gap:8px; min-height:44px;
+  }
+  .app-backbar[hidden], .app-rootbar[hidden]{ display:none !important; }
+  .app-back{
+    appearance:none; border:0; background:transparent; color:#f0d78c;
+    display:inline-flex; align-items:center; gap:4px;
+    min-height:44px; min-width:44px; padding:0 10px 0 0;
+    font-family:var(--display); font-size:17px; font-weight:700; cursor:pointer;
+  }
+  .app-back svg{ width:22px; height:22px; display:block; }
+  #appBackTitle{
+    margin:0; min-width:0; font-family:var(--display); font-size:20px; line-height:1.15;
+    color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  body.hub-app #appDrill{
+    display:none; order:2; flex:1 1 auto; min-height:0; flex-direction:column;
+    background:transparent;
+  }
+  body.hub-app.app-screen #appDrill{ display:flex; }
+  body.hub-app.app-screen .hub-panel{ display:none !important; }
+  #appDrill[hidden]{ display:none !important; }
+  .app-drill-scroll{
+    flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
+    padding:16px 14px 12px;
+  }
+  .app-drill-actions{
+    flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px;
+    padding:10px 14px 12px;
+    background:rgba(7,22,15,.96); border-top:1px solid rgba(226,193,90,.4);
+  }
+  .app-drill-actions .app-rsvp,
+  .app-drill-actions .app-cal{
+    min-height:48px; width:100%; border:0; border-radius:999px; cursor:pointer;
+    font-family:var(--display); font-weight:700; font-size:15px;
+  }
+  .app-drill-actions .app-cal{
+    background:transparent; color:#f0d78c; border:1px solid rgba(226,193,90,.7);
+  }
+  .app-detail-kicker{
+    margin:0 0 6px; font-family:var(--display); letter-spacing:.14em; text-transform:uppercase;
+    font-size:12px; color:#e2c15a;
+  }
+  .app-detail h2{
+    margin:0 0 8px; font-family:var(--display); font-size:28px; line-height:1.15; color:#fff;
+  }
+  .app-detail p{ margin:0 0 8px; color:rgba(255,255,255,.9); font-size:16px; line-height:1.4; }
+  .app-detail-more{
+    display:inline-flex; align-items:center; min-height:44px; margin-top:8px;
+    color:#e2c15a; font-family:var(--display); font-weight:700;
+  }
+  .app-detail .app-pass{
+    text-align:center; background:#fbf7ec; color:#23291f;
+    border-radius:22px; padding:16px 16px 20px;
+  }
+  .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
+  .app-event-hit{
+    width:100%; text-align:left; cursor:pointer; color:inherit; font:inherit;
+    display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:12px; align-items:center;
+    margin:10px 0; padding:12px; border-radius:18px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16);
+  }
+  body.hub-app [data-hub-panel="events"] .app-card{
+    background:rgba(255,255,255,.06); color:#fff; border-color:rgba(255,255,255,.14);
+    box-shadow:none;
+  }
+  body.hub-app [data-hub-panel="events"] .app-head{
+    background:transparent; color:#fff;
+  }
+  body.hub-app [data-hub-panel="events"] .app-body,
+  body.hub-app [data-hub-panel="events"] .muted,
+  body.hub-app [data-hub-panel="events"] .empty{ color:rgba(255,255,255,.88); }
+  body.hub-app [data-hub-panel="events"] .app-head small{ color:rgba(255,255,255,.75); }
+  body.hub-app.app-focus .hub-panel.hub-on > .desk-hero,
+  body.hub-app.app-focus .hub-panel.hub-on .desk-nav,
+  body.hub-app.app-focus .hub-panel.hub-on .desk-group-head,
+  body.hub-app.app-focus .hub-panel.hub-on .desk-group-rule,
+  body.hub-app.app-focus .hub-panel.hub-on .app-card:not(.app-focus-target),
+  body.hub-app.app-focus .hub-panel.hub-on .desk-group:not(:has(.app-focus-target)),
+  body.hub-app.app-focus .hub-panel.hub-on > .member-grid > .app-card:not(.app-focus-target){
+    display:none !important;
+  }
+  body.hub-app .hub-tabs{
+    position:sticky; bottom:0;
+  }
+  body.hub-app .hub-tabs button.on{
+    background:rgba(226,193,90,.16);
+  }
+  .app-sheet-grab{
+    width:42px; height:5px; border-radius:999px; margin:0 auto 8px;
+    background:rgba(20,83,45,.28);
+  }
+  @keyframes appFromRight{
+    from{ transform:translate3d(100%,0,0); }
+    to{ transform:none; }
+  }
+  @keyframes appFromLeft{
+    from{ transform:translate3d(-22%,0,0); }
+    to{ transform:none; }
+  }
+  body.hub-app.app-nav-push #appDrill,
+  body.hub-app.app-nav-push.app-focus .hub-panel.hub-on{
+    animation:appFromRight .22s ease;
+  }
+  body.hub-app.app-nav-pop .hub-panel.hub-on,
+  body.hub-app.app-nav-pop #appDrill{
+    animation:appFromLeft .22s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    body.hub-app.app-nav-push #appDrill,
+    body.hub-app.app-nav-push.app-focus .hub-panel.hub-on,
+    body.hub-app.app-nav-pop .hub-panel.hub-on,
+    body.hub-app.app-nav-pop #appDrill{ animation:none !important; }
   }
   @media (min-width:960px){
     body.hub-app #memberContent.wrap{ width:min(840px, calc(100% - 32px)); }
@@ -3726,7 +3843,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260918pwa1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260928apppreview1" defer></script>
+<script src="assets/members-desk.js?v=20260928appnav1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
