@@ -27,7 +27,7 @@ test.describe("Get the App on Home", () => {
     await unlockMemberHub(page);
     const banner = page.locator("#hubGetAppBanner");
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText("Get the App");
+    await expect(banner).toContainText("Get the mobile app");
     await expect(banner).toContainText("Add Shamrock to your home screen.");
     const bannerBox = await banner.boundingBox();
     const heroBox = await page.locator(".app-hero").boundingBox();

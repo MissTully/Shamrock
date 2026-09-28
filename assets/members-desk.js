@@ -305,6 +305,25 @@
     ".hub-officer-inside li{padding:0;}",
     ".hub-install{background:#fff;border:1px solid rgba(168,128,28,.22);border-radius:16px;padding:16px 16px 14px;}",
     ".hub-install h3{font-family:var(--display);color:var(--green-800);margin:0 0 8px;font-size:20px;}",
+    /* Computer Home: the mobile-app card. min-height reserves its space on
+       first paint so the QR image cannot shove the cards below it. */
+    ".hub .hub-desk-app{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 176px;gap:8px 18px;align-items:center;background:linear-gradient(165deg,#fffdf8 0%,#f4f8f1 52%,#e7f3ea 100%);border:1px solid #c9b57a;border-top:4px solid #14532d;border-radius:18px;padding:14px 16px 14px 18px;box-shadow:var(--shadow-sm);min-height:228px;}",
+    ".hub-desk-app-head{display:flex;align-items:center;gap:12px;min-width:0;padding-right:40px;}",
+    ".hub-desk-app-ic{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:#14532d;color:#f0d78c;border:2px solid #c9a227;box-shadow:0 2px 8px rgba(20,83,45,.18);}",
+    ".hub-desk-app-ic svg{width:30px;height:30px;display:block;}",
+    ".hub-desk-app h3{font-family:var(--display);color:var(--green-800);margin:0;font-size:22px;line-height:1.2;}",
+    ".hub-desk-app-rule{height:3px;background:linear-gradient(90deg,#a9801c,#d4af37,#ecd07e,#d4af37,#a9801c);border-radius:2px;margin:8px 0 8px;}",
+    ".hub-desk-app p{margin:0 0 4px;font-size:16px;line-height:1.35;color:#3a3a2e;}",
+    ".hub-desk-app-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}",
+    ".hub-desk-app-actions .btn{min-height:44px;padding:10px 16px;background:#fff;color:#14532d;border:2px solid #14532d;box-shadow:none;}",
+    ".hub-desk-app-actions .btn.btn-primary{background:linear-gradient(180deg,#f6e7a8,#e2c15a);color:#14532d;border-color:#a9801c;box-shadow:0 4px 12px rgba(168,128,28,.28);}",
+    ".hub-desk-app-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#14532d;cursor:pointer;display:grid;place-items:center;padding:0;}",
+    ".hub-desk-app-x svg{width:20px;height:20px;display:block;}",
+    ".hub-desk-app-qr{margin:0;display:grid;justify-items:center;align-content:center;gap:6px;background:#fff;border:1px solid rgba(168,128,28,.5);border-radius:16px;padding:10px 10px 8px;min-height:176px;}",
+    ".hub-desk-app-qr img{width:132px;height:132px;display:block;}",
+    ".hub-desk-app-qr figcaption{margin:0;font-family:var(--display);font-size:13px;line-height:1.25;text-align:center;color:#14532d;}",
+    ".hub-desk-app-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;margin:0 0 10px;padding:8px 14px;text-align:left;background:#fffdf4;border:1px solid rgba(168,128,28,.5);border-radius:14px;cursor:pointer;font:inherit;color:var(--green-800);font-family:var(--display);font-weight:700;font-size:17px;}",
+    ".hub-desk-app-row .qk-ic svg{width:22px;height:22px;display:block;}",
     ".hub-install p{margin:0 0 10px;font-size:16px;line-height:1.4;color:#3a3a2e;}",
     ".hub-install-steps{margin:0 0 10px;padding:0 0 0 1.2em;display:grid;gap:8px;font-size:16px;line-height:1.4;color:#3a3a2e;}",
     ".hub-install-note{margin:0;font-size:15px;color:var(--muted);}",
@@ -1380,10 +1399,10 @@
     return '<section class="app-getapp" id="hubGetAppBanner">' +
       '<button type="button" class="app-getapp-open" data-app-go="get-app">' +
       '<span class="app-getapp-ic" aria-hidden="true">' + APP_ICO.phone + "</span>" +
-      '<span class="app-getapp-copy"><b>Get the App</b>' +
+      '<span class="app-getapp-copy"><b>Get the mobile app</b>' +
       "<span>Add Shamrock to your home screen.</span></span>" +
       '<span class="app-getapp-go">Open</span></button>' +
-      '<button type="button" class="app-getapp-x" id="hubGetAppDismiss" data-app-go="dismiss-get-app" aria-label="Dismiss Get the App">' +
+      '<button type="button" class="app-getapp-x" id="hubGetAppDismiss" data-app-go="dismiss-get-app" aria-label="Dismiss Get the mobile app">' +
       svgIcon('<path d="M6 6 18 18M18 6 6 18"/>') + "</button></section>";
   }
 
@@ -1862,6 +1881,34 @@
     api.prompt().then(function () { paintGetAppScreen(); });
   }
 
+  function copyText(url, done) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = url;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      ta.remove();
+      done();
+    }
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      navigator.clipboard.writeText(url).then(done).catch(fallback);
+      return;
+    }
+    fallback();
+  }
+
+  function copyDeskAppLink() {
+    copyText(DESK_APP_URL, function () {
+      var btn = document.getElementById("hubDeskAppCopy");
+      if (btn) btn.textContent = "Link copied";
+      showToast("Link copied. Text it to your phone.");
+    });
+  }
+
   function copyHubLink() {
     var api = window.KOS_HUB_INSTALL;
     var url = (api && api.hubUrl) || "https://kreweofshamrock.com/members.html";
@@ -1913,10 +1960,14 @@
       try { localStorage.setItem("kosHubGetAppDismissed", "1"); } catch (e) {}
       var banner = document.getElementById("hubGetAppBanner");
       if (banner) banner.remove();
+      if (document.getElementById("hubDeskAppCard")) {
+        try { renderHome(); } catch (e2) {}
+      }
       return;
     }
     if (go === "prompt-install") { promptHubInstall(); return; }
     if (go === "copy-hub-link") { copyHubLink(); return; }
+    if (go === "copy-desk-app-link") { copyDeskAppLink(); return; }
     if (go === "tune") {
       var music = document.getElementById("kreweMusicBtn");
       if (music) music.click();
@@ -2000,11 +2051,48 @@
     }
   }
 
-  function desktopGetAppLinkHtml() {
-    if (document.body.classList.contains("hub-app")) return "";
-    if (isHubStandalone()) return "";
-    return '<p class="hub-desk-getapp" id="hubGetAppLinkWrap">' +
-      '<button type="button" id="hubGetAppLink" data-app-go="get-app">Get the App</button></p>';
+  var DESK_APP_URL = "https://kreweofshamrock.com/members.html#get-app";
+  var DESK_APP_QR = "/assets/img/hub-install-qr.svg";
+
+  /* Phone with a shamrock on the screen. Decorative; the heading names it. */
+  var DESK_APP_PHONE = '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+    '<rect x="14" y="3" width="20" height="42" rx="3.5" fill="#14532d" stroke="#e2c15a" stroke-width="1.6"/>' +
+    '<rect x="17.2" y="8" width="13.6" height="26" rx="1.4" fill="#fbf7ec"/>' +
+    '<circle cx="24" cy="16.2" r="2.5" fill="#1d6b3e"/>' +
+    '<circle cx="20.6" cy="20.4" r="2.5" fill="#1d6b3e"/>' +
+    '<circle cx="27.4" cy="20.4" r="2.5" fill="#1d6b3e"/>' +
+    '<path d="M24 21.6v5.2" stroke="#1d6b3e" stroke-width="1.4" stroke-linecap="round"/>' +
+    '<path d="M21.2 39.2h5.6" stroke="#e2c15a" stroke-width="1.6" stroke-linecap="round"/>' +
+    "</svg>";
+
+  function desktopGetAppCardHtml() {
+    if (wantsHubApp() || isHubStandalone() || getAppDismissed()) return "";
+    return '<section class="hub-desk-app" id="hubDeskAppCard" aria-labelledby="hubDeskAppTitle">' +
+      '<button type="button" class="hub-desk-app-x" id="hubDeskAppDismiss" data-app-go="dismiss-get-app" aria-label="Dismiss Get the mobile app">' +
+      svgIcon('<path d="M6 6 18 18M18 6 6 18"/>') + "</button>" +
+      '<div class="hub-desk-app-main">' +
+      '<div class="hub-desk-app-head">' +
+      '<span class="hub-desk-app-ic" aria-hidden="true">' + DESK_APP_PHONE + "</span>" +
+      '<h3 id="hubDeskAppTitle">Get the Shamrock Hub mobile app</h3></div>' +
+      '<div class="hub-desk-app-rule" aria-hidden="true"></div>' +
+      "<p>It puts the Member Hub on your phone's home screen, like an app, for iPhone and Android.</p>" +
+      "<p>It's free, and there's nothing to download from an app store.</p>" +
+      "<p>You open it with one tap.</p>" +
+      '<div class="hub-desk-app-actions">' +
+      '<button type="button" class="btn btn-primary" id="hubGetAppLink" data-app-go="get-app">See how to install</button>' +
+      '<button type="button" class="btn" id="hubDeskAppCopy" data-app-go="copy-desk-app-link" data-hub-url="' + DESK_APP_URL + '">Copy link</button>' +
+      "</div></div>" +
+      '<figure class="hub-desk-app-qr">' +
+      '<img src="' + DESK_APP_QR + '" width="132" height="132" alt="QR code that opens the Member Hub" />' +
+      "<figcaption>Scan with your phone's camera</figcaption>" +
+      "</figure></section>";
+  }
+
+  function desktopGetAppQuickHtml() {
+    if (wantsHubApp() || isHubStandalone() || !getAppDismissed()) return "";
+    return '<button type="button" class="hub-desk-app-row" id="hubGetAppQuick" data-app-go="get-app">' +
+      '<span class="qk-ic" aria-hidden="true">' + APP_ICO.phone + "</span>" +
+      "<span>Get the mobile app</span></button>";
   }
 
   function applyFeedLock() {
@@ -2128,6 +2216,7 @@
       '<div class="hub-find">' +
       '<h3>' + qkIcon("shamrock") + 'Quick links</h3>' +
       '<p class="hub-find-sub">Tap a tile to jump straight there.</p>' +
+      desktopGetAppQuickHtml() +
       '<div class="hub-find-grid">' +
       quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events &amp; RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
@@ -2148,7 +2237,7 @@
         : '') +
       '</div></div>';
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
-    // Computer: birthday, welcome, tidings, officer tools, the Cup, then links.
+    // Computer: birthday, welcome, the mobile-app card, tidings, officer tools, the Cup, then links.
     // Phone: the app home (countdown and tiles) stays above that same desk.
     var phoneHome = document.body.classList.contains("hub-app");
     top.innerHTML =
@@ -2156,9 +2245,9 @@
       (phoneHome ? appDashHtml() : "") +
       (phoneHome ? boardAnnouncementsHtml() : "") +
       welcomeDeskHtml() +
+      (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : boardAnnouncementsHtml()) +
-      appsBanner + officerCard + craicHeroHtml() + findCards +
-      (phoneHome ? "" : desktopGetAppLinkHtml());
+      appsBanner + officerCard + craicHeroHtml() + findCards;
 
     renderProfileCard();
 
