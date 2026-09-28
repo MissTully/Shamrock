@@ -405,7 +405,8 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [] };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], paradeSeason: [], nextParade: null };
+  var feedLock = null;
   var applicationsFixture = null;
 
   function canOpenOfficerDesk() {
@@ -443,7 +444,9 @@
     try { sessionStorage.removeItem("kos_hub_intent"); } catch (re) {}
     try {
       var h = (location.hash || "").replace(/^#/, "").toLowerCase();
-      if (h === "hours" || h === "volunteer") history.replaceState(null, "", location.pathname);
+      if ((h === "hours" || h === "volunteer") && !(history.state && history.state.kosHub)) {
+        history.replaceState(null, "", location.pathname);
+      }
     } catch (he) {}
   }
 
@@ -459,6 +462,107 @@
     return (s == null ? "" : String(s)).replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
+  }
+
+  /* Phone-app shell helpers. The signed-in hub keeps every existing panel.
+     This layer adds the header, countdown, tiles, and bottom tabs. */
+  function svgIcon(inner) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + inner + "</svg>";
+  }
+  var APP_ICO = {
+    home: svgIcon('<path d="M4 10.5 12 3.8l8 6.7V20a1 1 0 0 1-1 1h-5.1v-6.2H10.1V21H5a1 1 0 0 1-1-1Z"/>'),
+    events: svgIcon('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5V7M16 3.5V7M4 10h16"/>'),
+    parade: svgIcon('<path d="M6 21V4"/><path d="M6 5h11l-2.2 3.2L17 11.5H6"/>'),
+    me: svgIcon('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5"/>'),
+    officer: svgIcon('<path d="m12 3.2 2.2 4.6 5 .6-3.7 3.4.9 5L12 14.6 7.6 16.8l.9-5L4.8 8.4l5-.6Z"/>'),
+    bell: svgIcon('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5"/><path d="M4.5 16.5h15"/><path d="M10 18.5a2 2 0 0 0 4 0"/>'),
+    card: svgIcon('<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M13 10.2h5M13 13.4h4"/>'),
+    cal: svgIcon('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5V7M16 3.5V7M4 10h16"/>'),
+    dues: svgIcon('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 14.2h3.2"/>'),
+    chat: svgIcon('<path d="M6 16.5 4 19.2V7.2A2.2 2.2 0 0 1 6.2 5h11.6A2.2 2.2 0 0 1 20 7.2v6.2a2.2 2.2 0 0 1-2.2 2.2H8.2Z"/>'),
+    car: svgIcon('<path d="M4 15.2 5.8 9.6A2 2 0 0 1 7.7 8.2h8.6a2 2 0 0 1 1.9 1.4L20 15.2"/><path d="M3.8 15.2h16.4V18a1 1 0 0 1-1 1H5a1 1 0 0 1-1.2-1Z"/><circle cx="7.5" cy="15.2" r="1.1"/><circle cx="16.5" cy="15.2" r="1.1"/>'),
+    heart: svgIcon('<path d="M12 19.4s-6.4-3.9-6.4-8.1A3.5 3.5 0 0 1 12 8.8a3.5 3.5 0 0 1 6.4 2.5c0 4.2-6.4 8.1-6.4 8.1Z"/>'),
+    bag: svgIcon('<path d="M6.5 8.5h11l-.8 11H7.3Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>'),
+    camera: svgIcon('<path d="M8.2 7.4 9.4 5.4h5.2l1.2 2"/><rect x="4" y="7.4" width="16" height="11.2" rx="2"/><circle cx="12" cy="13" r="2.5"/>')
+  };
+  var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "Me", fun: "Craic Cup", officer: "Officer" };
+  var DUES_FULL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+  var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+
+  function tabButton(id, label, icon, extra) {
+    return '<button type="button" data-hub-tab="' + id + '">' +
+      '<span class="app-tab-ic" aria-hidden="true">' + icon + "</span>" +
+      '<span class="app-tab-tx">' + label + "</span>" +
+      (extra || "") + "</button>";
+  }
+
+  var BACK_ICO = svgIcon('<path d="M15 5 8 12l7 7"/>');
+  /* Filled in after showTab exists. Clicks before that still switch panels. */
+  var appNavApi = {
+    ready: false,
+    openTab: function (tab) { showTab(tab); },
+    openEvent: function () {},
+    openFocus: function (tab) { showTab(tab); },
+    openCard: function () { openMemberCard(); },
+    openFun: function () { showTab("fun"); },
+    back: function () { try { history.back(); } catch (e) {} },
+    boot: function () {},
+    sync: function () {},
+    onHash: function () {}
+  };
+
+  function appChromeHtml() {
+    return '<header class="app-top" id="appTop">' +
+      '<div class="app-rootbar" id="appRootBar">' +
+      '<div class="app-av" id="appAv" aria-hidden="true">☘</div>' +
+      '<div class="app-top-copy"><p class="app-greet" id="appGreet">Good afternoon</p>' +
+      '<h1 id="appPageTitle">Home</h1></div>' +
+      '<button type="button" class="app-bell" id="appBell" aria-label="Notes from the officers">' +
+      APP_ICO.bell + '<span class="app-bell-dot" id="appBellDot" hidden></span></button>' +
+      '</div>' +
+      '<div class="app-backbar" id="appBackBar" hidden>' +
+      '<button type="button" class="app-back" id="appBack">' + BACK_ICO + ' Back</button>' +
+      '<h1 id="appBackTitle">Back</h1></div>' +
+      '<div class="app-bell-panel" id="appBellPanel" hidden></div></header>' +
+      '<div class="app-sheet" id="appSheet" hidden>' +
+      '<div class="app-sheet-card" role="dialog" aria-modal="true" aria-labelledby="appSheetTitle">' +
+      '<div class="app-sheet-grab" aria-hidden="true"></div>' +
+      '<button type="button" class="app-sheet-x" id="appSheetClose">Close</button>' +
+      '<div id="appSheetBody"></div></div></div>' +
+      '<div id="appDrill" hidden>' +
+      '<div class="app-drill-scroll" id="appDrillScroll"></div>' +
+      '<div class="app-drill-actions" id="appDrillActions"></div></div>' +
+      '<div class="app-toast" id="appToast" hidden role="status"></div>';
+  }
+
+  function meLinksHtml() {
+    return '<section class="app-card" id="appMeLinks">' +
+      '<div class="app-head"><span class="ic" aria-hidden="true">☘</span><div><h2>Your hub</h2>' +
+      '<small>Everything else still lives here</small></div></div>' +
+      '<div class="app-body app-links">' +
+      "<p>The Parade tab is your Member desk: Parade Ready, volunteer hours, carpools, vans, lockers, documents, and the orientation video. The Craic Cup is here too.</p>" +
+      '<button type="button" class="btn btn-primary" data-app-go="fun">Open the Craic Cup</button>' +
+      '<button type="button" class="btn" data-app-go="parade">Open Member desk</button>' +
+      '<button type="button" class="btn" data-app-go="docs">Documents</button>' +
+      '<button type="button" class="btn" data-app-go="tune">Play the Irish tune</button>' +
+      '<button type="button" class="btn" data-app-go="signout">Sign out</button>' +
+      "<h3>Rest of the website</h3>" +
+      '<a href="index.html">Public home</a>' +
+      '<a href="event-signup.html">Upcoming events</a>' +
+      '<a href="parades.html">Parades</a>' +
+      '<a href="tartan-ball.html">Tartan Ball</a>' +
+      '<a href="faq.html">Member FAQ</a>' +
+      '<a href="learn.html">Our heritage</a>' +
+      '<a href="krewe-history.html">Krewe history</a>' +
+      '<a href="poetry.html">Krewe creativity</a>' +
+      '<a href="gallery.html">Photo gallery</a>' +
+      '<a href="videos.html">Videos</a>' +
+      '<a href="share.html">Share yours</a>' +
+      '<a href="volunteer.html">Volunteer</a>' +
+      '<a href="store.html">Shop</a>' +
+      '<a href="membership-application.html">Membership application</a>' +
+      '<a href="https://kreweofshamrock.wildapricot.org" target="_blank" rel="noopener noreferrer">Archive of the previous site</a>' +
+      "</div></section>";
   }
 
   function memberEventWhereHtml(ev) {
@@ -490,14 +594,17 @@
       var where = addr
         ? ('<div style="margin:4px 0 0;"><b>Address:</b> ' + esc(addr) + '</div>')
         : (teaser ? ('<div style="margin:4px 0 0;">' + esc(teaser) + '</div>') : "");
-      var href = "event-signup.html?event=" + encodeURIComponent(ev.id || "");
-      return '<div class="hub-event-row" style="margin:10px 0;">' +
-        '<div style="flex:1;min-width:0;"><b>' + esc(ev.name || "Krewe event") + '</b>' +
-        '<div class="muted">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</div>' +
+      var bits = appEventBits(ev.start_time);
+      var dateBlock = bits
+        ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
+        : '<span class="app-date"><b>TBD</b><span></span></span>';
+      return '<button type="button" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
+        dateBlock +
+        '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
+        '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         where +
-        (teaser && addr ? '<div class="muted" style="margin-top:2px;">Public note: ' + esc(teaser) + '</div>' : "") +
-        '</div>' +
-        '<div class="hub-appr-btns"><a class="btn btn-primary" href="' + href + '">RSVP</a></div></div>';
+        (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
+        '</span><span class="app-rsvp">RSVP</span></button>';
     }).join("");
   }
 
@@ -593,7 +700,9 @@
   }
 
   function renderHubParadeSeason(list) {
+    if (feedLock && Array.isArray(feedLock.parades)) list = feedLock.parades;
     var rows = list || [];
+    state.paradeSeason = rows;
     var html = rows.length
       ? rows.map(paradeSeasonCardHtml).join("")
       : '<p class="empty">No published Shamrock parades on the calendar yet. Officers add them in Event Studio.</p>';
@@ -811,21 +920,17 @@
     root.id = "hubRoot";
     root.className = "hub-wrap";
 
-    var tabs = [
-      ["hub", "Home"],
-      ["krewe", "My Krewe"],
-      ["events", "Events"],
-      ["parade", "Member desk"],
-      ["fun", "Craic Cup"],
-      ["officer", "Officer"]
-    ];
-    var tabHtml = '<nav class="hub-tabs" id="hubTabs" aria-label="Member hub sections">';
-    tabs.forEach(function (t) {
-      tabHtml += '<button type="button" data-hub-tab="' + t[0] + '">' + t[1] + "</button>";
-    });
-    tabHtml += "</nav>";
+    var tabHtml = '<nav class="hub-tabs" id="hubTabs" aria-label="Member hub sections">' +
+      tabButton("hub", "Home", APP_ICO.home) +
+      tabButton("events", "Events", APP_ICO.events) +
+      tabButton("parade", "Parade", APP_ICO.parade) +
+      tabButton("krewe", "Me", APP_ICO.me) +
+      tabButton("fun", "Craic Cup", APP_ICO.heart) +
+      tabButton("officer", "Officer", APP_ICO.officer, '<span class="app-tab-badge" id="appOfficerBadge" hidden>0</span>') +
+      "</nav>";
 
     root.innerHTML =
+      appChromeHtml() +
       tabHtml +
       '<div id="hubHome" class="hub-panel hub-on" data-hub-panel="hub">' +
       '<div id="hubHomeTop" class="hub-home-stack"></div><div class="member-grid" id="hubHomeGrid"></div></div>' +
@@ -891,6 +996,11 @@
     oldGrid.remove();
     relocateHours();
     layoutMemberDesk();
+    if (!document.getElementById("appMeLinks")) {
+      var kreweLinks = document.getElementById("hubKrewe");
+      if (kreweLinks) kreweLinks.insertAdjacentHTML("beforeend", meLinksHtml());
+    }
+    bindAppChrome();
     ensureClaimCloversCard();
   }
 
@@ -1095,6 +1205,7 @@
         ' <span class="hub-board-date">' + esc(annDate(m.created_at)) + "</span></summary>" + op + "</details>";
     }).join("");
     return '<section class="hub-board" aria-label="Announcements from the board">' +
+      '<p class="app-from">From the officers</p>' +
       "<h3>📜 Krewe Tidings</h3>" +
       '<div class="hub-board-rule"></div>' +
       '<div class="hub-board-date">News from the Board</div>' +
@@ -1373,6 +1484,403 @@
   window.__kosNyTodayParts = nyTodayParts;
   window.__kosBirthdayArtSrc = birthdayArtSrc;
 
+  function timeGreeting() {
+    var h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }
+
+  function memberInitials() {
+    var p = window.kosProfile || {};
+    var a = String(p.first_name || "").trim().charAt(0);
+    var b = String(p.last_name || "").trim().charAt(0);
+    var both = (a + b).toUpperCase();
+    if (both.trim()) return both;
+    var dn = String(p.display_name || "").trim();
+    if (!dn) return "☘";
+    var parts = dn.split(/\s+/);
+    var ini = ((parts[0] || "").charAt(0) + (parts[1] || "").charAt(0)).toUpperCase();
+    return ini.trim() ? ini : "☘";
+  }
+
+  function currentHubTab() {
+    var on = document.querySelector("[data-hub-panel].hub-on");
+    return (on && on.getAttribute("data-hub-panel")) || "hub";
+  }
+
+  function latestAnnKey() {
+    var latest = (state.announcements || [])[0];
+    if (!latest) return "";
+    return String(latest.id || latest.subject || latest.created_at || "note");
+  }
+
+  function paintAppHeader(tab) {
+    tab = tab || currentHubTab();
+    var greet = document.getElementById("appGreet");
+    var title = document.getElementById("appPageTitle");
+    var av = document.getElementById("appAv");
+    if (greet) greet.textContent = timeGreeting();
+    if (title) title.textContent = TAB_TITLES[tab] || "Home";
+    if (av) {
+      var p = window.kosProfile || {};
+      if (p.photo_url) av.innerHTML = '<img src="' + esc(p.photo_url) + '" alt="" />';
+      else av.textContent = memberInitials();
+    }
+    var dot = document.getElementById("appBellDot");
+    var key = latestAnnKey();
+    var seen = "";
+    try { seen = sessionStorage.getItem("kosBellSeen") || ""; } catch (e) {}
+    if (dot) dot.hidden = !(key && key !== seen);
+    var badge = document.getElementById("appOfficerBadge");
+    if (badge) {
+      var n = state.canReviewApplications ? (Number(state.applicationCount) || 0) : 0;
+      badge.hidden = !(n > 0);
+      badge.textContent = n > 9 ? "9+" : String(n);
+    }
+  }
+
+  function closeBell() {
+    var panel = document.getElementById("appBellPanel");
+    if (panel) panel.hidden = true;
+  }
+
+  function toggleBell() {
+    var panel = document.getElementById("appBellPanel");
+    if (!panel) return;
+    if (!panel.hidden) { closeBell(); return; }
+    var key = latestAnnKey();
+    try { if (key) sessionStorage.setItem("kosBellSeen", key); } catch (e) {}
+    var dot = document.getElementById("appBellDot");
+    if (dot) dot.hidden = true;
+    var list = state.announcements || [];
+    panel.innerHTML = list.length
+      ? '<p class="app-bell-kicker">From the officers</p>' + list.map(function (m, i) {
+        return '<button type="button" data-app-note="' + i + '">' + esc(m.subject || "Announcement") + "</button>";
+      }).join("")
+      : '<p class="app-bell-empty">No new notes from the officers.</p>';
+    panel.hidden = false;
+    panel.querySelectorAll("[data-app-note]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeBell();
+        showTab("hub", { skipScroll: true });
+        setTimeout(function () {
+          var board = document.querySelector(".hub-board");
+          if (board) focusHubTarget(board);
+        }, 60);
+      });
+    });
+  }
+
+  function closeSheet() {
+    var sheet = document.getElementById("appSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function openSheet(html) {
+    var body = document.getElementById("appSheetBody");
+    var sheet = document.getElementById("appSheet");
+    if (!body || !sheet) return;
+    body.innerHTML = html;
+    sheet.hidden = false;
+  }
+
+  var toastTimer = null;
+  function showToast(text) {
+    var el = document.getElementById("appToast");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 3400);
+  }
+
+  function plainStanding() {
+    var st = (state.membershipStatus || "").toString();
+    var me = state.parade;
+    if (me && me.dues_paid === true) return "Good standing";
+    if (me && me.dues_paid === false) return "Dues need attention";
+    if (/unpaid|delinquent|lapsed|owing|past/.test(st.toLowerCase())) return "Dues need attention";
+    if (/good|active|current|paid/.test(st.toLowerCase())) return "Good standing";
+    if (st) return st;
+    return "Standing updates after your roster record loads";
+  }
+
+  function plainParadeReady() {
+    var me = state.parade;
+    if (!me) return "Parade Ready status loads with your roster record";
+    return (me.dues_paid && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
+  }
+
+  function openMemberCard() {
+    var p = window.kosProfile || {};
+    var name = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Krewe member").toString().trim();
+    var title = (p.officer_title || "").toString().trim();
+    var since = (p.parade_since || "").toString().trim();
+    var email = (p.email || "").toString().trim();
+    openSheet(
+      '<div class="app-pass">' +
+      '<img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />' +
+      '<p class="app-pass-kicker">Krewe of Shamrock</p>' +
+      '<h2 id="appSheetTitle">' + esc(name) + "</h2>" +
+      (title ? '<p class="app-pass-title">' + esc(title) + "</p>" : "") +
+      (email ? "<p>" + esc(email) + "</p>" : "") +
+      '<ul class="app-pass-facts"><li>' + esc(plainStanding()) + "</li><li>" + esc(plainParadeReady()) + "</li>" +
+      (since ? "<li>Marching since " + esc(since) + "</li>" : "") +
+      "</ul><p>Show this card at the float. It uses the profile and Parade Ready details already on your account.</p></div>"
+    );
+  }
+
+  function openPayDues() {
+    openSheet(
+      '<div class="app-dues"><h2 id="appSheetTitle">Pay dues</h2>' +
+      "<p>Dues are collected on Zeffy. Choose the membership you are paying.</p>" +
+      '<p><a class="btn btn-primary" href="' + DUES_FULL_URL + '" target="_blank" rel="noopener noreferrer">Pay full krewe dues</a></p>' +
+      '<p><a class="btn" href="' + DUES_LOA_URL + '" target="_blank" rel="noopener noreferrer">Pay leave of absence</a></p></div>'
+    );
+  }
+
+  function paradeHeroPhoto(name) {
+    var n = String(name || "").toLowerCase();
+    if (n.indexOf("children") !== -1) return "assets/img/parades/childrens-gasparilla.jpg";
+    if (n.indexOf("pirate") !== -1 || n.indexOf("gasparilla") !== -1) return "assets/img/parades/gasparilla-pirates.jpg";
+    if (n.indexOf("santa") !== -1) return "assets/img/parades/santafest.jpg";
+    if (n.indexOf("pride") !== -1) return "assets/img/parades/tampa-pride.jpg";
+    if (n.indexOf("knight") !== -1 || n.indexOf("yago") !== -1) return "assets/img/parades/santyago-knight.jpg";
+    if (n.indexOf("patrick") !== -1) return "assets/img/parades/st-patricks.jpg";
+    return "assets/img/gallery/krewe-parade-kilts.jpg";
+  }
+
+  function isParadeLike(ev) {
+    if (!ev) return false;
+    var t = String(ev.event_type || "").toLowerCase();
+    if (t === "meeting") return false;
+    if (t === "parade" || t === "march") return true;
+    var n = String(ev.name || "").toLowerCase();
+    return n.indexOf("parade") !== -1 || n.indexOf("march") !== -1;
+  }
+
+  function pickNextParade() {
+    var rows = [];
+    (state.paradeSeason || []).forEach(function (r) { if (r && r.start_time) rows.push(r); });
+    (state.hubEvents || []).forEach(function (e) { if (isParadeLike(e) && e.start_time) rows.push(e); });
+    var now = Date.now();
+    var upcoming = rows.filter(function (r) {
+      var t = new Date(r.start_time).getTime();
+      return !isNaN(t) && t > now;
+    }).sort(function (a, b) { return new Date(a.start_time) - new Date(b.start_time); });
+    state.nextParade = upcoming[0] || null;
+    return state.nextParade;
+  }
+
+  var countdownTimer = null;
+  function paintCountdown() {
+    var days = document.getElementById("appCdDays");
+    if (!days || !state.nextParade || !state.nextParade.start_time) return;
+    var ms = new Date(state.nextParade.start_time).getTime() - Date.now();
+    if (isNaN(ms) || ms < 0) ms = 0;
+    var sec = Math.floor(ms / 1000);
+    var d = Math.floor(sec / 86400);
+    sec -= d * 86400;
+    var h = Math.floor(sec / 3600);
+    sec -= h * 3600;
+    var m = Math.floor(sec / 60);
+    sec -= m * 60;
+    days.textContent = String(d);
+    var he = document.getElementById("appCdHours");
+    var mi = document.getElementById("appCdMin");
+    var se = document.getElementById("appCdSec");
+    if (he) he.textContent = String(h).padStart(2, "0");
+    if (mi) mi.textContent = String(m).padStart(2, "0");
+    if (se) se.textContent = String(sec).padStart(2, "0");
+  }
+
+  function startCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = null;
+    paintCountdown();
+    if (state.nextParade && state.nextParade.start_time) countdownTimer = setInterval(paintCountdown, 1000);
+  }
+
+  function appEventBits(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return {
+      month: d.toLocaleDateString([], { month: "short" }).toUpperCase(),
+      day: String(d.getDate()),
+      line: d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · " +
+        d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    };
+  }
+
+  function appTile(go, label, icon, soon) {
+    return '<button type="button" class="app-tile' + (soon ? " is-soon" : "") + '" data-app-go="' + go + '">' +
+      '<span class="app-tile-ic" aria-hidden="true">' + icon + "</span>" +
+      '<span class="app-tile-lb">' + label + "</span>" +
+      (soon ? '<span class="app-tile-soon">Coming soon</span>' : "") +
+      "</button>";
+  }
+
+  function appDashHtml() {
+    var parade = pickNextParade();
+    var photo = paradeHeroPhoto(parade && parade.name);
+    var title = parade && parade.name ? parade.name : "Next Shamrock parade";
+    var count = parade
+      ? '<div class="app-count" id="appCount">' +
+        '<div><strong id="appCdDays">0</strong><small>Days</small></div>' +
+        '<div><strong id="appCdHours">00</strong><small>Hours</small></div>' +
+        '<div><strong id="appCdMin">00</strong><small>Min</small></div>' +
+        '<div><strong id="appCdSec">00</strong><small>Sec</small></div></div>'
+      : '<p class="app-hero-wait">Next parade date is not on the calendar yet.</p>';
+    var where = (parade && (parade.member_address || parade.location))
+      ? '<p class="app-hero-where">' + esc(parade.member_address || parade.location) + "</p>"
+      : "";
+    var ev = state.nextEvent;
+    var next;
+    if (!ev) {
+      next = '<p class="app-next-empty">No upcoming published events yet.</p>';
+    } else {
+      var bits = appEventBits(ev.start_time) || { month: "TBD", day: "", line: "Date to be announced" };
+      var loc = ev.member_address || ev.location || "";
+      next = '<article class="app-event" data-app-event="' + esc(ev.id || "") + '">' +
+        '<div class="app-date"><b>' + esc(bits.month) + "</b><span>" + esc(bits.day) + "</span></div>" +
+        '<div class="app-event-copy"><h3>' + esc(ev.name || "Krewe event") + "</h3><p>" + esc(bits.line) + "</p>" +
+        (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
+        '</div><button type="button" class="app-rsvp" data-app-event="' + esc(ev.id || "") + '">RSVP</button></article>';
+    }
+    return '<div id="appDash">' +
+      '<section class="app-hero" style="background-image:url(\'' + photo + '\')">' +
+      '<p class="kicker">Countdown to the parade</p><h2>' + esc(title) + "</h2>" + where + count +
+      "</section>" +
+      '<div class="app-tiles" aria-label="Member shortcuts">' +
+      appTile("card", "Member Card", APP_ICO.card) +
+      appTile("events", "RSVP", APP_ICO.cal) +
+      appTile("dues", "Pay Dues", APP_ICO.dues) +
+      appTile("chat", "Chat", APP_ICO.chat, true) +
+      appTile("carpool", "Carpool", APP_ICO.car) +
+      appTile("volunteer", "Volunteer", APP_ICO.heart) +
+      appTile("shop", "Shop", APP_ICO.bag) +
+      appTile("photos", "Photos", APP_ICO.camera) +
+      "</div>" +
+      '<section class="app-next" id="appNextUp" aria-label="Next up">' +
+      '<div class="app-next-head"><h2>Next up</h2>' +
+      '<button type="button" data-app-go="events">All events</button></div>' +
+      next + "</section></div>";
+  }
+
+  function handleAppGo(go) {
+    if (go === "events") { appNavApi.openTab("events"); return; }
+    if (go === "parade" || go === "desk") { appNavApi.openTab("parade"); return; }
+    if (go === "fun") { appNavApi.openFun(); return; }
+    if (go === "docs") { revealDocsCard(); return; }
+    if (go === "directory") { openDirectoryFromHome(); return; }
+    if (go === "card") { appNavApi.openCard(); return; }
+    if (go === "dues") { openPayDues(); return; }
+    if (go === "chat") {
+      showToast("Chat is coming soon. Members still gather in the krewe Facebook group.");
+      return;
+    }
+    if (go === "carpool") { appNavApi.openFocus("parade", "carpoolCard", "Carpool"); return; }
+    if (go === "volunteer") { appNavApi.openFocus("parade", "hubHoursCard", "Volunteer hours"); return; }
+    if (go === "shop") { location.href = "store.html"; return; }
+    if (go === "photos") { location.href = "gallery.html"; return; }
+    if (go === "tune") {
+      var music = document.getElementById("kreweMusicBtn");
+      if (music) music.click();
+      showToast("The Irish tune is playing. Open Me and tap again to pause it.");
+      return;
+    }
+    if (go === "signout" && window.kosSignOut) window.kosSignOut();
+  }
+
+  var appChromeBound = false;
+  function bindAppChrome() {
+    if (appChromeBound) return;
+    var root = document.getElementById("hubRoot");
+    if (!root) return;
+    appChromeBound = true;
+    root.addEventListener("click", function (ev) {
+      var hit = ev.target && ev.target.closest ? ev.target.closest("[data-app-event]") : null;
+      if (hit && root.contains(hit)) {
+        var eventId = hit.getAttribute("data-app-event");
+        if (eventId) {
+          ev.preventDefault();
+          appNavApi.openEvent(eventId);
+          return;
+        }
+      }
+      var go = ev.target && ev.target.closest ? ev.target.closest("[data-app-go]") : null;
+      if (!go || !root.contains(go)) return;
+      ev.preventDefault();
+      handleAppGo(go.getAttribute("data-app-go"));
+    });
+    var bell = document.getElementById("appBell");
+    if (bell) bell.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      toggleBell();
+    });
+    var sheet = document.getElementById("appSheet");
+    var closeBtn = document.getElementById("appSheetClose");
+    if (closeBtn) closeBtn.addEventListener("click", closeSheet);
+    if (sheet) sheet.addEventListener("click", function (ev) { if (ev.target === sheet) closeSheet(); });
+    var sheetCard = sheet && sheet.querySelector(".app-sheet-card");
+    if (sheetCard) {
+      var touchY = 0;
+      sheetCard.addEventListener("touchstart", function (ev) {
+        touchY = ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0;
+      }, { passive: true });
+      sheetCard.addEventListener("touchend", function (ev) {
+        var y = ev.changedTouches && ev.changedTouches[0] ? ev.changedTouches[0].clientY : touchY;
+        if (y - touchY > 72) closeSheet();
+      }, { passive: true });
+    }
+    var backBtn = document.getElementById("appBack");
+    if (backBtn) backBtn.addEventListener("click", function () { appNavApi.back(); });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") { closeSheet(); closeBell(); }
+    });
+    document.addEventListener("click", function (ev) {
+      var panel = document.getElementById("appBellPanel");
+      if (!panel || panel.hidden) return;
+      if (ev.target && ev.target.closest && ev.target.closest("#appBell, #appBellPanel")) return;
+      closeBell();
+    });
+  }
+
+  function syncAppChrome() {
+    var content = document.getElementById("memberContent");
+    var on = !!(content && content.style.display !== "none");
+    document.body.classList.toggle("hub-app", on);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", on ? "#0c3b21" : "#14532d");
+    if (on) paintAppHeader(currentHubTab());
+  }
+
+  function applyFeedLock() {
+    if (!feedLock) return;
+    var feed = feedLock;
+    if (feed.profile) window.kosProfile = Object.assign({}, window.kosProfile || {}, feed.profile);
+    if (Array.isArray(feed.events)) {
+      state.hubEvents = feed.events.slice();
+      state.nextEvents = feed.events.slice(0, 4);
+      state.nextEvent = state.nextEvents[0] || null;
+      try { renderHubMemberEvents(state.hubEvents); } catch (e) {}
+    }
+    if (Array.isArray(feed.parades)) {
+      try { renderHubParadeSeason(feed.parades); } catch (e2) {}
+    }
+    if (feed.paradeReady) state.parade = feed.paradeReady;
+    if (feed.membershipStatus) state.membershipStatus = feed.membershipStatus;
+    renderHome();
+    try { syncSignedInPill(); } catch (e3) {}
+    try { appNavApi.sync(); } catch (e4) {}
+  }
+
+  window.__kosHubSetFeed = function (feed) {
+    feedLock = feed || {};
+    applyFeedLock();
+  };
+
   /* ---- Welcome hero: the home page opens with the member, not the game.
      Greeting, standing chips, and the season checklist up top; the Craic
      Cup keeps its own clearly-labeled card further down the stack. */
@@ -1493,16 +2001,16 @@
     // celebrating, then greet the member and show their season standing,
     // then news from the board, then the officer's own desk, then the
     // Craic Cup game, then navigation, and housekeeping last.
-    top.innerHTML = birthdayCardHtml() + welcomeDeskHtml() + boardAnnouncementsHtml() + appsBanner + officerCard + craicHeroHtml() + findCards + installCardHtml();
+    top.innerHTML = birthdayCardHtml() + appDashHtml() + boardAnnouncementsHtml() + welcomeDeskHtml() + appsBanner + officerCard + craicHeroHtml() + findCards + installCardHtml();
 
     renderProfileCard();
 
     top.querySelectorAll("[data-hub-action]").forEach(function (btn) {
-      btn.addEventListener("click", function () { showTab(btn.getAttribute("data-hub-action")); });
+      btn.addEventListener("click", function () { appNavApi.openTab(btn.getAttribute("data-hub-action")); });
       btn.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") {
           ev.preventDefault();
-          showTab(btn.getAttribute("data-hub-action"));
+          appNavApi.openTab(btn.getAttribute("data-hub-action"));
         }
       });
     });
@@ -1537,6 +2045,8 @@
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 60);
     });
+    paintAppHeader(currentHubTab());
+    startCountdown();
   }
 
   window.__hubShowTab = showTab;
@@ -1553,41 +2063,26 @@
     }
   }
 
-  function gotoHubTabFromHome(tab, hash) {
-    try { history.replaceState(null, "", location.pathname + "#" + hash); } catch (e) {}
-    showTab(tab);
+  function gotoHubTabFromHome(tab) {
+    appNavApi.openTab(tab);
   }
 
   function revealShareGroup() {
-    try { history.replaceState(null, "", location.pathname + "#share"); } catch (e) {}
-    showTab("parade", { skipScroll: true });
-    setTimeout(function () {
-      focusHubTarget(document.getElementById("deskShare") || document.getElementById("shareCard"));
-    }, 80);
+    appNavApi.openFocus("parade", "shareCard", "Share your media");
   }
 
   function revealDocsCard() {
-    try { history.replaceState(null, "", location.pathname + "#docs"); } catch (e) {}
-    showTab("parade", { skipScroll: true });
-    setTimeout(function () {
-      focusHubTarget(document.getElementById("docs"));
-    }, 80);
+    appNavApi.openFocus("parade", "docs", "Documents");
   }
 
   function openDirectoryFromHome() {
-    try { history.replaceState(null, "", location.pathname + "#directory"); } catch (e) {}
-    showTab("krewe", { skipScroll: true });
-    setTimeout(function () {
-      var card = document.getElementById("hubMemberDirectory") || document.getElementById("dirGrid");
-      focusHubTarget(card, document.getElementById("dirSearch"));
-    }, 80);
+    appNavApi.openFocus("krewe", "hubMemberDirectory", "Directory");
   }
 
   function openApplicationsFromHome() {
     if (!state.canReviewApplications) return;
-    try { history.replaceState(null, "", location.pathname + "#applications"); } catch (e) {}
     try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e2) {}
-    showTab("officer", { skipScroll: true });
+    appNavApi.openTab("officer");
     try { wireOfficerDeskPicker(); } catch (e3) {}
     try { renderApplicationsFromState(); } catch (e4) {}
     openOfficerTool("tool:hubApplications", true);
@@ -1598,8 +2093,7 @@
 
   function openEventStudioFromHome() {
     if (!state.officer && !state.canManageEvents) return;
-    try { history.replaceState(null, "", location.pathname + "#event-studio"); } catch (e) {}
-    showTab("officer", { skipScroll: true });
+    appNavApi.openTab("officer");
     try { wireOfficerDeskPicker(); } catch (e) {}
     openOfficerTool("tool:hubEventStudio", true);
     setTimeout(function () {
@@ -1654,6 +2148,8 @@
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       var id = btn.getAttribute("data-hub-tab");
       btn.classList.toggle("on", id === tab);
+      if (id === tab) btn.setAttribute("aria-current", "page");
+      else btn.removeAttribute("aria-current");
       if (id === "officer") btn.style.display = canOpenOfficerDesk() ? "" : "none";
     });
     syncOfficerChip();
@@ -1665,11 +2161,15 @@
       setTimeout(wireOfficerDeskPicker, 60);
       setTimeout(wireOfficerDeskPicker, 500);
     }
+    closeBell();
     if (tab === "hub" && !opts.skipHomeRender) renderHome();
+    else paintAppHeader(tab);
     if (!opts.skipScroll) {
       // Defer scroll until after panel display settles (avoids snap on login).
       setTimeout(function () {
         try { window.scrollTo({ top: 0, behavior: "auto" }); } catch (e3) {}
+        var active = document.querySelector("[data-hub-panel].hub-on");
+        if (active) active.scrollTop = 0;
       }, 0);
     }
   }
@@ -1728,6 +2228,7 @@
       var off = await client.rpc("is_krewe_officer");
       state.officer = !!off.data;
     } catch (e) { state.officer = false; }
+    if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
     state.shopOnly = false;
     state.socialOnly = false;
     // Committee desks without full board officer access
@@ -1818,36 +2319,43 @@
         var src = String(e.source || "").toLowerCase();
         return src === "krewe" && (st === "published" || st === "live");
       });
-      state.hubEvents = list.slice(0, 12);
+      var lockedEvents = !!(feedLock && Array.isArray(feedLock.events));
+      if (!lockedEvents) state.hubEvents = list.slice(0, 12);
       renderHubMemberEvents(state.hubEvents);
       await loadParadeSeason(client);
-      var open = list.slice();
-      var meId = (window.kosProfile || {}).member_id || null;
-      if (meId && open.length) {
-        try {
-          var signed = await client.from("event_signups")
-            .select("event_id,status")
-            .eq("member_id", meId)
-            .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
-          var taken = {};
-          (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
-          open = open.filter(function (e) { return !taken[e.id]; });
-        } catch (signupErr) { /* keep unfiltered krewe list */ }
+      if (!lockedEvents) {
+        var open = list.slice();
+        var meId = (window.kosProfile || {}).member_id || null;
+        if (meId && open.length) {
+          try {
+            var signed = await client.from("event_signups")
+              .select("event_id,status")
+              .eq("member_id", meId)
+              .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
+            var taken = {};
+            (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
+            open = open.filter(function (e) { return !taken[e.id]; });
+          } catch (signupErr) { /* keep unfiltered krewe list */ }
+        }
+        state.nextEvents = open.slice(0, 4);
+        state.nextEvent = state.nextEvents[0] || null;
       }
-      state.nextEvents = open.slice(0, 4);
-      state.nextEvent = state.nextEvents[0] || null;
     } catch (e) {
-      state.nextEvents = [];
-      state.nextEvent = null;
-      state.hubEvents = [];
-      renderHubMemberEvents([]);
+      if (!(feedLock && Array.isArray(feedLock.events))) {
+        state.nextEvents = [];
+        state.nextEvent = null;
+        state.hubEvents = [];
+        renderHubMemberEvents([]);
+      }
       try { await loadParadeSeason(client); } catch (pe) { renderHubParadeSeason([]); }
     }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
       var pr = await client.from("v_parade_ready").select("*");
       var rows = pr.data || [];
-      state.parade = (meId && rows.find(function (r) { return r.member_id === meId; })) || (rows.length === 1 ? rows[0] : null);
+      if (!(feedLock && feedLock.paradeReady)) {
+        state.parade = (meId && rows.find(function (r) { return r.member_id === meId; })) || (rows.length === 1 ? rows[0] : null);
+      }
       if (state.parade) {
         state.membershipStatus = state.parade.membership_status || state.membershipStatus;
         if (state.parade.volunteer_hours_approved != null) {
@@ -1911,7 +2419,9 @@
 
     // One settle: pick the tab once, skip scroll on first paint, then optionally
     // deep-link hours after layout is stable (prevents Home <-> desk snap).
-    showTab(saved, { skipScroll: true });
+    // If the member already moved (a tab tap can land while this load is in
+    // flight), leave that screen alone.
+    if (!(appNavApi.hasMoved && appNavApi.hasMoved())) showTab(saved, { skipScroll: true });
     if (saved !== "hub") renderHome();
     if (wantHours) {
       setTimeout(function () { openVolunteerHoursForm(false); }, 280);
@@ -1925,6 +2435,8 @@
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (appPaint) {}
     }
+    if (feedLock) applyFeedLock();
+    try { appNavApi.boot(); } catch (navBootErr) {}
   }
 
   function openVolunteerHoursForm(clearIntent) {
@@ -3993,40 +4505,690 @@
     wireOfficerDeskPicker();
   }
 
-  // Hub tabs are "pages": every tab click adds a history entry, so the
-  // browser's Back and Forward buttons walk between hub sections instead of
-  // dumping members out of the hub. Back/Forward changes the hash, the
-  // hashchange listener below re-shows the matching tab.
-  var HASH_TABS = { home: "hub", hub: "hub", krewe: "krewe", events: "events", parade: "parade", desk: "parade", fun: "fun", officer: "officer" };
+  // Each bottom tab keeps its own stack. History entries mirror the visible
+  // stack so the system back button, Android back, and the iOS edge swipe
+  // pop a screen instead of leaving the hub. Back from a tab root returns
+  // to Home. Back from Home is the browser's own back, and it does not sign out.
+  function installAppNav() {
+    var TAB_IDS = ["hub", "events", "parade", "krewe", "fun", "officer", "give"];
+    var appNav = {
+      tab: "hub",
+      stacks: null,
+      scroll: {},
+      depth: 0,
+      booted: false,
+      userMoved: false,
+      writing: false,
+      pending: null,
+      funFrom: "hub",
+      motion: ""
+    };
 
-  function pushTabHistory(tab) {
-    try {
-      var want = "#" + (tab === "hub" ? "home" : tab);
-      if (location.hash === want) return;
-      history.pushState({ kosHubTab: tab }, "", want);
-    } catch (e) {}
-  }
+    function freshStacks() {
+      var o = {};
+      TAB_IDS.forEach(function (t) { o[t] = [{ kind: "root" }]; });
+      return o;
+    }
 
-  function bindTabs() {
+    function ensure() {
+      if (!appNav.stacks) appNav.stacks = freshStacks();
+    }
+
+    function framesOf(tab) {
+      ensure();
+      if (!appNav.stacks[tab]) appNav.stacks[tab] = [{ kind: "root" }];
+      return appNav.stacks[tab];
+    }
+
+    function desiredDepth(tab, frames) {
+      var extra = Math.max(0, (frames ? frames.length : 1) - 1);
+      if (tab === "hub") return extra;
+      return 1 + extra;
+    }
+
+    function slim(frames) {
+      return (frames || []).map(function (fr) {
+        return { kind: fr.kind || "root", id: fr.id || "", title: fr.title || "" };
+      });
+    }
+
+    function hashFor(tab, frames) {
+      var top = frames && frames.length ? frames[frames.length - 1] : { kind: "root" };
+      if (top.kind === "event" && top.id) return "#events/" + encodeURIComponent(top.id);
+      if (top.kind === "focus") {
+        if (top.id === "docs") return "#docs";
+        if (top.id === "hubHoursCard") return "#hours";
+        if (top.id === "shareCard") return "#share";
+        if (top.id === "carpoolCard") return "#parade/carpool";
+        if (top.id === "hubMemberDirectory") return "#directory";
+        return "#parade";
+      }
+      if (top.kind === "card") return "#card";
+      if (tab === "hub") return "#home";
+      if (tab === "parade") return "#parade";
+      if (tab === "krewe") return "#krewe";
+      return "#" + tab;
+    }
+
+    function stateObj() {
+      return {
+        kosHub: {
+          tab: appNav.tab,
+          frames: slim(framesOf(appNav.tab)),
+          depth: appNav.depth,
+          funFrom: appNav.funFrom || "hub"
+        }
+      };
+    }
+
+    function writeHistory(method) {
+      appNav.writing = true;
+      try {
+        history[method](stateObj(), "", hashFor(appNav.tab, framesOf(appNav.tab)));
+      } catch (e) {}
+      setTimeout(function () { appNav.writing = false; }, 0);
+    }
+
+    function routeFromHash(raw) {
+      var h = "";
+      try { h = decodeURIComponent(String(raw || "").replace(/^#/, "")); } catch (e) { h = String(raw || "").replace(/^#/, ""); }
+      var lower = h.toLowerCase();
+      if (lower.indexOf("craic") === 0) return null;
+      if (!lower || lower === "home" || lower === "hub") return { tab: "hub", frames: [{ kind: "root" }] };
+      var evMatch = h.match(/^events\/(.+)$/i);
+      if (evMatch) return { tab: "events", frames: [{ kind: "root" }, { kind: "event", id: evMatch[1], title: "Event" }] };
+      if (lower === "events") return { tab: "events", frames: [{ kind: "root" }] };
+      if (lower === "parade" || lower === "desk") return { tab: "parade", frames: [{ kind: "root" }] };
+      if (lower === "docs") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
+      if (lower === "hours" || lower === "volunteer") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
+      if (lower === "share") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
+      if (lower === "parade/carpool" || lower === "carpool") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "carpoolCard", title: "Carpool" }] };
+      if (lower === "directory") return { tab: "krewe", frames: [{ kind: "root" }, { kind: "focus", id: "hubMemberDirectory", title: "Directory" }] };
+      if (lower === "krewe" || lower === "me") return { tab: "krewe", frames: [{ kind: "root" }] };
+      if (lower === "card") return { tab: "hub", frames: [{ kind: "root" }, { kind: "card", title: "Member card" }] };
+      if (lower === "fun") return { tab: "fun", frames: [{ kind: "root" }] };
+      if (lower === "officer") return { tab: "officer", frames: [{ kind: "root" }] };
+      if (lower === "applications") return { tab: "officer", frames: [{ kind: "root" }], tool: "applications" };
+      if (lower === "event-studio") return { tab: "officer", frames: [{ kind: "root" }], tool: "event-studio" };
+      return null;
+    }
+
+    function findHubEvent(id) {
+      var key = String(id || "");
+      if (!key) return null;
+      var pools = [state.hubEvents, state.nextEvents, state.paradeSeason];
+      if (state.nextEvent) pools.push([state.nextEvent]);
+      if (state.nextParade) pools.push([state.nextParade]);
+      var i, j, row, meet;
+      for (i = 0; i < pools.length; i++) {
+        var list = pools[i] || [];
+        for (j = 0; j < list.length; j++) {
+          row = list[j];
+          if (!row) continue;
+          if (String(row.id) === key) return row;
+          meet = row.meeting;
+          if (meet && String(meet.id) === key) return meet;
+        }
+      }
+      return null;
+    }
+
+    function saveScroll() {
+      if (document.body.classList.contains("app-screen")) return;
+      var panel = document.querySelector("[data-hub-panel].hub-on");
+      if (!panel) return;
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind !== "root") return;
+      appNav.scroll[appNav.tab] = panel.scrollTop || 0;
+    }
+
+    function restoreScroll(forceTop) {
+      var panel = document.querySelector('[data-hub-panel="' + appNav.tab + '"]');
+      if (!panel || document.body.classList.contains("app-screen") || document.body.classList.contains("app-focus")) return;
+      var y = forceTop ? 0 : (appNav.scroll[appNav.tab] || 0);
+      if (forceTop) appNav.scroll[appNav.tab] = 0;
+      try { panel.scrollTop = y; } catch (e) {}
+    }
+
+    function showBack(title) {
+      var back = document.getElementById("appBackBar");
+      var rootBar = document.getElementById("appRootBar");
+      var label = document.getElementById("appBackTitle");
+      if (back) back.hidden = false;
+      if (rootBar) rootBar.hidden = true;
+      if (label) label.textContent = title || "Back";
+    }
+
+    function showRootBar() {
+      var back = document.getElementById("appBackBar");
+      var rootBar = document.getElementById("appRootBar");
+      if (back) back.hidden = true;
+      if (rootBar) rootBar.hidden = false;
+    }
+
+    function clearFocusMarks() {
+      document.querySelectorAll(".app-focus-target").forEach(function (el) {
+        el.classList.remove("app-focus-target");
+      });
+    }
+
+    function markOriginTab() {
+      if (appNav.tab !== "fun") return;
+      var origin = appNav.funFrom || "hub";
+      document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
+        var id = btn.getAttribute("data-hub-tab");
+        var on = id === origin;
+        btn.classList.toggle("on", on);
+        if (on) btn.setAttribute("aria-current", "page");
+        else btn.removeAttribute("aria-current");
+      });
+    }
+
+    function addEventCalendar(ev) {
+      if (!ev || !ev.start_time) {
+        showToast("This event does not have a date yet.");
+        return;
+      }
+      if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
+        window.kosCalendar.download({
+          id: ev.id,
+          name: ev.name,
+          start_time: ev.start_time,
+          end_time: ev.end_time,
+          location: ev.location,
+          description: ev.description || ""
+        });
+        return;
+      }
+      showToast("Calendar download is not available in this browser.");
+    }
+
+    async function rsvpFromDetail(ev, btn) {
+      var client = window.__kosSb;
+      if (!client) {
+        showToast("RSVP needs a connection. The full signup form is linked below.");
+        return;
+      }
+      var p = window.kosProfile || {};
+      var email = p.email || "";
+      var last = p.last_name || "";
+      if (!email || !last) {
+        showToast("Your profile needs a first name, last name, and email to RSVP.");
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+      try {
+        var res = await client.rpc("rsvp_to_event", {
+          p_event_id: ev.id,
+          p_first_name: p.first_name || firstName(),
+          p_last_name: last,
+          p_email: email,
+          p_guests_count: 0,
+          p_signup_role: "attendee"
+        });
+        if (res.error) throw res.error;
+        if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not RSVP.");
+        if (btn) { btn.textContent = "You're going"; btn.disabled = true; }
+        showToast((res.data && res.data.message) || "You're signed up.");
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
+        showToast((err && err.message) || "Could not RSVP. Try again.");
+      }
+    }
+
+    function paintEvent(id) {
+      var scroll = document.getElementById("appDrillScroll");
+      var actions = document.getElementById("appDrillActions");
+      var ev = findHubEvent(id);
+      if (!scroll || !actions) return;
+      if (!ev) {
+        showBack("Event");
+        scroll.innerHTML = '<div class="app-detail"><p>That event is not on your calendar yet.</p></div>';
+        actions.innerHTML = "";
+        return;
+      }
+      showBack(ev.name || "Event");
+      var bits = appEventBits(ev.start_time);
+      var when = bits ? bits.line : whenLabel(ev.start_time);
+      var loc = ev.member_address || ev.location || "";
+      var desc = ev.description ? String(ev.description) : "";
+      var more = ev.id
+        ? '<p><a class="app-detail-more" href="event-signup.html?event=' + encodeURIComponent(ev.id) + '">Full signup form</a></p>'
+        : "";
+      scroll.innerHTML =
+        '<article class="app-detail" id="appEventDetail">' +
+        '<p class="app-detail-kicker">' + esc(String(ev.event_type || "event")) + "</p>" +
+        "<h2>" + esc(ev.name || "Krewe event") + "</h2>" +
+        "<p>" + esc(when) + (ev.members_only ? " · Members only" : "") + "</p>" +
+        (loc ? "<p>" + esc(loc) + "</p>" : "") +
+        (desc ? "<p>" + esc(desc) + "</p>" : "") +
+        more +
+        "<p>RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.</p>" +
+        "</article>";
+      actions.innerHTML =
+        '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
+        '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
+      var rsvpBtn = document.getElementById("appRsvpBtn");
+      var calBtn = document.getElementById("appCalBtn");
+      if (ev.parade_rsvpd || ev.rsvpd) {
+        if (rsvpBtn) { rsvpBtn.textContent = "You're going"; rsvpBtn.disabled = true; }
+      }
+      if (rsvpBtn) rsvpBtn.addEventListener("click", function () { rsvpFromDetail(ev, rsvpBtn); });
+      if (calBtn) calBtn.addEventListener("click", function () { addEventCalendar(ev); });
+    }
+
+    function paintCard() {
+      var scroll = document.getElementById("appDrillScroll");
+      var actions = document.getElementById("appDrillActions");
+      showBack("Member card");
+      if (actions) actions.innerHTML = "";
+      if (!scroll) return;
+      var p = window.kosProfile || {};
+      var name = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Krewe member").toString().trim();
+      var title = (p.officer_title || "").toString().trim();
+      var since = (p.parade_since || "").toString().trim();
+      var email = (p.email || "").toString().trim();
+      scroll.innerHTML =
+        '<div class="app-detail"><div class="app-pass">' +
+        '<img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />' +
+        '<p class="app-pass-kicker">Krewe of Shamrock</p>' +
+        "<h2>" + esc(name) + "</h2>" +
+        (title ? '<p class="app-pass-title">' + esc(title) + "</p>" : "") +
+        (email ? "<p>" + esc(email) + "</p>" : "") +
+        '<ul class="app-pass-facts"><li>' + esc(plainStanding()) + "</li><li>" + esc(plainParadeReady()) + "</li>" +
+        (since ? "<li>Marching since " + esc(since) + "</li>" : "") +
+        "</ul><p>Show this card at the float. It uses the profile and Parade Ready details already on your account.</p></div></div>";
+    }
+
+    function renderTop(motion) {
+      var top = framesOf(appNav.tab).slice(-1)[0] || { kind: "root" };
+      var drill = document.getElementById("appDrill");
+      document.body.classList.remove("app-screen", "app-focus", "app-nav-push", "app-nav-pop");
+      clearFocusMarks();
+      var skipHome = !(appNav.tab === "hub" && top.kind === "root");
+      showTab(appNav.tab, { skipScroll: true, skipHomeRender: skipHome });
+      if (top.kind === "root") {
+        if (drill) drill.hidden = true;
+        if (appNav.tab === "fun") showBack("Craic Cup");
+        else showRootBar();
+        markOriginTab();
+        paintAppHeader(appNav.tab === "fun" ? (appNav.funFrom || "hub") : appNav.tab);
+        restoreScroll(false);
+      } else if (top.kind === "focus") {
+        if (drill) drill.hidden = true;
+        var el = document.getElementById(top.id);
+        if (el) el.classList.add("app-focus-target");
+        /* Carpool and volunteer hours are single tools. Documents, share, and
+           the directory stay on the desk so the rest of that desk remains visible. */
+        if (top.id === "carpoolCard" || top.id === "hubHoursCard") document.body.classList.add("app-focus");
+        showBack(top.title || "Back");
+        var panel = document.querySelector("[data-hub-panel].hub-on");
+        if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
+        else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
+      } else if (top.kind === "event") {
+        if (drill) drill.hidden = false;
+        document.body.classList.add("app-screen");
+        paintEvent(top.id);
+      } else if (top.kind === "card") {
+        if (drill) drill.hidden = false;
+        document.body.classList.add("app-screen");
+        paintCard();
+      } else {
+        if (drill) drill.hidden = true;
+        showRootBar();
+      }
+      if (motion === "push" || motion === "pop") {
+        document.body.classList.add(motion === "push" ? "app-nav-push" : "app-nav-pop");
+      }
+      if (top.kind === "root" && appNav.tab === "hub") startCountdown();
+    }
+
+    function applyRoute(tab, frames, motion) {
+      ensure();
+      appNav.tab = tab;
+      appNav.stacks[tab] = frames && frames.length ? frames : [{ kind: "root" }];
+      appNav.depth = desiredDepth(tab, appNav.stacks[tab]);
+      renderTop(motion || "");
+    }
+
+    function seed(route) {
+      ensure();
+      var tab = route.tab;
+      var frames = route.frames && route.frames.length ? route.frames : [{ kind: "root" }];
+      var levels = [];
+      if (tab !== "hub" || frames.length > 1) levels.push({ tab: "hub", frames: [{ kind: "root" }] });
+      if (tab !== "hub") levels.push({ tab: tab, frames: [{ kind: "root" }] });
+      if (frames.length > 1 || (tab === "hub" && frames.length > 1)) levels.push({ tab: tab, frames: frames });
+      if (tab !== "hub" && frames.length > 1) {
+        /* the tab root level is already queued; the last push is the drill */
+      }
+      if (!levels.length) levels.push({ tab: "hub", frames: [{ kind: "root" }] });
+      /* Drop a duplicate root if the drill level repeats it. */
+      var seen = {};
+      levels = levels.filter(function (lv) {
+        var key = lv.tab + ":" + (lv.frames.length) + ":" + (lv.frames[lv.frames.length - 1].kind);
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+      levels.forEach(function (lv, i) {
+        appNav.tab = lv.tab;
+        appNav.stacks[lv.tab] = lv.frames;
+        appNav.depth = desiredDepth(lv.tab, lv.frames);
+        writeHistory(i === 0 ? "replaceState" : "pushState");
+      });
+      renderTop("");
+      if (route.tool === "applications") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e1) {}
+        try { wireOfficerDeskPicker(); } catch (e2) {}
+        try { openOfficerTool("tool:hubApplications", false); } catch (e3) {}
+      }
+      if (route.tool === "event-studio") {
+        try { wireOfficerDeskPicker(); } catch (e4) {}
+        try { openOfficerTool("tool:hubEventStudio", false); } catch (e5) {}
+      }
+    }
+
+    function sameFrames(a, b) {
+      a = a || [];
+      b = b || [];
+      if (a.length !== b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        if ((a[i].kind || "root") !== (b[i].kind || "root")) return false;
+        if (String(a[i].id || "") !== String(b[i].id || "")) return false;
+      }
+      return true;
+    }
+
+    function pushFrames(tab, frames, motion) {
+      ensure();
+      saveScroll();
+      if (tab !== appNav.tab && frames.length === 1 && frames[0].kind === "root") {
+        switchTab(tab);
+        return;
+      }
+      var cur = framesOf(appNav.tab);
+      if (tab === appNav.tab && sameFrames(cur, frames)) {
+        renderTop("");
+        return;
+      }
+      appNav.tab = tab;
+      appNav.stacks[tab] = frames;
+      appNav.depth = desiredDepth(tab, frames);
+      writeHistory("pushState");
+      renderTop(motion || "push");
+    }
+
+    function switchTab(tab) {
+      ensure();
+      if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
+      if (roleFixture && ("canManageEvents" in roleFixture)) state.canManageEvents = !!roleFixture.canManageEvents;
+      if (!tab) tab = "hub";
+      if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
+      if (tab !== "parade") clearHoursIntent();
+      if (tab === appNav.tab) {
+        var cur = framesOf(tab);
+        if (cur.length > 1) {
+          var drop = cur.length - 1;
+          appNav.stacks[tab] = [{ kind: "root" }];
+          appNav.scroll[tab] = 0;
+          if (appNav.depth >= drop) {
+            appNav.pending = { tab: tab, frames: [{ kind: "root" }], scrollTop: true };
+            try { history.go(-drop); } catch (e) { applyRoute(tab, [{ kind: "root" }], "pop"); }
+          } else {
+            appNav.depth = desiredDepth(tab, [{ kind: "root" }]);
+            writeHistory("replaceState");
+            applyRoute(tab, [{ kind: "root" }], "pop");
+            restoreScroll(true);
+          }
+          return;
+        }
+        appNav.scroll[tab] = 0;
+        var panel = document.querySelector("[data-hub-panel].hub-on");
+        if (panel) panel.scrollTop = 0;
+        try { window.scrollTo(0, 0); } catch (e2) {}
+        return;
+      }
+      saveScroll();
+      var dest = framesOf(tab).slice();
+      var want = desiredDepth(tab, dest);
+      if (appNav.depth > want) {
+        appNav.pending = { tab: tab, frames: dest };
+        try { history.go(-(appNav.depth - want)); } catch (e3) { applyRoute(tab, dest, ""); }
+        return;
+      }
+      if (appNav.depth < want) {
+        var built = [];
+        dest.forEach(function (fr) {
+          built.push(fr);
+          appNav.tab = tab;
+          appNav.stacks[tab] = built.slice();
+          var need = desiredDepth(tab, built);
+          if (need > appNav.depth) {
+            appNav.depth = need;
+            writeHistory("pushState");
+          } else {
+            appNav.depth = need;
+            writeHistory("replaceState");
+          }
+        });
+        renderTop("");
+        return;
+      }
+      appNav.tab = tab;
+      appNav.depth = want;
+      writeHistory("replaceState");
+      renderTop("");
+    }
+
+    function openEvent(id) {
+      if (!id) return;
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = framesOf(appNav.tab).slice();
+      var top = frames[frames.length - 1];
+      if (top && top.kind === "event" && String(top.id) === String(id)) return;
+      if (top && top.kind !== "root") frames = [{ kind: "root" }];
+      frames.push({ kind: "event", id: String(id), title: "Event" });
+      pushFrames(appNav.tab, frames, "push");
+    }
+
+    function openFocus(tab, id, title) {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = [{ kind: "root" }, { kind: "focus", id: id, title: title || "Back" }];
+      if (appNav.tab === tab && sameFrames(framesOf(tab), frames)) {
+        renderTop("");
+        return;
+      }
+      /* Opening a tool from another tab: land on that tab, then push the tool
+         so Back returns to the tab root, and another Back returns Home. */
+      if (appNav.tab !== tab) {
+        var rootFrames = [{ kind: "root" }];
+        var wantRoot = desiredDepth(tab, rootFrames);
+        if (appNav.depth < wantRoot) {
+          appNav.tab = tab;
+          appNav.stacks[tab] = rootFrames;
+          appNav.depth = wantRoot;
+          writeHistory("pushState");
+        } else if (appNav.depth > wantRoot) {
+          appNav.pending = { tab: tab, frames: frames, after: "focus" };
+          try { history.go(-(appNav.depth - wantRoot)); return; } catch (e) {}
+        } else {
+          appNav.tab = tab;
+          appNav.stacks[tab] = rootFrames;
+          appNav.depth = wantRoot;
+          writeHistory("replaceState");
+        }
+      }
+      pushFrames(tab, frames, "push");
+    }
+
+    function openCard() {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var frames = framesOf(appNav.tab).slice();
+      var top = frames[frames.length - 1];
+      if (top && top.kind === "card") return;
+      if (top && top.kind !== "root") frames = [{ kind: "root" }];
+      frames.push({ kind: "card", title: "Member card" });
+      pushFrames(appNav.tab, frames, "push");
+    }
+
+    function openFun() {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      if (appNav.tab !== "fun") appNav.funFrom = appNav.tab;
+      pushFrames("fun", [{ kind: "root" }], "push");
+    }
+
+    function openTab(tab) {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      switchTab(tab || "hub");
+    }
+
+    function goBack() {
+      if (appNav.depth > 0) {
+        try { history.back(); return; } catch (e) {}
+      }
+      if (appNav.tab !== "hub") openTab("hub");
+    }
+
+    function onPop(e) {
+      ensure();
+      var pend = appNav.pending;
+      appNav.pending = null;
+      if (pend) {
+        if (pend.after === "focus") {
+          applyRoute(pend.tab, [{ kind: "root" }], "");
+          writeHistory("replaceState");
+          pushFrames(pend.tab, pend.frames, "push");
+          return;
+        }
+        applyRoute(pend.tab, pend.frames, "pop");
+        if (pend.scrollTop) {
+          appNav.scroll[pend.tab] = 0;
+          restoreScroll(true);
+        }
+        writeHistory("replaceState");
+        return;
+      }
+      var st = e.state && e.state.kosHub;
+      if (!st) {
+        if (!document.body.classList.contains("hub-app")) return;
+        appNav.tab = "hub";
+        appNav.stacks.hub = [{ kind: "root" }];
+        appNav.depth = 0;
+        renderTop("pop");
+        return;
+      }
+      ensure();
+      appNav.funFrom = st.funFrom || appNav.funFrom || "hub";
+      applyRoute(st.tab || "hub", st.frames, "pop");
+      appNav.depth = typeof st.depth === "number" ? st.depth : appNav.depth;
+    }
+
+    function onHash() {
+      if (appNav.writing) return;
+      ensure();
+      var route = routeFromHash(location.hash);
+      if (!route) return;
+      var st = history.state && history.state.kosHub;
+      if (st && hashFor(st.tab, st.frames) === location.hash) return;
+      appNav.userMoved = true;
+      appNav.booted = true;
+      var prevDepth = st && typeof st.depth === "number" ? st.depth : appNav.depth;
+      appNav.tab = route.tab;
+      appNav.stacks[route.tab] = route.frames;
+      appNav.depth = prevDepth + (route.frames.length > 1 || route.tab !== "hub" ? 1 : 0);
+      writeHistory("replaceState");
+      renderTop("");
+      if (route.tool === "applications") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e) {}
+        try { wireOfficerDeskPicker(); } catch (e2) {}
+        try { openOfficerTool("tool:hubApplications", true); } catch (e3) {}
+      } else if (route.tool === "event-studio") {
+        try { wireOfficerDeskPicker(); } catch (e4) {}
+        try { openOfficerTool("tool:hubEventStudio", true); } catch (e5) {}
+      }
+    }
+
+    function boot() {
+      ensure();
+      if (!appNav.booted && !appNav.userMoved) {
+        appNav.booted = true;
+        var route = routeFromHash(location.hash) || { tab: "hub", frames: [{ kind: "root" }] };
+        if (history.state && history.state.kosHub) {
+          var st = history.state.kosHub;
+          applyRoute(st.tab || route.tab, st.frames || route.frames, "");
+        } else {
+          seed(route);
+        }
+      } else {
+        appNav.booted = true;
+      }
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind === "event") paintEvent(top.id);
+      var hashRoute = routeFromHash(location.hash);
+      if (hashRoute && hashRoute.frames.some(function (fr) { return fr.kind === "event"; })) {
+        var evId = hashRoute.frames[hashRoute.frames.length - 1].id;
+        if (!appNav.userMoved) {
+          applyRoute(hashRoute.tab, hashRoute.frames, "");
+        } else if (top && top.kind === "event") {
+          paintEvent(evId);
+        }
+      }
+    }
+
+    function sync() {
+      var top = framesOf(appNav.tab).slice(-1)[0];
+      if (top && top.kind === "event") paintEvent(top.id);
+      else if (top && top.kind === "card") paintCard();
+      var hashRoute = routeFromHash(location.hash);
+      if (!appNav.userMoved && hashRoute && hashRoute.frames.some(function (fr) { return fr.kind === "event"; })) {
+        if (!(history.state && history.state.kosHub)) seed(hashRoute);
+        else applyRoute(hashRoute.tab, hashRoute.frames, "");
+      }
+    }
+
+    appNavApi.openTab = openTab;
+    appNavApi.openEvent = openEvent;
+    appNavApi.openFocus = openFocus;
+    appNavApi.openCard = openCard;
+    appNavApi.openFun = openFun;
+    appNavApi.back = goBack;
+    appNavApi.boot = boot;
+    appNavApi.sync = sync;
+    appNavApi.onHash = onHash;
+    appNavApi.hasMoved = function () { return !!appNav.userMoved; };
+    appNavApi.ready = true;
+    window.__kosHubSyncRoute = sync;
+
+    if (!window.__kosHubPopBound) {
+      window.__kosHubPopBound = true;
+      window.addEventListener("popstate", onPop);
+    }
+
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var tab = btn.getAttribute("data-hub-tab");
-        if (tab !== "parade") clearHoursIntent();
-        showTab(tab);
-        pushTabHistory(tab);
+        openTab(tab);
       });
     });
+  }
+
+  function bindTabs() {
+    installAppNav();
     if (!window.__hubDocsHashBound) {
       window.__hubDocsHashBound = true;
       window.addEventListener("hashchange", function () {
-        var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
-        if (hash === "docs") revealDocsCard();
-        else if (hash === "directory") openDirectoryFromHome();
-        else if (hash === "applications") openApplicationsFromHome();
-        else if (hash === "event-studio") openEventStudioFromHome();
-        else if (hash.indexOf("craic") === 0) return; /* the Craic Cup handles its own hashes */
-        else if (HASH_TABS[hash]) showTab(HASH_TABS[hash]);
-        else if (hash === "") showTab(TAB_HOME); /* backed past the first tab entry */
+        appNavApi.onHash();
       });
     }
     if (!window.__hubSamePageBound) {
@@ -4574,6 +5736,7 @@
     if (!document.getElementById("memberContent")) return;
     if (document.getElementById("hubRoot")) {
       // Already built: only refresh data if we have not settled this session.
+      syncAppChrome();
       if (!hubSettled && !hubLoadInFlight) loadHubData();
       return;
     }
@@ -4590,6 +5753,7 @@
       var visible = content && content.style.display !== "none";
       if (visible || tries > 50) {
         clearInterval(t);
+        syncAppChrome();
         loadHubData();
       }
     }, 200);
@@ -4600,6 +5764,7 @@
     if (typeof _unlock === "function") _unlock();
     // Build hub once; loadHubData itself is single-flight. Do not open hours
     // here - loadHubData settles the tab and defers the hours deep-link.
+    syncAppChrome();
     setTimeout(boot, 40);
   };
 
