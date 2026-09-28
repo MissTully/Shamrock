@@ -409,7 +409,7 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
 
@@ -1250,9 +1250,19 @@
       body + "</div></article>";
   }
 
+  function tidingsSkeletonHtml() {
+    return '<section class="hub-board hub-board-skel" aria-hidden="true" aria-label="Announcements from the board">' +
+      '<p class="app-from">From the officers</p>' +
+      "<h3>📜 Krewe Tidings</h3>" +
+      '<div class="hub-board-rule"></div>' +
+      '<div class="hub-board-date">News from the Board</div>' +
+      '<div class="skel-line"></div><div class="skel-line"></div><div class="skel-line skel-short"></div>' +
+      "</section>";
+  }
+
   function boardAnnouncementsHtml() {
     var list = state.announcements || [];
-    if (!list.length) return "";
+    if (!list.length) return state.tidingsReady ? "" : tidingsSkeletonHtml();
     var latest = list[0];
     var older = list.slice(1).map(function (m, i) {
       return '<details class="hub-board-old"><summary>' + esc(m.subject || "Announcement") +
@@ -1350,7 +1360,22 @@
     try { return localStorage.getItem("kosHubGetAppDismissed") === "1"; } catch (e) { return false; }
   }
 
+  /* Wide browsers use the computer Hub. Phones, and the home-screen app at
+     any width, keep the phone shell. 960px keeps a sideways phone on the
+     app and treats a landscape tablet as a computer. */
+  var HUB_DESKTOP_MQ = "(min-width: 960px)";
+
+  function wantsHubApp() {
+    if (isHubStandalone()) return true;
+    try {
+      return !(window.matchMedia && window.matchMedia(HUB_DESKTOP_MQ).matches);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function getAppBannerHtml() {
+    if (!document.body.classList.contains("hub-app")) return "";
     if (isHubStandalone() || getAppDismissed()) return "";
     return '<section class="app-getapp" id="hubGetAppBanner">' +
       '<button type="button" class="app-getapp-open" data-app-go="get-app">' +
@@ -1963,11 +1988,23 @@
 
   function syncAppChrome() {
     var content = document.getElementById("memberContent");
-    var on = !!(content && content.style.display !== "none");
+    var signedIn = !!(content && content.style.display !== "none");
+    var on = signedIn && wantsHubApp();
     document.body.classList.toggle("hub-app", on);
+    document.body.classList.toggle("hub-desk", signedIn && !on);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", on ? "#0c3b21" : "#14532d");
     if (on) paintAppHeader(currentHubTab());
+    if (signedIn && document.getElementById("hubHome") && !document.getElementById("hubWelcomeCard")) {
+      try { renderHome(); } catch (e) {}
+    }
+  }
+
+  function desktopGetAppLinkHtml() {
+    if (document.body.classList.contains("hub-app")) return "";
+    if (isHubStandalone()) return "";
+    return '<p class="hub-desk-getapp" id="hubGetAppLinkWrap">' +
+      '<button type="button" id="hubGetAppLink" data-app-go="get-app">Get the App</button></p>';
   }
 
   function applyFeedLock() {
@@ -2111,11 +2148,17 @@
         : '') +
       '</div></div>';
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
-    // Reading order, top to bottom: today's birthdays when someone is
-    // celebrating, then greet the member and show their season standing,
-    // then news from the board, then the officer's own desk, then the
-    // Craic Cup game, then navigation, and housekeeping last.
-    top.innerHTML = birthdayCardHtml() + appDashHtml() + boardAnnouncementsHtml() + welcomeDeskHtml() + appsBanner + officerCard + craicHeroHtml() + findCards;
+    // Computer: birthday, welcome, tidings, officer tools, the Cup, then links.
+    // Phone: the app home (countdown and tiles) stays above that same desk.
+    var phoneHome = document.body.classList.contains("hub-app");
+    top.innerHTML =
+      birthdayCardHtml() +
+      (phoneHome ? appDashHtml() : "") +
+      (phoneHome ? boardAnnouncementsHtml() : "") +
+      welcomeDeskHtml() +
+      (phoneHome ? "" : boardAnnouncementsHtml()) +
+      appsBanner + officerCard + craicHeroHtml() + findCards +
+      (phoneHome ? "" : desktopGetAppLinkHtml());
 
     renderProfileCard();
 
@@ -2156,7 +2199,7 @@
       showTab("fun");
       setTimeout(function () {
         var el = document.getElementById("hubClaimCard");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (el) el.scrollIntoView({ behavior: "auto", block: "nearest" });
       }, 60);
     });
     paintAppHeader(currentHubTab());
@@ -2170,7 +2213,7 @@
   window.kosOpenEventStudio = openEventStudioFromHome;
 
   function focusHubTarget(el, focusEl) {
-    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "auto", block: "nearest" });
     if (!focusEl) return;
     try { focusEl.focus({ preventScroll: true }); } catch (fe) {
       try { focusEl.focus(); } catch (fe2) {}
@@ -2223,6 +2266,7 @@
      Krewe Tidings card and its archive without a live database. */
   window.__kosHubSetAnnouncements = function (list) {
     announcementFixture = true;
+    state.tidingsReady = true;
     state.announcements = Array.isArray(list) ? list : [];
     renderHome();
   };
@@ -2232,6 +2276,7 @@
      Only first names (plus a last initial or last name when needed) are kept. */
   window.__kosHubSetBirthdays = function (rows, today) {
     birthdayFixture = true;
+    state.birthdaysReady = true;
     state.birthdayToday = today && today.month && today.day ? { month: Number(today.month), day: Number(today.day) } : null;
     state.birthdays = birthdaysToday(rows || [], state.birthdayToday || nyTodayParts());
     renderHome();
@@ -2280,11 +2325,18 @@
     if (tab === "hub" && !opts.skipHomeRender) renderHome();
     else paintAppHeader(tab);
     if (!opts.skipScroll) {
-      // Defer scroll until after panel display settles (avoids snap on login).
+      // One instant scroll after the panel is shown. Smooth scrolling here
+      // fights the next scroll and snaps the page back.
       setTimeout(function () {
-        try { window.scrollTo({ top: 0, behavior: "auto" }); } catch (e3) {}
         var active = document.querySelector("[data-hub-panel].hub-on");
-        if (active) active.scrollTop = 0;
+        if (document.body.classList.contains("hub-app")) {
+          if (active) active.scrollTop = 0;
+          return;
+        }
+        var tabs = document.getElementById("hubTabs");
+        if (!tabs) return;
+        var y = tabs.getBoundingClientRect().top + window.pageYOffset - 4;
+        try { window.scrollTo({ top: Math.max(0, y), behavior: "auto" }); } catch (e3) {}
       }, 0);
     }
   }
@@ -2337,7 +2389,12 @@
         if (!client) await new Promise(function (r) { setTimeout(r, 100); });
       }
     }
-    if (!client) { renderHome(); return; }
+    if (!client) {
+      state.tidingsReady = true;
+      state.birthdaysReady = true;
+      renderHome();
+      return;
+    }
 
     try {
       var off = await client.rpc("is_krewe_officer");
@@ -2405,6 +2462,9 @@
       } catch (e) {
         if (!announcementFixture) state.announcements = [];
       }
+      state.tidingsReady = true;
+    } else {
+      state.tidingsReady = true;
     }
     if (!birthdayFixture) {
       try {
@@ -2418,6 +2478,9 @@
       } catch (bdayErr) {
         if (!birthdayFixture) state.birthdays = [];
       }
+      state.birthdaysReady = true;
+    } else {
+      state.birthdaysReady = true;
     }
     try {
       var evSelect = "id,name,start_time,end_time,location,member_address,members_only,status,source,event_type,linked_meeting_id,description";
@@ -2574,7 +2637,7 @@
       var card = document.getElementById("hubHoursCard") || form || document.getElementById("prHours");
       // Defer scroll until after the parade panel is painted (avoids login snap).
       setTimeout(function () {
-        if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "auto", block: "start" });
+        if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "auto", block: "nearest" });
       }, 120);
       var hours = document.getElementById("vhHours") || document.getElementById("vhActivity");
       if (hours) {
@@ -3974,7 +4037,7 @@
     if (panel) {
       panel.hidden = false;
       panel.style.display = "";
-      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      panel.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
     if (typed) typed.focus();
   }
@@ -4167,7 +4230,7 @@
     showEventDeleteButton(!!event.id);
     hideDeletePanel();
     var wrap = document.getElementById("hubEventFormWrap");
-    if (wrap) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (wrap) wrap.scrollIntoView({ behavior: "auto", block: "nearest" });
   }
   function renderEventList(list) {
     var target = document.getElementById("hubEventList");
@@ -4949,8 +5012,15 @@
         if (top.id === "carpoolCard" || top.id === "hubHoursCard") document.body.classList.add("app-focus");
         showBack(top.title || "Back");
         var panel = document.querySelector("[data-hub-panel].hub-on");
-        if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
-        else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
+        if (document.body.classList.contains("hub-app")) {
+          if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
+          else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
+        } else if (el && el.getBoundingClientRect) {
+          var rect = el.getBoundingClientRect();
+          if (rect.top < 72 || rect.bottom > window.innerHeight - 16) {
+            el.scrollIntoView({ behavior: "auto", block: "nearest" });
+          }
+        }
       } else if (top.kind === "event") {
         if (drill) drill.hidden = false;
         document.body.classList.add("app-screen");
@@ -5080,7 +5150,13 @@
         appNav.scroll[tab] = 0;
         var panel = document.querySelector("[data-hub-panel].hub-on");
         if (panel) panel.scrollTop = 0;
-        try { window.scrollTo(0, 0); } catch (e2) {}
+        if (!document.body.classList.contains("hub-app")) {
+          var tabsTop = document.getElementById("hubTabs");
+          if (tabsTop) {
+            var yTop = tabsTop.getBoundingClientRect().top + window.pageYOffset - 4;
+            try { window.scrollTo({ top: Math.max(0, yTop), behavior: "auto" }); } catch (e2) {}
+          }
+        }
         return;
       }
       saveScroll();
@@ -5965,7 +6041,31 @@
     }
   };
 
+  function bindLayoutMode() {
+    if (window.__kosHubLayoutBound) return;
+    window.__kosHubLayoutBound = true;
+    try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) {}
+    function apply() {
+      var wasApp = document.body.classList.contains("hub-app");
+      var wasDesk = document.body.classList.contains("hub-desk");
+      syncAppChrome();
+      if (wasApp === document.body.classList.contains("hub-app") && wasDesk === document.body.classList.contains("hub-desk")) return;
+      if (!document.getElementById("hubHome")) return;
+      try { renderHome(); } catch (e2) {}
+      try { if (appNavApi.sync) appNavApi.sync(); } catch (e3) {}
+    }
+    var mq = null;
+    var stand = null;
+    try { mq = window.matchMedia(HUB_DESKTOP_MQ); } catch (e4) {}
+    try { stand = window.matchMedia("(display-mode: standalone)"); } catch (e5) {}
+    if (mq && mq.addEventListener) mq.addEventListener("change", apply);
+    else if (mq && mq.addListener) mq.addListener(apply);
+    if (stand && stand.addEventListener) stand.addEventListener("change", apply);
+    else if (stand && stand.addListener) stand.addListener(apply);
+  }
+
   function boot() {
+    bindLayoutMode();
     if (!document.getElementById("memberContent")) return;
     if (document.getElementById("hubRoot")) {
       // Already built: only refresh data if we have not settled this session.

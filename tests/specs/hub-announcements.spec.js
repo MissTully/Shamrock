@@ -72,6 +72,7 @@ test.describe("Krewe Tidings announcements", () => {
 
   test("Home clamps the latest post and Read more returns to the same scroll", async ({ page }) => {
     const report = watchPage(page);
+    await page.setViewportSize({ width: 390, height: 844 });
     await unlockMemberHub(page);
     await page.waitForSelector('[data-hub-goto="directory"]');
     const tail = "TAIL_MARKER_END";
