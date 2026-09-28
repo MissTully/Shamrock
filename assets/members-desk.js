@@ -405,7 +405,8 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [] };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], paradeSeason: [], nextParade: null };
+  var feedLock = null;
   var applicationsFixture = null;
 
   function canOpenOfficerDesk() {
@@ -459,6 +460,83 @@
     return (s == null ? "" : String(s)).replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
+  }
+
+  /* Phone-app shell helpers. The signed-in hub keeps every existing panel.
+     This layer adds the header, countdown, tiles, and bottom tabs. */
+  function svgIcon(inner) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + inner + "</svg>";
+  }
+  var APP_ICO = {
+    home: svgIcon('<path d="M4 10.5 12 3.8l8 6.7V20a1 1 0 0 1-1 1h-5.1v-6.2H10.1V21H5a1 1 0 0 1-1-1Z"/>'),
+    events: svgIcon('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5V7M16 3.5V7M4 10h16"/>'),
+    parade: svgIcon('<path d="M6 21V4"/><path d="M6 5h11l-2.2 3.2L17 11.5H6"/>'),
+    me: svgIcon('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.5c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5"/>'),
+    officer: svgIcon('<path d="m12 3.2 2.2 4.6 5 .6-3.7 3.4.9 5L12 14.6 7.6 16.8l.9-5L4.8 8.4l5-.6Z"/>'),
+    bell: svgIcon('<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5"/><path d="M4.5 16.5h15"/><path d="M10 18.5a2 2 0 0 0 4 0"/>'),
+    card: svgIcon('<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M13 10.2h5M13 13.4h4"/>'),
+    cal: svgIcon('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5V7M16 3.5V7M4 10h16"/>'),
+    dues: svgIcon('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 14.2h3.2"/>'),
+    chat: svgIcon('<path d="M6 16.5 4 19.2V7.2A2.2 2.2 0 0 1 6.2 5h11.6A2.2 2.2 0 0 1 20 7.2v6.2a2.2 2.2 0 0 1-2.2 2.2H8.2Z"/>'),
+    car: svgIcon('<path d="M4 15.2 5.8 9.6A2 2 0 0 1 7.7 8.2h8.6a2 2 0 0 1 1.9 1.4L20 15.2"/><path d="M3.8 15.2h16.4V18a1 1 0 0 1-1 1H5a1 1 0 0 1-1.2-1Z"/><circle cx="7.5" cy="15.2" r="1.1"/><circle cx="16.5" cy="15.2" r="1.1"/>'),
+    heart: svgIcon('<path d="M12 19.4s-6.4-3.9-6.4-8.1A3.5 3.5 0 0 1 12 8.8a3.5 3.5 0 0 1 6.4 2.5c0 4.2-6.4 8.1-6.4 8.1Z"/>'),
+    bag: svgIcon('<path d="M6.5 8.5h11l-.8 11H7.3Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>'),
+    camera: svgIcon('<path d="M8.2 7.4 9.4 5.4h5.2l1.2 2"/><rect x="4" y="7.4" width="16" height="11.2" rx="2"/><circle cx="12" cy="13" r="2.5"/>')
+  };
+  var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "Me", fun: "Craic Cup", officer: "Officer" };
+  var DUES_FULL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+  var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+
+  function tabButton(id, label, icon, extra) {
+    return '<button type="button" data-hub-tab="' + id + '">' +
+      '<span class="app-tab-ic" aria-hidden="true">' + icon + "</span>" +
+      '<span class="app-tab-tx">' + label + "</span>" +
+      (extra || "") + "</button>";
+  }
+
+  function appChromeHtml() {
+    return '<header class="app-top" id="appTop">' +
+      '<div class="app-av" id="appAv" aria-hidden="true">☘</div>' +
+      '<div class="app-top-copy"><p class="app-greet" id="appGreet">Good afternoon</p>' +
+      '<h1 id="appPageTitle">Home</h1></div>' +
+      '<button type="button" class="app-bell" id="appBell" aria-label="Notes from the officers">' +
+      APP_ICO.bell + '<span class="app-bell-dot" id="appBellDot" hidden></span></button>' +
+      '<div class="app-bell-panel" id="appBellPanel" hidden></div></header>' +
+      '<div class="app-sheet" id="appSheet" hidden>' +
+      '<div class="app-sheet-card" role="dialog" aria-modal="true" aria-labelledby="appSheetTitle">' +
+      '<button type="button" class="app-sheet-x" id="appSheetClose">Close</button>' +
+      '<div id="appSheetBody"></div></div></div>' +
+      '<div class="app-toast" id="appToast" hidden role="status"></div>';
+  }
+
+  function meLinksHtml() {
+    return '<section class="app-card" id="appMeLinks">' +
+      '<div class="app-head"><span class="ic" aria-hidden="true">☘</span><div><h2>Your hub</h2>' +
+      '<small>Everything else still lives here</small></div></div>' +
+      '<div class="app-body app-links">' +
+      "<p>The Parade tab is your Member desk: Parade Ready, volunteer hours, carpools, vans, lockers, documents, and the orientation video. The Craic Cup is here too.</p>" +
+      '<button type="button" class="btn btn-primary" data-app-go="fun">Open the Craic Cup</button>' +
+      '<button type="button" class="btn" data-app-go="parade">Open Member desk</button>' +
+      '<button type="button" class="btn" data-app-go="docs">Documents</button>' +
+      '<button type="button" class="btn" data-app-go="tune">Play the Irish tune</button>' +
+      '<button type="button" class="btn" data-app-go="signout">Sign out</button>' +
+      "<h3>Rest of the website</h3>" +
+      '<a href="index.html">Public home</a>' +
+      '<a href="event-signup.html">Upcoming events</a>' +
+      '<a href="parades.html">Parades</a>' +
+      '<a href="tartan-ball.html">Tartan Ball</a>' +
+      '<a href="faq.html">Member FAQ</a>' +
+      '<a href="learn.html">Our heritage</a>' +
+      '<a href="krewe-history.html">Krewe history</a>' +
+      '<a href="poetry.html">Krewe creativity</a>' +
+      '<a href="gallery.html">Photo gallery</a>' +
+      '<a href="videos.html">Videos</a>' +
+      '<a href="share.html">Share yours</a>' +
+      '<a href="volunteer.html">Volunteer</a>' +
+      '<a href="store.html">Shop</a>' +
+      '<a href="membership-application.html">Membership application</a>' +
+      '<a href="https://kreweofshamrock.wildapricot.org" target="_blank" rel="noopener noreferrer">Archive of the previous site</a>' +
+      "</div></section>";
   }
 
   function memberEventWhereHtml(ev) {
@@ -593,7 +671,9 @@
   }
 
   function renderHubParadeSeason(list) {
+    if (feedLock && Array.isArray(feedLock.parades)) list = feedLock.parades;
     var rows = list || [];
+    state.paradeSeason = rows;
     var html = rows.length
       ? rows.map(paradeSeasonCardHtml).join("")
       : '<p class="empty">No published Shamrock parades on the calendar yet. Officers add them in Event Studio.</p>';
@@ -811,21 +891,17 @@
     root.id = "hubRoot";
     root.className = "hub-wrap";
 
-    var tabs = [
-      ["hub", "Home"],
-      ["krewe", "My Krewe"],
-      ["events", "Events"],
-      ["parade", "Member desk"],
-      ["fun", "Craic Cup"],
-      ["officer", "Officer"]
-    ];
-    var tabHtml = '<nav class="hub-tabs" id="hubTabs" aria-label="Member hub sections">';
-    tabs.forEach(function (t) {
-      tabHtml += '<button type="button" data-hub-tab="' + t[0] + '">' + t[1] + "</button>";
-    });
-    tabHtml += "</nav>";
+    var tabHtml = '<nav class="hub-tabs" id="hubTabs" aria-label="Member hub sections">' +
+      tabButton("hub", "Home", APP_ICO.home) +
+      tabButton("events", "Events", APP_ICO.events) +
+      tabButton("parade", "Parade", APP_ICO.parade) +
+      tabButton("krewe", "Me", APP_ICO.me) +
+      tabButton("fun", "Craic Cup", APP_ICO.heart) +
+      tabButton("officer", "Officer", APP_ICO.officer, '<span class="app-tab-badge" id="appOfficerBadge" hidden>0</span>') +
+      "</nav>";
 
     root.innerHTML =
+      appChromeHtml() +
       tabHtml +
       '<div id="hubHome" class="hub-panel hub-on" data-hub-panel="hub">' +
       '<div id="hubHomeTop" class="hub-home-stack"></div><div class="member-grid" id="hubHomeGrid"></div></div>' +
@@ -891,6 +967,11 @@
     oldGrid.remove();
     relocateHours();
     layoutMemberDesk();
+    if (!document.getElementById("appMeLinks")) {
+      var kreweLinks = document.getElementById("hubKrewe");
+      if (kreweLinks) kreweLinks.insertAdjacentHTML("beforeend", meLinksHtml());
+    }
+    bindAppChrome();
     ensureClaimCloversCard();
   }
 
@@ -1095,6 +1176,7 @@
         ' <span class="hub-board-date">' + esc(annDate(m.created_at)) + "</span></summary>" + op + "</details>";
     }).join("");
     return '<section class="hub-board" aria-label="Announcements from the board">' +
+      '<p class="app-from">From the officers</p>' +
       "<h3>📜 Krewe Tidings</h3>" +
       '<div class="hub-board-rule"></div>' +
       '<div class="hub-board-date">News from the Board</div>' +
@@ -1373,6 +1455,389 @@
   window.__kosNyTodayParts = nyTodayParts;
   window.__kosBirthdayArtSrc = birthdayArtSrc;
 
+  function timeGreeting() {
+    var h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }
+
+  function memberInitials() {
+    var p = window.kosProfile || {};
+    var a = String(p.first_name || "").trim().charAt(0);
+    var b = String(p.last_name || "").trim().charAt(0);
+    var both = (a + b).toUpperCase();
+    if (both.trim()) return both;
+    var dn = String(p.display_name || "").trim();
+    if (!dn) return "☘";
+    var parts = dn.split(/\s+/);
+    var ini = ((parts[0] || "").charAt(0) + (parts[1] || "").charAt(0)).toUpperCase();
+    return ini.trim() ? ini : "☘";
+  }
+
+  function currentHubTab() {
+    var on = document.querySelector("[data-hub-panel].hub-on");
+    return (on && on.getAttribute("data-hub-panel")) || "hub";
+  }
+
+  function latestAnnKey() {
+    var latest = (state.announcements || [])[0];
+    if (!latest) return "";
+    return String(latest.id || latest.subject || latest.created_at || "note");
+  }
+
+  function paintAppHeader(tab) {
+    tab = tab || currentHubTab();
+    var greet = document.getElementById("appGreet");
+    var title = document.getElementById("appPageTitle");
+    var av = document.getElementById("appAv");
+    if (greet) greet.textContent = timeGreeting();
+    if (title) title.textContent = TAB_TITLES[tab] || "Home";
+    if (av) {
+      var p = window.kosProfile || {};
+      if (p.photo_url) av.innerHTML = '<img src="' + esc(p.photo_url) + '" alt="" />';
+      else av.textContent = memberInitials();
+    }
+    var dot = document.getElementById("appBellDot");
+    var key = latestAnnKey();
+    var seen = "";
+    try { seen = sessionStorage.getItem("kosBellSeen") || ""; } catch (e) {}
+    if (dot) dot.hidden = !(key && key !== seen);
+    var badge = document.getElementById("appOfficerBadge");
+    if (badge) {
+      var n = state.canReviewApplications ? (Number(state.applicationCount) || 0) : 0;
+      badge.hidden = !(n > 0);
+      badge.textContent = n > 9 ? "9+" : String(n);
+    }
+  }
+
+  function closeBell() {
+    var panel = document.getElementById("appBellPanel");
+    if (panel) panel.hidden = true;
+  }
+
+  function toggleBell() {
+    var panel = document.getElementById("appBellPanel");
+    if (!panel) return;
+    if (!panel.hidden) { closeBell(); return; }
+    var key = latestAnnKey();
+    try { if (key) sessionStorage.setItem("kosBellSeen", key); } catch (e) {}
+    var dot = document.getElementById("appBellDot");
+    if (dot) dot.hidden = true;
+    var list = state.announcements || [];
+    panel.innerHTML = list.length
+      ? '<p class="app-bell-kicker">From the officers</p>' + list.map(function (m, i) {
+        return '<button type="button" data-app-note="' + i + '">' + esc(m.subject || "Announcement") + "</button>";
+      }).join("")
+      : '<p class="app-bell-empty">No new notes from the officers.</p>';
+    panel.hidden = false;
+    panel.querySelectorAll("[data-app-note]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeBell();
+        showTab("hub", { skipScroll: true });
+        setTimeout(function () {
+          var board = document.querySelector(".hub-board");
+          if (board) focusHubTarget(board);
+        }, 60);
+      });
+    });
+  }
+
+  function closeSheet() {
+    var sheet = document.getElementById("appSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function openSheet(html) {
+    var body = document.getElementById("appSheetBody");
+    var sheet = document.getElementById("appSheet");
+    if (!body || !sheet) return;
+    body.innerHTML = html;
+    sheet.hidden = false;
+  }
+
+  var toastTimer = null;
+  function showToast(text) {
+    var el = document.getElementById("appToast");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 3400);
+  }
+
+  function plainStanding() {
+    var st = (state.membershipStatus || "").toString();
+    var me = state.parade;
+    if (me && me.dues_paid === true) return "Good standing";
+    if (me && me.dues_paid === false) return "Dues need attention";
+    if (/unpaid|delinquent|lapsed|owing|past/.test(st.toLowerCase())) return "Dues need attention";
+    if (/good|active|current|paid/.test(st.toLowerCase())) return "Good standing";
+    if (st) return st;
+    return "Standing updates after your roster record loads";
+  }
+
+  function plainParadeReady() {
+    var me = state.parade;
+    if (!me) return "Parade Ready status loads with your roster record";
+    return (me.dues_paid && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
+  }
+
+  function openMemberCard() {
+    var p = window.kosProfile || {};
+    var name = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Krewe member").toString().trim();
+    var title = (p.officer_title || "").toString().trim();
+    var since = (p.parade_since || "").toString().trim();
+    var email = (p.email || "").toString().trim();
+    openSheet(
+      '<div class="app-pass">' +
+      '<img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />' +
+      '<p class="app-pass-kicker">Krewe of Shamrock</p>' +
+      '<h2 id="appSheetTitle">' + esc(name) + "</h2>" +
+      (title ? '<p class="app-pass-title">' + esc(title) + "</p>" : "") +
+      (email ? "<p>" + esc(email) + "</p>" : "") +
+      '<ul class="app-pass-facts"><li>' + esc(plainStanding()) + "</li><li>" + esc(plainParadeReady()) + "</li>" +
+      (since ? "<li>Marching since " + esc(since) + "</li>" : "") +
+      "</ul><p>Show this card at the float. It uses the profile and Parade Ready details already on your account.</p></div>"
+    );
+  }
+
+  function openPayDues() {
+    openSheet(
+      '<div class="app-dues"><h2 id="appSheetTitle">Pay dues</h2>' +
+      "<p>Dues are collected on Zeffy. Choose the membership you are paying.</p>" +
+      '<p><a class="btn btn-primary" href="' + DUES_FULL_URL + '" target="_blank" rel="noopener noreferrer">Pay full krewe dues</a></p>' +
+      '<p><a class="btn" href="' + DUES_LOA_URL + '" target="_blank" rel="noopener noreferrer">Pay leave of absence</a></p></div>'
+    );
+  }
+
+  function paradeHeroPhoto(name) {
+    var n = String(name || "").toLowerCase();
+    if (n.indexOf("children") !== -1) return "assets/img/parades/childrens-gasparilla.jpg";
+    if (n.indexOf("pirate") !== -1 || n.indexOf("gasparilla") !== -1) return "assets/img/parades/gasparilla-pirates.jpg";
+    if (n.indexOf("santa") !== -1) return "assets/img/parades/santafest.jpg";
+    if (n.indexOf("pride") !== -1) return "assets/img/parades/tampa-pride.jpg";
+    if (n.indexOf("knight") !== -1 || n.indexOf("yago") !== -1) return "assets/img/parades/santyago-knight.jpg";
+    if (n.indexOf("patrick") !== -1) return "assets/img/parades/st-patricks.jpg";
+    return "assets/img/gallery/krewe-parade-kilts.jpg";
+  }
+
+  function isParadeLike(ev) {
+    if (!ev) return false;
+    var t = String(ev.event_type || "").toLowerCase();
+    if (t === "meeting") return false;
+    if (t === "parade" || t === "march") return true;
+    var n = String(ev.name || "").toLowerCase();
+    return n.indexOf("parade") !== -1 || n.indexOf("march") !== -1;
+  }
+
+  function pickNextParade() {
+    var rows = [];
+    (state.paradeSeason || []).forEach(function (r) { if (r && r.start_time) rows.push(r); });
+    (state.hubEvents || []).forEach(function (e) { if (isParadeLike(e) && e.start_time) rows.push(e); });
+    var now = Date.now();
+    var upcoming = rows.filter(function (r) {
+      var t = new Date(r.start_time).getTime();
+      return !isNaN(t) && t > now;
+    }).sort(function (a, b) { return new Date(a.start_time) - new Date(b.start_time); });
+    state.nextParade = upcoming[0] || null;
+    return state.nextParade;
+  }
+
+  var countdownTimer = null;
+  function paintCountdown() {
+    var days = document.getElementById("appCdDays");
+    if (!days || !state.nextParade || !state.nextParade.start_time) return;
+    var ms = new Date(state.nextParade.start_time).getTime() - Date.now();
+    if (isNaN(ms) || ms < 0) ms = 0;
+    var sec = Math.floor(ms / 1000);
+    var d = Math.floor(sec / 86400);
+    sec -= d * 86400;
+    var h = Math.floor(sec / 3600);
+    sec -= h * 3600;
+    var m = Math.floor(sec / 60);
+    sec -= m * 60;
+    days.textContent = String(d);
+    var he = document.getElementById("appCdHours");
+    var mi = document.getElementById("appCdMin");
+    var se = document.getElementById("appCdSec");
+    if (he) he.textContent = String(h).padStart(2, "0");
+    if (mi) mi.textContent = String(m).padStart(2, "0");
+    if (se) se.textContent = String(sec).padStart(2, "0");
+  }
+
+  function startCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = null;
+    paintCountdown();
+    if (state.nextParade && state.nextParade.start_time) countdownTimer = setInterval(paintCountdown, 1000);
+  }
+
+  function appEventBits(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return {
+      month: d.toLocaleDateString([], { month: "short" }).toUpperCase(),
+      day: String(d.getDate()),
+      line: d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · " +
+        d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    };
+  }
+
+  function appTile(go, label, icon, soon) {
+    return '<button type="button" class="app-tile' + (soon ? " is-soon" : "") + '" data-app-go="' + go + '">' +
+      '<span class="app-tile-ic" aria-hidden="true">' + icon + "</span>" +
+      '<span class="app-tile-lb">' + label + "</span>" +
+      (soon ? '<span class="app-tile-soon">Coming soon</span>' : "") +
+      "</button>";
+  }
+
+  function appDashHtml() {
+    var parade = pickNextParade();
+    var photo = paradeHeroPhoto(parade && parade.name);
+    var title = parade && parade.name ? parade.name : "Next Shamrock parade";
+    var count = parade
+      ? '<div class="app-count" id="appCount">' +
+        '<div><strong id="appCdDays">0</strong><small>Days</small></div>' +
+        '<div><strong id="appCdHours">00</strong><small>Hours</small></div>' +
+        '<div><strong id="appCdMin">00</strong><small>Min</small></div>' +
+        '<div><strong id="appCdSec">00</strong><small>Sec</small></div></div>'
+      : '<p class="app-hero-wait">Next parade date is not on the calendar yet.</p>';
+    var where = (parade && (parade.member_address || parade.location))
+      ? '<p class="app-hero-where">' + esc(parade.member_address || parade.location) + "</p>"
+      : "";
+    var ev = state.nextEvent;
+    var next;
+    if (!ev) {
+      next = '<p class="app-next-empty">No upcoming published events yet.</p>';
+    } else {
+      var bits = appEventBits(ev.start_time) || { month: "TBD", day: "", line: "Date to be announced" };
+      var loc = ev.member_address || ev.location || "";
+      var href = ev.id ? ("event-signup.html?event=" + encodeURIComponent(ev.id)) : "event-signup.html";
+      next = '<article class="app-event">' +
+        '<div class="app-date"><b>' + esc(bits.month) + "</b><span>" + esc(bits.day) + "</span></div>" +
+        '<div class="app-event-copy"><h3>' + esc(ev.name || "Krewe event") + "</h3><p>" + esc(bits.line) + "</p>" +
+        (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
+        '</div><a class="app-rsvp" href="' + href + '">RSVP</a></article>';
+    }
+    return '<div id="appDash">' +
+      '<section class="app-hero" style="background-image:url(\'' + photo + '\')">' +
+      '<p class="kicker">Countdown to the parade</p><h2>' + esc(title) + "</h2>" + where + count +
+      "</section>" +
+      '<div class="app-tiles" aria-label="Member shortcuts">' +
+      appTile("card", "Member Card", APP_ICO.card) +
+      appTile("events", "RSVP", APP_ICO.cal) +
+      appTile("dues", "Pay Dues", APP_ICO.dues) +
+      appTile("chat", "Chat", APP_ICO.chat, true) +
+      appTile("carpool", "Carpool", APP_ICO.car) +
+      appTile("volunteer", "Volunteer", APP_ICO.heart) +
+      appTile("shop", "Shop", APP_ICO.bag) +
+      appTile("photos", "Photos", APP_ICO.camera) +
+      "</div>" +
+      '<section class="app-next" id="appNextUp" aria-label="Next up">' +
+      '<div class="app-next-head"><h2>Next up</h2>' +
+      '<button type="button" data-app-go="events">All events</button></div>' +
+      next + "</section></div>";
+  }
+
+  function handleAppGo(go) {
+    if (go === "events") { showTab("events"); return; }
+    if (go === "parade" || go === "desk") { showTab("parade"); return; }
+    if (go === "fun") { showTab("fun"); return; }
+    if (go === "docs") { revealDocsCard(); return; }
+    if (go === "directory") { openDirectoryFromHome(); return; }
+    if (go === "card") { openMemberCard(); return; }
+    if (go === "dues") { openPayDues(); return; }
+    if (go === "chat") {
+      showToast("Chat is coming soon. Members still gather in the krewe Facebook group.");
+      return;
+    }
+    if (go === "carpool") {
+      showTab("parade", { skipScroll: true });
+      setTimeout(function () { focusHubTarget(document.getElementById("carpoolCard")); }, 90);
+      return;
+    }
+    if (go === "volunteer") {
+      showTab("parade", { skipScroll: true });
+      setTimeout(function () { focusHubTarget(document.getElementById("hubHoursCard") || document.getElementById("vhForm")); }, 90);
+      return;
+    }
+    if (go === "shop") { location.href = "store.html"; return; }
+    if (go === "photos") { location.href = "gallery.html"; return; }
+    if (go === "tune") {
+      var music = document.getElementById("kreweMusicBtn");
+      if (music) music.click();
+      showToast("The Irish tune is playing. Open Me and tap again to pause it.");
+      return;
+    }
+    if (go === "signout" && window.kosSignOut) window.kosSignOut();
+  }
+
+  var appChromeBound = false;
+  function bindAppChrome() {
+    if (appChromeBound) return;
+    var root = document.getElementById("hubRoot");
+    if (!root) return;
+    appChromeBound = true;
+    root.addEventListener("click", function (ev) {
+      var go = ev.target && ev.target.closest ? ev.target.closest("[data-app-go]") : null;
+      if (!go || !root.contains(go)) return;
+      ev.preventDefault();
+      handleAppGo(go.getAttribute("data-app-go"));
+    });
+    var bell = document.getElementById("appBell");
+    if (bell) bell.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      toggleBell();
+    });
+    var sheet = document.getElementById("appSheet");
+    var closeBtn = document.getElementById("appSheetClose");
+    if (closeBtn) closeBtn.addEventListener("click", closeSheet);
+    if (sheet) sheet.addEventListener("click", function (ev) { if (ev.target === sheet) closeSheet(); });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") { closeSheet(); closeBell(); }
+    });
+    document.addEventListener("click", function (ev) {
+      var panel = document.getElementById("appBellPanel");
+      if (!panel || panel.hidden) return;
+      if (ev.target && ev.target.closest && ev.target.closest("#appBell, #appBellPanel")) return;
+      closeBell();
+    });
+  }
+
+  function syncAppChrome() {
+    var content = document.getElementById("memberContent");
+    var on = !!(content && content.style.display !== "none");
+    document.body.classList.toggle("hub-app", on);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", on ? "#0c3b21" : "#14532d");
+    if (on) paintAppHeader(currentHubTab());
+  }
+
+  function applyFeedLock() {
+    if (!feedLock) return;
+    var feed = feedLock;
+    if (feed.profile) window.kosProfile = Object.assign({}, window.kosProfile || {}, feed.profile);
+    if (Array.isArray(feed.events)) {
+      state.hubEvents = feed.events.slice();
+      state.nextEvents = feed.events.slice(0, 4);
+      state.nextEvent = state.nextEvents[0] || null;
+      try { renderHubMemberEvents(state.hubEvents); } catch (e) {}
+    }
+    if (Array.isArray(feed.parades)) {
+      try { renderHubParadeSeason(feed.parades); } catch (e2) {}
+    }
+    if (feed.paradeReady) state.parade = feed.paradeReady;
+    if (feed.membershipStatus) state.membershipStatus = feed.membershipStatus;
+    renderHome();
+    try { syncSignedInPill(); } catch (e3) {}
+  }
+
+  window.__kosHubSetFeed = function (feed) {
+    feedLock = feed || {};
+    applyFeedLock();
+  };
+
   /* ---- Welcome hero: the home page opens with the member, not the game.
      Greeting, standing chips, and the season checklist up top; the Craic
      Cup keeps its own clearly-labeled card further down the stack. */
@@ -1493,7 +1958,7 @@
     // celebrating, then greet the member and show their season standing,
     // then news from the board, then the officer's own desk, then the
     // Craic Cup game, then navigation, and housekeeping last.
-    top.innerHTML = birthdayCardHtml() + welcomeDeskHtml() + boardAnnouncementsHtml() + appsBanner + officerCard + craicHeroHtml() + findCards + installCardHtml();
+    top.innerHTML = birthdayCardHtml() + appDashHtml() + boardAnnouncementsHtml() + welcomeDeskHtml() + appsBanner + officerCard + craicHeroHtml() + findCards + installCardHtml();
 
     renderProfileCard();
 
@@ -1537,6 +2002,8 @@
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 60);
     });
+    paintAppHeader(currentHubTab());
+    startCountdown();
   }
 
   window.__hubShowTab = showTab;
@@ -1654,6 +2121,8 @@
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       var id = btn.getAttribute("data-hub-tab");
       btn.classList.toggle("on", id === tab);
+      if (id === tab) btn.setAttribute("aria-current", "page");
+      else btn.removeAttribute("aria-current");
       if (id === "officer") btn.style.display = canOpenOfficerDesk() ? "" : "none";
     });
     syncOfficerChip();
@@ -1665,11 +2134,15 @@
       setTimeout(wireOfficerDeskPicker, 60);
       setTimeout(wireOfficerDeskPicker, 500);
     }
+    closeBell();
     if (tab === "hub" && !opts.skipHomeRender) renderHome();
+    else paintAppHeader(tab);
     if (!opts.skipScroll) {
       // Defer scroll until after panel display settles (avoids snap on login).
       setTimeout(function () {
         try { window.scrollTo({ top: 0, behavior: "auto" }); } catch (e3) {}
+        var active = document.querySelector("[data-hub-panel].hub-on");
+        if (active) active.scrollTop = 0;
       }, 0);
     }
   }
@@ -1818,36 +2291,43 @@
         var src = String(e.source || "").toLowerCase();
         return src === "krewe" && (st === "published" || st === "live");
       });
-      state.hubEvents = list.slice(0, 12);
+      var lockedEvents = !!(feedLock && Array.isArray(feedLock.events));
+      if (!lockedEvents) state.hubEvents = list.slice(0, 12);
       renderHubMemberEvents(state.hubEvents);
       await loadParadeSeason(client);
-      var open = list.slice();
-      var meId = (window.kosProfile || {}).member_id || null;
-      if (meId && open.length) {
-        try {
-          var signed = await client.from("event_signups")
-            .select("event_id,status")
-            .eq("member_id", meId)
-            .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
-          var taken = {};
-          (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
-          open = open.filter(function (e) { return !taken[e.id]; });
-        } catch (signupErr) { /* keep unfiltered krewe list */ }
+      if (!lockedEvents) {
+        var open = list.slice();
+        var meId = (window.kosProfile || {}).member_id || null;
+        if (meId && open.length) {
+          try {
+            var signed = await client.from("event_signups")
+              .select("event_id,status")
+              .eq("member_id", meId)
+              .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
+            var taken = {};
+            (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
+            open = open.filter(function (e) { return !taken[e.id]; });
+          } catch (signupErr) { /* keep unfiltered krewe list */ }
+        }
+        state.nextEvents = open.slice(0, 4);
+        state.nextEvent = state.nextEvents[0] || null;
       }
-      state.nextEvents = open.slice(0, 4);
-      state.nextEvent = state.nextEvents[0] || null;
     } catch (e) {
-      state.nextEvents = [];
-      state.nextEvent = null;
-      state.hubEvents = [];
-      renderHubMemberEvents([]);
+      if (!(feedLock && Array.isArray(feedLock.events))) {
+        state.nextEvents = [];
+        state.nextEvent = null;
+        state.hubEvents = [];
+        renderHubMemberEvents([]);
+      }
       try { await loadParadeSeason(client); } catch (pe) { renderHubParadeSeason([]); }
     }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
       var pr = await client.from("v_parade_ready").select("*");
       var rows = pr.data || [];
-      state.parade = (meId && rows.find(function (r) { return r.member_id === meId; })) || (rows.length === 1 ? rows[0] : null);
+      if (!(feedLock && feedLock.paradeReady)) {
+        state.parade = (meId && rows.find(function (r) { return r.member_id === meId; })) || (rows.length === 1 ? rows[0] : null);
+      }
       if (state.parade) {
         state.membershipStatus = state.parade.membership_status || state.membershipStatus;
         if (state.parade.volunteer_hours_approved != null) {
@@ -1925,6 +2405,7 @@
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (appPaint) {}
     }
+    if (feedLock) applyFeedLock();
   }
 
   function openVolunteerHoursForm(clearIntent) {
@@ -4574,6 +5055,7 @@
     if (!document.getElementById("memberContent")) return;
     if (document.getElementById("hubRoot")) {
       // Already built: only refresh data if we have not settled this session.
+      syncAppChrome();
       if (!hubSettled && !hubLoadInFlight) loadHubData();
       return;
     }
@@ -4590,6 +5072,7 @@
       var visible = content && content.style.display !== "none";
       if (visible || tries > 50) {
         clearInterval(t);
+        syncAppChrome();
         loadHubData();
       }
     }, 200);
@@ -4600,6 +5083,7 @@
     if (typeof _unlock === "function") _unlock();
     // Build hub once; loadHubData itself is single-flight. Do not open hours
     // here - loadHubData settles the tab and defers the hours deep-link.
+    syncAppChrome();
     setTimeout(boot, 40);
   };
 
