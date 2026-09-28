@@ -149,6 +149,14 @@ test.describe("Computer Hub on a wide screen", () => {
     await expect(card.locator("img")).toHaveAttribute("src", "/assets/img/hub-install-qr.svg");
     const copy = page.locator("#hubDeskAppCopy");
     await expect(copy).toHaveAttribute("data-hub-url", "https://kreweofshamrock.com/members.html#get-app");
+    const url = page.locator("#hubDeskAppUrl");
+    await expect(url).toBeVisible();
+    await expect(url).toHaveText("kreweofshamrock.com/members.html#get-app");
+    await expect(url).toHaveAttribute("href", "https://kreweofshamrock.com/members.html#get-app");
+    const urlBox = await url.boundingBox();
+    const copyBox = await copy.boundingBox();
+    expect(urlBox.x).toBeGreaterThan(copyBox.x);
+    expect(Math.abs((urlBox.y + urlBox.height / 2) - (copyBox.y + copyBox.height / 2))).toBeLessThan(20);
     const text = await card.innerText();
     expect(text).not.toMatch(/[—–]/);
     const box = await card.boundingBox();
@@ -156,6 +164,9 @@ test.describe("Computer Hub on a wide screen", () => {
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(900);
     expect(box.y).toBeGreaterThan(welcome.y);
+    await url.click();
+    await expect(page.locator("#appGetApp")).toBeVisible();
+    await expect(page).toHaveURL(/#get-app/);
     assertHealthy(expect, report, "desktop app card above the fold");
   });
 

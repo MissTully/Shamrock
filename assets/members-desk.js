@@ -314,7 +314,9 @@
     ".hub-desk-app h3{font-family:var(--display);color:var(--green-800);margin:0;font-size:22px;line-height:1.2;}",
     ".hub-desk-app-rule{height:3px;background:linear-gradient(90deg,#a9801c,#d4af37,#ecd07e,#d4af37,#a9801c);border-radius:2px;margin:8px 0 8px;}",
     ".hub-desk-app p{margin:0 0 4px;font-size:16px;line-height:1.35;color:#3a3a2e;}",
-    ".hub-desk-app-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}",
+    ".hub-desk-app-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;align-items:center;}",
+    ".hub-desk-app-copyline{display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-width:0;}",
+    ".hub-desk-app-url{font-size:16px;line-height:1.3;color:var(--navy,#313770);text-underline-offset:3px;overflow-wrap:anywhere;}",
     ".hub-desk-app-actions .btn{min-height:44px;padding:10px 16px;background:#fff;color:#14532d;border:2px solid #14532d;box-shadow:none;}",
     ".hub-desk-app-actions .btn.btn-primary{background:linear-gradient(180deg,#f6e7a8,#e2c15a);color:#14532d;border-color:#a9801c;box-shadow:0 4px 12px rgba(168,128,28,.28);}",
     ".hub-desk-app-x{position:absolute;top:6px;right:6px;width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#14532d;cursor:pointer;display:grid;place-items:center;padding:0;}",
@@ -2080,8 +2082,10 @@
       "<p>You open it with one tap.</p>" +
       '<div class="hub-desk-app-actions">' +
       '<button type="button" class="btn btn-primary" id="hubGetAppLink" data-app-go="get-app">See how to install</button>' +
+      '<span class="hub-desk-app-copyline">' +
       '<button type="button" class="btn" id="hubDeskAppCopy" data-app-go="copy-desk-app-link" data-hub-url="' + DESK_APP_URL + '">Copy link</button>' +
-      "</div></div>" +
+      '<a class="hub-desk-app-url" id="hubDeskAppUrl" href="' + DESK_APP_URL + '">kreweofshamrock.com/members.html#get-app</a>' +
+      "</span></div></div>" +
       '<figure class="hub-desk-app-qr">' +
       '<img src="' + DESK_APP_QR + '" width="132" height="132" alt="QR code that opens the Member Hub" />' +
       "<figcaption>Scan with your phone's camera</figcaption>" +
