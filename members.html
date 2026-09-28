@@ -1083,6 +1083,89 @@
   body.hub-app.app-nav-pop #appDrill{
     animation:appFromLeft .22s ease;
   }
+  .app-getapp{
+    display:flex; align-items:stretch; gap:4px;
+    margin:14px 0 0; padding:8px 6px 8px 8px; border-radius:18px;
+    background:linear-gradient(180deg, rgba(226,193,90,.24), rgba(226,193,90,.08));
+    border:1px solid rgba(226,193,90,.55);
+  }
+  .app-getapp-open{
+    flex:1; min-width:0; display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+    gap:10px; align-items:center; background:transparent; border:0; color:#fff;
+    text-align:left; padding:4px; cursor:pointer; font:inherit; min-height:48px;
+  }
+  .app-getapp-ic{
+    width:44px; height:44px; border-radius:14px; display:grid; place-items:center;
+    background:#e2c15a; color:#14532d;
+  }
+  .app-getapp-ic svg{ width:24px; height:24px; display:block; }
+  .app-getapp-copy{ min-width:0; }
+  .app-getapp-copy b{
+    display:block; font-family:var(--display); font-size:16px; color:#f0d78c;
+  }
+  .app-getapp-copy span{
+    display:block; font-size:13px; line-height:1.3; color:rgba(255,255,255,.9);
+  }
+  .app-getapp-go{
+    font-family:var(--display); color:#e2c15a; font-weight:700; font-size:14px;
+  }
+  .app-getapp-x{
+    width:44px; height:44px; flex:none; border:0; border-radius:12px;
+    background:transparent; color:rgba(255,255,255,.82); cursor:pointer;
+    display:grid; place-items:center; padding:0;
+  }
+  .app-getapp-x svg{ width:20px; height:20px; display:block; }
+  .app-install-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    width:100%; min-height:48px; margin:0 0 10px; padding:10px 2px;
+    border:0; border-bottom:1px solid rgba(168,128,28,.35);
+    background:transparent; color:var(--green-800); cursor:pointer;
+    font-family:var(--display); font-size:17px; font-weight:700; text-align:left;
+  }
+  .app-install-row .go{ color:#a9801c; font-size:14px; font-weight:700; }
+  .app-steps{
+    list-style:none; margin:12px 0; padding:0; display:grid; gap:10px;
+  }
+  .app-steps li{
+    display:grid; grid-template-columns:28px 44px minmax(0,1fr); gap:10px;
+    align-items:center; background:#fffdf6; color:#14532d;
+    border:1px solid rgba(168,128,28,.4); border-radius:16px; padding:10px 12px;
+    font-size:16px; line-height:1.35;
+  }
+  .app-step-n{
+    font-family:var(--display); font-weight:700; font-size:18px; color:#a9801c;
+  }
+  .app-step-ic{
+    width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+    background:#14532d; color:#f0d78c;
+  }
+  .app-step-ic svg{ width:26px; height:26px; display:block; }
+  .app-install-btn{
+    display:flex; width:100%; align-items:center; justify-content:center;
+    min-height:48px; margin:14px 0 8px; border:0; border-radius:999px;
+    background:#e2c15a; color:#14532d; font-family:var(--display);
+    font-weight:700; font-size:17px; cursor:pointer;
+  }
+  .app-install-btn:disabled{ opacity:.75; }
+  .app-install-once{ color:#f0d78c !important; }
+  .app-qr{
+    display:grid; justify-items:center; gap:8px; margin:12px 0;
+    background:#fff; border-radius:18px; padding:16px 16px 12px;
+  }
+  .app-qr img{ width:220px; height:220px; }
+  .app-qr p{ color:#14532d !important; text-align:center; margin:0 !important; font-size:15px; }
+  body.hub-app.app-getapp #appDrillActions:empty,
+  body.hub-app.app-ann #appDrillActions:empty{ display:none !important; }
+  .app-detail .app-ann{
+    background:#fbf7ec; color:#23291f; border-radius:22px; padding:16px 16px 20px;
+  }
+  .app-detail .app-ann h2{
+    margin:0 0 6px; font-family:var(--display); font-size:26px; line-height:1.2; color:#14532d;
+  }
+  .app-detail .app-ann .app-ann-meta{
+    margin:0 0 12px; font-family:var(--display); font-size:14px; color:#a9801c;
+  }
+  .app-detail .app-ann p{ color:#3a3a2e; margin:0 0 12px; line-height:1.5; font-size:16px; }
   @media (prefers-reduced-motion: reduce){
     body.hub-app.app-nav-push #appDrill,
     body.hub-app.app-nav-push.app-focus .hub-panel.hub-on,
@@ -3841,9 +3924,9 @@
   </script>
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
-<script src="assets/hub-install.js?v=20260918pwa1"></script>
+<script src="assets/hub-install.js?v=20260928getapp1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260928appnav1" defer></script>
+<script src="assets/members-desk.js?v=20260928tidings1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>

@@ -12,6 +12,10 @@ test.describe("Member Hub home-screen install", () => {
     expect(manifest.short_name).toBe("Shamrock");
     expect(String(manifest.start_url)).toMatch(/members\.html/);
     expect(manifest.display).toBe("standalone");
+    expect(manifest.theme_color).toBe("#14532d");
+    expect(manifest.background_color).toBe("#14532d");
+    expect(manifest.scope).toBe("/");
+    expect(String(manifest.id || manifest.start_url)).toMatch(/members\.html/);
     const sizes = (manifest.icons || []).map((icon) => icon.sizes);
     expect(sizes).toEqual(expect.arrayContaining(["192x192", "512x512"]));
     for (const icon of manifest.icons) {
@@ -52,20 +56,18 @@ test.describe("Member Hub home-screen install", () => {
     assertHealthy(expect, report, "members install tags");
   });
 
-  test("signed-in hub Home shows the iPhone Add to Home Screen how-to card", async ({ page }) => {
+  test("signed-in hub Home shows Get the App and keeps the Craic Cup", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
-    const card = page.locator("#hubInstallCard");
-    await expect(card).toBeVisible();
-    await expect(card.locator("h3")).toHaveText(/Add Shamrock to your Home Screen/i);
-    await expect(card).toContainText("Safari");
-    await expect(card).toContainText("Share");
-    await expect(card).toContainText("Add to Home Screen");
-    await expect(card).toContainText("Chrome");
-    await expect(card).toContainText("Zeffy");
-    await expect(card).toContainText("not an App Store or Play Store app");
+    const banner = page.locator("#hubGetAppBanner");
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText("Get the App");
+    await expect(page.locator("#hubInstallCard")).toHaveCount(0);
     await expect(page.locator("#hubHome")).toContainText("This is the Craic Cup");
-    assertHealthy(expect, report, "hub install card");
+    await page.locator('[data-hub-tab="krewe"]').click();
+    await expect(page.locator("#hubInstallMe")).toBeVisible();
+    await expect(page.locator("#hubInstallMe")).toContainText("Install the app");
+    assertHealthy(expect, report, "hub install banner");
   });
 
   test("public homepage does not grow an install banner", async ({ page, request }) => {

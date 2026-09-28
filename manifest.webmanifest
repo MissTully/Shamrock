@@ -2,6 +2,7 @@
   "name": "Shamrock",
   "short_name": "Shamrock",
   "description": "Krewe of Shamrock Member Hub",
+  "id": "/members.html",
   "start_url": "/members.html",
   "scope": "/",
   "display": "standalone",
