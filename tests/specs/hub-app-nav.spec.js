@@ -63,6 +63,7 @@ async function eventDetail(page) {
 }
 
 test.describe("Member Hub app navigation", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
   test("back from Events returns Home and does not sign out", async ({ page }) => {
     const report = watchPage(page);
     await openApp(page);

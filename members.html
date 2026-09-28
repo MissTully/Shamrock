@@ -20,7 +20,7 @@
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260919navfix1" />
 <style>
   .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
@@ -588,13 +588,14 @@
   .page-head.is-home{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
   }
-  .page-head.is-home .lep-wave{
+  .page-head .lep-wave{
     margin:0 auto 14px; padding:0; position:relative; display:block;
-    width:min(300px, 72vw); border-radius:16px; overflow:hidden;
+    width:min(300px, 72vw); aspect-ratio:900 / 678;
+    border-radius:16px; overflow:hidden;
     border:3px solid #cda53c;
     box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 5px rgba(205,165,60,.22);
   }
-  .lep-wave img{ display:block; width:100%; height:auto; }
+  .lep-wave img{ display:block; width:100%; height:100%; object-fit:cover; }
   .page-head.is-home h1{ letter-spacing:2px; }
 
   .raffle-head .app-head{ background:linear-gradient(180deg,#7a1f2b,#4a0f17); }
@@ -670,7 +671,7 @@
     padding-top:28px;
   }
   #authStage .auth-card::before, #authStage .auth-card::after{ display:none; }
-  #authStage .auth-card img{ width:96px; margin-left:auto; margin-right:auto; }
+  #authStage .auth-card img{ width:96px; height:72px; aspect-ratio:900 / 678; object-fit:cover; margin-left:auto; margin-right:auto; }
   #authStage .gate-card h1{ font-size:22px; margin:6px 0 8px; }
   #authStage .gate-card p{ font-size:15px; line-height:1.4; }
   #authStage .castle-guide{ margin-top:12px; border-radius:12px; border-width:1px; box-shadow:none; }
@@ -1083,7 +1084,7 @@
   body.hub-app.app-nav-pop #appDrill{
     animation:appFromLeft .22s ease;
   }
-  .app-getapp{
+  section.app-getapp{
     display:flex; align-items:stretch; gap:4px;
     margin:14px 0 0; padding:8px 6px 8px 8px; border-radius:18px;
     background:linear-gradient(180deg, rgba(226,193,90,.24), rgba(226,193,90,.08));
@@ -1175,6 +1176,93 @@
   @media (min-width:960px){
     body.hub-app #memberContent.wrap{ width:min(840px, calc(100% - 32px)); }
   }
+
+  /* The hub page should not smooth-scroll. A smooth scroll plus a later
+     scroll-to-top is the snap members feel while a screen is opening. */
+  html:has(body.hub){ scroll-behavior:auto !important; }
+
+  /* Computer Hub (wide browser). Phones and the installed app keep body.hub-app. */
+  body.hub-desk .app-top,
+  body.hub-desk #appDrill,
+  body.hub-desk .app-toast,
+  body.hub-desk #appDash,
+  body.hub-desk .app-getapp{ display:none !important; }
+  body.hub-desk .hub-tabs .app-tab-ic{ display:none; }
+  body.hub-desk .app-tab-badge{
+    position:static; display:inline-block; margin-left:6px;
+    min-width:18px; height:18px; line-height:18px; vertical-align:middle;
+  }
+  /* The castle door covers this page. Leave the footer out of the layout
+     until the computer Hub is on, so opening the Hub does not throw the
+     footer down through the viewport. */
+  body.hub:not(.hub-desk) footer.krewe-foot{ display:none; }
+  body.hub-desk.app-screen .app-top{
+    display:block !important;
+    position:fixed; z-index:1110;
+    top:80px; left:50%; transform:translateX(-50%);
+    width:min(520px, calc(100% - 32px));
+    border-radius:22px 22px 0 0;
+    padding:8px 12px 8px;
+  }
+  body.hub-desk.app-screen #appRootBar{ display:none !important; }
+  body.hub-desk.app-screen #appBackBar{ display:flex !important; }
+  body.hub-desk.app-screen #appDrill:not([hidden]){
+    display:flex !important;
+    position:fixed; z-index:1100; left:0; right:0; bottom:0; top:72px;
+    align-items:flex-start; justify-content:center;
+    padding:66px 16px 24px;
+    background:rgba(4,16,10,.55);
+  }
+  body.hub-desk.app-screen #appDrill .app-drill-scroll{
+    width:min(520px, 100%);
+    max-height:min(68vh, 640px);
+    overflow:auto;
+    background:linear-gradient(180deg, #143526 0%, #07160f 100%);
+    border:1px solid rgba(226,193,90,.5);
+    border-top:0;
+    border-radius:0 0 22px 22px;
+    padding:8px 16px 18px;
+  }
+  body.hub-desk.app-screen #appDrillActions{
+    width:min(520px, 100%);
+    border-radius:0 0 22px 22px;
+  }
+  body.hub-desk.app-screen #appDrillActions:empty{ display:none !important; }
+  body.hub-desk.app-nav-push #appDrill,
+  body.hub-desk.app-nav-pop #appDrill{ animation:none !important; }
+  body.hub-desk .app-event-hit{
+    background:#fffdf6; color:#14532d;
+    border:1px solid rgba(168,128,28,.4);
+  }
+  body.hub-desk .app-event-hit .muted{ color:#5f6b5a; }
+  body.hub-desk .app-date{ background:#14532d; }
+  body.hub-desk .app-date span{ color:#fff; }
+  .hub-desk-getapp{ margin:4px 0 8px; text-align:left; }
+  .hub-desk-getapp button{
+    appearance:none; background:transparent; border:0; padding:6px 0;
+    min-height:44px; cursor:pointer;
+    font-family:var(--display); font-size:15px; font-weight:700;
+    color:var(--gold-deep, #a9801c); text-decoration:underline;
+  }
+  .hub-board{ min-height:248px; }
+  .hub-board-skel{ min-height:248px; }
+  .hub-welcome{ min-height:260px; }
+  #hubMemberEventList, #hubParadeSeasonList, #hubParadeSeasonDeskList{ min-height:160px; }
+  .app-next{ min-height:132px; }
+  .skel-line{
+    height:14px; border-radius:7px; margin:10px 0;
+    background:rgba(168,128,28,.2);
+  }
+  .skel-line.skel-short{ width:58%; }
+  body.hub-app.app-screen #appDrill:not([hidden]){
+    position:absolute; z-index:30; left:0; right:0;
+    top:72px; bottom:64px;
+  }
+  body.hub-app #hubRoot{ position:relative; }
+  body.hub-app.app-screen .hub-panel.hub-on{
+    visibility:hidden !important;
+    display:block !important;
+  }
 </style>
   <!-- Self-hosted QR library: same-origin so ad-blockers and venue networks can't block it.
        If the local file somehow fails, fall back to the CDN copy. -->
@@ -1215,7 +1303,7 @@
         <span class="castle-torch right" aria-hidden="true">🔥</span>
         <p class="castle-banner">☘ The Krewe Castle ☘</p>
         <div class="gate-card auth-card">
-      <img src="assets/img/leprechaun-failte.jpg" alt="A leprechaun waves you in from the castle door" />
+      <img src="assets/img/leprechaun-failte.jpg" alt="A leprechaun waves you in from the castle door" width="900" height="678" />
       <h1>Members Only</h1>
 
       <!-- Sign in -->
@@ -1438,6 +1526,9 @@
 
   <header class="page-head">
     <div class="ph-bg" style="background-image:url('assets/img/gallery/krewe-big-group.jpg')"></div>
+    <figure class="lep-wave" aria-hidden="true" title="Waving leprechaun">
+      <img src="assets/img/leprechaun-failte.jpg" alt="" width="900" height="678" decoding="async" />
+    </figure>
     <p class="eyebrow">For the Krewe</p>
     <h1>Members Only</h1>
     <p class="sub">Coordinate lockers, carpools, van pools, and find your fellow members.</p>
@@ -1826,7 +1917,7 @@
             fig.className = "lep-wave";
             fig.setAttribute("aria-hidden","true");
             fig.title = "Waving leprechaun";
-            fig.innerHTML = '<img src="assets/img/leprechaun-failte.jpg" alt="" loading="lazy" decoding="async" />';
+            fig.innerHTML = '<img src="assets/img/leprechaun-failte.jpg" alt="" width="900" height="678" decoding="async" />';
             const eyNode = head.querySelector(".eyebrow");
             if(eyNode) head.insertBefore(fig, eyNode);
             else head.appendChild(fig);
@@ -3924,9 +4015,9 @@
   </script>
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
-<script src="assets/hub-install.js?v=20260928getapp1"></script>
+<script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260928tidings1" defer></script>
+<script src="assets/members-desk.js?v=20260928desk1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>

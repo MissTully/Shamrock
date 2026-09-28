@@ -21,6 +21,7 @@ async function mockInstallPrompt(page) {
 }
 
 test.describe("Get the App on Home", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
   test("banner shows when the hub is not installed, above the parade hero", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
@@ -92,6 +93,7 @@ test.describe("Get the App on Home", () => {
 });
 
 test.describe("Get the App deep link", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
   test("#get-app opens the screen and Back returns Home", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page, { hash: "get-app" });

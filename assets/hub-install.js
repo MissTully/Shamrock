@@ -150,6 +150,22 @@
     }
     var info = detect();
     var name = esc(APP_NAME);
+    if (!info.mobile) {
+      var promptBtn = (info.path === "chromium" && deferred && typeof deferred.prompt === "function")
+        ? '<button type="button" class="app-install-btn" id="appInstallBtn" data-app-go="prompt-install">Install Shamrock Hub</button>'
+        : "";
+      return wrap(
+        '<p class="app-detail-kicker">On your phone</p>' +
+        "<h2>Get the App</h2>" +
+        "<p>Open the Member Hub on your phone to add it to your home screen.</p>" +
+        '<div class="app-qr"><img src="' + QR_SRC + '" width="220" height="220" alt="QR code that opens the Member Hub" />' +
+        "<p>Point your phone camera at this code. It opens the Member Hub.</p></div>" +
+        promptBtn +
+        "<p>On a computer, you can also use the install icon in the address bar.</p>" +
+        notStore() +
+        signOnce()
+      );
+    }
     if (info.path === "ios-safari") {
       return wrap(
         '<p class="app-detail-kicker">iPhone and iPad</p>' +

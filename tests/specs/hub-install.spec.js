@@ -58,6 +58,7 @@ test.describe("Member Hub home-screen install", () => {
 
   test("signed-in hub Home shows Get the App and keeps the Craic Cup", async ({ page }) => {
     const report = watchPage(page);
+    await page.setViewportSize({ width: 390, height: 844 });
     await unlockMemberHub(page);
     const banner = page.locator("#hubGetAppBanner");
     await expect(banner).toBeVisible();

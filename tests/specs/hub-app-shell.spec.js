@@ -34,6 +34,7 @@ async function openApp(page, extra) {
 }
 
 test.describe("Member Hub phone app shell", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
   test("signed-in home uses the app header, countdown, tiles, and bottom tabs", async ({ page }) => {
     const report = watchPage(page);
     await openApp(page);
