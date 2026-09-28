@@ -2208,7 +2208,7 @@
               rows.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), m.email||"-", m.phone||"-", m.member_role||"member", m.membership_status||"-"]));
         }},
       { id:"pending_apps", cat:"Membership", icon:"📝", title:"Pending Applications", secure:true,
-        desc:"Prospective members and their contact details.",
+        desc:"Read-only mix of new applications, renewals, and event prospects. To approve or decline a join-form application, open Membership Applications on the Officer desk.",
         run: async()=>{
           const { data, error } = await supabase.from("v_pending_applications")
             .select("first_name,last_name,email,phone,notes,created_at").order("created_at",{ascending:false});
@@ -3445,7 +3445,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260918pwa1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260924birthday2" defer></script>
+<script src="assets/members-desk.js?v=20260928apps1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
