@@ -458,12 +458,13 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
+  var hourApprovalsFixture = false;
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.canManageEvents || state.canReviewApplications);
+    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours);
   }
 
   function newApplicationLabel(n) {
@@ -955,7 +956,7 @@
     var nodes = Array.prototype.slice.call(pr.querySelectorAll(".app-body > *"));
     var frag = document.createDocumentFragment();
     nodes.forEach(function (n) {
-      if (n.id === "prHours" || n.id === "vhForm" || (n.tagName === "H4" && /volunteer hours/i.test(n.textContent || ""))) {
+      if (n.id === "prHours" || n.id === "vhIntro" || n.id === "vhForm" || (n.tagName === "H4" && /volunteer hours/i.test(n.textContent || ""))) {
         frag.appendChild(n);
       }
     });
@@ -1022,7 +1023,7 @@
 
     var give = document.getElementById("hubGive");
     if (give) give.innerHTML =
-      '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Total hours since July 1 (bring TrackItForward over)</small></div></div>' +
+      '<section class="app-card" id="hubHoursCard"><div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer hours</h2><small>Log hours for this season (June through May)</small></div></div>' +
       '<div class="app-body" id="hubHoursBody"><p class="empty">Loading hours…</p></div></section>';
 
     var parade = document.getElementById("hubParade");
@@ -2348,8 +2349,16 @@
         officerPulse = " hub-officer-pulse";
       }
     } catch (pe) {}
-    var officerCard = canOpenOfficerDesk()
+    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications;
+    var officerCard = !canOpenOfficerDesk()
+      ? ""
+      : hostHoursOnly
       ? '<div class="hub-officer-card' + officerPulse + '" data-hub-action="officer" role="button" tabindex="0">' +
+        '<div class="hub-officer-card-top">' +
+        '<div class="ic" aria-hidden="true">✅</div>' +
+        '<div class="copy"><b>Hour approvals</b><div class="sub">Confirm volunteer hours for events you host.</div></div>' +
+        '<div class="go">Open →</div></div></div>'
+      : '<div class="hub-officer-card' + officerPulse + '" data-hub-action="officer" role="button" tabindex="0">' +
         '<div class="hub-officer-card-top">' +
         '<div class="ic" aria-hidden="true">🎖️</div>' +
         '<div class="copy"><b>Officer desk</b><div class="sub">Events, approvals, money, and reports in one calm place.</div></div>' +
@@ -2359,11 +2368,10 @@
         '<ul class="hub-officer-inside" aria-label="Officer desk tools">' +
         (state.canReviewApplications ? '<li>Membership Applications</li>' : '') +
         '<li>Event Studio and calendar</li>' +
-        '<li>Approvals (photos, videos, clovers)</li>' +
+        '<li>Approvals (hours, photos, videos, clovers)</li>' +
         '<li>Shop, member records, and money</li>' +
         '<li>Reports, QR tools, and messages</li>' +
-        '</ul></div></div>'
-      : "";
+        '</ul></div></div>';
     var appsBanner = state.canReviewApplications
       ? '<button type="button" class="hub-apps-banner" id="hubAppsHomeLink" data-hub-goto="applications">' +
         '<span class="ic" aria-hidden="true">📝</span>' +
@@ -2545,6 +2553,7 @@
     if ("officer" in flags) state.officer = !!flags.officer;
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
     if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
+    if ("canReviewHours" in flags) state.canReviewHours = !!flags.canReviewHours;
     applyApplicationFixture();
     syncOfficerChip();
     renderHome();
@@ -2553,6 +2562,12 @@
     }
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (e2) {}
+    }
+    if (state.canManageEvents) {
+      var studioClient = window.__kosSb || {
+        rpc: function () { return Promise.resolve({ data: { ok: true, events: [] }, error: null }); }
+      };
+      try { loadEventStudio(studioClient); } catch (e3) {}
     }
   };
 
@@ -2698,9 +2713,10 @@
     if (roleFixture) {
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
+      if ("canReviewHours" in roleFixture) state.canReviewHours = !!roleFixture.canReviewHours;
     }
     await refreshApplicationAccess(client);
-    if (state.officer) loadApprovals(client);
+    if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
     loadClaimClovers(client);
@@ -3770,8 +3786,76 @@
     loadApprovals(client);
   }
 
+  function hourSourceLabel(source) {
+    var s = String(source || "").toLowerCase();
+    if (s === "event_signup") return "Event signup";
+    if (s === "door_checkin") return "Door check-in";
+    if (s === "in_kind") return "In-kind";
+    if (s === "trackitforward_import") return "Imported";
+    return "Logged in the Hub";
+  }
+
+  function renderHourApprovalsHtml(rows) {
+    if (!rows || !rows.length) return "";
+    var html = '<h3 class="hub-appr-h">Volunteer hours</h3>';
+    rows.forEach(function (q) {
+      var when = q.worked_on ? String(q.worked_on).slice(0, 10) : "";
+      var bits = [hourSourceLabel(q.source)];
+      if (q.event_name) bits.push(q.event_name);
+      if (when) bits.push(when);
+      html += '<div class="hub-appr" data-hours-id="' + esc(q.id) + '">' +
+        "<div><b>" + esc(q.member_name || "Member") + "</b>" +
+        '<div class="muted"><b>' + esc(String(q.hours)) + " hours</b> · " + esc(q.activity || "Volunteer hours") + "</div>" +
+        '<div class="muted">' + esc(bits.join(" · ")) + "</div>" +
+        (q.notes ? '<div class="muted">' + esc(q.notes) + "</div>" : "") +
+        '<label class="muted" style="display:block;margin-top:8px;" for="hubHoursNote-' + esc(q.id) + '">Optional note</label>' +
+        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision"></textarea>' +
+        '</div><div class="hub-appr-btns">' +
+        '<button type="button" class="btn btn-primary" data-hours-approve="' + esc(q.id) + '">Approve</button>' +
+        '<button type="button" class="btn" data-hours-decline="' + esc(q.id) + '">Decline</button>' +
+        "</div></div>";
+    });
+    return html;
+  }
+
+  function hourNoteFor(id) {
+    var el = document.getElementById("hubHoursNote-" + id);
+    return el ? (el.value || "").trim() : "";
+  }
+
+  function applyHourDecision(client, id, approved, btn) {
+    var note = hourNoteFor(id);
+    if (hourApprovalsFixture) {
+      var row = (state.pendingHours || []).filter(function (h) { return String(h.id) === String(id); })[0];
+      state.pendingHours = (state.pendingHours || []).filter(function (h) { return String(h.id) !== String(id); });
+      state.hourDecisionFlash = (approved ? "Approved" : "Declined") +
+        (row && row.member_name ? " " + row.member_name : "") +
+        (note ? ". Note saved." : ".");
+      loadApprovals(client);
+      return;
+    }
+    decideApproval(client, "decide_volunteer_hours", {
+      p_id: id,
+      p_approved: !!approved,
+      p_note: note || null
+    }, btn);
+  }
+
+  window.__kosHubSetHourApprovals = function (rows, opts) {
+    opts = opts || {};
+    hourApprovalsFixture = true;
+    state.pendingHours = Array.isArray(rows) ? rows : [];
+    state.canReviewHours = opts.host === false ? state.canReviewHours : true;
+    state.hourDecisionFlash = "";
+    if (opts.officer === false) state.officer = false;
+    if (opts.officer === true) state.officer = true;
+    var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+    if (officerBtn && canOpenOfficerDesk()) officerBtn.style.display = "";
+    loadApprovals(window.__kosSb || { rpc: function () { return Promise.resolve({ data: null, error: null }); } });
+  };
+
   async function loadApprovals(client) {
-    if (!state.officer) return;
+    if (!state.officer && !state.canReviewHours) return;
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
     var card = document.getElementById("hubApprovals");
@@ -3781,8 +3865,13 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
+    var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
-      '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>Role requests, clover claims, media (photos/videos), and record merges waiting on an officer</small></div></div>' +
+      '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
+      (hostOnlyQueue
+        ? "Volunteer hours for events you host"
+        : "Role requests, clover claims, media, volunteer hours, and record merges") +
+      "</small></div></div>" +
       '<div class="app-body" id="hubApprovalsBody"><p class="empty">Loading approvals…</p></div>';
     var body = card.querySelector("#hubApprovalsBody");
     var data = null;
@@ -3805,18 +3894,49 @@
       var lr = await client.rpc("list_content_approval_log", { p_limit: 25 });
       if (lr.data && Array.isArray(lr.data)) mediaLog = lr.data;
     } catch (e4) {}
-    if (!data) { body.innerHTML = '<p class="empty">Couldn&rsquo;t load the approvals queue. Try again in a moment.</p>'; return; }
+    var hours = state.pendingHours || [];
+    if (!hourApprovalsFixture && client && client.rpc) {
+      try {
+        var hr = await client.rpc("list_pending_volunteer_hours");
+        if (hr.data && hr.data.viewer && hr.data.viewer !== "none") {
+          state.canReviewHours = true;
+          hours = Array.isArray(hr.data.hours) ? hr.data.hours : [];
+          state.pendingHours = hours;
+        } else if (hr.data && Array.isArray(hr.data.hours)) {
+          hours = hr.data.hours;
+          state.pendingHours = hours;
+        }
+      } catch (e5) {}
+    }
+    if (!state.officer) {
+      data = { role_requests: [], duplicates: [] };
+      clovers = [];
+      media = [];
+      mediaLog = [];
+    } else if (!data) {
+      if (!hourApprovalsFixture && !hours.length) {
+        body.innerHTML = '<p class="empty">Couldn&rsquo;t load the approvals queue. Try again in a moment.</p>';
+        return;
+      }
+      data = { role_requests: [], duplicates: [] };
+    }
     var reqs = data.role_requests || [];
     var dups = data.duplicates || [];
-    setOfficerBadge(reqs.length + dups.length + clovers.length + media.length);
-    if (!reqs.length && !dups.length && !clovers.length && !media.length) {
-      var emptyHtml = '<p class="empty">Nothing waiting · all caught up. ☘</p>';
+    setOfficerBadge(reqs.length + dups.length + clovers.length + media.length + hours.length);
+    if (!reqs.length && !dups.length && !clovers.length && !media.length && !hours.length) {
+      var emptyHtml = "";
+      if (state.hourDecisionFlash) emptyHtml += '<p class="hub-app-flash" id="hubHoursFlash">' + esc(state.hourDecisionFlash) + "</p>";
+      emptyHtml += '<p class="empty">Nothing waiting · all caught up. ☘</p>';
       if (mediaLog.length) emptyHtml += mediaLogHtml(mediaLog);
       body.innerHTML = emptyHtml;
       wireOfficerDeskPicker();
       return;
     }
     var html = "";
+    if (state.hourDecisionFlash) {
+      html += '<p class="hub-app-flash" id="hubHoursFlash">' + esc(state.hourDecisionFlash) + "</p>";
+    }
+    html += renderHourApprovalsHtml(hours);
     if (media.length) {
       html += '<h3 class="hub-appr-h">Media approvals</h3>';
       media.forEach(function (q) {
@@ -3894,6 +4014,17 @@
     }
     if (mediaLog.length) html += mediaLogHtml(mediaLog);
     body.innerHTML = html;
+    body.querySelectorAll("[data-hours-approve]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        applyHourDecision(client, b.getAttribute("data-hours-approve"), true, b);
+      });
+    });
+    body.querySelectorAll("[data-hours-decline]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (!confirm("Decline these hours? They will not count toward the 12-hour season goal.")) return;
+        applyHourDecision(client, b.getAttribute("data-hours-decline"), false, b);
+      });
+    });
     body.querySelectorAll("[data-media-approve]").forEach(function (b) {
       b.addEventListener("click", function () {
         decideApproval(client, "approve_content_item", { p_id: b.getAttribute("data-media-approve") }, b);
@@ -4048,6 +4179,8 @@
       '<div class="wide"><label for="hubEventMemberAddress">Private / member address</label><input id="hubEventMemberAddress" placeholder="Full street address" autocomplete="off" />' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Full address for signed-in members in the Member Hub and the RSVP confirmation email. Never shown on public pages.</p></div>' +
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
+      '<div><label for="hubEventVolunteerCap">Volunteer slots</label><input id="hubEventVolunteerCap" type="number" min="0" step="1" placeholder="No cap" />' +
+      '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.</p></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
       '<label><input type="checkbox" id="hubEventMembersOnly" /> Members only</label>' +
@@ -4248,6 +4381,27 @@
       sendAt.toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) + ".";
   }
 
+  function syncVolunteerCapHint() {
+    var el = document.getElementById("hubEventVolunteerCap");
+    var hint = document.getElementById("hubEventVolunteerCapHint");
+    if (!el || !hint) return;
+    var raw = String(el.value || "").trim();
+    if (raw === "") {
+      hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.";
+      return;
+    }
+    var n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0) {
+      hint.textContent = "Enter a whole number, or leave blank for no cap.";
+      return;
+    }
+    if (n === 0) {
+      hint.textContent = "Zero volunteer slots. Volunteer signup is blocked for this event.";
+      return;
+    }
+    hint.textContent = "Volunteer signup stops after " + n + (n === 1 ? " member" : " members") + ". Each signup logs pending hours. It will not overbook.";
+  }
+
   function resetEventEmailFields() {
     eventEmailHadRows = false;
     var master = document.getElementById("hubEventEmails");
@@ -4364,6 +4518,7 @@
     showEl("hubEventEmailTicketFields", emailsOn && emailChecked("hubEventEmailTicket"));
     showEl("hubEventEmailClosingFields", emailsOn && emailChecked("hubEventEmailClosing"));
     syncClosingEmailHint();
+    syncVolunteerCapHint();
     var loc = document.getElementById("hubEventLocation");
     var membersOnly = !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked);
     var paradeOn = !!(typeEl && typeEl.value === "parade");
@@ -4653,6 +4808,8 @@
     get("hubEventLocation").value = event.location || "";
     var maFill = get("hubEventMemberAddress"); if (maFill) maFill.value = event.member_address || "";
     get("hubEventCapacity").value = event.capacity == null ? "" : event.capacity;
+    var vcap = get("hubEventVolunteerCap");
+    if (vcap) vcap.value = event.volunteer_cap == null ? "" : event.volunteer_cap;
     get("hubEventDescription").value = event.description || "";
     get("hubEventPublic").checked = event.is_public !== false;
     var monly = get("hubEventMembersOnly");
@@ -4948,10 +5105,13 @@
     var regClose = regCloseValue ? new Date(regCloseValue) : null;
     if (regCloseValue && (!regClose || isNaN(regClose.getTime()))) { if (msg) msg.textContent = "Please check the registration close date/time."; return; }
     var capacityValue = value("hubEventCapacity");
+    var volunteerCapValue = value("hubEventVolunteerCap");
     var ticketValue = value("hubEventTicketPrice");
     var capacity = capacityValue === "" ? null : parseInt(capacityValue, 10);
+    var volunteerCap = volunteerCapValue === "" ? null : parseInt(volunteerCapValue, 10);
     var dollars = ticketValue === "" ? null : Number(ticketValue);
     if (capacityValue !== "" && (isNaN(capacity) || capacity < 0)) { if (msg) msg.textContent = "Capacity must be a whole number."; return; }
+    if (volunteerCapValue !== "" && (isNaN(volunteerCap) || volunteerCap < 0)) { if (msg) msg.textContent = "Volunteer slots must be a whole number, or blank for no cap."; return; }
     if (ticketValue !== "" && (isNaN(dollars) || dollars < 0)) { if (msg) msg.textContent = "Ticket price must be zero or more."; return; }
     var rafflePriceValue = value("hubEventRafflePrice");
     var raffleDollars = rafflePriceValue === "" ? null : Number(rafflePriceValue);
@@ -5008,7 +5168,7 @@
       end_time: end ? end.toISOString() : null, location: value("hubEventLocation") || null,
       member_address: value("hubEventMemberAddress") || null,
       description: value("hubEventDescription") || null, event_type: value("hubEventType") || "other",
-      capacity: capacity, is_public: !!document.getElementById("hubEventPublic").checked,
+      capacity: capacity, volunteer_cap: volunteerCap, is_public: !!document.getElementById("hubEventPublic").checked,
       members_only: !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked),
       is_mandatory: !!document.getElementById("hubEventMandatory").checked,
       is_featured: !!document.getElementById("hubEventFeatured").checked,
@@ -5059,6 +5219,20 @@
       await refreshEventStudio(client);
       await loadEventRaffles(client);
       var savedEventId = (res.data && res.data.event && res.data.event.id) || payload.id;
+      var capNote = "";
+      if (savedEventId) {
+        try {
+          var capRes = await client.rpc("officer_set_volunteer_cap", {
+            p_event: savedEventId,
+            p_cap: payload.volunteer_cap
+          });
+          if (capRes.error || (capRes.data && capRes.data.ok === false)) {
+            capNote = " Volunteer slots were not saved. Apply sql/kos_hub_volunteer_hours.sql, then save again.";
+          }
+        } catch (capErr) {
+          capNote = " Volunteer slots were not saved. Apply sql/kos_hub_volunteer_hours.sql, then save again.";
+        }
+      }
       var emailNote = "";
       if (savedEventId) {
         emailNote = await saveEventEmailSchedule(client, savedEventId, emailCfg);
@@ -5067,11 +5241,18 @@
       }
       if (save) { save.disabled = false; save.textContent = "☘ Save event"; }
       finishSavedReview(msg, res, payload, cleared,
-        "You can make an RSVP QR or a Door check-in QR from the list above." + (emailNote ? " " + emailNote : ""));
+        "You can make an RSVP QR or a Door check-in QR from the list above." + (emailNote ? " " + emailNote : "") + capNote);
     } catch (e) { if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e); }
     if (save) { save.disabled = false; save.textContent = "☘ Save event"; }
   }
+  var eventStudioLoading = null;
   async function loadEventStudio(client) {
+    if (document.getElementById("hubEventForm")) return;
+    if (eventStudioLoading) return eventStudioLoading;
+    eventStudioLoading = loadEventStudioNow(client).finally(function () { eventStudioLoading = null; });
+    return eventStudioLoading;
+  }
+  async function loadEventStudioNow(client) {
     window.__kosHubOwnsEventStudio = true;
     if (!state.canManageEvents) return;
     eventStudioClient = client;
@@ -5108,11 +5289,13 @@
       eventForm.addEventListener("change", onEventFormEdited);
     }
     ["hubEventType", "hubEventCollectRaffle", "hubEventCollectMeals", "hubEventOnline", "hubEventMembersOnly",
-      "hubEventCreateMeeting",
+      "hubEventCreateMeeting", "hubEventVolunteerCap",
       "hubEventEmails", "hubEventEmailAnnounce", "hubEventEmailTicket", "hubEventEmailClosing"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", syncOptionalEventFields);
     });
+    var vcapEl = document.getElementById("hubEventVolunteerCap");
+    if (vcapEl) vcapEl.addEventListener("input", syncVolunteerCapHint);
     var moTouch = document.getElementById("hubEventMembersOnly");
     if (moTouch) moTouch.addEventListener("change", function () { moTouch.dataset.kosTouched = "1"; });
     var regClosesEl = document.getElementById("hubEventRegCloses");
@@ -5613,6 +5796,7 @@
       ensure();
       if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
       if (roleFixture && ("canManageEvents" in roleFixture)) state.canManageEvents = !!roleFixture.canManageEvents;
+      if (roleFixture && ("canReviewHours" in roleFixture)) state.canReviewHours = !!roleFixture.canReviewHours;
       if (!tab) tab = "hub";
       if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
       if (tab !== "parade") clearHoursIntent();
@@ -6054,7 +6238,7 @@
 
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Review join-form applications", icon: "📝", section: "Membership" },
-    hubApprovals: { title: "Approvals", desc: "Roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
+    hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Payments", desc: "Dues and payment records", icon: "💳", section: "Money" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
@@ -6082,7 +6266,7 @@
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Join-form applications: new, background check, dues pending, then approve, decline, or archive." },
     "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
-    "Approvals": { icon: "✅", sub: "Members' photos and videos, clover claims, roles, and record merges." },
+    "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
     "Money": { icon: "💳", sub: "Dues and payment records." },
@@ -6145,8 +6329,10 @@
 
   function currentOfficerToolOrder() {
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (!state.officer && state.canReviewApplications && !state.canManageEvents && !state.shopOnly && !state.socialOnly) {
-      toolOrder = ["hubApplications"];
+    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours)) {
+      toolOrder = [];
+      if (state.canReviewApplications) toolOrder.push("hubApplications");
+      if (state.canReviewHours) toolOrder.push("hubApprovals");
     } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
     } else if (state.shopOnly) {

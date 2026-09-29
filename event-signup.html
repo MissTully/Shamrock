@@ -234,7 +234,7 @@
         <div id="plannedHoursWrap" style="display:none;">
           <label for="plannedHours">Volunteer hours you expect to work</label>
           <input id="plannedHours" type="number" min="0.5" max="24" step="0.5" placeholder="e.g. 2" />
-          <div class="hint">Optional. Hours count toward your 12-hour season goal after an officer confirms you attended.</div>
+          <div class="hint">Optional. Signing up as a volunteer logs pending hours when a slot is open. A host or an officer confirms them. They count toward the 12-hour season goal after that.</div>
         </div>
 
         <button id="submitBtn" type="submit">☘ Sign me up</button>
@@ -596,11 +596,26 @@
         if (publicWhere(ev)) opt.dataset.location = publicWhere(ev);
         if (isRegistrationClosed(ev)) opt.dataset.regClosed = "1";
         else if (ev.registration_closes_at) opt.dataset.regClosesAt = ev.registration_closes_at;
+        if (ev.volunteer_cap != null && ev.volunteer_cap !== "") opt.dataset.volunteerCap = String(ev.volunteer_cap);
+        if (ev.volunteer_slots_used != null && ev.volunteer_slots_used !== "") opt.dataset.volunteerSlotsUsed = String(ev.volunteer_slots_used);
         eventSelect.appendChild(opt);
       }
       function isVolunteerRole() {
         const role = (document.getElementById("role") || {}).value || "";
         return role === "volunteer" || role === "organizer";
+      }
+      function volunteerSlotsFull(opt) {
+        if (!opt || opt.dataset.volunteerCap == null || opt.dataset.volunteerCap === "") return false;
+        const cap = Number(opt.dataset.volunteerCap);
+        const used = Number(opt.dataset.volunteerSlotsUsed || "0");
+        return Number.isFinite(cap) && used >= cap;
+      }
+      function volunteerSlotsLeft(opt) {
+        if (!opt || opt.dataset.volunteerCap == null || opt.dataset.volunteerCap === "") return null;
+        const cap = Number(opt.dataset.volunteerCap);
+        const used = Number(opt.dataset.volunteerSlotsUsed || "0");
+        if (!Number.isFinite(cap)) return null;
+        return Math.max(0, cap - used);
       }
       const haveTicketWrap = document.getElementById("haveTicketWrap");
       const haveTicketBox = document.getElementById("haveTicket");
@@ -695,11 +710,21 @@
         purchasedByWrap.style.display = ticketAlreadyPurchased() ? "block" : "none";
         // Volunteers / organizers RSVP free — never send them to Zeffy/ticket checkout.
         if (isVolunteerRole()) {
+          if (opt && opt.value && volunteerSlotsFull(opt)) {
+            btn.textContent = "Volunteer slots are full";
+            btn.disabled = true;
+            showMessage("Volunteer slots are full for this event. Pick Attendee, or ask the host if another slot opens.", "error");
+            return;
+          }
           btn.textContent = "☘ Sign me up (free volunteer)";
           if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Buy Tickets|Opening |ticket is covered/i.test(message.textContent || "")) {
             message.className = "msg"; message.textContent = "";
           }
-          showMessage("Volunteering is free — you’ll be signed up without ticket checkout.", "success");
+          const left = opt && opt.value ? volunteerSlotsLeft(opt) : null;
+          const slotLine = left == null
+            ? "Volunteering is free. You will be signed up without ticket checkout. Pending hours are logged for the host or an officer to confirm."
+            : "Volunteering is free. " + left + (left === 1 ? " volunteer slot left." : " volunteer slots left.") + " Signing up logs pending hours for the host or an officer to confirm.";
+          showMessage(slotLine, "success");
           return;
         }
         if (ticketedAttendee && ticketAlreadyPurchased()) {
@@ -725,6 +750,17 @@
           }
         }
       }
+      try {
+        const slotRes = await supabase.rpc("volunteer_slot_summary");
+        const slotRows = Array.isArray(slotRes.data) ? slotRes.data : [];
+        slotRows.forEach((row) => {
+          if (!row || !row.event_id) return;
+          const slotOpt = eventSelect.querySelector('option[value="' + row.event_id + '"]');
+          if (!slotOpt) return;
+          if (row.volunteer_cap != null) slotOpt.dataset.volunteerCap = String(row.volunteer_cap);
+          if (row.slots_used != null) slotOpt.dataset.volunteerSlotsUsed = String(row.slots_used);
+        });
+      } catch (_) {}
       eventSelect.addEventListener("change", syncSignupButton);
       document.getElementById("role").addEventListener("change", syncSignupButton);
       haveTicketBox.addEventListener("change", syncSignupButton);
@@ -932,6 +968,16 @@
         showMessage("Registration closed for this event. Existing RSVPs and tickets already purchased stay on file for officers.", "error");
         return;
       }
+      if (volunteering && selected && selected.dataset.volunteerCap != null && selected.dataset.volunteerCap !== "") {
+        const cap = Number(selected.dataset.volunteerCap);
+        const used = Number(selected.dataset.volunteerSlotsUsed || "0");
+        if (Number.isFinite(cap) && used >= cap) {
+          showMessage("Volunteer slots are full for this event.", "error");
+          btn.disabled = true;
+          btn.textContent = "Volunteer slots are full";
+          return;
+        }
+      }
       if (!volunteering && selected && selected.dataset.needsTickets) {
         showMessage("Paid tickets for this event aren't linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
         return;
@@ -1017,6 +1063,14 @@
       let doneMsg = ticketPurchased && data.status !== "waitlisted"
         ? "You're signed up - no second charge, since your ticket is already covered. See you there!"
         : data.message;
+      if (role === "volunteer" && data.status !== "waitlisted") {
+        const pendingHrs = data.volunteer_hours_pending;
+        doneMsg = (doneMsg ? doneMsg + " " : "") + (
+          pendingHrs
+            ? pendingHrs + " volunteer hours are pending approval."
+            : "Pending volunteer hours were logged for the host or an officer to confirm."
+        );
+      }
       if (data.status !== "waitlisted" && data.meeting_url) {
         doneMsg += " Your join link was emailed to you, and is also here: " + data.meeting_url;
       }

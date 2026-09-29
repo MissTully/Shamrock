@@ -39,6 +39,10 @@ plus Playwright browser tests that load every page.
   officers who cannot review them. Reviewers see the home count, mailing
   address, escaped notes, and a separate renewals list. Approve shows the
   Hub login next step.
+- **`specs/hub-volunteer-hours.spec.js`**: Member desk hours form and FAQ
+  stay in the Hub (no Track It Forward instructions). Officer Approvals and
+  a host-only queue can confirm pending hours. Event Studio volunteer slot
+  copy blocks overbooking. Public volunteer signup reports pending hours.
 
 External services (Supabase, CDNs, Google Fonts) are treated as optional:
 the suite passes offline, and only same-origin failures or genuine script
