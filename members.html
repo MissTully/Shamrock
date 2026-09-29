@@ -86,31 +86,44 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 2px 8px rgba(90,60,10,.10); }
   .castle-guide summary{ list-style:none; display:flex; align-items:center; gap:10px; cursor:pointer;
     padding:13px 16px; font-family:var(--display); color:var(--green-800); font-size:17px; letter-spacing:.3px;
+    text-align:left; line-height:1.35;
     background:linear-gradient(180deg, rgba(212,180,90,.30), rgba(212,180,90,.10)); }
   .castle-guide summary::-webkit-details-marker{ display:none; }
-  .castle-guide summary .key{ font-size:20px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
-  .castle-guide summary .chev{ margin-left:auto; font-size:15px; color:var(--gold-text); transition:transform .25s ease; }
+  .castle-guide summary .key{ flex:none; font-size:20px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  /* The label is its own flex item so the words wrap on the left.
+     A bare text node in this row was stretched like justified text. */
+  .castle-guide summary .guide-label{ flex:1 1 auto; min-width:0; text-align:left; line-height:1.35;
+    white-space:normal; overflow-wrap:normal; word-break:normal; hyphens:manual; }
+  .castle-guide summary .chev{ flex:none; margin-left:0; font-size:15px; color:var(--gold-text); transition:transform .25s ease; }
   .castle-guide[open] summary .chev{ transform:rotate(90deg); }
   .castle-guide[open] summary{ border-bottom:1px dashed rgba(168,128,28,.45); }
   .castle-guide .guide-body{ padding:16px; }
   .castle-guide .guide-step{ display:flex; gap:12px; align-items:flex-start; margin:0 0 16px; }
   .castle-guide .guide-step:last-of-type{ margin-bottom:0; }
+  .castle-guide .guide-copy{ flex:1 1 auto; min-width:0; text-align:left; }
   .castle-guide .guide-step .num{ flex:0 0 30px; width:30px; height:30px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #e9c96a, #b8860b 78%);
     color:#fff; font-family:var(--display); font-size:15px; display:flex; align-items:center; justify-content:center;
     box-shadow:0 0 0 2px #fffdf4, 0 0 0 3.5px rgba(168,128,28,.5), 0 2px 4px rgba(0,0,0,.25); }
-  .castle-guide .guide-step h3{ margin:3px 0 4px; font-family:var(--display); font-size:15px; color:var(--green-800); }
-  .castle-guide .guide-step p{ margin:0; font-size:15.5px; color:#3d3a33; line-height:1.5; }
-  .castle-guide .guide-step a{ color:var(--green-800); }
+  .castle-guide .guide-step h3{ margin:3px 0 4px; font-family:var(--display); font-size:15px; color:var(--green-800);
+    text-align:left; overflow-wrap:normal; word-break:normal; hyphens:manual; }
+  .castle-guide .guide-step p{ margin:0; font-size:15.5px; color:#3d3a33; line-height:1.5;
+    text-align:left; overflow-wrap:break-word; word-break:normal; hyphens:manual; }
+  .castle-guide .guide-step a{ color:var(--green-800); overflow-wrap:anywhere; word-break:normal; }
   .castle-guide .guide-cta{ display:block; width:100%; margin:10px 0 2px; padding:11px 14px; border-radius:12px;
     border:1.5px solid #8a6d1f; background:linear-gradient(180deg,#e9c96a,#caa53d); color:#3a2a05;
     font-family:var(--display); font-size:16px; cursor:pointer;
     box-shadow:0 2px 6px rgba(90,60,10,.25), inset 0 1px 0 rgba(255,255,255,.55); }
   .castle-guide .guide-cta:hover{ filter:brightness(1.05); }
   .castle-guide .guide-inside{ margin-top:16px; padding:10px 12px; background:rgba(255,255,255,.55);
-    border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:15px; color:#57513f; line-height:1.5; }
+    border:1px dashed rgba(168,128,28,.45); border-radius:10px; font-size:15px; color:#57513f; line-height:1.5;
+    text-align:left; overflow-wrap:break-word; word-break:normal; hyphens:manual; }
   .castle-guide .guide-inside b{ color:var(--green-800); }
-  .castle-guide .guide-help{ margin:10px 0 0; font-size:15px; color:var(--muted); text-align:center; }
+  .castle-guide .guide-help{ margin:10px 0 0; font-size:15px; color:var(--muted); text-align:center;
+    overflow-wrap:anywhere; word-break:normal; hyphens:manual; }
+  #authPanelReset .mail-note{ margin:12px 0 0; padding:10px 12px; text-align:left; font-size:15px; line-height:1.45;
+    color:#3a3a2e; background:rgba(255,255,255,.55); border:1px dashed rgba(168,128,28,.55); border-radius:10px;
+    overflow-wrap:break-word; word-break:normal; hyphens:manual; }
   /* Compact castle on small phones - fit gate + login without painful nested scroll */
   @media (max-width:480px){
     .castle-torch{ display:none; }
@@ -156,7 +169,8 @@
   .gate-card textarea{ min-height:64px; resize:vertical; }
   #authStage .gate-card input{ text-align:center; }
   #profileStage .gate-card{ max-height:92vh; overflow:auto; }
-  .gate-card .err{ color:#a12; font-size:16px; min-height:18px; margin-top:8px; }
+  .gate-card .err{ color:#a12; font-size:16px; min-height:18px; margin-top:8px; text-align:left; line-height:1.45;
+    overflow-wrap:break-word; word-break:normal; hyphens:manual; }
   .member-grid{ display:grid; gap:26px; }
   .app-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:18px; box-shadow:var(--shadow-sm); overflow:hidden; }
   .app-card > .app-head{ background:linear-gradient(180deg,var(--green-700),var(--green-800)); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:12px; }
@@ -1325,35 +1339,36 @@
           <div class="err" id="resetMsg"></div>
         </form>
         <p style="margin-top:10px;font-size:14px;">Open the link on this device, then choose a password of at least 8 characters.</p>
+        <p class="mail-note" id="resetMailNote">Password emails can take a few minutes. If you do not see one, check spam or junk.</p>
         <p style="margin-top:14px;font-size:14px;"><a href="#" id="backFromReset">← Back to sign in</a></p>
       </div>
 
       <details class="castle-guide" id="castleGuide">
-        <summary><span class="key">🗝️</span> First time at the castle door? Start here <span class="chev">▶</span></summary>
+        <summary><span class="key">🗝️</span> <span class="guide-label">First time at the castle door? Start here</span> <span class="chev">▶</span></summary>
         <div class="guide-body">
           <div class="guide-step">
             <span class="num" aria-hidden="true">1</span>
-            <div>
+            <div class="guide-copy">
               <h3>Use your roster email</h3>
               <p>The door knows you by the email on the member roster. Not sure which one that is? Ask <a href="mailto:digital@kreweofshamrock.com">digital@kreweofshamrock.com</a>.</p>
             </div>
           </div>
           <div class="guide-step">
             <span class="num" aria-hidden="true">2</span>
-            <div>
+            <div class="guide-copy">
               <h3>Need a password?</h3>
-              <p>Tap the gold button and we email you a link &mdash; it works for a first password or a reset. Open it on this device and choose a password of at least 8 characters.</p>
+              <p>Tap the gold button and we email you a link. It works for a first password or a reset. Open it on this device and choose a password of at least 8 characters.</p>
               <button type="button" class="guide-cta" id="guideResetBtn">☘ Email me a password link</button>
             </div>
           </div>
           <div class="guide-step">
             <span class="num" aria-hidden="true">3</span>
-            <div>
+            <div class="guide-copy">
               <h3>Sign in</h3>
               <p>Come back and sign in with your email and new password. Krewe leaders (President, Board Member, Committee Chair of&hellip;) confirm their titles at first login.</p>
             </div>
           </div>
-          <div class="guide-inside"><b>Inside:</b> your hub &mdash; <b>Home</b>, <b>My Krewe</b>, <b>Events</b>, <b>Member desk</b>, and the <b>Craic Cup</b>. Officers get an <b>Officer</b> tab.</div>
+          <div class="guide-inside"><b>Inside:</b> your hub. <b>Home</b>, <b>My Krewe</b>, <b>Events</b>, <b>Member desk</b>, and the <b>Craic Cup</b>. Officers get an <b>Officer</b> tab.</div>
           <p class="guide-help">Stuck at the door? Email <a href="mailto:digital@kreweofshamrock.com?subject=Website%20issue%20report">digital@kreweofshamrock.com</a>.</p>
         </div>
       </details>
@@ -3642,6 +3657,34 @@
           }catch(_){ maybeTour(); }
         }, 900);
     }
+    var NOT_ON_ROSTER_MSG = "That email is not on the krewe roster. Use the address the krewe has for you, apply on the Join page, or write digital@kreweofshamrock.com.";
+    var WRONG_PASSWORD_MSG = "That password is wrong. Old Wild Apricot passwords do not work here. Tap Create or reset your password to get a new link.";
+    function doorBlockMessage(door){
+      if(!door) return "Couldn't check that email. Write digital@kreweofshamrock.com.";
+      if(door.status==="not_on_roster") return NOT_ON_ROSTER_MSG;
+      if(door.status==="invalid") return door.message || "Please enter a valid email.";
+      if(door.status==="rate_limited") return door.message || "Please try again in a little while, or write digital@kreweofshamrock.com.";
+      return "";
+    }
+    function isWrongPasswordError(error){
+      var code = String((error && (error.code || error.error_code)) || "").toLowerCase();
+      var message = String((error && error.message) || "");
+      if(code==="invalid_credentials" || code==="invalid_grant") return true;
+      return /invalid login credentials/i.test(message);
+    }
+    function otherSignInMessage(error){
+      var message = String((error && error.message) || "");
+      if(/email not confirmed/i.test(message) || String((error && error.code) || "").toLowerCase()==="email_not_confirmed"){
+        return "That Hub login still needs a confirmed email. Open the link we sent, or tap Create or reset your password to get a new one.";
+      }
+      return "Couldn't sign in just now. Try again, or tap Create or reset your password. If it keeps happening, write digital@kreweofshamrock.com.";
+    }
+    function mailedLinkMessage(triedPassword){
+      if(triedPassword){
+        return "That password will not work. Old Wild Apricot passwords do not work here. We emailed a link to create your Hub password. Check spam or junk. It can take a few minutes.";
+      }
+      return "We emailed your password link. Check that inbox (and spam), then click it on this device.";
+    }
     document.getElementById("signinForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const email=document.getElementById("siEmail").value.trim();
@@ -3654,11 +3697,10 @@
         msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com.";
         return;
       }
-      if(door.status==="not_on_roster" || door.status==="invalid" || door.status==="rate_limited"){
-        msg.textContent=door.message; return;
-      }
+      var blocked = doorBlockMessage(door);
+      if(blocked){ msg.textContent=blocked; return; }
       if(door.status==="needs_invite"){
-        await requestPasswordMail(email, msg, door);
+        await requestPasswordMail(email, msg, door, { triedPassword: !!password });
         return;
       }
       if(!password){
@@ -3668,12 +3710,15 @@
       msg.textContent="Signing in…";
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if(error){
-        msg.textContent="That password isn't right. Old Wild Apricot passwords do not work here. Tap Create or reset your password to get a fresh link.";
+        msg.style.color="";
+        msg.textContent = isWrongPasswordError(error) ? WRONG_PASSWORD_MSG : otherSignInMessage(error);
         return;
       }
       msg.textContent="";
     });
-    async function requestPasswordMail(email, msg, doorHint){
+    async function requestPasswordMail(email, msg, doorHint, opts){
+      opts = opts || {};
+      var triedPassword = !!opts.triedPassword;
       if(!email){ msg.style.color=""; msg.textContent="Please enter your email."; return; }
       msg.style.color=""; msg.textContent="Checking the member list…";
       var door = doorHint || null;
@@ -3684,11 +3729,12 @@
         doorErr = checked.error;
       }
       if(doorErr || !door){ msg.textContent="Couldn't check that email. Write digital@kreweofshamrock.com."; return; }
-      if(door.status==="invalid" || door.status==="rate_limited" || door.status==="not_on_roster"){
-        msg.textContent=door.message; return;
-      }
+      var blocked = doorBlockMessage(door);
+      if(blocked){ msg.textContent=blocked; return; }
       if(door.status==="needs_invite"){
-        msg.textContent="You're on the roster. Sending your password link…";
+        msg.textContent = triedPassword
+          ? "That password will not work here. Sending a link to create your Hub password…"
+          : "You're on the roster. Sending your password link…";
         try{
           const res = await fetch("https://oazwkwflgbthojvnclfc.supabase.co/functions/v1/hub-password-mail", {
             method: "POST",
@@ -3698,25 +3744,29 @@
           const body = await res.json().catch(()=>({}));
           if(body && body.send_reset){
             const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-            if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+            if(error){ msg.style.color=""; msg.textContent="Couldn't send the link: "+error.message; return; }
             msg.style.color="#14532d";
-            msg.textContent="Check that inbox for your password link, then click it on this device.";
+            msg.textContent = triedPassword
+              ? mailedLinkMessage(true)
+              : "Check that inbox for your password link, then click it on this device.";
             return;
           }
           if(!res.ok || !body.ok){
+            msg.style.color="";
             msg.textContent=body.message || "You're on the roster, but the link did not send. Write digital@kreweofshamrock.com.";
             return;
           }
           msg.style.color="#14532d";
-          msg.textContent="We emailed your password link. Check that inbox (and spam), then click it on this device.";
+          msg.textContent = mailedLinkMessage(triedPassword);
         }catch(err){
+          msg.style.color="";
           msg.textContent="You're on the roster, but the link did not send. Write digital@kreweofshamrock.com.";
         }
         return;
       }
       msg.textContent="Sending…";
       const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if(error){ msg.textContent="Couldn't send the link: "+error.message; return; }
+      if(error){ msg.style.color=""; msg.textContent="Couldn't send the link: "+error.message; return; }
       msg.style.color="#14532d";
       msg.textContent="We emailed your password link. Check that inbox (and spam), then click it on this device.";
     }
