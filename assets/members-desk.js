@@ -231,6 +231,9 @@
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
     ".hub-app-flash{background:#e7f3ea;border:1px solid rgba(29,107,62,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#14532d;line-height:1.45;}",
+    ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
+    ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    ".hub-app-fee{margin:6px 0 0;font-size:15px;line-height:1.4;color:#3a3a2e;}",
     "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
     /* ---- Officer desk layout ---- */
     ".hub-officer-hero{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:18px;padding:18px 20px;margin:0 0 16px;}",
@@ -455,7 +458,7 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
 
@@ -1217,21 +1220,60 @@
     bindFaqPills();
   }
 
+  function profileDuesExempt(profile) {
+    var p = profile || window.kosProfile || {};
+    var roles = [];
+    if (p.member_role) roles.push(p.member_role);
+    var grants = p.roles || p.member_roles || [];
+    if (Array.isArray(grants)) {
+      grants.forEach(function (g) {
+        if (typeof g === "string") roles.push(g);
+        else if (g && g.role) roles.push(g.role);
+      });
+    }
+    var L = window.KOS_LEADERSHIP;
+    if (L && typeof L.highestMemberRole === "function") {
+      var top = L.highestMemberRole(roles);
+      if (top === "officer" || top === "board") return true;
+      if (p.officer_title && typeof L.splitTitles === "function" && typeof L.rolesForTitle === "function") {
+        var fromTitles = [];
+        L.splitTitles(p.officer_title).forEach(function (title) {
+          fromTitles = fromTitles.concat(L.rolesForTitle(title) || []);
+        });
+        var titled = L.highestMemberRole(fromTitles);
+        if (titled === "officer" || titled === "board") return true;
+      }
+      return false;
+    }
+    return roles.some(function (r) {
+      return /^(officer|captain|board|treasurer|secretary)$/i.test(String(r || ""));
+    });
+  }
+
+  window.kosDuesExempt = function () { return profileDuesExempt(); };
+
   function standingChip() {
     var st = (state.membershipStatus || "").toString().toLowerCase();
     var unpaid = /unpaid|delinquent|lapsed|owing|past.?due/.test(st);
     var good = /good|active|current|paid/.test(st) && !unpaid;
-    if (state.parade && state.parade.dues_paid === true) good = true;
-    if (state.parade && state.parade.dues_paid === false) { good = false; unpaid = true; }
+    var exempt = profileDuesExempt();
+    if (!exempt && state.parade && state.parade.dues_paid === true) good = true;
+    if (!exempt && state.parade && state.parade.dues_paid === false) { good = false; unpaid = true; }
+    if (exempt && state.parade && state.parade.dues_paid === true) good = true;
     var label = good ? "Good Standing" : (state.membershipStatus ? String(state.membershipStatus) : (unpaid ? "Dues attention" : "Standing TBD"));
     var cls = good ? "ok" : (unpaid ? "warn" : "");
     return '<span class="hub-chip ' + cls + '">🏷 ' + esc(label) + "</span>";
   }
 
+  function duesGateMet(me) {
+    if (profileDuesExempt()) return true;
+    return !!(me && me.dues_paid);
+  }
+
   function paradeChip() {
     var me = state.parade;
     if (!me) return '<span class="hub-chip">🎗️ Parade Ready · -</span>';
-    var ready = !!(me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var ready = !!(duesGateMet(me) && me.waiver_signed && me.meeting_attended);
     return '<span class="hub-chip ' + (ready ? "ok" : "warn") + '">🎗️ ' + (ready ? "Parade Ready" : "Not parade ready") + "</span>";
   }
 
@@ -1806,6 +1848,12 @@
   function plainStanding() {
     var st = (state.membershipStatus || "").toString();
     var me = state.parade;
+    if (profileDuesExempt()) {
+      if (/unpaid|delinquent|lapsed|owing|past/.test(st.toLowerCase())) return "Dues need attention";
+      if (/good|active|current|paid/.test(st.toLowerCase()) || (me && me.dues_paid === true)) return "Good standing";
+      if (st) return st;
+      return "Standing updates after your roster record loads";
+    }
     if (me && me.dues_paid === true) return "Good standing";
     if (me && me.dues_paid === false) return "Dues need attention";
     if (/unpaid|delinquent|lapsed|owing|past/.test(st.toLowerCase())) return "Dues need attention";
@@ -1817,7 +1865,7 @@
   function plainParadeReady() {
     var me = state.parade;
     if (!me) return "Parade Ready status loads with your roster record";
-    return (me.dues_paid && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
+    return (duesGateMet(me) && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
   }
 
   function openMemberCard() {
@@ -1842,6 +1890,7 @@
   function openPayDues() {
     openSheet(
       '<div class="app-dues"><h2 id="appSheetTitle">Pay dues</h2>' +
+      "<p>These links are membership dues. They are not the join application fee ($50 single or $75 couple).</p>" +
       "<p>Dues are collected on Zeffy. Choose the membership you are paying.</p>" +
       '<p><a class="btn btn-primary" href="' + DUES_FULL_URL + '" target="_blank" rel="noopener noreferrer">Pay full krewe dues</a></p>' +
       '<p><a class="btn" href="' + DUES_LOA_URL + '" target="_blank" rel="noopener noreferrer">Pay leave of absence</a></p></div>'
@@ -1964,7 +2013,7 @@
       '<div class="app-tiles" aria-label="Member shortcuts">' +
       appTile("card", "Member Card", APP_ICO.card) +
       appTile("events", "RSVP", APP_ICO.cal) +
-      appTile("dues", "Pay Dues", APP_ICO.dues) +
+      (profileDuesExempt() ? "" : appTile("dues", "Pay Dues", APP_ICO.dues)) +
       appTile("chat", "Chat", APP_ICO.chat, true) +
       appTile("carpool", "Carpool", APP_ICO.car) +
       appTile("volunteer", "Volunteer", APP_ICO.heart) +
@@ -2243,12 +2292,12 @@
     var bits = [];
     if (me) {
       if (!me.waiver_signed) bits.push("liability waiver");
-      if (!me.dues_paid) bits.push("dues");
+      if (!me.dues_paid && !profileDuesExempt()) bits.push("dues");
       if (!me.meeting_attended) bits.push("mandatory meeting");
     }
     if ((state.hoursApproved || 0) < 1) bits.push("hours since July 1");
     if (needsProfile) bits.push("My Krewe profile");
-    var ready = !!(me && me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var ready = !!(me && duesGateMet(me) && me.waiver_signed && me.meeting_attended);
     var line = "Parade Ready, volunteer hours, media sharing, rides, and your locker - all on one desk.";
     if (ready && !needsProfile && (state.hoursApproved || 0) >= 1) {
       line = "You are set for the season. The desk still has your rides, locker, and media sharing.";
@@ -2267,6 +2316,8 @@
       '<li><span class="mark" aria-hidden="true">1</span><span>Parade Ready: waiver and Photo Release</span></li>' +
       '<li><span class="mark" aria-hidden="true">2</span><span>My Krewe profile</span></li>' +
       '<li><span class="mark" aria-hidden="true">3</span><span>Total hours since July 1</span></li>' +
+      (profileDuesExempt() ? "" :
+        '<li id="hubDuesCheck"><span class="mark" aria-hidden="true">4</span><span>Pay membership dues <button type="button" class="btn" data-app-go="dues">Pay dues</button></span></li>') +
       '</ul>' +
       '<button type="button" class="btn btn-primary" data-hub-action="parade" style="width:100%;">Open Member desk</button>' +
       profileBtn +
@@ -2317,7 +2368,7 @@
       ? '<button type="button" class="hub-apps-banner" id="hubAppsHomeLink" data-hub-goto="applications">' +
         '<span class="ic" aria-hidden="true">📝</span>' +
         '<span class="copy"><b>' + esc(newApplicationLabel(state.applicationCount)) + '</b>' +
-        '<span class="sub">Membership Applications on your Officer desk. Approve, decline, or archive join-form applications.</span></span>' +
+        '<span class="sub">Membership Applications on your Officer desk. Move an applicant through new, background check, and dues pending, or approve, decline, or archive.</span></span>' +
         '<span class="go">Open</span></button>'
       : "";
     function quickTile(goto, icon, title, sub) {
@@ -2493,6 +2544,7 @@
     roleFixture = flags;
     if ("officer" in flags) state.officer = !!flags.officer;
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
+    if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
     applyApplicationFixture();
     syncOfficerChip();
     renderHome();
@@ -2641,6 +2693,7 @@
       var pay = await client.rpc("can_view_payments");
       state.canViewPayments = !!pay.data;
     } catch (e) { state.canViewPayments = false; }
+    if (roleFixture && ("canViewPayments" in roleFixture)) state.canViewPayments = !!roleFixture.canViewPayments;
     try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
     if (roleFixture) {
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
@@ -3194,13 +3247,35 @@
     renderClaimForm(client, rows);
   }
 
-  // ---- Membership Applications: join form (pending-new), separate from renewals ----
+  // ---- Membership Applications: join form pipeline, separate from renewals ----
+  var APP_BUCKET_STATUS = {
+    "new": "pending-new",
+    background: "background-check",
+    dues: "dues-pending",
+    approved: "active",
+    declined: "declined",
+    archived: "archived",
+    renewal: "pending-renewal",
+    prospect: "prospect"
+  };
+
+  function scrubApplicationRow(row) {
+    if (!row || typeof row !== "object") return row;
+    delete row.ssn;
+    delete row.ssn_full;
+    delete row.id_digits;
+    delete row.social_security;
+    delete row.partner_ssn;
+    delete row.partner_ssn_full;
+    return row;
+  }
+
   function applyApplicationFixture() {
     if (!roleFixture) return;
     if ("canReviewApplications" in roleFixture) state.canReviewApplications = !!roleFixture.canReviewApplications;
     if (Array.isArray(roleFixture.applications)) {
-      applicationsFixture = roleFixture.applications;
-      state.applicationRows = roleFixture.applications.slice();
+      applicationsFixture = roleFixture.applications.map(scrubApplicationRow);
+      state.applicationRows = applicationsFixture.slice();
       state.applicationRecent = Array.isArray(roleFixture.applicationRecent) ? roleFixture.applicationRecent : [];
       syncApplicationFixtureCounts();
     } else if ("applicationCount" in roleFixture) {
@@ -3208,12 +3283,21 @@
     }
   }
 
+  function countStatus(rows, status) {
+    return rows.filter(function (r) { return r && r.membership_status === status; }).length;
+  }
+
   function syncApplicationFixtureCounts() {
     var rows = applicationsFixture || state.applicationRows || [];
     state.applicationCounts = {
-      "new": rows.filter(function (r) { return r && r.membership_status === "pending-new"; }).length,
-      renewal: rows.filter(function (r) { return r && r.membership_status === "pending-renewal"; }).length,
-      prospect: rows.filter(function (r) { return r && r.membership_status === "prospect"; }).length
+      "new": countStatus(rows, "pending-new"),
+      background: countStatus(rows, "background-check"),
+      dues: countStatus(rows, "dues-pending"),
+      approved: countStatus(rows, "active"),
+      declined: countStatus(rows, "declined"),
+      archived: countStatus(rows, "archived"),
+      renewal: countStatus(rows, "pending-renewal"),
+      prospect: countStatus(rows, "prospect")
     };
     state.applicationCount = state.applicationCounts["new"];
   }
@@ -3224,8 +3308,14 @@
       state.applicationLoadError = (data && data.message) || "Could not load membership applications.";
       return;
     }
+    var asked = state.applicationBucket || "new";
+    if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "renewal" && asked !== "prospect" && data.bucket === "new") {
+      state.applicationRows = [];
+      state.applicationLoadError = "This stage needs the database update in sql/kos_membership_application_pipeline.sql.";
+      return;
+    }
     state.applicationLoadError = "";
-    state.applicationRows = Array.isArray(data.applications) ? data.applications : [];
+    state.applicationRows = (Array.isArray(data.applications) ? data.applications : []).map(scrubApplicationRow);
     state.applicationCounts = data.counts || state.applicationCounts;
     if (data.counts && data.counts["new"] != null) state.applicationCount = Number(data.counts["new"]) || 0;
     state.applicationRecent = Array.isArray(data.recent) ? data.recent : [];
@@ -3279,15 +3369,23 @@
     return [street, line2].filter(Boolean).join(", ");
   }
 
+  function applicationStatusLabel(status) {
+    if (status === "pending-new") return "New";
+    if (status === "background-check") return "Background check in progress";
+    if (status === "dues-pending") return "Dues pending";
+    if (status === "active") return "Approved";
+    if (status === "declined") return "Declined";
+    if (status === "archived") return "Archived";
+    if (status === "pending-renewal") return "Renewal";
+    if (status === "prospect") return "Event prospect";
+    return "New";
+  }
+
   function applicationBucketRows() {
     var bucket = state.applicationBucket || "new";
+    var want = APP_BUCKET_STATUS[bucket] || "pending-new";
     var rows = state.applicationRows || [];
-    return rows.filter(function (r) {
-      if (!r) return false;
-      if (bucket === "renewal") return r.membership_status === "pending-renewal";
-      if (bucket === "prospect") return r.membership_status === "prospect";
-      return r.membership_status === "pending-new";
-    });
+    return rows.filter(function (r) { return r && r.membership_status === want; });
   }
 
   function applicationCountOf(bucket) {
@@ -3299,7 +3397,52 @@
   function applicationActionWord(action) {
     if (action === "decline") return "Declined";
     if (action === "archive") return "Archived";
-    return "Approved";
+    if (action === "background_check") return "Background check in progress";
+    if (action === "dues_pending") return "Dues pending";
+    if (action === "next_step_sent") return "Next step sent";
+    if (action === "approve") return "Approved";
+    return "Updated";
+  }
+
+  function applicationFeeLine(row) {
+    var t = String(row.application_fee_type || row.fee_type || "").toLowerCase();
+    if (t === "dual" || t === "couple") {
+      return "Application fee: couple, $75. This is the background check fee, not membership dues.";
+    }
+    if (t === "single") {
+      return "Application fee: single applicant, $50. This is the background check fee, not membership dues.";
+    }
+    return "Application fee: $50 single or $75 couple. Membership dues ($375 full krewe, or $100 leave of absence) come after the background check.";
+  }
+
+  function applicationLast4(value) {
+    var d = String(value == null ? "" : value).replace(/\D/g, "");
+    if (d.length < 4) return "";
+    return d.slice(-4);
+  }
+
+  function applicationSsnLine(row, which) {
+    var last = applicationLast4(which === "partner" ? row.partner_ssn_last4 : row.ssn_last4);
+    var label = which === "partner" ? "Partner SSN on file, last 4 only" : "SSN on file, last 4 only";
+    if (!last) {
+      if (which !== "partner" && row.has_ssn) return "SSN on file. Lists show the last 4 only.";
+      return "";
+    }
+    return label + ": •••-••-" + last;
+  }
+
+  function applicationOpenStatus(status) {
+    return status === "pending-new" || status === "background-check" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
+  }
+
+  function fixtureActor() {
+    var p = window.kosProfile || {};
+    var name = (p.display_name || [p.first_name, p.last_name].filter(Boolean).join(" ") || "Membership Chair").toString().trim();
+    return {
+      actor_name: name || "Membership Chair",
+      actor_email: (p.email || "lsugrue99@gmail.com").toString(),
+      created_at: new Date().toISOString()
+    };
   }
 
   async function reloadApplications(client) {
@@ -3324,32 +3467,88 @@
     openOfficerTool("tool:hubApplications", false);
   }
 
+  function applicationFlashFor(action) {
+    if (action === "approve") {
+      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
+    }
+    if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
+    if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
+    if (action === "background_check") return "Moved to background check in progress. Other officers can see this status and your note.";
+    if (action === "dues_pending") return "Moved to dues pending. This is membership dues after the background check, not the application fee.";
+    if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
+    return "Saved.";
+  }
+
+  function applicationStatusFor(action, from) {
+    if (action === "approve") return "active";
+    if (action === "decline") return "declined";
+    if (action === "archive") return "archived";
+    if (action === "background_check") return "background-check";
+    if (action === "dues_pending") return "dues-pending";
+    return from;
+  }
+
+  var lastDecisionStamp = { key: "", at: 0 };
+
   async function decideApplication(client, action, id, note, btn) {
+    // A status click rebuilds the card. A second click in the same moment
+    // (a double tap, or the browser retrying after the first button is
+    // replaced) would log an empty note on top of the real one.
+    var stamp = String(action) + ":" + String(id);
+    var now = Date.now();
+    if (lastDecisionStamp.key === stamp && now - lastDecisionStamp.at < 800) return;
+    lastDecisionStamp.key = stamp;
+    lastDecisionStamp.at = now;
     if (btn) btn.disabled = true;
     if (applicationsFixture) {
-      var keep = (applicationsFixture || []).filter(function (r) { return String(r.id) !== String(id); });
-      applicationsFixture = keep;
-      if (roleFixture) roleFixture.applications = keep;
-      state.applicationRows = keep.slice();
-      syncApplicationFixtureCounts();
-      if (action === "approve") {
-        state.applicationFlash = "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
-      } else if (action === "decline") {
-        state.applicationFlash = "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
-      } else {
-        state.applicationFlash = "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
+      var row = null;
+      (applicationsFixture || []).forEach(function (r) {
+        if (String(r.id) === String(id)) row = r;
+      });
+      if (!row) {
+        if (btn) btn.disabled = false;
+        return;
       }
+      var from = row.membership_status;
+      row.membership_status = applicationStatusFor(action, from);
+      var actor = fixtureActor();
+      var recent = state.applicationRecent || [];
+      recent.unshift({
+        id: "act-" + Date.now(),
+        member_id: row.id,
+        action: action,
+        note: note || "",
+        from_status: from,
+        to_status: row.membership_status,
+        actor_name: actor.actor_name,
+        actor_email: actor.actor_email,
+        created_at: actor.created_at,
+        applicant: ((row.first_name || "") + " " + (row.last_name || "")).trim()
+      });
+      state.applicationRecent = recent.slice(0, 12);
+      if (roleFixture) {
+        roleFixture.applications = applicationsFixture;
+        roleFixture.applicationRecent = state.applicationRecent;
+      }
+      state.applicationRows = applicationsFixture.slice();
+      syncApplicationFixtureCounts();
+      state.applicationFlash = applicationFlashFor(action);
       renderHome();
       renderApplicationsFromState();
       openOfficerTool("tool:hubApplications", false);
       return;
     }
-    var fn = action === "approve" ? "approve_membership_application"
-      : action === "decline" ? "decline_membership_application"
-      : "archive_membership_application";
-    var args = action === "approve" ? { p_member_id: id } : { p_member_id: id, p_note: note || null };
+    var args = { p_member_id: id, p_action: action, p_note: note || null };
     try {
-      var res = await client.rpc(fn, args);
+      var res = await client.rpc("set_membership_application_status", args);
+      var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
+      if (missing && (action === "approve" || action === "decline" || action === "archive")) {
+        var legacy = action === "approve" ? "approve_membership_application"
+          : action === "decline" ? "decline_membership_application"
+          : "archive_membership_application";
+        var legacyArgs = action === "approve" ? { p_member_id: id } : { p_member_id: id, p_note: note || null };
+        res = await client.rpc(legacy, legacyArgs);
+      }
       if (res.error) throw res.error;
       var payload = res.data || {};
       if (payload.ok === false) throw new Error(payload.message || "Could not update that application.");
@@ -3369,28 +3568,46 @@
     var card = ensureOfficerToolCard("hubApplications");
     if (!card) return;
     var bucket = state.applicationBucket || "new";
-    var counts = state.applicationCounts || {};
     var rows = applicationBucketRows();
-    var intro = bucket === "renewal"
-      ? "These are renewals, not new join-form applications."
-      : bucket === "prospect"
-        ? "These are event RSVP prospects, not new join-form applications."
-        : "These people asked to join on the membership form. Newest first.";
-    var empty = bucket === "renewal"
-      ? "No pending renewals."
-      : bucket === "prospect"
-        ? "No event prospects in this list."
-        : "No new applications right now. When someone submits the join form, they will show up here.";
+    var intro = {
+      renewal: "These are renewals, not new join-form applications.",
+      prospect: "These are event RSVP prospects, not new join-form applications.",
+      background: "Background check is in progress. The application fee covers this step. Membership dues come later.",
+      dues: "Background check is done. Membership dues are pending. This is not the application fee.",
+      approved: "Approved applications. These people are active members.",
+      declined: "Declined applications stay on file. Nothing was deleted.",
+      archived: "Archived applications stay on file. Nothing was deleted.",
+      "new": "These people asked to join on the membership form. Newest first. Status: new."
+    }[bucket] || "These people asked to join on the membership form. Newest first. Status: new.";
+    var empty = {
+      renewal: "No pending renewals.",
+      prospect: "No event prospects in this list.",
+      background: "Nobody is in background check right now.",
+      dues: "Nobody is waiting on membership dues right now.",
+      approved: "No approved applications in this list yet.",
+      declined: "No declined applications.",
+      archived: "No archived applications.",
+      "new": "No new applications right now. When someone submits the join form, they will show up here."
+    }[bucket] || "No new applications right now. When someone submits the join form, they will show up here.";
+    function filterBtn(key, label) {
+      return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on"' : "") + ">" +
+        label + " (" + applicationCountOf(key) + ")</button>";
+    }
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Join-form applications. Renewals and event prospects stay in their own lists.</small></div></div>' +
+      '<small>Join-form applications. Move each one through new, background check, and dues pending.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
     }
     html += '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
-      '<button type="button" data-app-bucket="new"' + (bucket === "new" ? ' class="on"' : "") + ">New applications (" + applicationCountOf("new") + ")</button>" +
-      '<button type="button" data-app-bucket="renewal"' + (bucket === "renewal" ? ' class="on"' : "") + ">Renewals (" + (Number(counts.renewal) || 0) + ")</button>" +
-      '<button type="button" data-app-bucket="prospect"' + (bucket === "prospect" ? ' class="on"' : "") + ">Event prospects (" + (Number(counts.prospect) || 0) + ")</button>" +
+      filterBtn("new", "New applications") +
+      filterBtn("background", "Background check") +
+      filterBtn("dues", "Dues pending") +
+      filterBtn("approved", "Approved") +
+      filterBtn("declined", "Declined") +
+      filterBtn("archived", "Archived") +
+      filterBtn("renewal", "Renewals") +
+      filterBtn("prospect", "Event prospects") +
       "</div>" +
       '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
     if (state.applicationLoadError && !rows.length) {
@@ -3402,22 +3619,41 @@
         var name = ((row.first_name || "") + " " + (row.last_name || "")).trim() || "Applicant";
         var addr = applicationAddress(row);
         var when = formatAppliedEt(row.created_at);
-        html += '<div class="hub-appr" data-app-id="' + esc(row.id) + '">' +
+        var partner = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+        var ssnLine = applicationSsnLine(row, "applicant");
+        var partnerSsn = applicationSsnLine(row, "partner");
+        var open = applicationOpenStatus(row.membership_status);
+        var id = esc(row.id);
+        html += '<div class="hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '">' +
           "<div><b>" + esc(name) + "</b>" +
+          '<span class="hub-app-status' + (row.membership_status === "active" ? " ok" : "") + '">' + esc(applicationStatusLabel(row.membership_status)) + "</span>" +
           (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
           (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
           (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
+          (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
+          '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
+          '<div class="muted">Membership dues are separate: $375 full krewe, or $100 leave of absence, after the background check. They are not the application fee.</div>' +
+          (ssnLine ? '<div class="muted" data-app-ssn>' + esc(ssnLine) + "</div>" : "") +
+          (partnerSsn ? '<div class="muted" data-app-ssn>' + esc(partnerSsn) + "</div>" : "") +
           (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
           (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(row.interests) + "</div>" : "") +
           (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(row.notes) + "</div>" : '<div class="muted">Their note: none</div>') +
-          '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + esc(row.id) + '">Optional note for the record</label>' +
-          '<textarea class="hub-app-note" id="hubAppNote-' + esc(row.id) + '" data-app-note maxlength="1000" placeholder="Only if you want a note saved with this decision"></textarea>' +
-          "</div>" +
-          '<div class="hub-appr-btns">' +
-          '<button type="button" class="btn btn-primary" data-app-approve="' + esc(row.id) + '">Approve</button>' +
-          '<button type="button" class="btn" data-app-decline="' + esc(row.id) + '">Decline</button>' +
-          '<button type="button" class="btn" data-app-archive="' + esc(row.id) + '">Archive</button>' +
-          "</div></div>";
+          (open
+            ? '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
+              '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>'
+            : "") +
+          "</div>";
+        if (open) {
+          html += '<div class="hub-appr-btns">' +
+            '<button type="button" class="btn" data-app-next="' + id + '">Mark next step sent</button>' +
+            (row.membership_status === "background-check" ? "" : '<button type="button" class="btn" data-app-bg="' + id + '">Move to background check</button>') +
+            (row.membership_status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
+            '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
+            '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+            '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>' +
+            "</div>";
+        }
+        html += "</div>";
       });
     }
     var recent = state.applicationRecent || [];
@@ -3425,8 +3661,9 @@
       html += '<h3 class="hub-appr-h">Recent decisions</h3>';
       recent.forEach(function (r) {
         var when = formatAppliedEt(r.created_at);
-        html += '<div class="hub-appr"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
+        html += '<div class="hub-appr" data-app-history="' + esc(r.action || "") + '"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
           (r.applicant ? " · " + esc(r.applicant) : "") +
+          '<div class="muted">' + esc(applicationStatusLabel(r.from_status)) + " to " + esc(applicationStatusLabel(r.to_status)) + "</div>" +
           '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") +
           (when ? " · " + esc(when) : "") + "</div>" +
           (r.note ? '<div class="muted">Note: ' + esc(r.note) + "</div>" : "") +
@@ -3452,7 +3689,7 @@
     body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
-        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), null, btn);
+        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), noteFor(btn.getAttribute("data-app-approve")), btn);
       });
     });
     body.querySelectorAll("[data-app-decline]").forEach(function (btn) {
@@ -3467,6 +3704,27 @@
         var id = btn.getAttribute("data-app-archive");
         if (!confirm("Archive this application? Their record stays on file. Nothing is deleted.")) return;
         decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-bg");
+        if (!confirm("Move this application to background check in progress?")) return;
+        decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-dues");
+        if (!confirm("Move this application to dues pending? That means membership dues, after the background check.")) return;
+        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-next]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-next");
+        if (!confirm("Mark the next step as sent? Other officers will see your note.")) return;
+        decideApplication(window.__kosSb || null, "next_step_sent", id, noteFor(id), btn);
       });
     });
   }
@@ -5822,7 +6080,7 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
-    "Membership": { icon: "📝", sub: "Join-form applications waiting for a yes, a no, or an archive." },
+    "Membership": { icon: "📝", sub: "Join-form applications: new, background check, dues pending, then approve, decline, or archive." },
     "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Members' photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
@@ -5900,6 +6158,9 @@
       toolOrder = toolOrder.filter(function (id) { return id !== "hubApplications"; });
     } else if (toolOrder.indexOf("hubApplications") === -1) {
       toolOrder.unshift("hubApplications");
+    }
+    if (!state.canViewPayments) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubPayments"; });
     }
     return toolOrder;
   }
