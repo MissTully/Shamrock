@@ -1265,10 +1265,15 @@
     return '<span class="hub-chip ' + cls + '">🏷 ' + esc(label) + "</span>";
   }
 
+  function duesGateMet(me) {
+    if (profileDuesExempt()) return true;
+    return !!(me && me.dues_paid);
+  }
+
   function paradeChip() {
     var me = state.parade;
     if (!me) return '<span class="hub-chip">🎗️ Parade Ready · -</span>';
-    var ready = !!(me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var ready = !!(duesGateMet(me) && me.waiver_signed && me.meeting_attended);
     return '<span class="hub-chip ' + (ready ? "ok" : "warn") + '">🎗️ ' + (ready ? "Parade Ready" : "Not parade ready") + "</span>";
   }
 
@@ -1860,7 +1865,7 @@
   function plainParadeReady() {
     var me = state.parade;
     if (!me) return "Parade Ready status loads with your roster record";
-    return (me.dues_paid && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
+    return (duesGateMet(me) && me.waiver_signed && me.meeting_attended) ? "Parade Ready" : "Not parade ready yet";
   }
 
   function openMemberCard() {
@@ -2287,12 +2292,12 @@
     var bits = [];
     if (me) {
       if (!me.waiver_signed) bits.push("liability waiver");
-      if (!me.dues_paid) bits.push("dues");
+      if (!me.dues_paid && !profileDuesExempt()) bits.push("dues");
       if (!me.meeting_attended) bits.push("mandatory meeting");
     }
     if ((state.hoursApproved || 0) < 1) bits.push("hours since July 1");
     if (needsProfile) bits.push("My Krewe profile");
-    var ready = !!(me && me.dues_paid && me.waiver_signed && me.meeting_attended);
+    var ready = !!(me && duesGateMet(me) && me.waiver_signed && me.meeting_attended);
     var line = "Parade Ready, volunteer hours, media sharing, rides, and your locker - all on one desk.";
     if (ready && !needsProfile && (state.hoursApproved || 0) >= 1) {
       line = "You are set for the season. The desk still has your rides, locker, and media sharing.";
@@ -3483,7 +3488,17 @@
     return from;
   }
 
+  var lastDecisionStamp = { key: "", at: 0 };
+
   async function decideApplication(client, action, id, note, btn) {
+    // A status click rebuilds the card. A second click in the same moment
+    // (a double tap, or the browser retrying after the first button is
+    // replaced) would log an empty note on top of the real one.
+    var stamp = String(action) + ":" + String(id);
+    var now = Date.now();
+    if (lastDecisionStamp.key === stamp && now - lastDecisionStamp.at < 800) return;
+    lastDecisionStamp.key = stamp;
+    lastDecisionStamp.at = now;
     if (btn) btn.disabled = true;
     if (applicationsFixture) {
       var row = null;
