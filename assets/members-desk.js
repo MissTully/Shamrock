@@ -427,6 +427,31 @@
     ".desk-officer .desk-kicker{color:#7a5b00;}",
     ".desk-group-head h3{text-transform:none;opacity:1;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
+    /* Member FAQ tab. The group stays out of the desk until the FAQ chip
+       or a #faq link opens it, so the rest of the desk keeps its height.
+       Section pills swap answers in place: no scroll-into-view, no snap. */
+    "#deskFaq{display:none;}",
+    "[data-hub-panel='parade'].desk-faq-on #deskFaq{display:block;}",
+    "[data-hub-panel='parade'].desk-faq-on #hubParade>.desk-group:not(#deskFaq){display:none !important;}",
+    "[data-hub-panel='parade'].desk-faq-on .desk-hero>p:not(.desk-kicker){display:none;}",
+    "[data-hub-panel='parade'].desk-faq-on #deskFaq>.desk-group-head,[data-hub-panel='parade'].desk-faq-on #deskFaq>.desk-group-rule{display:none;}",
+    ".desk-nav button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    "#hubFaq .app-body{color:#23291f;}",
+    ".faq-kicker{margin:0 0 4px;font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9801c;}",
+    ".faq-title{margin:0 0 4px;font-family:var(--display);font-size:clamp(22px,4vw,28px);color:var(--green-800);line-height:1.2;}",
+    ".faq-lead{margin:0 0 12px;color:#5c5848;font-size:16px;line-height:1.45;}",
+    ".faq-jump{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}",
+    ".faq-jump button{display:inline-flex;align-items:center;min-height:44px;border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:15px;cursor:pointer;box-shadow:0 1px 3px rgba(42,33,24,.10);}",
+    ".faq-jump button.on,.faq-jump button[aria-pressed='true']{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    ".faq-block h2{margin:0 0 8px;font-family:var(--display);font-size:22px;color:var(--green-800);line-height:1.25;}",
+    ".faq-block .faq-sub{margin:-2px 0 10px;font-family:var(--fancy);font-style:italic;color:#5c5848;font-size:16px;}",
+    ".faq-block h3{margin:14px 0 6px;font-family:var(--display);font-size:18px;color:var(--green-800);}",
+    ".faq-block p,.faq-block li{font-size:17px;line-height:1.55;}",
+    ".faq-block ul,.faq-block ol{margin:0 0 12px;padding-left:1.25em;}",
+    ".faq-block li{margin:0 0 6px;}",
+    ".faq-block a{color:var(--green-800);font-weight:700;overflow-wrap:anywhere;}",
+    ".faq-block[hidden]{display:none !important;}",
+    "@media (max-width:520px){.faq-jump button{font-size:14px;padding:8px 12px;}}",
 
   ].join("");
 
@@ -570,7 +595,7 @@
       '<div class="app-body app-links">' +
       '<button type="button" class="app-install-row" id="hubInstallMe" data-app-go="get-app">' +
       "<span>Install the app</span><span class=\"go\">Open</span></button>" +
-      "<p>The Parade tab is your Member desk: Parade Ready, volunteer hours, carpools, vans, lockers, documents, and the orientation video. The Craic Cup is here too.</p>" +
+      "<p>The Parade tab is your Member desk: Parade Ready, volunteer hours, carpools, vans, lockers, documents, the orientation video, and the member FAQ. The Craic Cup is here too.</p>" +
       '<button type="button" class="btn btn-primary" data-app-go="fun">Open the Craic Cup</button>' +
       '<button type="button" class="btn" data-app-go="parade">Open Member desk</button>' +
       '<button type="button" class="btn" data-app-go="docs">Documents</button>' +
@@ -581,7 +606,7 @@
       '<a href="event-signup.html">Upcoming events</a>' +
       '<a href="parades.html">Parades</a>' +
       '<a href="tartan-ball.html">Tartan Ball</a>' +
-      '<a href="faq.html">Member FAQ</a>' +
+      '<a href="members.html#faq">Member FAQ</a>' +
       '<a href="learn.html">Our heritage</a>' +
       '<a href="krewe-history.html">Krewe history</a>' +
       '<a href="poetry.html">Krewe creativity</a>' +
@@ -1034,14 +1059,83 @@
     ensureClaimCloversCard();
   }
 
-  /* ---- Member desk layout: one desk, four labeled counters ----
+  /* Member FAQ sections. Hashes are #faq and #faq-beads (and the other
+     section names). None of those strings is an element id, so the browser
+     does not scroll the page to a matching anchor on load. */
+  var FAQ_SECTIONS = ["events", "beads", "charities", "communication", "merchandise", "parades", "attire", "guests"];
+
+  function faqHashSection(hash) {
+    var h = String(hash || "").replace(/^#/, "").toLowerCase();
+    if (h === "faq") return "";
+    if (h.indexOf("faq-") === 0) {
+      var sec = h.slice(4);
+      if (FAQ_SECTIONS.indexOf(sec) !== -1) return sec;
+    }
+    return null;
+  }
+
+  function clearFaqMode() {
+    var panel = document.querySelector('[data-hub-panel="parade"]');
+    if (panel) panel.classList.remove("desk-faq-on");
+    document.querySelectorAll('.desk-nav [data-desk-goto="deskFaq"]').forEach(function (btn) {
+      btn.classList.remove("on");
+      btn.removeAttribute("aria-current");
+    });
+  }
+
+  function applyFaqView(section) {
+    var sec = section && FAQ_SECTIONS.indexOf(section) !== -1 ? section : "events";
+    var panel = document.querySelector('[data-hub-panel="parade"]');
+    if (panel) panel.classList.add("desk-faq-on");
+    document.querySelectorAll("#hubFaq [data-faq-section]").forEach(function (el) {
+      if (el.getAttribute("data-faq-section") === sec) el.removeAttribute("hidden");
+      else el.setAttribute("hidden", "");
+    });
+    document.querySelectorAll("#hubFaq [data-faq-pill]").forEach(function (btn) {
+      var on = btn.getAttribute("data-faq-pill") === sec;
+      btn.classList.toggle("on", on);
+      if (on) btn.setAttribute("aria-pressed", "true");
+      else btn.setAttribute("aria-pressed", "false");
+    });
+    document.querySelectorAll(".desk-nav [data-desk-goto]").forEach(function (btn) {
+      var on = btn.getAttribute("data-desk-goto") === "deskFaq";
+      btn.classList.toggle("on", on);
+      if (on) btn.setAttribute("aria-current", "true");
+      else btn.removeAttribute("aria-current");
+    });
+  }
+
+  function openMemberFaq(section) {
+    var sec = section || "";
+    if (sec && FAQ_SECTIONS.indexOf(sec) === -1) sec = "";
+    if (appNavApi.ready && typeof appNavApi.openFocus === "function") {
+      appNavApi.openFocus("parade", "hubFaq", "FAQ", sec);
+      return;
+    }
+    showTab("parade", { skipScroll: true });
+    applyFaqView(sec);
+  }
+
+  function bindFaqPills() {
+    var root = document.getElementById("hubFaq");
+    if (!root || root.getAttribute("data-faq-bound") === "1") return;
+    root.setAttribute("data-faq-bound", "1");
+    root.querySelectorAll("[data-faq-pill]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        openMemberFaq(btn.getAttribute("data-faq-pill") || "");
+      });
+    });
+  }
+
+  /* ---- Member desk layout: one desk, labeled counters ----
      A member who taps Member desk should understand at a glance what lives
      here, so every everyday tool files under a labeled group with jump chips
      in an Irish-styled masthead. The flow reads top to bottom: get season
      ready, share your media for the public site, sort rides and gear, then
-     learn and look things up. Cards keep their ids and internal wiring - only
-     their position changes - and a card no group claims files in last, so
-     future desk cards never vanish. */
+     learn and look things up, including the member FAQ. Cards keep their ids
+     and internal wiring - only their position changes - and a card no group
+     claims files in last, so future desk cards never vanish. */
   var DESK_GROUPS = [
     { id: "deskSeason", icon: "🎗️", chip: "Season checklist", title: "Get Season Ready",
       sub: "Dues, waiver, parade RSVP, meeting check-in, photo release, and your volunteer hours.",
@@ -1054,7 +1148,10 @@
       cards: ["carpoolCard", "vanCard", "lockerCard"] },
     { id: "deskLearn", icon: "📜", chip: "Learn & documents", title: "Learn & Look Up",
       sub: "The new member orientation video and the governing documents.",
-      cards: ["orientationCard", "docs"] }
+      cards: ["orientationCard", "docs"] },
+    { id: "deskFaq", icon: "❓", chip: "FAQ", title: "Frequently Asked Questions",
+      sub: "Events, beads, volunteer hours, parades, and krewe gear.",
+      cards: ["hubFaq"] }
   ];
 
   function layoutMemberDesk() {
@@ -1071,7 +1168,7 @@
       "<h2>☘ Your Member Desk</h2>" +
       "<p>Everything a member needs, on one desk: get Parade Ready and log your volunteer hours, " +
       "share your photos and videos for the public site (an officer approves each one before it goes live), " +
-      "find a ride or a locker, and look anything up.</p>" +
+      "find a ride or a locker, look up documents, and read the member FAQ.</p>" +
       '<nav class="desk-nav" aria-label="Member desk sections">' +
       DESK_GROUPS.map(function (g) {
         return '<button type="button" data-desk-goto="' + g.id + '">' + g.icon + " " + g.chip + "</button>";
@@ -1105,9 +1202,19 @@
 
     hero.querySelectorAll("[data-desk-goto]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        focusHubTarget(document.getElementById(btn.getAttribute("data-desk-goto")));
+        var id = btn.getAttribute("data-desk-goto");
+        if (id === "deskFaq") {
+          openMemberFaq("");
+          return;
+        }
+        var paradePanel = document.querySelector('[data-hub-panel="parade"]');
+        if (paradePanel && paradePanel.classList.contains("desk-faq-on") && typeof appNavApi.showParadeRoot === "function") {
+          appNavApi.showParadeRoot();
+        }
+        focusHubTarget(document.getElementById(id));
       });
     });
+    bindFaqPills();
   }
 
   function standingChip() {
@@ -1426,7 +1533,9 @@
     // Triskele (triple spiral) - creativity in motion: Share your media.
     triskele: '<path d="M12 12c0-3.6 2.7-6.3 6.1-6.3"/><path d="M12 12c3.1 1.8 3.8 5.5 2 8.4"/><path d="M12 12c-3.1 1.8-6.4.8-8.1-2.1"/><circle cx="12" cy="12" r="1.7"/>',
     // Shamrock for the card heading.
-    shamrock: '<circle cx="12" cy="7.4" r="3.2"/><circle cx="7.9" cy="12.8" r="3.2"/><circle cx="16.1" cy="12.8" r="3.2"/><path d="M12 13c.3 3.2-.5 5.6-2.6 7.5"/>'
+    shamrock: '<circle cx="12" cy="7.4" r="3.2"/><circle cx="7.9" cy="12.8" r="3.2"/><circle cx="16.1" cy="12.8" r="3.2"/><path d="M12 13c.3 3.2-.5 5.6-2.6 7.5"/>',
+    // Open book - the member FAQ.
+    book: '<path d="M5 5.2h6.2A2.8 2.8 0 0 1 14 8v11a2.4 2.4 0 0 0-2.2-1.2H5Z"/><path d="M19 5.2h-6.2A2.8 2.8 0 0 0 10 8v11a2.4 2.4 0 0 1 2.2-1.2H19Z"/>'
   };
 
   function qkIcon(name) {
@@ -1943,6 +2052,7 @@
     if (go === "parade" || go === "desk") { appNavApi.openTab("parade"); return; }
     if (go === "fun") { appNavApi.openFun(); return; }
     if (go === "docs") { revealDocsCard(); return; }
+    if (go === "faq") { openMemberFaq(""); return; }
     if (go === "directory") { openDirectoryFromHome(); return; }
     if (go === "card") { appNavApi.openCard(); return; }
     if (go === "dues") { openPayDues(); return; }
@@ -2225,6 +2335,7 @@
       quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events &amp; RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, volunteer hours, rides, your locker, and media sharing.") +
+      quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
       quickTile("share", "triskele", "Share your media", "Upload photos &amp; videos for the public site - an officer approves them - plus artwork, poems &amp; recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
       '<div class="hub-action" id="docsHome" style="cursor:default">' +
@@ -2274,6 +2385,7 @@
         else if (go === "events") gotoHubTabFromHome("events", "events");
         else if (go === "desk") gotoHubTabFromHome("parade", "desk");
         else if (go === "share") revealShareGroup();
+        else if (go === "faq") openMemberFaq("");
         else if (go === "fun") gotoHubTabFromHome("fun", "fun");
       });
     });
@@ -2302,6 +2414,7 @@
   window.__hubShowTab = showTab;
   window.showHubTab = showTab;
   window.kosRevealDocs = revealDocsCard;
+  window.kosOpenFaq = openMemberFaq;
   window.kosOpenDirectory = openDirectoryFromHome;
   window.kosOpenEventStudio = openEventStudioFromHome;
 
@@ -2486,6 +2599,7 @@
       state.tidingsReady = true;
       state.birthdaysReady = true;
       renderHome();
+      try { appNavApi.boot(); } catch (faqBoot) {}
       return;
     }
 
@@ -2674,6 +2788,7 @@
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "docs") { saved = "parade"; wantDocs = true; }
       else if (hash === "share") { saved = "parade"; wantShare = true; }
+      else if (faqHashSection(hash) !== null) saved = "parade";
       else if (hash === "events") saved = "events";
       else if (hash === "fun") saved = "fun";
       else if (hash === "home") saved = TAB_HOME;
@@ -4825,7 +4940,9 @@
 
     function slim(frames) {
       return (frames || []).map(function (fr) {
-        return { kind: fr.kind || "root", id: fr.id || "", title: fr.title || "" };
+        var row = { kind: fr.kind || "root", id: fr.id || "", title: fr.title || "" };
+        if (fr.section) row.section = fr.section;
+        return row;
       });
     }
 
@@ -4838,6 +4955,7 @@
         if (top.id === "shareCard") return "#share";
         if (top.id === "carpoolCard") return "#parade/carpool";
         if (top.id === "hubMemberDirectory") return "#directory";
+        if (top.id === "hubFaq") return top.section ? ("#faq-" + top.section) : "#faq";
         return "#parade";
       }
       if (top.kind === "card") return "#card";
@@ -4881,6 +4999,11 @@
       if (lower === "docs") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
       if (lower === "hours" || lower === "volunteer") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
       if (lower === "share") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
+      if (faqHashSection(lower) !== null) {
+        var faqFrame = { kind: "focus", id: "hubFaq", title: "FAQ" };
+        if (faqHashSection(lower)) faqFrame.section = faqHashSection(lower);
+        return { tab: "parade", frames: [{ kind: "root" }, faqFrame] };
+      }
       if (lower === "parade/carpool" || lower === "carpool") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "carpoolCard", title: "Carpool" }] };
       if (lower === "directory") return { tab: "krewe", frames: [{ kind: "root" }, { kind: "focus", id: "hubMemberDirectory", title: "Directory" }] };
       if (lower === "krewe" || lower === "me") return { tab: "krewe", frames: [{ kind: "root" }] };
@@ -5089,6 +5212,7 @@
       clearFocusMarks();
       var skipHome = !(appNav.tab === "hub" && top.kind === "root");
       showTab(appNav.tab, { skipScroll: true, skipHomeRender: skipHome });
+      if (!(top.kind === "focus" && top.id === "hubFaq")) clearFaqMode();
       if (top.kind === "root") {
         if (drill) drill.hidden = true;
         if (appNav.tab === "fun") showBack("Craic Cup");
@@ -5100,18 +5224,28 @@
         if (drill) drill.hidden = true;
         var el = document.getElementById(top.id);
         if (el) el.classList.add("app-focus-target");
-        /* Carpool and volunteer hours are single tools. Documents, share, and
-           the directory stay on the desk so the rest of that desk remains visible. */
-        if (top.id === "carpoolCard" || top.id === "hubHoursCard") document.body.classList.add("app-focus");
-        showBack(top.title || "Back");
-        var panel = document.querySelector("[data-hub-panel].hub-on");
-        if (document.body.classList.contains("hub-app")) {
-          if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
-          else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
-        } else if (el && el.getBoundingClientRect) {
-          var rect = el.getBoundingClientRect();
-          if (rect.top < 72 || rect.bottom > window.innerHeight - 16) {
-            el.scrollIntoView({ behavior: "auto", block: "nearest" });
+        if (top.id === "hubFaq") {
+          /* Keep the desk masthead and topic pills. Swap the answer in place
+             and do not scroll the page or the panel when a pill changes. */
+          showBack(top.title || "FAQ");
+          var paradePanel = document.querySelector('[data-hub-panel="parade"]');
+          var alreadyFaq = !!(paradePanel && paradePanel.classList.contains("desk-faq-on"));
+          applyFaqView(top.section || "");
+          if (paradePanel && !alreadyFaq) paradePanel.scrollTop = 0;
+        } else {
+          /* Carpool and volunteer hours are single tools. Documents, share, and
+             the directory stay on the desk so the rest of that desk remains visible. */
+          if (top.id === "carpoolCard" || top.id === "hubHoursCard") document.body.classList.add("app-focus");
+          showBack(top.title || "Back");
+          var panel = document.querySelector("[data-hub-panel].hub-on");
+          if (document.body.classList.contains("hub-app")) {
+            if (panel && el && document.body.classList.contains("app-focus")) panel.scrollTop = 0;
+            else if (panel && el) panel.scrollTop = Math.max(0, (el.offsetTop || 0) - 8);
+          } else if (el && el.getBoundingClientRect) {
+            var rect = el.getBoundingClientRect();
+            if (rect.top < 72 || rect.bottom > window.innerHeight - 16) {
+              el.scrollIntoView({ behavior: "auto", block: "nearest" });
+            }
           }
         }
       } else if (top.kind === "event") {
@@ -5193,6 +5327,7 @@
       for (var i = 0; i < a.length; i++) {
         if ((a[i].kind || "root") !== (b[i].kind || "root")) return false;
         if (String(a[i].id || "") !== String(b[i].id || "")) return false;
+        if (String(a[i].section || "") !== String(b[i].section || "")) return false;
       }
       return true;
     }
@@ -5297,11 +5432,13 @@
       pushFrames(appNav.tab, frames, "push");
     }
 
-    function openFocus(tab, id, title) {
+    function openFocus(tab, id, title, section) {
       ensure();
       appNav.userMoved = true;
       appNav.booted = true;
-      var frames = [{ kind: "root" }, { kind: "focus", id: id, title: title || "Back" }];
+      var focus = { kind: "focus", id: id, title: title || "Back" };
+      if (section) focus.section = section;
+      var frames = [{ kind: "root" }, focus];
       if (appNav.tab === tab && sameFrames(framesOf(tab), frames)) {
         renderTop("");
         return;
@@ -5427,9 +5564,17 @@
       if (!appNav.booted && !appNav.userMoved) {
         appNav.booted = true;
         var route = routeFromHash(location.hash) || { tab: "hub", frames: [{ kind: "root" }] };
+        var bareHash = !location.hash || location.hash === "#";
+        var alreadyPanel = document.querySelector("[data-hub-panel].hub-on");
+        var alreadyTab = alreadyPanel && alreadyPanel.getAttribute("data-hub-panel");
         if (history.state && history.state.kosHub) {
           var st = history.state.kosHub;
           applyRoute(st.tab || route.tab, st.frames || route.frames, "");
+        } else if (bareHash && alreadyTab && alreadyTab !== "hub") {
+          // A caller already opened a desk (tests, or a tab tap before the
+          // client settles). Do not seed Home over that panel.
+          appNav.tab = alreadyTab;
+          if (!appNav.stacks[alreadyTab]) appNav.stacks[alreadyTab] = [{ kind: "root" }];
         } else {
           seed(route);
         }
@@ -5545,6 +5690,13 @@
     appNavApi.openTab = openTab;
     appNavApi.openEvent = openEvent;
     appNavApi.openFocus = openFocus;
+    appNavApi.showParadeRoot = function () {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      applyRoute("parade", [{ kind: "root" }], "");
+      writeHistory("replaceState");
+    };
     appNavApi.openCard = openCard;
     appNavApi.openGetApp = openGetApp;
     appNavApi.openAnnouncement = openAnnouncement;
@@ -5603,7 +5755,11 @@
           var m = href.match(/(?:^|\/)members\.html#(.+)$/i);
           if (m) hash = m[1].toLowerCase();
         }
-        if (hash === "docs") {
+        var faqSec = faqHashSection(hash);
+        if (faqSec !== null) {
+          ev.preventDefault();
+          openMemberFaq(faqSec);
+        } else if (hash === "docs") {
           ev.preventDefault();
           revealDocsCard();
         } else if (hash === "directory") {
@@ -6163,6 +6319,7 @@
     if (document.getElementById("hubRoot")) {
       // Already built: only refresh data if we have not settled this session.
       syncAppChrome();
+      try { appNavApi.boot(); } catch (faqBootEarly) {}
       if (!hubSettled && !hubLoadInFlight) loadHubData();
       return;
     }
@@ -6180,6 +6337,7 @@
       if (visible || tries > 50) {
         clearInterval(t);
         syncAppChrome();
+        try { appNavApi.boot(); } catch (faqBootVisible) {}
         loadHubData();
       }
     }, 200);

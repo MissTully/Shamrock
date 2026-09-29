@@ -70,6 +70,7 @@ const STANDALONE_HTML = new Set([
   "tartan-ball-labels.html", // Avery label print sheet
   "photo-image-release.html", // printable waiver
   "join.html", // redirect stub to membership-application.html
+  "faq.html", // redirect stub to members.html#faq
   "go.html", // tracked QR redirect hop (QR_LIBRARY_BUILD_PLAN.md Phase 2)
 ]);
 for (const file of htmlFiles) {

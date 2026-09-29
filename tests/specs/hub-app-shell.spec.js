@@ -133,7 +133,7 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator("#appPageTitle")).toHaveText("Me");
     await expect(page.locator("#appMeLinks a[href='gallery.html']")).toBeVisible();
     await expect(page.locator("#appMeLinks a[href='store.html']")).toBeVisible();
-    await expect(page.locator("#appMeLinks a[href='faq.html']")).toBeVisible();
+    await expect(page.locator("#appMeLinks a[href='members.html#faq']")).toBeVisible();
     await expect(page.locator('#appMeLinks [data-app-go="signout"]')).toBeVisible();
     await expect(page.locator("#hubMemberDirectory")).toBeVisible();
     assertHealthy(expect, report, "app destinations");
