@@ -21,6 +21,17 @@ test("membership application: required fields block an empty submit", async ({ p
   await page.fill("#email", "not-an-email");
   expect(await page.locator("#email").evaluate((el) => el.checkValidity())).toBe(false);
 
+  await expect(page.locator("#appFeeBox")).toContainText("Application fee");
+  await expect(page.locator("#appFeeBox")).toContainText("$50");
+  await expect(page.locator("#appFeeBox")).toContainText("$75");
+  await expect(page.locator("#appFeeBox")).toContainText("not membership dues");
+  await expect(page.locator("#joinNextSteps")).toContainText("background check");
+  await expect(page.locator("#duesFeeBox")).toContainText("Membership dues");
+  await expect(page.locator("#duesFeeBox")).toContainText("$375");
+  await expect(page.locator("#appSsn")).toHaveAttribute("type", "password");
+  const html = await page.content();
+  expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
+
   assertHealthy(expect, report, "membership form");
 });
 

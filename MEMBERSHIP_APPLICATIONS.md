@@ -42,3 +42,54 @@ Until that file is applied, the Hub hides the tool because `can_review_applicati
 `submit_membership_application` still emails `secretary@kreweofshamrock.com` and `digital@kreweofshamrock.com` with the same message as before.
 
 It also emails whoever currently holds Membership Chair (committee grant or a title containing Chair of Membership). If nobody holds that role, it falls back to `lsugrue99@gmail.com`. The chair copy is skipped when that address is already secretary or digital, so those two are not mailed twice.
+
+The chair letter names the applicant and includes a link to Membership Applications (`members.html#applications`). It names the application fee (single $50 or couple $75). It does not include a Social Security number.
+
+## Pipeline stages
+
+Join-form applications move through these `membership_status` values. Officers do this from Membership Applications. Each change is a row in `membership_application_actions` (who, when, note, from status, to status).
+
+| Stage | Status value | What it means |
+|---|---|---|
+| New | `pending-new` | Submitted on the join form |
+| Background check in progress | `background-check` | Chair started the background check |
+| Dues pending | `dues-pending` | Background check is done. Membership dues are next. This is not the application fee. |
+| Approved | `active` | Approve. Welcome email for new applicants. |
+| Declined | `declined` | Record stays. Off the new list. |
+| Archived | `archived` | Record stays. Off the new list. |
+
+Mark next step sent keeps the current status and stores the note so other officers can see it.
+
+Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own lists.
+
+## Fees
+
+Two different fees:
+
+- Application fee (background check): $50 single applicant, $75 couple. The join page says the payment link is not published there. The Membership Chair sends that step. Do not use the dues links for this fee.
+- Membership dues (after the background check): full krewe $375 and leave of absence $100. Those Zeffy links are already on the join page and in the Hub, labeled as membership dues.
+
+The roster column `application_fee_type` is `single` or `dual`.
+
+Officers and board members (`member_role` or `member_roles` / `officer_title` of officer, captain, or board, using the same title map as the Hub) do not see a pay-dues checklist item. Regular members do.
+
+## Background check number
+
+The join form collects a Social Security number (the board's preferred ID; a driver license was the old path). It is stored in `membership_application_ids`, not on the public page and not in email.
+
+- Lists show the last 4 only.
+- `reveal_membership_application_id` returns the full number only when `can_review_applications()` is true.
+- The table has row level security and no client grants. The browser cannot select it directly.
+
+## Apply the pipeline file before go-live
+
+The site deploy does not run SQL. Do this in the Supabase SQL editor for project `oazwkwflgbthojvnclfc` before the new stages, the chair letter, and the background-check number are live.
+
+1. If Membership Applications is not installed yet, run `sql/kos_membership_applications.sql` first.
+2. Open `sql/kos_membership_application_pipeline.sql`.
+3. Paste it into a new SQL query and run it.
+4. Safe to run again.
+
+If you run the older membership applications file after the pipeline file, run the pipeline file again.
+
+Until the pipeline file is applied, the join form still saves the name and address. The background-check number is not stored, and the new stage buttons need the file.
