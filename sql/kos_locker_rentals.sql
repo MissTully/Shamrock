@@ -4,8 +4,12 @@
 --
 -- Re-running resets the four Zeffy keys below to the URLs in this file.
 -- Re-running does not overwrite a physical locker that already has that number
--- (officer assignments stay). It does replace kos_record_payment with the
--- live 2026-09-30 body (dues, event RSVP, raffle credit) plus locker claiming.
+-- (officer assignments stay: holder name and status are left as they are).
+-- It does replace kos_record_payment with the live 2026-09-30 body (dues,
+-- event RSVP, raffle credit) plus locker claiming.
+-- Re-running also fills a reservation name from the member roster when the
+-- stored name is an email, and links a queued reservation to the inventory
+-- locker that member already holds.
 --
 -- Zeffy pay links (the one place to change them):
 --   ZEFFY_LOCKER_SMALL_URL
@@ -1068,3 +1072,115 @@ grant execute on function public.officer_locker_free(uuid) to authenticated;
 grant execute on function public.officer_locker_set_setting(text, text) to authenticated;
 
 revoke all on function public.locker_reservation_before_write() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 8) Desk sync: roster names, and inventory already held by that member
+--    Safe to re-run. Does not rename a locker holder or change locker status.
+--    When the stored reservation name is an email, replace it with the
+--    member's first and last name.
+--    A queued reservation whose member already holds a locker (same member
+--    id, same holder email, or kos_match_member_by_name on the holder) is
+--    linked to that locker. Paid inventory sets paid_at. Same size is
+--    preferred when a member matches more than one locker.
+-- ---------------------------------------------------------------------------
+update public.locker_reservations r
+   set requester_name = btrim(concat_ws(' ', m.first_name, m.last_name))
+  from public.members m
+ where r.member_id = m.id
+   and m.merged_into is null
+   and position('@' in r.requester_name) > 0
+   and position('@' in btrim(concat_ws(' ', m.first_name, m.last_name))) = 0
+   and nullif(btrim(coalesce(m.first_name, '')), '') is not null
+   and nullif(btrim(coalesce(m.last_name, '')), '') is not null;
+
+do $sync$
+declare
+  rec record;
+  v_lock public.lockers%rowtype;
+begin
+  for rec in
+    select r.*
+    from public.locker_reservations r
+    where r.status in ('queued', 'assigned')
+      and r.locker_id is null
+    order by
+      case when exists (
+        select 1
+        from public.lockers l
+        where l.status in ('assigned', 'paid')
+          and l.size = r.size
+          and not exists (
+            select 1
+            from public.locker_reservations taken
+            where taken.locker_id = l.id
+              and taken.status <> 'cancelled'
+          )
+          and (
+            (l.member_id is not null and l.member_id = r.member_id)
+            or (
+              nullif(lower(btrim(coalesce(l.holder_email, ''))), '') is not null
+              and lower(btrim(l.holder_email)) = lower(btrim(coalesce(r.requester_email, '')))
+            )
+            or (
+              r.member_id is not null
+              and public.kos_match_member_by_name(l.holder_name) = r.member_id
+            )
+          )
+      ) then 0 else 1 end,
+      r.created_at,
+      r.id
+  loop
+    select l.*
+      into v_lock
+    from public.lockers l
+    where l.status in ('assigned', 'paid')
+      and not exists (
+        select 1
+        from public.locker_reservations taken
+        where taken.locker_id = l.id
+          and taken.status <> 'cancelled'
+      )
+      and (
+        (l.member_id is not null and l.member_id = rec.member_id)
+        or (
+          nullif(lower(btrim(coalesce(l.holder_email, ''))), '') is not null
+          and lower(btrim(l.holder_email)) = lower(btrim(coalesce(rec.requester_email, '')))
+        )
+        or (
+          rec.member_id is not null
+          and public.kos_match_member_by_name(l.holder_name) = rec.member_id
+        )
+      )
+    order by
+      case when l.size = rec.size then 0 else 1 end,
+      case when l.status = 'paid' then 0 else 1 end,
+      l.locker_number
+    limit 1;
+
+    if not found then
+      continue;
+    end if;
+
+    update public.locker_reservations
+       set locker_id = v_lock.id,
+           status = 'assigned',
+           paid_at = case
+             when v_lock.status = 'paid' then coalesce(paid_at, now())
+             else paid_at
+           end
+     where id = rec.id;
+
+    update public.lockers
+       set member_id = coalesce(member_id, rec.member_id),
+           holder_email = coalesce(
+             holder_email,
+             case
+               when position('@' in coalesce(rec.requester_email, '')) > 0
+                 then lower(btrim(rec.requester_email))
+               else null
+             end
+           )
+     where id = v_lock.id;
+  end loop;
+end;
+$sync$;

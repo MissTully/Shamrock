@@ -326,10 +326,132 @@
     return card;
   }
 
-  function queuePlace(rows, row) {
-    if (row.status !== "queued") return "";
+  function notEmailName(v) {
+    v = (v == null ? "" : String(v)).trim();
+    return v && v.indexOf("@") === -1 ? v : "";
+  }
+
+  function joinedPersonName(first, last) {
+    return notEmailName([notEmailName(first), notEmailName(last)].filter(Boolean).join(" "));
+  }
+
+  // Roster and profile names win. An email is only the label when no real name exists.
+  function reservationDisplayName(r, member, profile) {
+    var profileFull = profile ? notEmailName(profile.full_name) : "";
+    var profileJoined = profile ? joinedPersonName(profile.first_name, profile.last_name) : "";
+    var memberJoined = member ? joinedPersonName(member.first_name, member.last_name) : "";
+    var stamped = notEmailName(r.display_name) || joinedPersonName(r.member_first_name, r.member_last_name);
+    var request = notEmailName(r.requester_name);
+    return profileFull || profileJoined || memberJoined || stamped || request || String(r.requester_email || r.requester_name || "");
+  }
+
+  function nameTokens(full) {
+    var parts = String(full || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+    if (parts.length < 2) return null;
+    if (parts[0].length < 2 || parts[parts.length - 1].length < 2) return null;
+    return { first: parts[0], last: parts[parts.length - 1] };
+  }
+
+  // Same rule as kos_match_member_by_name: exact last name, and the first name
+  // is equal or one is a prefix of the other (Doug matches Douglas).
+  function namesMatch(holder, person) {
+    var h = nameTokens(holder);
+    var p = nameTokens(person);
+    if (!h || !p || h.last !== p.last) return false;
+    return h.first === p.first || h.first.indexOf(p.first) === 0 || p.first.indexOf(h.first) === 0;
+  }
+
+  function cleanEmail(v) {
+    return (v == null ? "" : String(v)).trim().toLowerCase();
+  }
+
+  function indexRows(rows, key) {
+    var map = {};
+    (rows || []).forEach(function (row) {
+      if (row && row[key] != null && row[key] !== "") map[row[key]] = row;
+    });
+    return map;
+  }
+
+  function personFromReservation(r, membersById, profilesById) {
+    var member = r.member_id ? membersById[r.member_id] : null;
+    var profile = r.member_id ? profilesById[r.member_id] : null;
+    var display = reservationDisplayName(r, member, profile);
+    return {
+      memberId: r.member_id || null,
+      email: cleanEmail(r.requester_email || (member && member.email) || ""),
+      name: notEmailName(display),
+      display: display,
+      size: r.size
+    };
+  }
+
+  function lockerHeld(l) {
+    return !!(l && (l.status === "assigned" || l.status === "paid"));
+  }
+
+  function matchScore(person, locker) {
+    if (!lockerHeld(locker)) return 0;
+    var score = 0;
+    if (person.memberId && locker.member_id && person.memberId === locker.member_id) score = 100;
+    else if (person.email && cleanEmail(locker.holder_email) && person.email === cleanEmail(locker.holder_email)) score = 80;
+    else if (person.name && namesMatch(locker.holder_name, person.name)) score = 40;
+    else return 0;
+    if (person.size && locker.size === person.size) score += 10;
+    if (locker.status === "paid") score += 5;
+    return score;
+  }
+
+  function reservationPaid(r, locker) {
+    return !!(r.paid_at || (locker && locker.status === "paid"));
+  }
+
+  // Inventory is the assignment of record. A reservation with no locker_id
+  // still shows the locker that member already holds.
+  function lockerForReservations(reservations, inventory, membersById, profilesById) {
+    var byId = {};
+    (inventory || []).forEach(function (l) { if (l && l.id != null) byId[l.id] = l; });
+    var used = {};
+    var direct = {};
+    (reservations || []).forEach(function (r) {
+      var linked = r.locker_id && byId[r.locker_id];
+      if (linked) {
+        direct[r.id] = linked;
+        used[linked.id] = r.id;
+      }
+    });
+    var pairs = [];
+    (reservations || []).forEach(function (r) {
+      if (direct[r.id]) return;
+      var person = personFromReservation(r, membersById, profilesById);
+      (inventory || []).forEach(function (l) {
+        if (!l || used[l.id]) return;
+        var score = matchScore(person, l);
+        if (score > 0) pairs.push({ id: r.id, locker: l, score: score, created: r.created_at || "" });
+      });
+    });
+    pairs.sort(function (a, b) {
+      return b.score - a.score
+        || String(a.created).localeCompare(String(b.created))
+        || String(a.locker.locker_number || "").localeCompare(String(b.locker.locker_number || ""));
+    });
+    var matched = {};
+    pairs.forEach(function (p) {
+      if (matched[p.id] || used[p.locker.id]) return;
+      matched[p.id] = p.locker;
+      used[p.locker.id] = p.id;
+    });
+    return function (r) {
+      return direct[r.id] || matched[r.id] || null;
+    };
+  }
+
+  function queuePlace(rows, row, lockerOf) {
+    var mine = lockerOf ? lockerOf(row) : null;
+    if (row.status !== "queued" || mine) return "";
     var ahead = rows.filter(function (r) {
-      return r.size === row.size && r.status === "queued" &&
+      var taken = lockerOf ? lockerOf(r) : null;
+      return r.size === row.size && r.status === "queued" && !taken &&
         (r.created_at < row.created_at || (r.created_at === row.created_at && String(r.id) <= String(row.id)));
     });
     return String(ahead.length);
@@ -350,34 +472,39 @@
       var openSmall = (model.inventory || []).filter(function (l) { return l.size === "small" && l.status === "available"; }).length;
       counts.textContent = openLarge + " large available, " + openSmall + " small available.";
     }
-    var byId = {};
-    (model.inventory || []).forEach(function (l) { byId[l.id] = l; });
     var available = (model.inventory || []).filter(function (l) { return l.status === "available"; }).sort(compareLockers);
+    var membersById = indexRows(model.members, "id");
+    var profilesById = indexRows(model.profiles, "member_id");
     var queue = document.getElementById("hubLockerQueue");
     if (queue) {
       var reservations = (model.reservations || []).slice().sort(function (a, b) {
         return String(a.created_at || "").localeCompare(String(b.created_at || "")) || String(a.id).localeCompare(String(b.id));
       });
+      var lockerOf = lockerForReservations(reservations, model.inventory, membersById, profilesById);
       if (!reservations.length) {
         queue.innerHTML = '<tr><td colspan="7">No reservations yet.</td></tr>';
       } else {
         queue.innerHTML = reservations.map(function (r) {
-          var locker = r.locker_id ? byId[r.locker_id] : null;
+          var locker = lockerOf(r);
+          var person = personFromReservation(r, membersById, profilesById);
+          var paid = reservationPaid(r, locker);
           var choices = available.filter(function (l) { return l.size === r.size; });
           var options = '<option value="">Choose an open locker</option>' + choices.map(function (l) {
             return '<option value="' + esc(l.locker_number) + '">' + esc(l.locker_number) + '</option>';
           }).join("");
           var actions = "";
-          if (!r.paid_at) {
-            actions += '<button type="button" class="btn btn-green" data-mark-paid="' + esc(r.id) + '" style="padding:6px 10px">Mark paid</button> ';
+          if (!paid) {
+            actions += '<button type="button" class="btn btn-green" data-mark-paid="' + esc(r.id) + '"';
+            if (locker && locker.id !== r.locker_id) actions += ' data-mark-locker="' + esc(locker.id) + '"';
+            actions += ' style="padding:6px 10px">Mark paid</button> ';
           }
-          if (r.status !== "cancelled") {
-            actions += '<select data-assign-for="' + esc(r.id) + '" aria-label="Locker number for ' + esc(r.requester_name) + '">' + options + '</select> ';
+          if (!locker && r.status !== "cancelled") {
+            actions += '<select data-assign-for="' + esc(r.id) + '" aria-label="Locker number for ' + esc(person.display) + '">' + options + '</select> ';
             actions += '<button type="button" class="btn btn-primary" data-assign="' + esc(r.id) + '" style="padding:6px 10px">Assign</button>';
           }
-          return '<tr><td>' + esc(queuePlace(reservations, r)) + '</td><td>' + esc(r.requester_name) +
+          return '<tr><td>' + esc(queuePlace(reservations, r, lockerOf)) + '</td><td>' + esc(person.display) +
             '</td><td>' + esc(r.requester_email || "") + '</td><td>' + esc(r.size) +
-            '</td><td>' + (r.paid_at ? "Yes" : "No") + '</td><td>' + esc(locker && locker.locker_number || "") +
+            '</td><td>' + (paid ? "Yes" : "No") + '</td><td>' + esc(locker && locker.locker_number || "") +
             '</td><td>' + actions + '</td></tr>';
         }).join("");
       }
@@ -424,8 +551,18 @@
       var res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id");
       if (res && res.error) throw res.error;
       reservations = (res.data || []).filter(function (r) { return r.status !== "cancelled"; });
+      var members = [];
+      var profiles = [];
+      try {
+        var mem = await client.from("members").select("id,first_name,last_name,email");
+        if (mem && !mem.error && mem.data) members = mem.data;
+      } catch (ignoreMembers) {}
+      try {
+        var prof = await client.from("profiles").select("member_id,full_name,first_name,last_name");
+        if (prof && !prof.error && prof.data) profiles = prof.data;
+      } catch (ignoreProfiles) {}
       if (seq !== officerSeq) return;
-      paintOfficer({ urls: urls, inventory: inventory, reservations: reservations });
+      paintOfficer({ urls: urls, inventory: inventory, reservations: reservations, members: members, profiles: profiles });
     } catch (e) {
       if (seq !== officerSeq) return;
       paintOfficer({ urls: urls, inventory: [], reservations: [] });
@@ -470,9 +607,14 @@
     var result;
     if (mark) {
       result = await client.rpc("officer_locker_mark_paid", { p_reservation_id: mark });
-    } else if (markLocker) {
+      if (!result || result.error || (result.data && result.data.ok === false)) {
+        setOfficerMsg((result && result.error && result.error.message) || (result && result.data && result.data.message) || "Could not update the locker.", "err");
+        return;
+      }
+    }
+    if (markLocker) {
       result = await client.rpc("officer_locker_mark_paid", { p_locker_id: markLocker });
-    } else if (free) {
+    } else if (!mark && free) {
       if (!window.confirm("Free this locker and return it to available?")) return;
       result = await client.rpc("officer_locker_free", { p_locker_id: free });
     } else if (assign) {
