@@ -11,7 +11,7 @@ which records payments and can auto-mark matching membership dues as paid.
 | `payments` table | Ledger of online payments; officers read it in the hub. |
 | `kos_record_payment(...)` | Idempotently records a payment, matches the payer to the roster by email, and auto-marks matching dues payments. |
 | `zeffy-webhook` Edge Function | Authenticates Zeffy with a shared token, maps the payment, and calls the recorder. |
-| Officer desk → Payments card | Shows recent payments and flags payers with no roster match. |
+| Officer desk → Dues & Payments | Same Payments gate. Tabs for the cash ledger, the dues season tracker, the waiver report, and CSV export. See TREASURER_DUES_REPORTING.md. |
 
 ## Step 1 — Create Zeffy campaigns and payment forms (Patrick)
 
@@ -84,8 +84,8 @@ a matching member and year update that member's unpaid dues row.
 
 1. Send a Zeffy test `payment.completed` notification or make a small test payment.
 2. Confirm Zeffy receives a 2xx response (`{"received":true}`).
-3. Confirm the payment appears in Officer desk → Payments and that the member/year
-   is marked paid when applicable.
+3. Confirm the payment appears in Officer desk → Dues & Payments → Cash ledger and that the member/year
+   is marked paid when applicable. Season cash totals live on the Dues season tab and do not add this ledger row a second time.
 4. If the payer is not matched, verify the email in the Zeffy receipt and roster.
 5. Rotate the shared token in Zeffy and Supabase if it is ever exposed.
 
