@@ -84,17 +84,6 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
   if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
     return explicit;
   }
-  const campaignType = text(
-    payment.campaign_type,
-    payment.campaignType,
-    payment.campaign_category,
-    payment.campaignCategory,
-  )?.toLowerCase() ?? "";
-  if (/(ticket|ticketing|event)/.test(campaignType)) return "event";
-  if (/(donation|donate)/.test(campaignType)) return "donation";
-  if (/(membership|dues)/.test(campaignType)) return "dues";
-  if (/(shop|store|merch)/.test(campaignType)) return "store";
-
   const description = [
     payment.campaign,
     payment.campaignName,
@@ -107,6 +96,36 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     payment.name,
     payment.rate_title,
   ].filter(Boolean).join(" ").toLowerCase();
+  const linkBlob = [
+    payment.url,
+    payment.campaign_url,
+    payment.campaignUrl,
+    payment.share_url,
+    payment.public_url,
+    payment.publicUrl,
+    metadata.url,
+    metadata.campaign_url,
+  ].filter(Boolean).join(" ").toLowerCase();
+  // Locker rentals stay product_kind "other". payments has no locker kind.
+  // kos_claim_locker_from_payment matches the campaign text and the Zeffy URL.
+  if (
+    /\blocker/.test(description) ||
+    /\blocker/.test(linkBlob) ||
+    /krewe-locker-rental-(small|large)/.test(`${description} ${linkBlob}`)
+  ) {
+    return "other";
+  }
+
+  const campaignType = text(
+    payment.campaign_type,
+    payment.campaignType,
+    payment.campaign_category,
+    payment.campaignCategory,
+  )?.toLowerCase() ?? "";
+  if (/(ticket|ticketing|event)/.test(campaignType)) return "event";
+  if (/(donation|donate)/.test(campaignType)) return "donation";
+  if (/(membership|dues)/.test(campaignType)) return "dues";
+  if (/(shop|store|merch)/.test(campaignType)) return "store";
   if (/\b(dues|membership)\b/.test(description)) return "dues";
   if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
   if (/\bdonation|donor|gift\b/.test(description)) return "donation";
@@ -267,6 +286,21 @@ Deno.serve(async (req: Request) => {
     ticket_count: ticketCount,
     campaign_slug: campaignSlug,
     campaign_id: text(payment.campaign_id, payment.campaignId),
+    campaign_name: text(
+      payment.campaignName,
+      payment.campaign_name,
+      payment.campaign,
+      payment.title,
+    ),
+    campaign_url: text(
+      payment.url,
+      payment.campaign_url,
+      payment.campaignUrl,
+      payment.share_url,
+      payment.public_url,
+      metadata.url,
+      metadata.campaign_url,
+    ),
     description,
     product_kind: inferKind(metadata, payment),
     ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
