@@ -16,8 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260930return1" />
 <style>
-.kos-cal-card{margin-top:14px;padding:12px 14px;border:1px solid rgba(168,128,28,.45);border-radius:12px;background:#fffdf8;}
-.kos-cal-card p{margin:0 0 10px;font-size:15px;color:#3a3a2e;line-height:1.4;}
+.kos-cal-offer{margin-top:14px;padding:12px 14px;border:1px solid rgba(168,128,28,.45);border-radius:12px;background:#fffdf8;}
+.kos-cal-offer p{margin:0 0 10px;font-size:15px;color:#3a3a2e;line-height:1.4;}
 .kos-cal-btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;background:#fff;color:#14532d;border:1px solid rgba(20,83,45,.45);font-family:var(--display);font-weight:700;font-size:15px;}
 .kos-cal-btn:hover{background:#f3efe2;}
 </style>
@@ -337,7 +337,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20260930cal1"></script>
+  <script src="assets/kos-calendar.js?v=20260930cal3"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -373,12 +373,12 @@
     function paintCalendarOffer(target, ev) {
       if (!target || !ev || !ev.start_time || !window.kosCalendar) return;
       target.hidden = false;
-      target.innerHTML = '<div class="kos-cal-card">' +
-        '<p>Add this event to your calendar. The file uses the public location, and the time is Tampa local time.</p>' +
-        '<button type="button" class="kos-cal-btn" id="rsvpAddCalendar">Add to calendar</button></div>';
+      target.innerHTML = '<div class="kos-cal-offer">' +
+        '<p>Add this event to your calendar. Google, Outlook, or an Apple calendar file. The time is Tampa local time, and the location is the public one.</p>' +
+        '<button type="button" class="kos-cal-btn" id="rsvpAddCalendar">Add to my calendar</button></div>';
       const addBtn = document.getElementById("rsvpAddCalendar");
       if (addBtn) addBtn.addEventListener("click", function () {
-        const ok = window.kosCalendar.download(ev);
+        const ok = window.kosCalendar.choose ? window.kosCalendar.choose(ev) : window.kosCalendar.download(ev);
         if (!ok) addBtn.textContent = "This event has no date yet";
       });
     }

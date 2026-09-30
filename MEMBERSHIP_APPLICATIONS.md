@@ -2,6 +2,8 @@
 
 The Membership Chair reviews join-form applications in the Member Hub. The tool is **Membership Applications**, the first section on the Officer desk. Home also shows a count such as **3 new applications** that opens the tool.
 
+Chair view of the journey: call the prospect, send the joining packet (Move to background check), wait for the full application and dues, then Approve. Decline and Archive keep the record on file.
+
 The old Pending Applications report (Officer desk, Jump by name, Membership) is still a read-only mix of new applications, renewals, and event prospects. It does not approve or decline anyone.
 
 ## Who can see it
@@ -60,7 +62,9 @@ Join-form applications move through these `membership_status` values. Officers d
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 
-Move to background check emails the applicant when prospect email is on. The letter has three parts: a button to finish the full application at `membership-full-application.html`, the background check payment ($50 individual or $75 couple), and each membership level with a short note and then that level's pay link. The link expires in 21 days. Only a hash of the token is stored. The letter does not include a Social Security number or a driver's license number. If the email cannot be queued, the status does not change. There is no separate Send full application button. Older `next_step_sent` and `full_application_sent` history rows still display.
+Move to background check emails the applicant when prospect email is on. In the Hub that button is **Send joining packet**. The letter has three parts: a button to finish the full application at `membership-full-application.html`, the background check payment ($50 individual or $75 couple), and each membership level with a short note and then that level's pay link. The link expires in 21 days. Only a hash of the token is stored. The letter does not include a Social Security number or a driver's license number. If the email cannot be queued, the status does not change. There is no separate Send full application button. Older `next_step_sent` and `full_application_sent` history rows still display.
+
+Reviewers can change the joining packet wording from Membership Applications. The button is **Edit joining packet email**. It shows the current subject, greeting, and explanatory paragraphs. Preview uses the sample name Nia and a placeholder token, and it does not send email. **Save draft template** writes one row, id `draft`, in `kos_joining_packet_template`. Send joining packet reads that draft for the subject and those paragraphs. The finish-application button (a new 21-day token), the background check pay buttons (`background_check_payments`), and the dues notes and pay buttons (`kos_dues_catalog`) are not free-text fields. Payment web addresses are rejected if someone pastes them into the letter.
 
 Prospect email can be paused. The switch is `kos_runtime_flags` key `membership_prospect_emails`. `enabled` false means do not email the prospect. Move to background check still changes the stage. Do not turn that pause on from these files. Background check payment links live on a different key, `background_check_payments`. Dues notes and Zeffy links live on `kos_dues_catalog` (`explainer` and `zeffy_url`).
 
@@ -101,9 +105,10 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, the secure link, and driver's license plus Social Security number on the token page.
 4. Open `sql/kos_membership_background_check_invoice.sql`. Paste it into a new SQL query and run it. This folds the secure link into Move to background check and queues the level-based membership dues invoice when the prospect submits the full application.
 5. Open `sql/kos_prospect_background_check_email.sql`. Paste it into a new SQL query and run it. This stores the dues explainers, the dues Zeffy links, and the background check payment links, and it builds the prospect letter. It does not turn prospect email on.
-6. Each file is safe to run again.
+6. Open `sql/kos_joining_packet_email_template.sql`. Paste it into a new SQL query and run it. This stores the editable joining packet draft and points Send joining packet at that draft. It does not turn prospect email on. Running it again does not overwrite a draft you already saved.
+7. Each file is safe to run again.
 
-Run `sql/kos_prospect_background_check_email.sql` last. If you run the pipeline file, the staged file, or the background-check invoice file again after it, run the prospect email file again.
+Run `sql/kos_joining_packet_email_template.sql` last. If you run the pipeline file, the staged file, the background-check invoice file, or the prospect email file again after it, run the template file again.
 
 Do not set `membership_prospect_emails` to enabled. Melissa applies the SQL in the Supabase editor. The site deploy does not run it.
 

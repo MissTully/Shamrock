@@ -89,6 +89,7 @@ test.describe("Membership Applications", () => {
     await page.locator("[data-hub-tab='officer']").click();
     await expect(page.locator('[data-tool="tool:hubApprovals"]')).toBeVisible();
     await expect(page.locator('[data-tool="tool:hubApplications"]')).toHaveCount(0);
+    await expect(page.locator("#hubEditJoiningPacket")).toHaveCount(0);
     assertHealthy(expect, report, "applications hidden");
   });
 
@@ -111,6 +112,9 @@ test.describe("Membership Applications", () => {
     const tool = page.locator("#hubApplications");
     await expect(tool).toBeVisible();
     await expect(tool.locator("h2")).toHaveText("Membership Applications");
+    await expect(tool).toContainText("Call first");
+    await expect(tool.locator(".hub-app-journey")).toContainText("Joining packet");
+    await expect(tool).toContainText("Next step: call the prospect");
     await expect(tool).toContainText("Nia Byrne");
     await expect(tool).toContainText("nia.byrne@example.com");
     await expect(tool).toContainText("813-555-0199");
@@ -126,7 +130,7 @@ test.describe("Membership Applications", () => {
     await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
     await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
-    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Move to background check");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Send joining packet");
     await expect(tool.locator("[data-app-send]")).toHaveCount(0);
     await expect(tool).not.toContainText("Send full application");
     await expect(tool).not.toContainText("Mark next step sent");
@@ -144,6 +148,7 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-bucket='new']").click();
     await expect(tool).toContainText("Nia Byrne");
 
+    await tool.locator(".hub-app-other summary").first().click();
     page.once("dialog", (dialog) => dialog.accept());
     await tool.locator("[data-app-approve='app-nia']").click();
     await expect(tool).toContainText("Approved.");
@@ -355,5 +360,97 @@ test.describe("Membership Applications", () => {
     await expect(nia).not.toContainText("123-45-6789");
     await expect(nia).not.toContainText("123456789");
     assertHealthy(expect, report, "copy through reveal");
+  });
+
+  test("reviewer previews and saves the joining packet draft", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: false,
+        canReviewApplications: true,
+        applications: APPLICATIONS
+      }
+    });
+    await page.locator("#hubAppsHomeLink").click();
+    const tool = page.locator("#hubApplications");
+    await expect(tool.locator("#hubEditJoiningPacket")).toHaveText("Edit joining packet email");
+    await tool.locator("#hubEditJoiningPacket").click();
+
+    await expect(tool.locator("h3")).toHaveText("Edit joining packet email");
+    await expect(tool.locator("#hubPacketField-subject")).toHaveValue("We're glad you're joining the Krewe");
+    await expect(tool.locator("#hubPacketField-greeting")).toHaveValue("Dear {{first_name}},");
+    await expect(tool.locator("#hubPacketField-intro")).toHaveValue(/We're so glad you're joining the Krewe of Shamrock/);
+    await expect(tool.locator("[data-packet-locked='finish']")).toContainText("Finish your application");
+    await expect(tool.locator("[data-packet-locked='fees']")).toContainText("background check pay buttons");
+    await expect(tool.locator("[data-packet-locked='dues']")).toContainText("dues notes and pay buttons");
+    await expect(tool.locator("[data-packet-locked] input, [data-packet-locked] textarea")).toHaveCount(0);
+    await expect(tool.locator("#hubPacketSave")).toBeDisabled();
+
+    const fields = tool.locator("[data-packet-field]");
+    const fieldCount = await fields.count();
+    for (let i = 0; i < fieldCount; i++) {
+      const value = await fields.nth(i).inputValue();
+      expect(value).not.toMatch(/https?:\/\//i);
+      expect(value).not.toContain("zeffy.com");
+      expect(value).not.toContain("token=");
+    }
+
+    await tool.locator("#hubPacketField-greeting").fill("Hello {{first_name}}, welcome in.");
+    await tool.locator("#hubPacketPreviewBtn").click();
+    const preview = tool.locator("#hubPacketPreviewBody");
+    await expect(preview).toContainText("Hello Nia, welcome in.");
+    await expect(preview).toContainText("We're so glad you're joining the Krewe of Shamrock");
+    await expect(preview.locator("h1")).toHaveText("We're glad you're joining the Krewe");
+    const finish = preview.locator("a", { hasText: "Finish your application" });
+    await expect(finish).toHaveAttribute(
+      "href",
+      "https://www.kreweofshamrock.com/membership-full-application.html?token=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    );
+    const html = await preview.innerHTML();
+    expect(html.indexOf("Just you on the application.")).toBeGreaterThan(-1);
+    expect(html.indexOf("Just you on the application.")).toBeLessThan(html.indexOf("Pay the individual fee"));
+    expect(html.indexOf("12/12 volunteer commitment")).toBeGreaterThan(-1);
+    expect(html.indexOf("12/12 volunteer commitment")).toBeLessThan(html.indexOf("Pay Full Krewe dues"));
+    await expect(preview.locator("a", { hasText: "Pay the individual fee" })).toHaveAttribute(
+      "href",
+      "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"
+    );
+    await expect(preview.locator("a", { hasText: "Pay Full Krewe dues" })).toHaveAttribute(
+      "href",
+      "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"
+    );
+    expect(html).not.toContain("—");
+    expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
+    await expect(tool).toContainText("This preview is not sent.");
+    await expect(tool.locator("#hubPacketSave")).toBeEnabled();
+
+    await page.screenshot({
+      path: "/opt/cursor/artifacts/screenshots/joining-packet-editor.png",
+      fullPage: true
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(tool.locator("#hubPacketSave")).toBeVisible();
+    await expect(tool.locator("#hubPacketField-greeting")).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await tool.locator("#hubPacketSave").click();
+    await expect(tool.locator("#hubPacketFlash")).toContainText("Draft template saved");
+    await expect(tool.locator("#hubPacketFlash")).toContainText("stay filled in automatically");
+
+    await tool.locator("#hubPacketClose").click();
+    await expect(tool.locator("#hubEditJoiningPacket")).toBeVisible();
+    await expect(tool).toContainText("Nia Byrne");
+    await tool.locator("#hubEditJoiningPacket").click();
+    await expect(tool.locator("#hubPacketField-greeting")).toHaveValue("Hello {{first_name}}, welcome in.");
+
+    await tool.locator("#hubPacketField-greeting").fill(
+      "Pay at https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"
+    );
+    await tool.locator("#hubPacketPreviewBtn").click();
+    await expect(tool.locator("#hubPacketError")).toContainText("Payment links and web addresses");
+    await expect(tool.locator("#hubPacketPreview")).toHaveCount(0);
+    await expect(tool.locator("#hubPacketSave")).toBeDisabled();
+    assertHealthy(expect, report, "joining packet editor");
   });
 });

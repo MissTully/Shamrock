@@ -227,9 +227,38 @@
     ".hub-apps-banner .sub{display:block;font-size:16px;line-height:1.4;color:#3d5a40;}",
     ".hub-apps-banner .go{margin-left:auto;color:#7a5b00;font-family:var(--display);font-size:18px;font-weight:700;flex:none;}",
     ".hub-app-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}",
+    ".hub-app-journey{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;}",
+    ".hub-app-journey li{border:1px solid rgba(168,128,28,.4);background:#fff;color:var(--green-800);border-radius:999px;padding:6px 12px;font-family:var(--display);font-size:14px;}",
+    ".hub-app-journey li.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    ".hub-app-journey li.done{background:#f0e2bd;border-color:#d4b45a;color:#7a5b00;}",
+    ".hub-app-other{margin-top:8px;width:100%;}",
+    ".hub-app-other summary{cursor:pointer;color:var(--green-800);font-family:var(--display);font-size:15px;}",
+    ".hub-app-other .hub-appr-btns{margin-top:8px;}",
+    ".hub-app-next{margin:0 0 10px;font-size:15px;color:var(--green-800);font-weight:600;}",
+    ".hub-packet-launch{margin:0 0 12px;}",
+    ".hub-packet-launch .muted{display:block;margin-top:6px;color:var(--muted);font-size:15px;line-height:1.4;}",
+    ".hub-packet-editor h3{margin:0 0 8px;font-family:var(--display);color:var(--green-800);font-size:22px;}",
+    ".hub-packet-editor p.lead{margin:0 0 12px;color:var(--muted);font-size:16px;line-height:1.45;}",
+    ".hub-packet-editor label{display:block;margin:12px 0 3px;font-size:15px;color:var(--muted);}",
+    ".hub-packet-editor input,.hub-packet-editor textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-packet-editor textarea{min-height:72px;resize:vertical;}",
+    ".hub-packet-hint{margin:4px 0 0;font-size:14px;color:var(--muted);line-height:1.4;}",
+    ".hub-packet-lock{margin:12px 0;padding:10px 12px;border-radius:10px;background:#f4f1e6;border:1px dashed rgba(20,83,45,.35);color:#3a3a2e;font-size:15px;line-height:1.45;}",
+    ".hub-packet-lock b{display:block;margin:0 0 4px;color:#14532d;font-family:var(--display);}",
+    ".hub-packet-lock p{margin:0;}",
+    ".hub-packet-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}",
+    ".hub-packet-error{background:#fff5f2;border:1px solid #e0b4a8;border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#8b2e1c;line-height:1.45;}",
+    ".hub-packet-preview{margin:0 0 14px;background:#fff;border:1px solid #ecd07e;border-radius:12px;padding:16px;}",
+    ".hub-packet-preview .sample{margin:0 0 10px;font-size:14px;color:var(--muted);line-height:1.4;}",
+    ".hub-packet-preview h1{margin:0 0 12px;font-size:22px;color:#14532d;font-family:var(--display);}",
+    ".hub-packet-preview h2{font-size:18px;margin:18px 0 8px;color:#14532d;}",
+    ".hub-packet-preview h3{margin:14px 0 6px;font-size:17px;color:#14532d;}",
+    ".hub-packet-preview p{margin:0 0 12px;line-height:1.55;}",
+    ".hub-packet-preview a.pay{display:inline-block;background:#14532d;color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none;font-weight:700;margin:8px 0 14px;}",
     ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
+    ".hub-vol-text{white-space:pre-wrap;}",
     ".hub-app-flash{background:#e7f3ea;border:1px solid rgba(29,107,62,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#14532d;line-height:1.45;}",
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
     ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
@@ -430,6 +459,28 @@
        the officer identity, and the illuminated group headers replace the
        old small uppercase section labels. */
     ".desk-hero.desk-officer{background:linear-gradient(180deg,#fffdf4,#f6ecd2);border-color:rgba(166,124,0,.5);}",
+    ".hub-outreach-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:4px 0 12px;}",
+    ".hub-outreach-controls label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;}",
+    ".hub-outreach-controls select,.hub-outreach-controls input[type=number]{padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;min-height:44px;}",
+    ".hub-outreach-check{display:flex;align-items:center;gap:8px;min-height:44px;font-size:15px;color:#23291f;}",
+    ".hub-outreach-check input{width:18px;height:18px;}",
+    ".hub-outreach-lead{margin:0 0 12px;font-size:15px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-outreach-chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;}",
+    ".hub-outreach-chip{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:8px 14px;}",
+    ".hub-outreach-chip b{display:block;font-family:var(--display);font-size:22px;color:var(--green-800);}",
+    ".hub-outreach-chip span{font-size:12px;color:var(--muted);}",
+    ".hub-outreach-note{margin:0 0 10px;font-size:13px;color:var(--muted);}",
+    ".hub-outreach-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:0 0 8px;}",
+    ".hub-outreach-tablewrap{overflow-x:auto;border:1px solid rgba(168,128,28,.3);border-radius:12px;}",
+    ".hub-outreach-table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px;}",
+    ".hub-outreach-table th{background:linear-gradient(180deg,var(--green-700),var(--green-800));color:#fff;text-align:left;padding:8px 10px;font-family:var(--display);font-weight:600;font-size:13px;}",
+    ".hub-outreach-table td{padding:7px 10px;border-top:1px solid rgba(168,128,28,.18);vertical-align:top;}",
+    ".hub-outreach-table tr:nth-child(even) td{background:#fffdf4;}",
+    ".hub-outreach-src{display:inline-block;margin:0 4px 4px 0;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid transparent;}",
+    ".hub-outreach-src-website{background:#e7f3ea;color:#14532d;border-color:#1d6b3e;}",
+    ".hub-outreach-src-zeffy{background:#fff4c2;color:#6b4e00;border-color:#a67c00;}",
+    ".hub-outreach-src-legacy{background:#eef0f8;color:#313770;border-color:#313770;}",
+    ".hub-outreach-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}",
     ".desk-officer .desk-kicker{color:#7a5b00;}",
     ".desk-group-head h3{text-transform:none;opacity:1;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
@@ -461,15 +512,17 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
   var feedLock = null;
   var applicationsFixture = null;
+  var joiningPacketLoadGen = 0;
+  var volunteerInquiriesFixture = null;
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
   var hourApprovalsFixture = false;
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours);
+    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
   }
 
   function newApplicationLabel(n) {
@@ -481,9 +534,29 @@
 
   function applicationsTileDesc() {
     var n = Number(state.applicationCount) || 0;
-    if (n === 1) return "1 new join-form application waiting";
-    if (n === 0) return "No new join-form applications right now";
-    return n + " new join-form applications waiting";
+    if (n === 1) return "1 new application. Call, then send the joining packet.";
+    if (n === 0) return "No new applications right now";
+    return n + " new applications. Call, then send the joining packet.";
+  }
+
+  function volunteerInquiryCountOf(status) {
+    var counts = state.volunteerInquiryCounts || {};
+    if (counts[status] != null) return Number(counts[status]) || 0;
+    return 0;
+  }
+
+  function newVolunteerInquiryLabel(n) {
+    n = Number(n) || 0;
+    if (n === 1) return "1 new volunteer inquiry";
+    if (n === 0) return "No new volunteer inquiries";
+    return n + " new volunteer inquiries";
+  }
+
+  function volunteerInquiriesTileDesc() {
+    var n = volunteerInquiryCountOf("new");
+    if (n === 1) return "1 new person asked to help";
+    if (n === 0) return "No new volunteer inquiries right now";
+    return n + " new people asked to help";
   }
   var hoursDeepLink = false;
 
@@ -663,15 +736,60 @@
         ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
         : '<span class="app-date"><b>TBD</b><span></span></span>';
       var going = eventIsRsvpd(ev);
-      return '<button type="button" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
+      // The row is a div (role=button) so the Calendar button can sit inside
+      // it; a <button> cannot contain another button.
+      var calBtn = ev.start_time
+        ? '<button type="button" class="app-cal-mini" data-app-cal="' + esc(ev.id || "") + '" aria-label="Add ' + esc(ev.name || "event") + ' to my calendar">📅 Calendar</button>'
+        : "";
+      return '<div role="button" tabindex="0" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
         dateBlock +
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         where +
         (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
-        '</span><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
-        (going ? "Already RSVP'd" : "RSVP") + "</span></button>";
+        '</span><span class="app-event-acts"><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
+        (going ? "Already RSVP'd" : "RSVP") + "</span>" + calBtn + "</span></div>";
     }).join("");
+    target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        // Keep the click from also opening the event detail screen.
+        e.stopPropagation();
+        e.preventDefault();
+        var id = btn.getAttribute("data-app-cal");
+        var ev = null;
+        rows.forEach(function (row) { if (String(row.id) === String(id)) ev = row; });
+        openCalendarChooser(ev);
+      });
+    });
+    target.querySelectorAll(".app-event-hit[role=button]").forEach(function (row) {
+      row.addEventListener("keydown", function (e) {
+        if (e.target !== row) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          row.click();
+        }
+      });
+    });
+  }
+
+  // Google, Outlook, or .ics chooser (assets/kos-calendar.js). Falls back to
+  // the plain .ics download if an older cached helper is loaded.
+  function openCalendarChooser(ev) {
+    if (!ev || !ev.start_time || !window.kosCalendar) return false;
+    var cal = {
+      id: ev.id,
+      name: ev.name,
+      start_time: ev.start_time,
+      end_time: ev.end_time,
+      location: ev.location,
+      member_address: ev.member_address,
+      // Signed-in Hub only: the member's own calendar gets the street address.
+      include_member_address: true,
+      description: ev.description || ""
+    };
+    if (typeof window.kosCalendar.choose === "function") return window.kosCalendar.choose(cal);
+    if (typeof window.kosCalendar.download === "function") return window.kosCalendar.download(cal);
+    return false;
   }
 
   function whenLabel(value) {
@@ -765,16 +883,7 @@
           else if (row.meeting && String(row.meeting.id) === String(key)) ev = row.meeting;
         });
         if (!ev) return;
-        if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
-          window.kosCalendar.download({
-            id: ev.id,
-            name: ev.name,
-            start_time: ev.start_time,
-            end_time: ev.end_time,
-            location: ev.location,
-            description: ev.description || ""
-          });
-        }
+        openCalendarChooser(ev);
       });
     });
   }
@@ -2545,7 +2654,7 @@
         officerPulse = " hub-officer-pulse";
       }
     } catch (pe) {}
-    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications;
+    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications && !state.canReviewVolunteerInquiries;
     var officerCard = !canOpenOfficerDesk()
       ? ""
       : hostHoursOnly
@@ -2563,6 +2672,7 @@
         '<div style="font-family:var(--display);font-size:15px;margin:0 0 6px;color:#7a5b00;">What\'s inside</div>' +
         '<ul class="hub-officer-inside" aria-label="Officer desk tools">' +
         (state.canReviewApplications ? '<li>Membership Applications</li>' : '') +
+        (state.canReviewVolunteerInquiries ? '<li>Volunteer inquiries</li>' : '') +
         '<li>Event Studio and calendar</li>' +
         '<li>Approvals (hours, photos, videos, clovers)</li>' +
         '<li>Shop, member records, and money</li>' +
@@ -2573,6 +2683,13 @@
         '<span class="ic" aria-hidden="true">📝</span>' +
         '<span class="copy"><b>' + esc(newApplicationLabel(state.applicationCount)) + '</b>' +
         '<span class="sub">Membership Applications on your Officer desk. Move an applicant through new, background check, and dues pending, or approve, decline, or archive.</span></span>' +
+        '<span class="go">Open</span></button>'
+      : "";
+    var volunteerBanner = state.canReviewVolunteerInquiries
+      ? '<button type="button" class="hub-apps-banner" id="hubVolunteerHomeLink" data-hub-goto="volunteer-inquiries">' +
+        '<span class="ic" aria-hidden="true">🤝</span>' +
+        '<span class="copy"><b>' + esc(newVolunteerInquiryLabel(volunteerInquiryCountOf("new"))) + '</b>' +
+        '<span class="sub">Charity inbox on your Officer desk. New, contacted, and done.</span></span>' +
         '<span class="go">Open</span></button>'
       : "";
     function quickTile(goto, icon, title, sub) {
@@ -2617,7 +2734,7 @@
       welcomeDeskHtml() +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : boardAnnouncementsHtml()) +
-      appsBanner + officerCard + craicHeroHtml() + findCards;
+      appsBanner + volunteerBanner + officerCard + craicHeroHtml() + findCards;
 
     renderProfileCard();
 
@@ -2635,6 +2752,7 @@
         var go = btn.getAttribute("data-hub-goto");
         if (go === "directory") openDirectoryFromHome();
         else if (go === "applications") openApplicationsFromHome();
+        else if (go === "volunteer-inquiries") openVolunteerInquiriesFromHome();
         else if (go === "event-studio") openEventStudioFromHome();
         else if (go === "docs") revealDocsCard();
         else if (go === "events") gotoHubTabFromHome("events", "events");
@@ -2709,6 +2827,18 @@
     }, 80);
   }
 
+  function openVolunteerInquiriesFromHome() {
+    if (!state.canReviewVolunteerInquiries) return;
+    try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (e2) {}
+    appNavApi.openTab("officer");
+    try { wireOfficerDeskPicker(); } catch (e3) {}
+    try { renderVolunteerInquiriesFromState(); } catch (e4) {}
+    openOfficerTool("tool:hubVolunteerInbox", true);
+    setTimeout(function () {
+      focusHubTarget(document.getElementById("hubVolunteerInbox"));
+    }, 80);
+  }
+
   function openEventStudioFromHome() {
     if (!state.officer && !state.canManageEvents) return;
     appNavApi.openTab("officer");
@@ -2750,7 +2880,10 @@
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
     if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
     if ("canReviewHours" in flags) state.canReviewHours = !!flags.canReviewHours;
+    if ("shopOnly" in flags) state.shopOnly = !!flags.shopOnly;
+    if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
     applyApplicationFixture();
+    applyVolunteerInquiryFixture();
     syncOfficerChip();
     renderHome();
     if (canOpenOfficerDesk()) {
@@ -2758,6 +2891,9 @@
     }
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (e2) {}
+    }
+    if (state.canReviewVolunteerInquiries) {
+      try { renderVolunteerInquiriesFromState(); } catch (eVol) {}
     }
     if (state.canManageEvents) {
       var studioClient = window.__kosSb || {
@@ -2873,6 +3009,8 @@
     if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
     state.shopOnly = false;
     state.socialOnly = false;
+    if (roleFixture && ("shopOnly" in roleFixture)) state.shopOnly = !!roleFixture.shopOnly;
+    if (roleFixture && ("socialOnly" in roleFixture)) state.socialOnly = !!roleFixture.socialOnly;
     // Committee desks without full board officer access
     if (!state.officer) {
       try {
@@ -2910,8 +3048,11 @@
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
       if ("canReviewHours" in roleFixture) state.canReviewHours = !!roleFixture.canReviewHours;
+      if ("shopOnly" in roleFixture) state.shopOnly = !!roleFixture.shopOnly;
+      if ("socialOnly" in roleFixture) state.socialOnly = !!roleFixture.socialOnly;
     }
     await refreshApplicationAccess(client);
+    await refreshVolunteerInquiryAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
@@ -3041,6 +3182,7 @@
     var wantDocs = false;
     var wantShare = false;
     var wantApplications = false;
+    var wantVolunteerInquiries = false;
     try {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
       if (wantHours) {
@@ -3049,6 +3191,7 @@
       } else if (hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
       else if (hash === "applications") { saved = "officer"; wantApplications = true; }
+      else if (hash === "volunteer-inquiries") { saved = "officer"; wantVolunteerInquiries = true; }
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "docs") { saved = "parade"; wantDocs = true; }
       else if (hash === "share") { saved = "parade"; wantShare = true; }
@@ -3087,9 +3230,14 @@
       setTimeout(function () { revealShareGroup(); }, 280);
     } else if (wantApplications) {
       setTimeout(function () { openApplicationsFromHome(); }, 280);
+    } else if (wantVolunteerInquiries) {
+      setTimeout(function () { openVolunteerInquiriesFromHome(); }, 280);
     }
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (appPaint) {}
+    }
+    if (state.canReviewVolunteerInquiries) {
+      try { renderVolunteerInquiriesFromState(); } catch (volPaint) {}
     }
     if (feedLock) applyFeedLock();
     try { appNavApi.boot(); } catch (navBootErr) {}
@@ -3804,7 +3952,7 @@
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
     if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
+    if (action === "background_check") return "Moved to background check. Joining packet sent when prospect emails are on: a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
     if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
@@ -3908,24 +4056,421 @@
     reloadApplications(client);
   }
 
+
+  var JOINING_PACKET_FIELDS = [
+    { key: "subject", label: "Subject", name: "subject", hint: "The subject line of the email.", max: 140, kind: "input" },
+    { key: "greeting", label: "Greeting", name: "greeting", hint: "Use {{first_name}} where the applicant's first name should appear.", max: 180, kind: "input" },
+    { key: "intro", label: "Opening", name: "opening", hint: "The paragraph after the greeting.", max: 2000, kind: "area" },
+    { key: "finish_heading", label: "Application heading", name: "application heading", hint: "Sits above the application note.", max: 120, kind: "input" },
+    { key: "finish_body", label: "Application note", name: "application note", hint: "Shown above the locked Finish your application button.", max: 2000, kind: "area" },
+    { key: "finish_after", label: "After the application button", name: "note after the application button", hint: "Shown under the locked button. The button itself is added automatically.", max: 2000, kind: "area", lockBefore: "finish" },
+    { key: "fee_heading", label: "Background check heading", name: "background check heading", hint: "Sits above the background check note.", max: 120, kind: "input" },
+    { key: "fee_intro", label: "Background check note", name: "background check note", hint: "Shown above the locked background check pay buttons.", max: 2000, kind: "area" },
+    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the membership note.", max: 120, kind: "input", lockBefore: "fees" },
+    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Shown above the locked dues notes and pay buttons.", max: 2000, kind: "area" },
+    { key: "closing", label: "Closing", name: "closing", hint: "The paragraph before the sign-off.", max: 2000, kind: "area", lockBefore: "dues" },
+    { key: "signoff", label: "Sign-off", name: "sign-off", hint: "You can use two lines.", max: 240, kind: "area" }
+  ];
+
+  var JOINING_PACKET_SAMPLE_TOKEN = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  var JOINING_PACKET_SAMPLE_URL = "https://www.kreweofshamrock.com/membership-full-application.html?token=" + JOINING_PACKET_SAMPLE_TOKEN;
+
+  function joiningPacketDefaults() {
+    return {
+      subject: "We're glad you're joining the Krewe",
+      greeting: "Dear {{first_name}},",
+      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you're ready.",
+      finish_heading: "Let's finish your application",
+      finish_body: "When you have a quiet moment, open your private link and finish the full application. It asks for a driver's license number and a Social Security number. We use those only for the background check, and we hold them confidentially.",
+      finish_after: "This email doesn't include those numbers. Your link expires in 21 days.",
+      fee_heading: "Your background check fee",
+      fee_intro: "This fee is separate from membership dues. Pick the one that matches your application.",
+      dues_heading: "Pick the membership that fits",
+      dues_intro: "Membership dues are separate from the background check fee. Read the short note for each level, then use that level's button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don't also pay the background check above. If you're not sure which level fits, write to treasurer@kreweofshamrock.com and we'll help before you pay.",
+      closing: "Welcome to the Krewe. We can't wait to have you with us.",
+      signoff: "Sláinte,\nKrewe of Shamrock"
+    };
+  }
+
+  function joiningPacketClone(src) {
+    var base = joiningPacketDefaults();
+    JOINING_PACKET_FIELDS.forEach(function (field) {
+      if (src && src[field.key] != null) base[field.key] = String(src[field.key]);
+    });
+    return base;
+  }
+
+  function joiningPacketProblem(draft) {
+    var i, field, text, opens, tokens;
+    for (i = 0; i < JOINING_PACKET_FIELDS.length; i++) {
+      field = JOINING_PACKET_FIELDS[i];
+      text = String((draft && draft[field.key]) || "").trim();
+      if (!text) return "Add the " + field.name + " before you save.";
+      if (text.length > field.max) return "The " + field.name + " is too long.";
+      if (/[—–]/.test(text)) return "Use a period or a comma instead of a long dash in the " + field.name + ".";
+      if (/https?:\/\/|www\.|zeffy\.com|token=|<[a-zA-Z/!]/i.test(text)) {
+        return "Payment links and web addresses stay out of the " + field.name + ". The finish button and pay buttons are added automatically.";
+      }
+      opens = text.split("{{").length - 1;
+      tokens = text.split("{{first_name}}").length - 1;
+      if (opens !== tokens) return "The only placeholder is {{first_name}}.";
+    }
+    return "";
+  }
+
+  function joiningPacketPlain(text, firstName) {
+    var name = (firstName && String(firstName).trim()) || "friend";
+    return esc(text).replace(/\{\{first_name\}\}/g, esc(name)).replace(/\r\n/g, "<br>").replace(/\n/g, "<br>");
+  }
+
+  function joiningPacketButton(href, label) {
+    return '<p><a class="pay" href="' + esc(href) + '">' + esc(label) + "</a></p>";
+  }
+
+  function joiningPacketLockedBlocks() {
+    return {
+      fees: [
+        { title: "Individual, $50", note: "Just you on the application.", label: "Pay the individual fee", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual" },
+        { title: "Couple, $75", note: "The two of you, applying together.", label: "Pay the couple fee", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple" }
+      ],
+      dues: [
+        { title: "Full Krewe Membership, $375", note: "You're a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don't work.", label: "Pay Full Krewe dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" },
+        { title: "Associate, $450", note: "This is for one year. You can join two parades of your choice. There's no vote, and you don't take on the 12/12 volunteer commitment.", label: "Pay Associate dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership" },
+        { title: "Auxiliary, $200", note: "This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.", label: "Pay Auxiliary dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership" },
+        { title: "Leave of Absence (LOA), $100", note: "This is our social membership for a year when you'd like to step back and still stay connected. That's leave of absence.", label: "Pay leave of absence dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2" }
+      ]
+    };
+  }
+
+  function joiningPacketLevelHtml(rows) {
+    return rows.map(function (row) {
+      return "<h3>" + esc(row.title) + "</h3><p>" + esc(row.note) + "</p>" + joiningPacketButton(row.href, row.label);
+    }).join("");
+  }
+
+  function buildJoiningPacketPreview(draft) {
+    var name = "Nia";
+    var locked = joiningPacketLockedBlocks();
+    var html = "<p>" + joiningPacketPlain(draft.greeting, name) + "</p>"
+      + "<p>" + joiningPacketPlain(draft.intro, name) + "</p>"
+      + "<h2>" + joiningPacketPlain(draft.finish_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.finish_body, name) + "</p>"
+      + joiningPacketButton(JOINING_PACKET_SAMPLE_URL, "Finish your application")
+      + "<p>" + joiningPacketPlain(draft.finish_after, name) + "</p>"
+      + "<h2>" + joiningPacketPlain(draft.fee_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>"
+      + joiningPacketLevelHtml(locked.fees)
+      + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.dues_intro, name) + "</p>"
+      + joiningPacketLevelHtml(locked.dues)
+      + "<p>" + joiningPacketPlain(draft.closing, name) + "</p>"
+      + "<p>" + joiningPacketPlain(draft.signoff, name) + "</p>";
+    return {
+      subject: String(draft.subject || "").trim(),
+      html: html,
+      sampleName: name
+    };
+  }
+
+  function joiningPacketLockCard(kind) {
+    if (kind === "finish") {
+      return '<div class="hub-packet-lock" data-packet-locked="finish"><b>Locked: Finish your application button</b><p>A fresh 21-day link is added when the letter is sent. The preview uses a placeholder token. This button is not edited here.</p></div>';
+    }
+    if (kind === "fees") {
+      return '<div class="hub-packet-lock" data-packet-locked="fees"><b>Locked: background check pay buttons</b><p>Individual and couple amounts, notes, and pay buttons come from the background check payment settings. They are not edited in this letter.</p></div>';
+    }
+    if (kind === "dues") {
+      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>Locked: dues notes and pay buttons</b><p>Each membership level note and pay button comes from the dues catalog. They are not edited in this letter.</p></div>';
+    }
+    return "";
+  }
+
+  function readJoiningPacketForm() {
+    var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
+    document.querySelectorAll("[data-packet-field]").forEach(function (el) {
+      draft[el.getAttribute("data-packet-field")] = el.value;
+    });
+    state.joiningPacketDraft = draft;
+    return draft;
+  }
+
+  function renderJoiningPacketEditor(card) {
+    var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
+    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === JSON.stringify(draft));
+    var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
+      "<small>Edit the joining packet letter. Send joining packet uses the saved draft.</small></div></div>" +
+      '<div class="app-body hub-packet-editor" id="hubPacketEditor">';
+    if (state.joiningPacketMessage) {
+      html += '<div class="hub-app-flash" id="hubPacketFlash">' + esc(state.joiningPacketMessage) + "</div>";
+    }
+    if (state.joiningPacketError) {
+      html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
+    }
+    html += "<h3>Edit joining packet email</h3>" +
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button, the background check pay buttons, and the dues notes and pay buttons stay locked so the links stay correct. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+    JOINING_PACKET_FIELDS.forEach(function (field) {
+      var value = draft[field.key] == null ? "" : String(draft[field.key]);
+      if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
+      html += '<label for="hubPacketField-' + field.key + '">' + esc(field.label) + "</label>";
+      if (field.kind === "input") {
+        html += '<input id="hubPacketField-' + field.key + '" data-packet-field="' + field.key + '" maxlength="' + field.max + '" value="' + esc(value) + '" autocomplete="off">';
+      } else {
+        html += '<textarea id="hubPacketField-' + field.key + '" data-packet-field="' + field.key + '" maxlength="' + field.max + '">' + esc(value) + "</textarea>";
+      }
+      html += '<p class="hub-packet-hint">' + esc(field.hint) + "</p>";
+    });
+    html += '<div class="hub-packet-actions">' +
+      '<button type="button" class="btn" id="hubPacketPreviewBtn">Preview</button>' +
+      '<button type="button" class="btn btn-primary" id="hubPacketSave"' + (previewReady ? "" : " disabled") + ">Save draft template</button>" +
+      '<button type="button" class="btn" id="hubPacketClose">Back to applications</button>' +
+      "</div>";
+    if (previewReady) {
+      html += '<div class="hub-packet-preview" id="hubPacketPreview">' +
+        '<p class="sample">Preview for the sample name Nia. The finish link uses a placeholder token. This preview is not sent.</p>' +
+        '<div id="hubPacketPreviewBody"><h1>' + esc(state.joiningPacketPreview.subject) + "</h1>" +
+        state.joiningPacketPreview.html + "</div></div>";
+    }
+    html += "</div>";
+    card.innerHTML = html;
+    card.querySelectorAll("[data-packet-field]").forEach(function (el) {
+      el.addEventListener("input", function () {
+        if (!state.joiningPacketDraft) state.joiningPacketDraft = joiningPacketDefaults();
+        state.joiningPacketDraft[el.getAttribute("data-packet-field")] = el.value;
+        state.joiningPacketDirty = true;
+        state.joiningPacketPreview = null;
+        var save = document.getElementById("hubPacketSave");
+        if (save) save.disabled = true;
+        var box = document.getElementById("hubPacketPreview");
+        if (box) box.hidden = true;
+      });
+    });
+    var previewBtn = document.getElementById("hubPacketPreviewBtn");
+    if (previewBtn) previewBtn.addEventListener("click", function () { previewJoiningPacket(); });
+    var saveBtn = document.getElementById("hubPacketSave");
+    if (saveBtn) saveBtn.addEventListener("click", function () { saveJoiningPacket(saveBtn); });
+    var closeBtn = document.getElementById("hubPacketClose");
+    if (closeBtn) closeBtn.addEventListener("click", function () {
+      readJoiningPacketForm();
+      state.joiningPacketEditor = false;
+      state.joiningPacketError = "";
+      renderApplicationsFromState();
+    });
+  }
+
+  async function openJoiningPacketEditor() {
+    var client, gen, res, payload;
+    if (!state.canReviewApplications) return;
+    state.joiningPacketEditor = true;
+    state.joiningPacketError = "";
+    state.joiningPacketMessage = "";
+    if (!state.joiningPacketDraft) {
+      state.joiningPacketDraft = joiningPacketClone(state.joiningPacketTemplate || joiningPacketDefaults());
+    }
+    renderApplicationsFromState();
+    if (applicationsFixture || state.joiningPacketLoaded) return;
+    client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") return;
+    gen = ++joiningPacketLoadGen;
+    try {
+      res = await client.rpc("get_joining_packet_email_template");
+      if (gen !== joiningPacketLoadGen || state.joiningPacketDirty) return;
+      if (res && res.error) return;
+      payload = (res && res.data) || {};
+      if (payload.ok && payload.template) {
+        state.joiningPacketDraft = joiningPacketClone(payload.template);
+        state.joiningPacketTemplate = joiningPacketClone(payload.template);
+        state.joiningPacketLoaded = true;
+        state.joiningPacketPreview = null;
+        renderApplicationsFromState();
+      }
+    } catch (e) {}
+  }
+
+  async function previewJoiningPacket() {
+    var draft = readJoiningPacketForm();
+    var problem = joiningPacketProblem(draft);
+    var local, client, res, payload, message;
+    state.joiningPacketMessage = "";
+    if (problem) {
+      state.joiningPacketError = problem;
+      state.joiningPacketPreview = null;
+      renderApplicationsFromState();
+      return;
+    }
+    local = buildJoiningPacketPreview(draft);
+    client = window.__kosSb;
+    if (!applicationsFixture && client && typeof client.rpc === "function") {
+      try {
+        res = await client.rpc("preview_joining_packet_email", { p_template: draft });
+        if (res && res.error) throw res.error;
+        payload = (res && res.data) || {};
+        if (payload.ok === false) throw new Error(payload.message || "Could not preview that letter.");
+        if (payload.html) {
+          local.subject = payload.subject || local.subject;
+          local.html = payload.html;
+        }
+      } catch (e) {
+        message = (e && e.message) || String(e || "");
+        if (!/function|schema cache|PGRST202|Could not find/i.test(message)) {
+          state.joiningPacketError = message || "Could not preview that letter.";
+          state.joiningPacketPreview = null;
+          renderApplicationsFromState();
+          return;
+        }
+      }
+    }
+    local.fingerprint = JSON.stringify(draft);
+    state.joiningPacketPreview = local;
+    state.joiningPacketError = "";
+    renderApplicationsFromState();
+  }
+
+  async function saveJoiningPacket(btn) {
+    var draft = readJoiningPacketForm();
+    var problem = joiningPacketProblem(draft);
+    var client, res, payload, message;
+    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== JSON.stringify(draft)) {
+      state.joiningPacketError = problem || "Preview the letter before you save.";
+      state.joiningPacketPreview = null;
+      renderApplicationsFromState();
+      return;
+    }
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      state.joiningPacketTemplate = joiningPacketClone(draft);
+      state.joiningPacketDraft = joiningPacketClone(draft);
+      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketError = "";
+      renderApplicationsFromState();
+      return;
+    }
+    client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      state.joiningPacketError = "Could not save the draft template.";
+      renderApplicationsFromState();
+      return;
+    }
+    try {
+      res = await client.rpc("save_joining_packet_email_template", { p_template: draft });
+      if (res && res.error) throw res.error;
+      payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not save the draft template.");
+      state.joiningPacketTemplate = joiningPacketClone(payload.template || draft);
+      state.joiningPacketDraft = joiningPacketClone(payload.template || draft);
+      state.joiningPacketLoaded = true;
+      state.joiningPacketDirty = false;
+      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketError = "";
+      state.joiningPacketPreview.fingerprint = JSON.stringify(state.joiningPacketDraft);
+    } catch (e) {
+      message = (e && e.message) || "Could not save the draft template.";
+      if (/function|schema cache|PGRST202|Could not find/i.test(message)) {
+        message = "Could not save the draft template yet. Apply sql/kos_joining_packet_email_template.sql in the Supabase SQL editor, then try again.";
+      }
+      state.joiningPacketError = message;
+    }
+    renderApplicationsFromState();
+  }
+
+  function applicationJourneyStep(bucket) {
+    if (bucket === "background") return 3;
+    if (bucket === "dues") return 4;
+    if (bucket === "approved") return 5;
+    if (bucket === "declined" || bucket === "archived") return 0;
+    if (bucket === "renewal" || bucket === "prospect") return 0;
+    return 1;
+  }
+
+  function applicationJourneyHtml(bucket) {
+    var step = applicationJourneyStep(bucket);
+    var labels = [
+      "1. Interest",
+      "2. Call",
+      "3. Joining packet",
+      "4. Check and dues",
+      "5. Approve"
+    ];
+    var html = '<ol class="hub-app-journey" aria-label="Member journey for the Membership Chair">';
+    labels.forEach(function (label, i) {
+      var n = i + 1;
+      var cls = "";
+      if (step > 0 && n < step) cls = " class=\"done\"";
+      else if (step > 0 && n === step) cls = " class=\"on\"";
+      html += "<li" + cls + ">" + label + "</li>";
+    });
+    return html + "</ol>";
+  }
+
+  function applicationActionButtons(row) {
+    var id = esc(row.id);
+    var status = row.membership_status || "";
+    var primary = "";
+    var secondary = "";
+    var other = "";
+    if (status === "pending-new" || status === "prospect") {
+      primary = '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+      other =
+        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
+        '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>' +
+        '<button type="button" class="btn" data-app-approve="' + id + '">Approve</button>' +
+        "</div></details>";
+    } else if (status === "background-check") {
+      primary = '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Move to dues pending</button>';
+      secondary =
+        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    } else if (status === "dues-pending") {
+      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+      other =
+        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
+        '<button type="button" class="btn" data-app-bg="' + id + '">Send joining packet again</button>' +
+        "</div></details>";
+    } else if (status === "pending-renewal") {
+      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    } else {
+      primary =
+        (status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>') +
+        (status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
+        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    }
+    return '<div class="hub-appr-btns">' + primary + secondary + "</div>" + other;
+  }
+
   function renderApplicationsFromState() {
     if (!state.canReviewApplications) return;
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
     var card = ensureOfficerToolCard("hubApplications");
     if (!card) return;
+    if (state.joiningPacketEditor) {
+      renderJoiningPacketEditor(card);
+      return;
+    }
     var bucket = state.applicationBucket || "new";
     var rows = applicationBucketRows();
     var intro = {
-      renewal: "These are renewals, not new join-form applications.",
+      renewal: "These are renewals, not new join-form applications. Approve when dues are settled.",
       prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "Background check is in progress. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they submit that form and begin the check. The application fee is separate from membership dues.",
-      dues: "This list is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.",
-      approved: "Approved applications. These people are active members.",
+      background: "You already sent the joining packet. They should finish the full application and pay the background check fee. The dues invoice is emailed when they submit that form and begin the check. The application fee is separate from membership dues.",
+      dues: "You are waiting on membership dues, not the application fee. The dues invoice was emailed when they submitted the full application and began the background check.",
+      approved: "Approved. These people are active members.",
       declined: "Declined applications stay on file. Nothing was deleted.",
       archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check."
-    }[bucket] || "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.";
+      "new": "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check."
+    }[bucket] || "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check.";
     var empty = {
       renewal: "No pending renewals.",
       prospect: "No event prospects in this list.",
@@ -3940,13 +4485,25 @@
       return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on"' : "") + ">" +
         label + " (" + applicationCountOf(key) + ")</button>";
     }
+    var nextStep = {
+      "new": "Next step: call the prospect, then send the joining packet.",
+      background: "Next step: wait for the full application and background check fee, then move to dues pending when ready.",
+      dues: "Next step: confirm dues, then Approve.",
+      approved: "These members are active.",
+      declined: "No next step. Records stay on file.",
+      archived: "No next step. Records stay on file.",
+      renewal: "Next step: Approve when the renewal is ready.",
+      prospect: "Event prospects are not the join-form pipeline."
+    }[bucket] || "Next step: call the prospect, then send the joining packet.";
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Interest comes in first. When prospect emails are on, Move to background check emails the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.</small></div></div>' +
+      '<small>Guide each person from interest to active member. Call first. Then send the joining packet. Wait for the check and dues. Approve when they are ready.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
     }
-    html += '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
+    html += '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
+      '<span class="muted">Change the greeting and the notes. The finish link and pay buttons stay locked.</span></p>' +
+      '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
       filterBtn("new", "New applications") +
       filterBtn("background", "Background check") +
       filterBtn("dues", "Dues pending") +
@@ -3956,6 +4513,8 @@
       filterBtn("renewal", "Renewals") +
       filterBtn("prospect", "Event prospects") +
       "</div>" +
+      applicationJourneyHtml(bucket) +
+      '<p class="hub-app-next">' + esc(nextStep) + "</p>" +
       '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
     if (state.applicationLoadError && !rows.length) {
       html += '<p class="empty">' + esc(state.applicationLoadError) + "</p>";
@@ -3977,7 +4536,7 @@
           (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
           (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
           '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are not the application fee. The dues invoice is emailed when they submit the full application and begin the background check. The background check email lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100.</div>' +
+          '<div class="muted">Membership dues are not the application fee. The joining packet lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100. The dues invoice is emailed when they submit the full application and begin the background check.</div>' +
           '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
           applicationIdMarkup(row, "applicant", "dl") +
           applicationIdMarkup(row, "applicant", "ssn") +
@@ -3992,13 +4551,7 @@
             : "") +
           "</div>";
         if (open) {
-          html += '<div class="hub-appr-btns">' +
-            (row.membership_status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Move to background check</button>') +
-            (row.membership_status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
-            '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
-            '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-            '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>' +
-            "</div>";
+          html += applicationActionButtons(row);
         }
         html += "</div>";
       });
@@ -4025,6 +4578,8 @@
     card.innerHTML = html;
     var body = card.querySelector("#hubApplicationsBody");
     if (!body) return;
+    var editPacket = document.getElementById("hubEditJoiningPacket");
+    if (editPacket) editPacket.addEventListener("click", function () { openJoiningPacketEditor(); });
     body.querySelectorAll("[data-app-bucket]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         state.applicationBucket = btn.getAttribute("data-app-bucket") || "new";
@@ -4065,14 +4620,14 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
+        if (!confirm("Send the joining packet and move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
-        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. The dues invoice is emailed when they submit the full application, not by this button.")) return;
+        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. This button does not send another invoice. The dues invoice is emailed when they submit the full application.")) return;
         decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
       });
     });
@@ -5823,6 +6378,7 @@
       if (lower === "fun") return { tab: "fun", frames: [{ kind: "root" }] };
       if (lower === "officer") return { tab: "officer", frames: [{ kind: "root" }] };
       if (lower === "applications") return { tab: "officer", frames: [{ kind: "root" }], tool: "applications" };
+      if (lower === "volunteer-inquiries") return { tab: "officer", frames: [{ kind: "root" }], tool: "volunteer-inquiries" };
       if (lower === "event-studio") return { tab: "officer", frames: [{ kind: "root" }], tool: "event-studio" };
       return null;
     }
@@ -5903,18 +6459,7 @@
         showToast("This event does not have a date yet.");
         return;
       }
-      if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
-        var saved = window.kosCalendar.download({
-          id: ev.id,
-          name: ev.name,
-          start_time: ev.start_time,
-          end_time: ev.end_time,
-          location: ev.location,
-          description: ev.description || ""
-        });
-        if (!saved) showToast("This event does not have a date yet.");
-        return;
-      }
+      if (openCalendarChooser(ev)) return;
       showToast("Calendar download is not available in this browser.");
     }
 
@@ -5995,10 +6540,10 @@
         "</article>";
       actions.innerHTML = going
         ? '<button type="button" class="app-rsvp is-going" id="appRsvpBtn" disabled>Already RSVP\'d</button>' +
-          '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>' +
+          '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>' +
           '<button type="button" class="app-cal app-cancel" id="appCancelRsvp">Cancel RSVP</button>'
         : '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
-          '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
+          '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>';
       var rsvpBtn = document.getElementById("appRsvpBtn");
       var calBtn = document.getElementById("appCalBtn");
       var cancelBtn = document.getElementById("appCancelRsvp");
@@ -6146,6 +6691,12 @@
         try { wireOfficerDeskPicker(); } catch (e2) {}
         try { openOfficerTool("tool:hubApplications", false); } catch (e3) {}
       }
+      if (route.tool === "volunteer-inquiries") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (eVol1) {}
+        try { wireOfficerDeskPicker(); } catch (eVol2) {}
+        try { renderVolunteerInquiriesFromState(); } catch (eVol3) {}
+        try { openOfficerTool("tool:hubVolunteerInbox", false); } catch (eVol4) {}
+      }
       if (route.tool === "event-studio") {
         try { wireOfficerDeskPicker(); } catch (e4) {}
         try { openOfficerTool("tool:hubEventStudio", false); } catch (e5) {}
@@ -6188,6 +6739,8 @@
       if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
       if (roleFixture && ("canManageEvents" in roleFixture)) state.canManageEvents = !!roleFixture.canManageEvents;
       if (roleFixture && ("canReviewHours" in roleFixture)) state.canReviewHours = !!roleFixture.canReviewHours;
+      if (roleFixture && ("shopOnly" in roleFixture)) state.shopOnly = !!roleFixture.shopOnly;
+      if (roleFixture && ("socialOnly" in roleFixture)) state.socialOnly = !!roleFixture.socialOnly;
       if (!tab) tab = "hub";
       if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
       if (tab !== "parade") clearHoursIntent();
@@ -6386,6 +6939,11 @@
         try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e) {}
         try { wireOfficerDeskPicker(); } catch (e2) {}
         try { openOfficerTool("tool:hubApplications", true); } catch (e3) {}
+      } else if (route.tool === "volunteer-inquiries") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (eVol) {}
+        try { wireOfficerDeskPicker(); } catch (eVol2) {}
+        try { renderVolunteerInquiriesFromState(); } catch (eVol3) {}
+        try { openOfficerTool("tool:hubVolunteerInbox", true); } catch (eVol4) {}
       } else if (route.tool === "event-studio") {
         try { wireOfficerDeskPicker(); } catch (e4) {}
         try { openOfficerTool("tool:hubEventStudio", true); } catch (e5) {}
@@ -6601,6 +7159,9 @@
         } else if (hash === "applications") {
           ev.preventDefault();
           openApplicationsFromHome();
+        } else if (hash === "volunteer-inquiries") {
+          ev.preventDefault();
+          openVolunteerInquiriesFromHome();
         } else if (hash === "event-studio") {
           ev.preventDefault();
           openEventStudioFromHome();
@@ -6612,13 +7173,594 @@
     }
   }
 
-  
+  function applyVolunteerInquiryFixture() {
+    if (!roleFixture) return;
+    if ("canReviewVolunteerInquiries" in roleFixture) {
+      state.canReviewVolunteerInquiries = !!roleFixture.canReviewVolunteerInquiries;
+    } else if (!Array.isArray(roleFixture.volunteerInquiries)) {
+      state.canReviewVolunteerInquiries = false;
+      volunteerInquiriesFixture = null;
+    }
+    if (Array.isArray(roleFixture.volunteerInquiries)) {
+      if (!("canReviewVolunteerInquiries" in roleFixture)) state.canReviewVolunteerInquiries = true;
+      volunteerInquiriesFixture = roleFixture.volunteerInquiries.map(function (row) {
+        var clone = {};
+        Object.keys(row || {}).forEach(function (key) { clone[key] = row[key]; });
+        return clone;
+      });
+      state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      state.volunteerInquiryLoadError = "";
+      syncVolunteerInquiryCounts();
+    }
+  }
+
+  function syncVolunteerInquiryCounts() {
+    var rows = volunteerInquiriesFixture || state.volunteerInquiryRows || [];
+    var counts = { "new": 0, contacted: 0, done: 0 };
+    rows.forEach(function (row) {
+      var status = (row && row.status) || "new";
+      if (counts[status] == null) status = "new";
+      counts[status] += 1;
+    });
+    state.volunteerInquiryCounts = counts;
+  }
+
+  function applyVolunteerInquiryPayload(data) {
+    if (!data || data.ok === false) {
+      state.volunteerInquiryRows = [];
+      state.volunteerInquiryLoadError = (data && data.message) || "Could not load volunteer inquiries.";
+      return;
+    }
+    state.volunteerInquiryLoadError = "";
+    state.volunteerInquiryRows = Array.isArray(data.inquiries) ? data.inquiries : [];
+    state.volunteerInquiryCounts = data.counts || state.volunteerInquiryCounts;
+    if (data.status) state.volunteerInquiryStatus = data.status;
+  }
+
+  async function refreshVolunteerInquiryAccess(client) {
+    var fixtureLocks = roleFixture && ("canReviewVolunteerInquiries" in roleFixture || Array.isArray(roleFixture.volunteerInquiries));
+    if (!fixtureLocks && client) {
+      try {
+        var can = await client.rpc("can_review_volunteer_inquiries");
+        if (can && can.error) state.canReviewVolunteerInquiries = false;
+        else state.canReviewVolunteerInquiries = !!(can && can.data);
+      } catch (e) { state.canReviewVolunteerInquiries = false; }
+    }
+    applyVolunteerInquiryFixture();
+    if (!state.canReviewVolunteerInquiries || volunteerInquiriesFixture || !client) return;
+    try {
+      var listed = await client.rpc("list_volunteer_inquiries", { p_status: state.volunteerInquiryStatus || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyVolunteerInquiryPayload(listed && listed.data);
+    } catch (e2) {
+      state.volunteerInquiryLoadError = "Could not load volunteer inquiries. If this stays blank, the database update in sql/kos_volunteer_inquiries.sql may not be applied yet.";
+    }
+  }
+
+  function volunteerAffiliationLabel(row) {
+    var kind = String((row && row.affiliation) || "");
+    if (kind === "krewe_member") return "Krewe member";
+    if (kind === "other_krewe") {
+      var name = String((row && row.other_krewe_name) || "").trim();
+      return name ? ("Friend from another krewe (" + name + ")") : "Friend from another krewe";
+    }
+    if (kind === "neither") return "Neighbor";
+    return kind || "Not given";
+  }
+
+  function volunteerStatusLabel(status) {
+    if (status === "contacted") return "Contacted";
+    if (status === "done") return "Done";
+    return "New";
+  }
+
+  function volunteerInquiryBucketRows() {
+    var want = state.volunteerInquiryStatus || "new";
+    return (state.volunteerInquiryRows || []).filter(function (row) {
+      return row && (row.status || "new") === want;
+    });
+  }
+
+  async function reloadVolunteerInquiries(client) {
+    if (volunteerInquiriesFixture) {
+      syncVolunteerInquiryCounts();
+      renderVolunteerInquiriesFromState();
+      renderHome();
+      return;
+    }
+    if (!client) client = window.__kosSb || null;
+    if (!client) return;
+    try {
+      var listed = await client.rpc("list_volunteer_inquiries", { p_status: state.volunteerInquiryStatus || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyVolunteerInquiryPayload(listed && listed.data);
+    } catch (e) {
+      state.volunteerInquiryLoadError = "Could not refresh volunteer inquiries.";
+    }
+    renderVolunteerInquiriesFromState();
+    renderHome();
+    try { wireOfficerDeskPicker(); } catch (e2) {}
+    openOfficerTool("tool:hubVolunteerInbox", false);
+  }
+
+  var lastVolunteerStamp = { key: "", at: 0 };
+
+  async function decideVolunteerInquiry(client, status, id, note, btn) {
+    var stamp = String(status) + ":" + String(id);
+    var now = Date.now();
+    if (lastVolunteerStamp.key === stamp && now - lastVolunteerStamp.at < 800) return;
+    lastVolunteerStamp.key = stamp;
+    lastVolunteerStamp.at = now;
+    if (btn) btn.disabled = true;
+    if (volunteerInquiriesFixture) {
+      var row = null;
+      volunteerInquiriesFixture.forEach(function (item) {
+        if (String(item.id) === String(id)) row = item;
+      });
+      if (!row) {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      row.status = status;
+      if (status === "contacted" || status === "done") row.contacted_at = row.contacted_at || new Date().toISOString();
+      if (status === "done") row.done_at = row.done_at || new Date().toISOString();
+      row.officer_note = note || "";
+      row.actor_name = ((window.kosProfile || {}).display_name || "Charity Chair");
+      row.updated_at = new Date().toISOString();
+      state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      syncVolunteerInquiryCounts();
+      state.volunteerInquiryFlash = status === "done" ? "Marked done." : "Marked contacted.";
+      renderHome();
+      renderVolunteerInquiriesFromState();
+      openOfficerTool("tool:hubVolunteerInbox", false);
+      return;
+    }
+    try {
+      var res = await client.rpc("update_volunteer_inquiry_status", {
+        p_id: id,
+        p_status: status,
+        p_officer_note: note || ""
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not update that inquiry.");
+      state.volunteerInquiryFlash = payload.message || "Saved.";
+    } catch (e) {
+      alert("Could not update that inquiry. " + ((e && e.message) || "If this keeps happening, sql/kos_volunteer_inquiries.sql may not be applied yet."));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadVolunteerInquiries(client);
+  }
+
+  function renderVolunteerInquiriesFromState() {
+    if (!state.canReviewVolunteerInquiries) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = ensureOfficerToolCard("hubVolunteerInbox");
+    if (!card) return;
+    var status = state.volunteerInquiryStatus || "new";
+    var rows = volunteerInquiryBucketRows();
+    var intro = {
+      contacted: "These people have been contacted. Mark one done when the follow-up is finished.",
+      done: "Finished inquiries stay here. Nothing is deleted.",
+      "new": "These people asked to volunteer on the public page. Newest first. The Charity Chair gets an email when a form arrives."
+    }[status];
+    var empty = {
+      contacted: "Nobody is marked contacted right now.",
+      done: "No finished inquiries in this list.",
+      "new": "No new volunteer inquiries. When someone chooses I\u2019d like to volunteer on the public page, they show up here."
+    }[status];
+    function filterBtn(key, label) {
+      return '<button type="button" data-vol-status="' + key + '"' + (status === key ? ' class="on"' : "") + ">" +
+        label + " (" + volunteerInquiryCountOf(key) + ")</button>";
+    }
+    var html = '<div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer inquiries</h2>' +
+      "<small>Charity inbox. New, contacted, and done. The public form emails the current Charity Chair.</small></div></div>" +
+      '<div class="app-body" id="hubVolunteerBody">';
+    if (state.volunteerInquiryFlash) {
+      html += '<div class="hub-app-flash" id="hubVolunteerFlash">' + esc(state.volunteerInquiryFlash) + "</div>";
+    }
+    html += '<div class="hub-app-filters" role="tablist" aria-label="Volunteer inquiry lists">' +
+      filterBtn("new", "New") +
+      filterBtn("contacted", "Contacted") +
+      filterBtn("done", "Done") +
+      "</div>" +
+      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
+    if (state.volunteerInquiryLoadError && !rows.length) {
+      html += '<p class="empty">' + esc(state.volunteerInquiryLoadError) + "</p>";
+    } else if (!rows.length) {
+      html += '<p class="empty">' + esc(empty) + "</p>";
+    } else {
+      rows.forEach(function (row) {
+        var id = esc(row.id);
+        var when = formatAppliedEt(row.created_at);
+        var touched = formatAppliedEt(row.updated_at || row.done_at || row.contacted_at);
+        var open = row.status !== "done";
+        html += '<div class="hub-appr" data-vol-id="' + id + '" data-vol-row-status="' + esc(row.status || "new") + '">' +
+          "<div><b>" + esc(row.full_name || "Volunteer") + "</b>" +
+          '<span class="hub-app-status' + (row.status === "done" ? " ok" : "") + '">' + esc(volunteerStatusLabel(row.status)) + "</span>" +
+          (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
+          (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
+          '<div class="muted">Affiliation: ' + esc(volunteerAffiliationLabel(row)) + "</div>" +
+          (when ? '<div class="muted">Submitted: ' + esc(when) + "</div>" : "") +
+          '<div class="muted hub-vol-text">Interests: ' + esc(row.interests || "") + "</div>" +
+          (row.notes && String(row.notes).trim() ? '<div class="muted hub-vol-text">Notes: ' + esc(row.notes) + "</div>" : "") +
+          (row.actor_name ? '<div class="muted">Last update by ' + esc(row.actor_name) + (touched ? " · " + esc(touched) : "") + "</div>" : "") +
+          (open
+            ? '<label class="muted" style="display:block;margin-top:8px;" for="hubVolNote-' + id + '">Note for the Charity committee</label>' +
+              '<textarea class="hub-app-note" id="hubVolNote-' + id + '" maxlength="1000" placeholder="Short note other officers can see">' + esc(row.officer_note || "") + "</textarea>"
+            : (row.officer_note ? '<div class="muted">Officer note: ' + esc(row.officer_note) + "</div>" : "")) +
+          "</div>";
+        if (open) {
+          html += '<div class="hub-appr-btns">' +
+            (row.status === "contacted" ? "" : '<button type="button" class="btn btn-primary" data-vol-contacted="' + id + '">Mark contacted</button>') +
+            '<button type="button" class="btn" data-vol-done="' + id + '">Mark done</button>' +
+            "</div>";
+        }
+        html += "</div>";
+      });
+    }
+    html += "</div>";
+    card.innerHTML = html;
+    var body = card.querySelector("#hubVolunteerBody");
+    if (!body) return;
+    body.querySelectorAll("[data-vol-status]").forEach(function (filter) {
+      filter.addEventListener("click", function () {
+        state.volunteerInquiryStatus = filter.getAttribute("data-vol-status") || "new";
+        state.volunteerInquiryFlash = "";
+        if (volunteerInquiriesFixture) renderVolunteerInquiriesFromState();
+        else reloadVolunteerInquiries(window.__kosSb || null);
+      });
+    });
+    function noteFor(id) {
+      var el = document.getElementById("hubVolNote-" + id);
+      return el ? (el.value || "").trim() : "";
+    }
+    body.querySelectorAll("[data-vol-contacted]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-vol-contacted");
+        if (!confirm("Mark this person contacted? They stay in the inbox under Contacted.")) return;
+        decideVolunteerInquiry(window.__kosSb || null, "contacted", id, noteFor(id), button);
+      });
+    });
+    body.querySelectorAll("[data-vol-done]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-vol-done");
+        if (!confirm("Mark this inquiry done? It leaves the new list and stays under Done.")) return;
+        decideVolunteerInquiry(window.__kosSb || null, "done", id, noteFor(id), button);
+      });
+    });
+  }
+
+  var outreachFixture = null;
+  var outreachState = { key: "", gen: 0, rows: [], total: 0 };
+
+  function canSeeEventOutreach() {
+    if (state.shopOnly && !state.socialOnly) return false;
+    return !!(state.canManageEvents || state.canReviewApplications || state.socialOnly);
+  }
+
+  function outreachReadFilters() {
+    var sourceEl = document.getElementById("hubOutreachSource");
+    var minEl = document.getElementById("hubOutreachMin");
+    var neverEl = document.getElementById("hubOutreachNever");
+    var source = sourceEl ? String(sourceEl.value || "") : "";
+    var min = 0;
+    if (minEl && String(minEl.value).trim() !== "") {
+      min = parseInt(minEl.value, 10);
+      if (!isFinite(min) || min < 0) min = 0;
+    }
+    return {
+      source: !source || source === "all" ? null : source,
+      minEvents: min,
+      neverApplied: !neverEl || !!neverEl.checked
+    };
+  }
+
+  function outreachFilterKey(filters) {
+    return JSON.stringify(filters);
+  }
+
+  function filterOutreachRows(rows, filters) {
+    return (rows || []).filter(function (row) {
+      if (!row) return false;
+      if (filters.neverApplied && row.applied_to_join) return false;
+      if ((Number(row.event_count) || 0) < filters.minEvents) return false;
+      if (filters.source && (row.source_keys || []).indexOf(filters.source) === -1) return false;
+      return true;
+    });
+  }
+
+  function outreachPayloadFromRows(rows, filters, sample) {
+    var filtered = filterOutreachRows(rows, filters);
+    filtered.sort(function (a, b) {
+      var at = a.last_event_at ? new Date(a.last_event_at).getTime() : 0;
+      var bt = b.last_event_at ? new Date(b.last_event_at).getTime() : 0;
+      if (bt !== at) return bt - at;
+      return String(a.email || "").localeCompare(String(b.email || ""));
+    });
+    function tagged(key) {
+      return filtered.filter(function (row) {
+        return (row.source_keys || []).indexOf(key) !== -1;
+      }).length;
+    }
+    return {
+      ok: true,
+      total: filtered.length,
+      by_source: {
+        website_rsvp: tagged("website_rsvp"),
+        zeffy: tagged("zeffy"),
+        legacy: tagged("legacy")
+      },
+      rows: filtered,
+      sample: !!sample
+    };
+  }
+
+  function outreachWhen(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(d);
+    } catch (e) {
+      return String(iso).slice(0, 10);
+    }
+  }
+
+  function outreachIsoDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(d);
+    } catch (e2) {
+      return String(iso).slice(0, 10);
+    }
+  }
+
+  function outreachRosterLabel(row) {
+    if (!row || !row.on_roster) return "Not on roster";
+    if (row.membership_status === "prospect") return "Prospect";
+    return "On roster · " + (row.membership_status || "member");
+  }
+
+  function outreachSourceHtml(row) {
+    var labels = row.sources || row.source_labels || [];
+    var keys = row.source_keys || [];
+    if (!labels.length) return "";
+    return labels.map(function (label, i) {
+      var key = keys[i] || "";
+      var cls = key === "website_rsvp" ? "website" : (key === "zeffy" ? "zeffy" : (key === "legacy" ? "legacy" : ""));
+      return '<span class="hub-outreach-src' + (cls ? " hub-outreach-src-" + cls : "") + '">' + esc(label) + "</span>";
+    }).join("");
+  }
+
+  function outreachCsvCell(value) {
+    var v = value == null ? "" : String(value);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+
+  function downloadOutreachCsv(rows) {
+    var headers = ["Name", "Email", "Sources", "Event count", "Last event", "Last event date", "Roster", "Applied to join"];
+    var body = (rows || []).map(function (row) {
+      var sources = row.sources || row.source_labels || [];
+      return [
+        row.name || row.display_name || "",
+        row.email || "",
+        sources.join("; "),
+        row.event_count == null ? "" : String(row.event_count),
+        row.last_event_name || "",
+        outreachIsoDate(row.last_event_at),
+        outreachRosterLabel(row),
+        row.applied_to_join ? "yes" : "no"
+      ];
+    });
+    var text = [headers].concat(body).map(function (line) {
+      return line.map(outreachCsvCell).join(",");
+    }).join("\r\n");
+    var blob = new Blob(["\uFEFF" + text], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kos-event-outreach.csv";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  function outreachInstallHint(err) {
+    var msg = "";
+    if (err) msg = String(err.message || err.details || err.hint || err.code || err);
+    if (/PGRST202|schema cache|does not exist|Could not find the function|list_event_outreach|404/i.test(msg)) {
+      return "Event outreach is not installed yet. Apply sql/kos_event_outreach.sql in the Supabase SQL editor, then refresh.";
+    }
+    if (/Not authorized/i.test(msg)) return "You do not have access to the event outreach list.";
+    return "Could not load the outreach list. " + msg;
+  }
+
+  function renderEventOutreachPayload(data) {
+    var out = document.getElementById("hubOutreachOut");
+    var msg = document.getElementById("hubOutreachMsg");
+    var sample = document.getElementById("hubOutreachSample");
+    if (!out) return;
+    var rows = (data && data.rows) || [];
+    var total = data && data.total != null ? Number(data.total) : rows.length;
+    var by = (data && data.by_source) || {};
+    outreachState.rows = rows;
+    outreachState.total = total;
+    if (sample) sample.hidden = !(data && data.sample);
+    if (msg) {
+      if (total > rows.length) {
+        msg.textContent = "Showing " + rows.length + " of " + total + ". Download CSV for the full filtered list.";
+      } else if (!rows.length) {
+        msg.textContent = "";
+      } else {
+        msg.textContent = "";
+      }
+    }
+    var chips =
+      '<div class="hub-outreach-chips">' +
+      '<div class="hub-outreach-chip"><b>' + esc(total) + '</b><span>people</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.website_rsvp || 0) + '</b><span>Website RSVP</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.zeffy || 0) + '</b><span>Zeffy</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.legacy || 0) + '</b><span>Legacy</span></div>' +
+      "</div>" +
+      '<p class="hub-outreach-note">A person can carry more than one source, so those counts can add up to more than the number of people.</p>';
+    if (!rows.length) {
+      out.innerHTML = chips + '<p class="empty">No one matches these filters.</p>';
+      return;
+    }
+    var body = rows.map(function (row) {
+      var name = row.name || row.display_name || "";
+      return "<tr><td>" + esc(name || "—") + "</td><td>" +
+        (row.email ? '<a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a>" : "") +
+        "</td><td>" + outreachSourceHtml(row) + "</td><td>" + esc(row.event_count == null ? 0 : row.event_count) +
+        "</td><td>" + esc(row.last_event_name || "") + "</td><td>" + esc(outreachWhen(row.last_event_at)) +
+        "</td><td>" + esc(outreachRosterLabel(row)) + "</td></tr>";
+    }).join("");
+    out.innerHTML = chips +
+      '<div class="hub-outreach-tablewrap"><table class="hub-outreach-table" id="hubOutreachTable"><thead><tr>' +
+      "<th>Name</th><th>Email</th><th>Sources</th><th>Events</th><th>Last event</th><th>Date</th><th>Roster</th>" +
+      "</tr></thead><tbody>" + body + "</tbody></table></div>";
+  }
+
+  function paintEventOutreachShell() {
+    var card = document.getElementById("hubEventOutreach");
+    if (!card || card.getAttribute("data-kos-ready") === "1") return;
+    card.setAttribute("data-kos-ready", "1");
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">📬</span><div><h2>Event outreach</h2>' +
+      "<small>Website RSVP prospects, Zeffy ticket buyers, and legacy emails</small></div></div>" +
+      '<div class="app-body">' +
+      '<p class="hub-outreach-lead">People to invite back. Website RSVP is a roster prospect. Zeffy is an event-ticket purchase. Legacy is a Wild Apricot registration. Checked “Never applied to join” hides buyers whose email already belongs to someone past the prospect stage. This list does not create members.</p>' +
+      '<div class="hub-outreach-controls">' +
+      '<div><label for="hubOutreachSource">Source</label>' +
+      '<select id="hubOutreachSource">' +
+      '<option value="all">All sources</option>' +
+      '<option value="website_rsvp">Website RSVP</option>' +
+      '<option value="zeffy">Zeffy</option>' +
+      '<option value="legacy">Legacy</option>' +
+      "</select></div>" +
+      '<div><label for="hubOutreachMin">At least this many events</label>' +
+      '<input id="hubOutreachMin" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>' +
+      '<label class="hub-outreach-check"><input id="hubOutreachNever" type="checkbox" checked /> Never applied to join</label>' +
+      "</div>" +
+      '<p class="hub-outreach-note">An event counts when they have a website RSVP (including the waitlist), a Zeffy ticket, or a legacy registration. Canceled rows are left out.</p>' +
+      '<p class="hub-outreach-note" id="hubOutreachSample" hidden>Sample rows for this preview. The live list loads after sql/kos_event_outreach.sql is applied.</p>' +
+      '<p class="hub-outreach-msg" id="hubOutreachMsg" aria-live="polite"></p>' +
+      '<div id="hubOutreachOut"><p class="empty">Open this tool to load the list.</p></div>' +
+      '<div class="hub-outreach-actions"><button class="btn" type="button" id="hubOutreachCsv">⬇ Download CSV</button></div>' +
+      "</div>";
+    ["hubOutreachSource", "hubOutreachMin", "hubOutreachNever"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("change", function () { loadEventOutreach(true); });
+    });
+    var csv = document.getElementById("hubOutreachCsv");
+    if (csv) csv.addEventListener("click", function () { exportEventOutreach(); });
+  }
+
+  async function loadEventOutreach(force) {
+    paintEventOutreachShell();
+    var msg = document.getElementById("hubOutreachMsg");
+    var filters = outreachReadFilters();
+    var key = outreachFilterKey(filters);
+    if (outreachFixture) {
+      renderEventOutreachPayload(outreachPayloadFromRows(outreachFixture, filters, true));
+      outreachState.key = key;
+      return;
+    }
+    if (!force && outreachState.key === key) return;
+    var gen = ++outreachState.gen;
+    var client = window.__kosSb || null;
+    if (!client || typeof client.rpc !== "function") {
+      if (msg) msg.textContent = "Sign in again to load this list.";
+      return;
+    }
+    if (msg) msg.textContent = "Loading the outreach list…";
+    try {
+      var res = await client.rpc("list_event_outreach", {
+        p_source: filters.source,
+        p_min_events: filters.minEvents,
+        p_never_applied: filters.neverApplied,
+        p_limit: 300,
+        p_offset: 0
+      });
+      if (gen !== outreachState.gen) return;
+      if (res && res.error) throw res.error;
+      var data = (res && res.data) || {};
+      if (data.ok === false) throw new Error(data.message || "Not authorized.");
+      outreachState.key = key;
+      renderEventOutreachPayload(data);
+    } catch (err) {
+      if (gen !== outreachState.gen) return;
+      outreachState.key = "";
+      var out = document.getElementById("hubOutreachOut");
+      if (out) out.innerHTML = "";
+      if (msg) msg.textContent = outreachInstallHint(err);
+    }
+  }
+
+  async function exportEventOutreach() {
+    var msg = document.getElementById("hubOutreachMsg");
+    var filters = outreachReadFilters();
+    try {
+      var rows;
+      if (outreachFixture) {
+        rows = outreachPayloadFromRows(outreachFixture, filters, true).rows;
+      } else {
+        var client = window.__kosSb || null;
+        if (!client || typeof client.rpc !== "function") throw new Error("Sign in again to download this list.");
+        if (msg) msg.textContent = "Preparing the CSV…";
+        var res = await client.rpc("export_event_outreach", {
+          p_source: filters.source,
+          p_min_events: filters.minEvents,
+          p_never_applied: filters.neverApplied
+        });
+        if (res && res.error) throw res.error;
+        var data = (res && res.data) || {};
+        if (data.ok === false) throw new Error(data.message || "Not authorized.");
+        rows = data.rows || [];
+        if (data.truncated && msg) {
+          msg.textContent = "Downloaded the first 10,000 of " + data.total + " people.";
+        } else if (msg) {
+          msg.textContent = "";
+        }
+      }
+      downloadOutreachCsv(rows);
+    } catch (err) {
+      if (msg) msg.textContent = outreachInstallHint(err);
+    }
+  }
+
+  window.__kosHubSetEventOutreach = function (rows) {
+    outreachFixture = Array.isArray(rows) ? rows : [];
+    outreachState.key = "";
+    var card = document.getElementById("hubEventOutreach");
+    if (card) card.removeAttribute("data-kos-ready");
+    paintEventOutreachShell();
+    if (document.getElementById("hubOutreachOut")) loadEventOutreach(true);
+  };
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
+    "hubVolunteerInbox",
     "hubApprovals",
     "hubPayments",
     "hubLockers",
     "hubEventStudio",
+    "hubEventOutreach",
     "hubShopStudio",
     "hubQrStudio",
     "hubDocStudio",
@@ -6630,23 +7772,26 @@
   ];
 
   var OFFICER_TOOL_META = {
-    hubApplications: { title: "Membership Applications", desc: "Review join-form applications", icon: "📝", section: "Membership" },
+    hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
+    hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
+    hubEventOutreach: { title: "Event outreach", desc: "Website RSVP prospects, unmatched Zeffy buyers, and legacy emails", icon: "📬", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
     hubDocStudio: { title: "Document Studio", desc: "Upload, publish, and hide library documents", icon: "📜", section: "Documents" },
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
-    hubEmailMembers: { title: "Email members", desc: "Choose audience, write, preview, and send", icon: "✉️", section: "Email & invoices" },
+    hubEmailMembers: { title: "Email members", desc: "Choose audience, including event prospects, then write, preview, and send", icon: "✉️", section: "Email & invoices" },
     hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
     hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
   };
 
   var OFFICER_SECTION_ORDER = [
     "Membership",
+    "Charity",
     "Events",
     "Approvals",
     "Documents",
@@ -6660,8 +7805,9 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
-    "Membership": { icon: "📝", sub: "Join-form applications: new, background check, dues pending, then approve, decline, or archive." },
-    "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
+    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
+    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
+    "Events": { icon: "📅", sub: "Event Studio, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
@@ -6726,9 +7872,10 @@
 
   function currentOfficerToolOrder() {
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours)) {
+    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
       toolOrder = [];
       if (state.canReviewApplications) toolOrder.push("hubApplications");
+      if (state.canReviewVolunteerInquiries) toolOrder.push("hubVolunteerInbox");
       if (state.canReviewHours) toolOrder.push("hubApprovals");
     } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
@@ -6742,11 +7889,23 @@
     } else if (toolOrder.indexOf("hubApplications") === -1) {
       toolOrder.unshift("hubApplications");
     }
+    if (!state.canReviewVolunteerInquiries) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubVolunteerInbox"; });
+    } else if (toolOrder.indexOf("hubVolunteerInbox") === -1) {
+      toolOrder.push("hubVolunteerInbox");
+    }
     if (!state.canViewPayments) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubPayments"; });
     }
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
+    }
+    if (!canSeeEventOutreach()) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubEventOutreach"; });
+    } else if (toolOrder.indexOf("hubEventOutreach") === -1) {
+      var afterStudio = toolOrder.indexOf("hubEventStudio");
+      if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
+      else toolOrder.push("hubEventOutreach");
     }
     return toolOrder;
   }
@@ -6763,7 +7922,7 @@
       hero.innerHTML =
         '<p class="desk-kicker">Céad míle fáilte - a hundred thousand welcomes</p>' +
         "<h2>🎖️ Your Officer Desk</h2>" +
-        "<p>Everything the krewe trusts you with, on one desk: run events and check-ins, " +
+        "<p>Everything the krewe trusts you with, on one desk: run events, check-ins, and outreach, " +
         "approve members' photos, videos, and clover claims, publish documents, mind the shop " +
         "and the money, write the membership, record dues waivers, and read the numbers. Pick one tool at a time - " +
         "the desk stays tidy.</p>" +
@@ -6878,6 +8037,9 @@
       document.querySelectorAll(".hub-officer-tile").forEach(function (t) {
         t.classList.toggle("on", t.getAttribute("data-tool") === ("tool:" + id));
       });
+      if (id === "hubEventOutreach") {
+        try { loadEventOutreach(false); } catch (eOut) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -6904,6 +8066,7 @@
       bySection[sec].forEach(function (item) {
         var desc = item.meta.desc || "";
         if (item.id === "hubApplications") desc = applicationsTileDesc();
+        if (item.id === "hubVolunteerInbox") desc = volunteerInquiriesTileDesc();
         h +=
           '<button type="button" class="hub-officer-tile" data-tool="tool:' + item.id + '">' +
           '<span class="tic" aria-hidden="true">' + (item.meta.icon || "☘") + "</span>" +
@@ -6961,6 +8124,7 @@
 
     var toolOrder = currentOfficerToolOrder();
     toolOrder.forEach(ensureOfficerToolCard);
+    if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -6975,7 +8139,9 @@
       } else if (state.shopOnly) {
         hint.textContent = "Merchandise Chair: Shop Studio (products, Zeffy links, shop QR).";
       } else if (state.socialOnly) {
-        hint.textContent = "Social / Charity: Event Studio and event or charity reports.";
+        hint.textContent = state.canReviewVolunteerInquiries
+          ? "Social / Charity: volunteer inquiries, Event Studio, and event or charity reports."
+          : "Social / Charity: Event Studio and event or charity reports.";
       } else {
         hint.textContent = "Optional menu if you prefer searching by name.";
       }
@@ -6984,7 +8150,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }

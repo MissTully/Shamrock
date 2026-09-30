@@ -49,7 +49,7 @@
 
   var LOGO = "https://www.kreweofshamrock.com/assets/img/emblem-shamrock.png";
 
-  var emailState = { audience: "active", selected: {}, counts: {} };
+  var emailState = { audience: "active", includeLegacy: false, selected: {}, counts: {} };
   var LEVELS = [
     { id: "full", label: "Full" },
     { id: "associate", label: "Associate" },
@@ -205,17 +205,52 @@
       if (cActive) cActive.textContent = emailState.counts.active != null ? "(" + emailState.counts.active + ")" : "";
       if (cOff) cOff.textContent = emailState.counts.officers != null ? "(" + emailState.counts.officers + ")" : "";
       if (cCh) cCh.textContent = emailState.counts.chairs != null ? "(" + emailState.counts.chairs + ")" : "";
+      paintProspectCount();
+      paintProspectNote();
     } catch (e) {}
+  }
+
+  function paintProspectCount() {
+    var el = document.getElementById("hubEmCountProspects");
+    if (!el) return;
+    var c = emailState.counts || {};
+    var n = emailState.includeLegacy ? c.prospects_legacy : c.prospects;
+    el.textContent = n != null ? "(" + n + ")" : "";
+  }
+
+  function paintProspectNote() {
+    var note = document.getElementById("hubEmProspectNote");
+    if (!note) return;
+    var c = emailState.counts || {};
+    if (c.prospects == null && c.prospects_legacy == null) {
+      note.textContent =
+        "Event prospect counts are not available yet. Apply sql/kos_event_outreach.sql in the Supabase SQL editor, then refresh this page.";
+      return;
+    }
+    note.textContent =
+      "Sends only to the Event outreach list: website RSVP prospects and unmatched Zeffy event emails. " +
+      "Active members are not added unless that same email is already on this list. " +
+      "Legacy Wild Apricot emails stay off unless you check the box. Duplicate emails are sent once. Opted-out addresses are skipped.";
   }
 
   function setAudience(aud) {
     emailState.audience = aud;
-    ["active", "officers", "chairs", "selected"].forEach(function (a) {
+    ["active", "officers", "chairs", "selected", "prospects"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.classList.toggle("on", a === aud);
     });
     var pick = document.getElementById("hubEmPickWrap");
     if (pick) pick.style.display = aud === "selected" ? "" : "none";
+    var legacy = document.getElementById("hubEmLegacyWrap");
+    if (legacy) legacy.style.display = aud === "prospects" ? "" : "none";
+    var subject = document.getElementById("hubEmSubject");
+    if (subject) {
+      subject.placeholder = aud === "prospects"
+        ? "e.g. Tartan Ball — save your seat"
+        : "e.g. Meeting reminder";
+    }
+    paintProspectCount();
+    paintProspectNote();
   }
 
   async function searchRoster(client) {
@@ -242,10 +277,14 @@
       setMsg("hubEmMsg", "Pick at least one member from the roster.", "err");
       return;
     }
+    var audienceKey = emailState.audience;
+    if (audienceKey === "prospects" && emailState.includeLegacy) audienceKey = "prospects_legacy";
     var who =
-      emailState.audience === "active" ? "ALL active members" :
-      emailState.audience === "officers" ? "officers and board" :
-      emailState.audience === "chairs" ? "chairs / officers / board" :
+      audienceKey === "active" ? "ALL active members" :
+      audienceKey === "officers" ? "officers and board" :
+      audienceKey === "chairs" ? "chairs / officers / board" :
+      audienceKey === "prospects" ? "event prospects (website RSVP and unmatched Zeffy emails — not the active roster)" :
+      audienceKey === "prospects_legacy" ? "event prospects plus legacy Wild Apricot emails (not the active roster)" :
       ids.length + " selected member(s)";
     if (!window.confirm("Queue this email for " + who + "?")) return;
     if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
@@ -254,16 +293,17 @@
       var res = await client.rpc("officer_send_member_email", {
         p_subject: subject,
         p_body_html: toHtml(bodyRaw),
-        p_audience: emailState.audience,
-        p_member_ids: emailState.audience === "selected" ? ids : null
+        p_audience: audienceKey,
+        p_member_ids: audienceKey === "selected" ? ids : null
       });
       if (res.error) throw res.error;
       var data = res.data || {};
       if (data.ok === false) throw new Error(data.message || "Could not send.");
+      var skipped = data.skipped_opt_out ? " Skipped " + data.skipped_opt_out + " opted-out address(es)." : "";
       setMsg(
         "hubEmMsg",
         "Queued for " + (data.recipient_count != null ? data.recipient_count : "?") +
-          " recipient(s). Delivery runs through the outbound email queue (Resend).",
+          " recipient(s)." + skipped + " Delivery runs through the outbound email queue (Resend).",
         "ok"
       );
       document.getElementById("hubEmSubject").value = "";
@@ -293,7 +333,12 @@
       '<button type="button" class="hub-ei-pill" id="hubEmAud_officers">Officers &amp; board <span id="hubEmCountOfficers"></span></button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_chairs">Chairs / officers <span id="hubEmCountChairs"></span></button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_selected">Pick from roster</button>' +
+      '<button type="button" class="hub-ei-pill" id="hubEmAud_prospects">Event prospects <span id="hubEmCountProspects"></span></button>' +
       "</div></div>" +
+      '<div id="hubEmLegacyWrap" style="display:none;">' +
+      '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmLegacy" />' +
+      "<span>Include legacy Wild Apricot emails</span></label>" +
+      '<p class="hub-ei-note" id="hubEmProspectNote"></p></div>' +
       '<div id="hubEmPickWrap" style="display:none;">' +
       '<label for="hubEmSearch">Search roster</label>' +
       '<input id="hubEmSearch" type="search" placeholder="Name or email" autocomplete="off" />' +
@@ -309,10 +354,17 @@
       '<div class="hub-ei-history"><h3>Recent emails</h3><div id="hubEmHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
 
-    ["active", "officers", "chairs", "selected"].forEach(function (a) {
+    ["active", "officers", "chairs", "selected", "prospects"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.addEventListener("click", function () { setAudience(a); });
     });
+    var legacyBox = document.getElementById("hubEmLegacy");
+    if (legacyBox) {
+      legacyBox.addEventListener("change", function () {
+        emailState.includeLegacy = !!legacyBox.checked;
+        paintProspectCount();
+      });
+    }
     var search = document.getElementById("hubEmSearch");
     var searchTimer = null;
     if (search) {

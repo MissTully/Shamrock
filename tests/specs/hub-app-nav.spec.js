@@ -100,7 +100,7 @@ test.describe("Member Hub app navigation", () => {
       panel.appendChild(spacer);
       panel.scrollTop = 520;
     });
-    await page.locator('#hubMemberEventList [data-app-event="evt-basket"]').click();
+    await page.locator('#hubMemberEventList [data-app-event="evt-basket"] .app-event-copy').click();
     await eventDetail(page);
     await expect(page.locator("#appBackTitle")).toContainText("Tartan Ball Basket Social");
 
@@ -156,7 +156,7 @@ test.describe("Member Hub app navigation", () => {
     await expect(page.locator(".app-hero h2")).toBeVisible();
 
     await page.locator('[data-hub-tab="events"]').click();
-    await page.locator('#hubMemberEventList [data-app-event="evt-later"]').click();
+    await page.locator('#hubMemberEventList [data-app-event="evt-later"] .app-event-copy').click();
     detail = await eventDetail(page);
     await expect(detail).toContainText("Float Build Saturday");
     await expect(page.locator('#hubTabs [data-hub-tab="events"]')).toHaveAttribute("aria-current", "page");
@@ -184,12 +184,12 @@ test.describe("Member Hub app navigation", () => {
     const hit = page.locator('#hubMemberEventList [data-app-event="evt-basket"]');
     await expect(hit).toContainText("Already RSVP'd");
     await expect(hit.locator(".app-rsvp")).toHaveClass(/is-going/);
-    await hit.click();
+    await hit.locator(".app-event-copy").click();
     await eventDetail(page);
     await expect(page.locator("#appRsvpBtn")).toBeDisabled();
     await expect(page.locator("#appRsvpBtn")).toHaveText("Already RSVP'd");
     await expect(page.locator("#appCancelRsvp")).toHaveText("Cancel RSVP");
-    await expect(page.locator("#appCalBtn")).toHaveText("Add to calendar");
+    await expect(page.locator("#appCalBtn")).toHaveText("Add to my calendar");
     assertHealthy(expect, report, "already rsvpd detail");
   });
 

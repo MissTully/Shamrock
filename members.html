@@ -1084,7 +1084,15 @@
     border-radius:22px; padding:16px 16px 20px;
   }
   .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
+  .app-event-acts{ display:flex; flex-direction:column; align-items:stretch; gap:6px; }
+  .app-cal-mini{
+    min-height:36px; padding:6px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    background:transparent; color:#f0d78c; border:1px solid rgba(226,193,90,.7);
+    font-family:var(--display); font-weight:700; font-size:13px;
+  }
+  .app-cal-mini:focus-visible, .app-event-hit:focus-visible{ outline:2px solid #e2c15a; outline-offset:2px; }
   .app-event-hit{
+    box-sizing:border-box;
     width:100%; text-align:left; cursor:pointer; color:inherit; font:inherit;
     display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:12px; align-items:center;
     margin:10px 0; padding:12px; border-radius:18px;
@@ -1290,6 +1298,7 @@
     border:1px solid rgba(168,128,28,.4);
   }
   body.hub-desk .app-event-hit .muted{ color:#5f6b5a; }
+  body.hub-desk .app-cal-mini{ color:#14532d; border-color:rgba(20,83,45,.45); background:#fff; }
   body.hub-desk .app-date{ background:#14532d; }
   body.hub-desk .app-date span{ color:#fff; }
   .hub-board{ min-height:248px; }
@@ -2113,7 +2122,7 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js?v=20260930return1" defer></script>
+  <script src="assets/krewe.js?v=20260930local1" defer></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -4106,7 +4115,8 @@
       if(desk?.scrollIntoView) desk.scrollIntoView({behavior:"smooth",block:"start"});
     });
 
-    window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
+    /* scope "local": sign out on this device only; other phones and computers stay signed in. */
+    window.kosSignOut=async()=>{ await sb.auth.signOut({ scope:"local" }); location.reload(); };
     sb.auth.onAuthStateChange((event)=>{
       if(event==="PASSWORD_RECOVERY"){ awaitingNewPassword=true; }
       route();
@@ -4376,8 +4386,8 @@
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
-<script src="assets/kos-calendar.js?v=20260930cal1"></script>
-<script src="assets/members-desk.js?v=20260930rsvp1" defer></script>
+<script src="assets/kos-calendar.js?v=20260930cal3"></script>
+<script src="assets/members-desk.js?v=20260930rsvp2" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260930del1" defer></script>
@@ -4385,10 +4395,10 @@
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
   <script src="assets/kos-reports.js?v=20260914t1" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
-  <script src="assets/kos-email-invoices.js?v=20260930inv1" defer></script>
+  <script src="assets/kos-email-invoices.js?v=20260930prospectmail1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20260930wav1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20260930rep1" defer></script>
-<script src="assets/kos-lockers.js?v=20260930lockers1" defer></script>
+<script src="assets/kos-lockers.js?v=20260930lockers2" defer></script>
 </body>
 </html>
 

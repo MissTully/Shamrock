@@ -9,7 +9,7 @@ ever changes, update **this file first**, then sweep the site to match.
 
 | Address | Purpose | Use it for |
 |---|---|---|
-| **secretary@kreweofshamrock.com** | All general information | Public "Contact" links, page footers, the home page's structured-data `email` field, "Questions:" lines on governing documents (bylaws, parade rules, code of conduct), store and volunteer inquiries |
+| **secretary@kreweofshamrock.com** | All general information | Public "Contact" links, page footers, the home page's structured-data `email` field, "Questions:" lines on governing documents (bylaws, parade rules, code of conduct), and store questions. Volunteer interest from volunteer.html goes to the current Charity Chair (see below). |
 | **treasurer@kreweofshamrock.com** | Member financial matters | Dues, payments, reimbursements, anything money-related for members |
 | **patrick@kreweofshamrock.com** | Marketing and business | Marketing-related email and Patrick Pustay's business side of the Krewe |
 | **digital@kreweofshamrock.com** | Technical website issues only | "Report a website problem," Member Hub sign-in trouble, photo/image release revocations, auth-admin notifications |
@@ -36,3 +36,10 @@ ever changes, update **this file first**, then sweep the site to match.
 5. **Checking your work:** before shipping a page, search the repository for
    `kreweofshamrocktampa` — the search should come back empty for all HTML
    files.
+6. **Volunteer interest** (`volunteer.html`, “I’d like to volunteer”) is emailed
+   to the current Charity Chair: a roster title containing `Chair of Charity`,
+   or a `member_roles` committee of Charity. That address comes from the
+   Leaders roster. Do not hardcode a person’s mailbox. If nobody holds the
+   chair, the notice falls back to `secretary@kreweofshamrock.com`. Logging
+   completed hours stays in the Member Hub (`members.html?hub=hours#hours`).
+   See `VOLUNTEER_INQUIRIES.md`.
