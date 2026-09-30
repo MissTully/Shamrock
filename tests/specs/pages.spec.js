@@ -46,6 +46,20 @@ for (const { file, title } of PAGES) {
   });
 }
 
+test("homepage hero no longer links to the previous Wild Apricot site", async ({ page }) => {
+  await page.goto("/index.html");
+  const heroLinks = page.locator(".hero-links");
+  await expect(heroLinks).toBeVisible();
+  await expect(heroLinks.getByRole("link")).toHaveCount(1);
+  await expect(heroLinks.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
+  await expect(heroLinks.getByRole("link", { name: "TARTAN BALL tickets" })).toBeVisible();
+  const hero = page.locator("header.hero");
+  await expect(hero.getByRole("link", { name: /Buy Tartan Ball Tickets/ })).toBeVisible();
+  await expect(hero.getByRole("link", { name: /Become a Member/ })).toBeVisible();
+  await expect(hero.getByRole("link", { name: /RSVP to an Event/ })).toBeVisible();
+  await expect(page.locator("nav.krewe-nav").getByRole("link", { name: "Member Hub Login" })).toBeVisible();
+});
+
 test("raffle-qr-sheet.html (standalone print sheet) renders", async ({ page }) => {
   const report = watchPage(page);
   await page.goto("/raffle-qr-sheet.html");
