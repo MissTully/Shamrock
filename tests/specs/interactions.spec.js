@@ -167,7 +167,8 @@ test.describe("header auth toggle", () => {
           onAuthStateChange: function () {
             return { data: { subscription: { unsubscribe: function () {} } } };
           },
-          signOut: function () {
+          signOut: function (options) {
+            localStorage.setItem("kosTestSignOutScope", (options && options.scope) || "global");
             localStorage.removeItem(key);
             return Promise.resolve({ error: null });
           }
@@ -184,6 +185,9 @@ test.describe("header auth toggle", () => {
     await expect(page.locator("nav.krewe-nav a.nav-hub-return")).toHaveCount(0);
     const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
     expect(stillStored).toBeNull();
+    // Log out ends only this device's session, not the member's other devices.
+    const scope = await page.evaluate(() => localStorage.getItem("kosTestSignOutScope"));
+    expect(scope).toBe("local");
   });
 
   test("signed in, a Member Hub button sits under Log out and returns to the Hub", async ({ page }) => {

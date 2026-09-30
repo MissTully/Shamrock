@@ -380,7 +380,8 @@
   function runClientSignOut(client) {
     var done = Promise.resolve();
     if (client && client.auth && client.auth.signOut) {
-      done = Promise.resolve(client.auth.signOut()).catch(function () {});
+      // scope "local": sign out on this device only; other devices stay signed in.
+      done = Promise.resolve(client.auth.signOut({ scope: "local" })).catch(function () {});
     }
     return done.then(leaveAfterLogout, leaveAfterLogout);
   }
