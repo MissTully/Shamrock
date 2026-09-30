@@ -1,6 +1,6 @@
 # Dues foundation (Phase 1)
 
-Level-based dues for the Member Hub. This phase is the database and the officer functions only. There is no Hub screen yet.
+Level-based dues for the Member Hub. Phase 1 is this database and the officer functions. Phase 2 is Officer desk → Email & invoices → **Send invoices**, which reads `kos_dues_catalog` and calls `kos_set_membership_level` and `kos_create_level_invoices`. Waiver decisions and treasurer reports are not on that screen.
 
 Rates for a year live in `kos_dues_catalog`. A member's level lives on `members.membership_level`. Do not treat $375 as the only dues amount.
 
@@ -64,8 +64,8 @@ All five require a signed-in officer (`is_krewe_officer()`). Anyone else gets `{
 
 | Function | What it does |
 |---|---|
-| `kos_set_membership_level(member_id, level)` | Sets the roster level. Does not change an invoice already written. Logs `level_set`. |
-| `kos_create_level_invoices(member_ids, year, exclude_elected_officers default true)` | Reads each member's level, reads the catalog, and inserts or updates an **unpaid** dues row at that amount. Skips a row that is already paid or has `waiver_status = applied`. Skips President, Vice President, Secretary, and Treasurer when the third argument is true. Logs `invoice_created`. If that year has no catalog row for the level, that member is skipped. |
+| `kos_set_membership_level(member_id, level)` | Sets the roster level. Does not change an invoice already written. Logs `level_set`. The Send invoices screen calls this from each member's level dropdown. |
+| `kos_create_level_invoices(member_ids, year, exclude_elected_officers default true)` | Reads each member's level, reads the catalog, and inserts or updates an **unpaid** dues row at that amount. Skips a row that is already paid or has `waiver_status = applied`. Skips President, Vice President, Secretary, and Treasurer when the third argument is true. Logs `invoice_created`. If that year has no catalog row for the level, that member is skipped. Send invoices previews those counts, then calls this. The exclude-elected-officers box is on by default. |
 | `kos_request_dues_waiver(member_id, year, kind, reason)` | Sets `waiver_status` to `requested` and stores the kind and note. Does **not** mark the member paid. Kind is `elected_officer`, `service_in_lieu`, or `board_approved_other`. |
 | `kos_decide_dues_waiver(member_id, year, approve, apply default true)` | Approve sets `approved`. With `apply` true (the default) it also sets amount 0, `paid` true, method `waiver`, status `applied`, and stores the catalog rate in `standard_amount`. Deny sets `denied` and does not mark anyone paid. An applied waiver is not undone here. |
 | `kos_apply_elected_officer_exemptions(year)` | For members whose title is President, Vice President, Secretary, or Treasurer, and who are not merged away: writes an applied `elected_officer` waiver. Board members and committee chairs are not included. Skips someone already paid in money, and skips a different applied waiver (for example service in lieu). Logs one `officer_exemptions_batch` row. |
@@ -91,6 +91,6 @@ select public.kos_apply_elected_officer_exemptions(2026);
 
 ## What this phase does not do
 
-- No Member Hub screen for levels, invoices, or waivers.
-- The current Officer desk **Send invoices** action can still default to $375 when no amount is typed. Until that screen reads the catalog, use `kos_create_level_invoices` or type the catalog amount for that member's level. See OFFICER_EMAIL_INVOICES.md.
-- Associate and auxiliary have no Zeffy link yet. Do not invent one.
+- No waiver queue and no treasurer report in the Hub. `kos_request_dues_waiver`, `kos_decide_dues_waiver`, and `kos_apply_elected_officer_exemptions` stay SQL-only until a later phase.
+- Send invoices does not type a single dollar amount. It prices from `kos_dues_catalog`. See OFFICER_EMAIL_INVOICES.md.
+- Associate and auxiliary have no Zeffy link yet. Do not invent one. The invoice screen warns, and it will not put a pay button in those emails.
