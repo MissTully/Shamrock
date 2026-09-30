@@ -45,7 +45,7 @@ test.describe("desktop navigation", () => {
 test.describe("Member Hub Login header control", () => {
   test("sits in the top-left of the header on desktop and on a phone", async ({ page }) => {
     await page.goto("/index.html");
-    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const hub = page.locator("nav.krewe-nav a.nav-hub");
     const brand = page.locator("nav.krewe-nav .brand");
     await expect(hub).toBeVisible();
     await expect(hub).toHaveAttribute("href", "members.html");
@@ -53,7 +53,7 @@ test.describe("Member Hub Login header control", () => {
     await expect(page.locator("#kreweMenu").getByRole("link", { name: "Member Hub Login" })).toHaveCount(0);
 
     const desktop = await page.evaluate(() => {
-      const hubEl = document.querySelector("nav.krewe-nav > a.nav-hub");
+      const hubEl = document.querySelector("nav.krewe-nav a.nav-hub");
       const brandEl = document.querySelector("nav.krewe-nav .brand");
       const hb = hubEl.getBoundingClientRect();
       const bb = brandEl.getBoundingClientRect();
@@ -66,7 +66,7 @@ test.describe("Member Hub Login header control", () => {
     await expect(hub).toBeVisible();
     await expect(page.locator("#kreweNavToggle")).toBeVisible();
     const phone = await page.evaluate(() => {
-      const hubEl = document.querySelector("nav.krewe-nav > a.nav-hub");
+      const hubEl = document.querySelector("nav.krewe-nav a.nav-hub");
       const brandEl = document.querySelector("nav.krewe-nav .brand");
       const navEl = document.querySelector("nav.krewe-nav");
       const hb = hubEl.getBoundingClientRect();
@@ -96,13 +96,13 @@ test.describe("header auth toggle", () => {
 
   test("logged out header stays Member Hub Login and opens Hub sign-in", async ({ page }) => {
     await page.goto("/index.html");
-    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const hub = page.locator("nav.krewe-nav a.nav-hub");
     await expect(hub).toHaveText("Member Hub Login");
     await expect(hub).toHaveAttribute("href", "members.html");
     await expect(hub).toHaveAttribute("data-kos-auth", "in");
     await hub.click();
     await expect(page).toHaveURL(/members\.html$/);
-    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login");
+    await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Member Hub Login");
   });
 
   test("an expired access token with a refresh token still shows Log out", async ({ page }) => {
@@ -118,12 +118,12 @@ test.describe("header auth toggle", () => {
     }, { key: STORAGE_KEY, expiresAt: Math.floor(Date.now() / 1000) - 120 });
 
     await page.goto("/index.html");
-    const homeHub = page.locator("nav.krewe-nav > a.nav-hub");
+    const homeHub = page.locator("nav.krewe-nav a.nav-hub");
     await expect(homeHub).toHaveText("Log out");
     await expect(homeHub).toHaveAttribute("data-kos-auth", "out");
 
     await page.goto("/gallery.html");
-    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Log out");
+    await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Log out");
   });
 
   test("members.html header shows Log out while the Hub session exists", async ({ page }) => {
@@ -140,7 +140,7 @@ test.describe("header auth toggle", () => {
     }, { key: STORAGE_KEY, expiresAt: Math.floor(Date.now() / 1000) + 3600 });
 
     await page.goto("/members.html#home");
-    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const hub = page.locator("nav.krewe-nav a.nav-hub");
     await expect(hub).toHaveText("Log out");
     await expect(hub).toHaveAttribute("data-kos-auth", "out");
     await page.waitForTimeout(1500);
@@ -167,7 +167,8 @@ test.describe("header auth toggle", () => {
           onAuthStateChange: function () {
             return { data: { subscription: { unsubscribe: function () {} } } };
           },
-          signOut: function () {
+          signOut: function (options) {
+            localStorage.setItem("kosTestSignOutScope", (options && options.scope) || "global");
             localStorage.removeItem(key);
             return Promise.resolve({ error: null });
           }
@@ -176,13 +177,59 @@ test.describe("header auth toggle", () => {
     }, STORAGE_KEY);
 
     await page.goto("/index.html");
-    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const hub = page.locator("nav.krewe-nav a.nav-hub");
     await expect(hub).toHaveText("Log out");
     await hub.click();
     await expect(page).toHaveURL(/index\.html$/);
-    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login");
+    await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Member Hub Login");
+    await expect(page.locator("nav.krewe-nav a.nav-hub-return")).toHaveCount(0);
     const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
     expect(stillStored).toBeNull();
+    // Log out ends only this device's session, not the member's other devices.
+    const scope = await page.evaluate(() => localStorage.getItem("kosTestSignOutScope"));
+    expect(scope).toBe("local");
+  });
+
+  test("signed in, a Member Hub button sits under Log out and returns to the Hub", async ({ page }) => {
+    await page.addInitScript(({ key, expiresAt }) => {
+      localStorage.setItem("kosLepWelcomeSeen", "1");
+      localStorage.setItem(key, JSON.stringify({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: expiresAt,
+        expires_in: 3600,
+        token_type: "bearer",
+        user: { id: "11111111-1111-1111-1111-111111111111", email: "melissa@example.com" }
+      }));
+    }, { key: STORAGE_KEY, expiresAt: Math.floor(Date.now() / 1000) + 3600 });
+    await page.route("**/*supabase.co/**", (route) => route.fulfill({ status: 204, body: "" }));
+
+    const stackPositions = () => page.evaluate(() => {
+      const out = document.querySelector("nav.krewe-nav a.nav-hub").getBoundingClientRect();
+      const back = document.querySelector("nav.krewe-nav a.nav-hub-return").getBoundingClientRect();
+      return { outX: out.x, outBottom: out.bottom, backX: back.x, backTop: back.top, backHeight: back.height };
+    });
+
+    for (const size of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(size);
+      await page.goto("/gallery.html");
+      const logout = page.locator("nav.krewe-nav a.nav-hub");
+      const back = page.locator("nav.krewe-nav a.nav-hub-return");
+      await expect(logout).toHaveText("Log out");
+      await expect(back).toBeVisible();
+      await expect(back).toHaveText("Member Hub");
+      await expect(back).toHaveAttribute("href", "members.html");
+      await expect(back).toHaveAccessibleName("Return to the Member Hub");
+      const pos = await stackPositions();
+      expect(pos.backTop).toBeGreaterThanOrEqual(pos.outBottom);
+      expect(Math.abs(pos.backX - pos.outX)).toBeLessThan(2);
+      expect(pos.backHeight).toBeGreaterThanOrEqual(24);
+    }
+
+    await page.locator("nav.krewe-nav a.nav-hub-return").click();
+    await expect(page).toHaveURL(/members\.html$/);
+    await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Log out");
+    await expect(page.locator("nav.krewe-nav a.nav-hub-return")).toHaveCount(0);
   });
 
   test("Log out on members.html uses the Hub sign-out path", async ({ page }) => {
@@ -202,10 +249,10 @@ test.describe("header auth toggle", () => {
     await page.route("**/*supabase.co/**", (route) => route.fulfill({ status: 204, body: "" }));
 
     await page.goto("/members.html#home");
-    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const hub = page.locator("nav.krewe-nav a.nav-hub");
     await expect(hub).toHaveText("Log out");
     await hub.click();
-    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login", { timeout: 15000 });
+    await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Member Hub Login", { timeout: 15000 });
     const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
     expect(stillStored).toBeNull();
   });
