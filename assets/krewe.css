@@ -862,6 +862,18 @@ table{ max-width:100%; }
 .hub a{ color:var(--navy); text-underline-offset:3px; }
 .hub a:hover{ color:var(--green-800); }
 
+/* Green buttons are anchors too (locker Pay links, raffle print).
+   Crest navy on the dark green fill is about 1.2:1, and hover turns
+   the label green-800. Keep the light label on every state. */
+.hub a.btn-green,
+.hub a.btn-green:hover,
+.hub a.btn-green:focus,
+.hub a.btn-green:focus-visible,
+.hub a.btn-green:visited{
+  color:#fff;
+  text-decoration:none;
+}
+
 /* The sticky nav bar sits on dark green, not parchment, so the
    crest-navy link color above is unreadable there. Restore the
    nav's own colors (these rules must stay below .hub a). */
