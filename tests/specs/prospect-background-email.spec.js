@@ -37,6 +37,8 @@ test("prospect email sample shows an explainer before each pay link", async ({ p
   await expect(body).toContainText("Your background check fee");
   await expect(body).toContainText("Pick the membership that fits");
   await expect(body).toContainText("treasurer@kreweofshamrock.com");
+  await expect(body).toContainText("Welcome to the Krewe. We can't wait to have you with us.");
+  await expect(body).not.toContainText("If you didn't ask to join");
   await expect(body).toContainText("Sláinte");
   for (const [label, href] of LINKS) {
     const link = body.locator("a", { hasText: label });
@@ -63,6 +65,8 @@ test("prospect email SQL stores links outside the letter and does not turn the p
   for (const [note] of EXPLAINERS) expect(SQL).toContain(note.replaceAll("'", "''"));
   expect(SQL).toContain("We''re so glad you''re joining the Krewe of Shamrock");
   expect(SQL).toContain("We''re glad you''re joining the Krewe");
+  expect(SQL).toContain("Welcome to the Krewe. We can''t wait to have you with us.");
+  expect(SQL).not.toContain("didn''t ask to join");
   expect(SQL).toContain("kos_membership_prospect_emails_enabled");
   expect(SQL).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
   expect(SQL).not.toContain("update public.kos_runtime_flags");

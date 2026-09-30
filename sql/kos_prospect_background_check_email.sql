@@ -258,7 +258,7 @@ begin
   end loop;
 
   v_html := v_html
-    || '<p>If you didn''t ask to join, you can set this aside. Otherwise, we can''t wait to welcome you.</p>'
+    || '<p>Welcome to the Krewe. We can''t wait to have you with us.</p>'
     || '<p>Sláinte,<br>Krewe of Shamrock</p>';
 
   return v_html;
