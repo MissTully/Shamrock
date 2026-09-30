@@ -159,6 +159,8 @@
     });
     var navLinks = menu.querySelectorAll('a[href]');
     for (var k = 0; k < navLinks.length; k++) navLinks[k].addEventListener('click', function () { if (mq.matches) closeMenu(); });
+    var hubLink = nav.querySelector('.nav-hub');
+    if (hubLink) hubLink.addEventListener('click', function () { if (mq.matches) closeMenu(); });
     function onMq() { if (!mq.matches) closeMenu(); }
     if (mq.addEventListener) mq.addEventListener('change', onMq);
     else if (mq.addListener) mq.addListener(onMq);
@@ -243,6 +245,17 @@
     if (document.getElementById("kosNavSigned")) return;
     var path = (location.pathname.split("/").pop() || "").toLowerCase();
     var onHub = path === "members.html";
+    var nav = document.querySelector(".krewe-nav");
+    if (!nav) return;
+    var hub = nav.querySelector(".nav-hub");
+    if (hub) {
+      hub.classList.add("is-signed");
+      hub.title = onHub ? "You are signed in" : "Open Member Hub";
+      hub.innerHTML = onHub
+        ? '<span class="dot" aria-hidden="true"></span>Signed in'
+        : '<span class="dot" aria-hidden="true"></span>Member Hub';
+      return;
+    }
     var chip = document.createElement("a");
     chip.id = "kosNavSigned";
     chip.className = "kos-nav-signed";
@@ -251,8 +264,6 @@
       ? '<span class="dot" aria-hidden="true"></span>Signed in'
       : '<span class="dot" aria-hidden="true"></span>Member Hub';
     chip.title = onHub ? "You are signed in" : "Open Member Hub";
-    var nav = document.querySelector(".krewe-nav");
-    if (!nav) return;
     var cta = nav.querySelector(".nav-cta");
     var menu = nav.querySelector(".krewe-menu");
     var login = nav.querySelector('[data-nav="members.html"]');

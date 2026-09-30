@@ -590,13 +590,32 @@ form.krewe-form{ padding:26px 30px 30px; }
   border-bottom:3px solid var(--gold);
   box-shadow:0 6px 18px rgba(12,59,33,.28);
 }
-.krewe-nav .brand{ display:flex; align-items:center; gap:12px; color:#fff; text-decoration:none; flex:0 0 auto; }
+.krewe-nav .brand{ display:flex; align-items:center; gap:12px; color:#fff; text-decoration:none; flex:0 0 auto; margin-right:auto; }
 .krewe-nav .brand img{ width:42px; height:42px; border-radius:50%; border:2px solid var(--gold); box-shadow:0 0 0 2px rgba(212,175,55,.25); }
 .krewe-nav .brand .name{ display:flex; flex-direction:column; line-height:1.05; }
 .krewe-nav .brand .name b{ font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:.6px; }
 .krewe-nav .brand .name small{ font-family:var(--fancy); font-style:italic; font-size:14px; color:var(--gold-light); letter-spacing:.4px; }
 
-.krewe-menu{ display:flex; align-items:center; gap:4px; flex-wrap:nowrap; }
+/* Member Hub Login: first control in the header, always visible (not only in the drawer). */
+.nav-hub{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  flex:0 0 auto; min-height:44px; padding:8px 14px;
+  border-radius:999px; border:1.5px solid var(--gold);
+  background:rgba(212,175,55,.18); color:var(--gold-light);
+  font-family:var(--display); font-size:15px; font-weight:700; letter-spacing:.2px;
+  text-decoration:none; white-space:nowrap;
+}
+.nav-hub:hover, .nav-hub:focus-visible{
+  background:var(--gold); color:var(--green-900); outline:none;
+}
+.nav-hub:focus-visible{ box-shadow:0 0 0 3px #fff; }
+.nav-hub.active{ background:var(--gold); color:var(--green-900); }
+.nav-hub .dot{
+  width:8px; height:8px; border-radius:50%; background:#7dffa8;
+  box-shadow:0 0 0 3px rgba(125,255,168,.28); flex:none;
+}
+
+.krewe-menu{ display:flex; align-items:center; gap:4px; flex-wrap:nowrap; margin-left:auto; }
 .krewe-links{ display:flex; align-items:center; gap:0; list-style:none; margin:0; padding:0; flex-wrap:nowrap; }
 .krewe-links > li{ position:relative; }
 .krewe-links a, .nav-group-btn{
@@ -692,6 +711,13 @@ form.krewe-form{ padding:26px 30px 30px; }
   .krewe-nav.open .nav-backdrop{ opacity:1; visibility:visible; }
 }
 body.nav-open{ overflow:hidden; }
+@media (max-width:640px){
+  /* Phones: keep Member Hub Login on its own top-left row so the label stays tappable. */
+  .krewe-nav{ flex-wrap:wrap; row-gap:8px; column-gap:10px; }
+  .nav-hub{ margin-right:auto; font-size:clamp(13px, 3.6vw, 15px); }
+  .nav-toggle{ order:1; }
+  .krewe-nav .brand{ order:2; flex:1 0 100%; }
+}
 @media (max-width:430px){
   .krewe-nav{ padding:10px 16px; }
   .krewe-nav .brand .name small{ display:none; }
@@ -841,6 +867,10 @@ table{ max-width:100%; }
 .hub .krewe-nav .krewe-links a.active{ color:var(--green-900); }
 .hub .krewe-nav .nav-cta,
 .hub .krewe-nav .nav-cta:hover{ color:var(--green-900); }
+.hub .krewe-nav .nav-hub{ color:var(--gold-light); }
+.hub .krewe-nav .nav-hub:hover,
+.hub .krewe-nav .nav-hub:focus-visible,
+.hub .krewe-nav .nav-hub.active{ color:var(--green-900); }
 
 /* Form labels: sans serif instead of all capitals Cinzel. */
 .hub .krewe-form label{

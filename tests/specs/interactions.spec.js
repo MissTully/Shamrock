@@ -36,9 +36,55 @@ test.describe("desktop navigation", () => {
     await page.getByRole("button", { name: /Get Involved/ }).click();
     await page.getByRole("link", { name: "Volunteer" }).click();
     await expect(page).toHaveURL(/volunteer\.html$/);
-    await page.getByRole("link", { name: "Member Login" }).click();
+    await page.getByRole("link", { name: "Member Hub Login" }).click();
     await expect(page).toHaveURL(/members\.html$/);
     await expect(page).toHaveTitle(/Members/);
+  });
+});
+
+test.describe("Member Hub Login header control", () => {
+  test("sits in the top-left of the header on desktop and on a phone", async ({ page }) => {
+    await page.goto("/index.html");
+    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    const brand = page.locator("nav.krewe-nav .brand");
+    await expect(hub).toBeVisible();
+    await expect(hub).toHaveAttribute("href", "members.html");
+    await expect(hub).toHaveText("Member Hub Login");
+    await expect(page.locator("#kreweMenu").getByRole("link", { name: "Member Hub Login" })).toHaveCount(0);
+
+    const desktop = await page.evaluate(() => {
+      const hubEl = document.querySelector("nav.krewe-nav > a.nav-hub");
+      const brandEl = document.querySelector("nav.krewe-nav .brand");
+      const hb = hubEl.getBoundingClientRect();
+      const bb = brandEl.getBoundingClientRect();
+      return { hx: hb.x, hy: hb.y, bx: bb.x, by: bb.y };
+    });
+    expect(desktop.hx).toBeLessThan(desktop.bx);
+    expect(Math.abs(desktop.hy - desktop.by)).toBeLessThan(20);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(hub).toBeVisible();
+    await expect(page.locator("#kreweNavToggle")).toBeVisible();
+    const phone = await page.evaluate(() => {
+      const hubEl = document.querySelector("nav.krewe-nav > a.nav-hub");
+      const brandEl = document.querySelector("nav.krewe-nav .brand");
+      const navEl = document.querySelector("nav.krewe-nav");
+      const hb = hubEl.getBoundingClientRect();
+      const bb = brandEl.getBoundingClientRect();
+      const nb = navEl.getBoundingClientRect();
+      return { hx: hb.x, hy: hb.y, bx: bb.x, by: bb.y, ny: nb.y, height: hb.height };
+    });
+    expect(phone.hx).toBeLessThan(40);
+    expect(phone.hy).toBeLessThan(phone.by);
+    expect(phone.hy).toBeLessThan(phone.ny + 24);
+    expect(phone.height).toBeGreaterThanOrEqual(44);
+
+    const hero = page.locator("header.hero");
+    await expect(hero.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "Become a Member" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "RSVP to an Event" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "Access previous site" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toBeVisible();
   });
 });
 
