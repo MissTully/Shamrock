@@ -662,14 +662,57 @@
       var dateBlock = bits
         ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
         : '<span class="app-date"><b>TBD</b><span></span></span>';
-      return '<button type="button" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
+      // The row is a div (role=button) so the Calendar button can sit inside
+      // it; a <button> cannot contain another button.
+      var calBtn = ev.start_time
+        ? '<button type="button" class="app-cal-mini" data-app-cal="' + esc(ev.id || "") + '" aria-label="Add ' + esc(ev.name || "event") + ' to my calendar">📅 Calendar</button>'
+        : "";
+      return '<div role="button" tabindex="0" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
         dateBlock +
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         where +
         (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
-        '</span><span class="app-rsvp">RSVP</span></button>';
+        '</span><span class="app-event-acts"><span class="app-rsvp">RSVP</span>' + calBtn + '</span></div>';
     }).join("");
+    target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        // Keep the click from also opening the event detail screen.
+        e.stopPropagation();
+        e.preventDefault();
+        var id = btn.getAttribute("data-app-cal");
+        var ev = null;
+        rows.forEach(function (row) { if (String(row.id) === String(id)) ev = row; });
+        openCalendarChooser(ev);
+      });
+    });
+    target.querySelectorAll(".app-event-hit[role=button]").forEach(function (row) {
+      row.addEventListener("keydown", function (e) {
+        if (e.target !== row) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          row.click();
+        }
+      });
+    });
+  }
+
+  // Google, Outlook, or .ics chooser (assets/kos-calendar.js). Falls back to
+  // the plain .ics download if an older cached helper is loaded.
+  function openCalendarChooser(ev) {
+    if (!ev || !ev.start_time || !window.kosCalendar) return false;
+    var cal = {
+      id: ev.id,
+      name: ev.name,
+      start_time: ev.start_time,
+      end_time: ev.end_time,
+      location: ev.location,
+      member_address: ev.member_address,
+      description: ev.description || ""
+    };
+    if (typeof window.kosCalendar.choose === "function") return window.kosCalendar.choose(cal);
+    if (typeof window.kosCalendar.download === "function") return window.kosCalendar.download(cal);
+    return false;
   }
 
   function whenLabel(value) {
@@ -749,16 +792,7 @@
           else if (row.meeting && String(row.meeting.id) === String(key)) ev = row.meeting;
         });
         if (!ev) return;
-        if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
-          window.kosCalendar.download({
-            id: ev.id,
-            name: ev.name,
-            start_time: ev.start_time,
-            end_time: ev.end_time,
-            location: ev.location,
-            description: ev.description || ""
-          });
-        }
+        openCalendarChooser(ev);
       });
     });
   }
@@ -5687,17 +5721,7 @@
         showToast("This event does not have a date yet.");
         return;
       }
-      if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
-        window.kosCalendar.download({
-          id: ev.id,
-          name: ev.name,
-          start_time: ev.start_time,
-          end_time: ev.end_time,
-          location: ev.location,
-          description: ev.description || ""
-        });
-        return;
-      }
+      if (openCalendarChooser(ev)) return;
       showToast("Calendar download is not available in this browser.");
     }
 
@@ -5765,7 +5789,7 @@
         "</article>";
       actions.innerHTML =
         '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
-        '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
+        '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>';
       var rsvpBtn = document.getElementById("appRsvpBtn");
       var calBtn = document.getElementById("appCalBtn");
       if (ev.parade_rsvpd || ev.rsvpd) {

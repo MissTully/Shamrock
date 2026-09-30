@@ -331,7 +331,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20260920p1"></script>
+  <script src="assets/kos-calendar.js?v=20260930cal1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -1055,7 +1055,7 @@
           calPending.hidden = false;
           calPending.innerHTML = '<button type="button" class="btn" id="rsvpAddCalendar">Add to calendar</button>';
           const addPending = document.getElementById("rsvpAddCalendar");
-          if (addPending) addPending.addEventListener("click", function () { window.kosCalendar.download(icsPending); });
+          if (addPending) addPending.addEventListener("click", function () { if (window.kosCalendar.choose) window.kosCalendar.choose(icsPending); else window.kosCalendar.download(icsPending); });
         }
         return;
       }
@@ -1091,7 +1091,7 @@
           cal.innerHTML = '<button type="button" class="btn" id="rsvpAddCalendar">Add to calendar</button>' +
             '<p class="hint" style="margin:8px 0 0;">Adds this event with the public location teaser. Full staging stays in the Member Hub.</p>';
           const addBtn = document.getElementById("rsvpAddCalendar");
-          if (addBtn) addBtn.addEventListener("click", function () { window.kosCalendar.download(icsEvent); });
+          if (addBtn) addBtn.addEventListener("click", function () { if (window.kosCalendar.choose) window.kosCalendar.choose(icsEvent); else window.kosCalendar.download(icsEvent); });
         }
       }
     });
