@@ -21,6 +21,9 @@ const APPLICATIONS = [
     ssn_last4: "6789",
     ssn_full: "123-45-6789",
     id_digits: "123456789",
+    dl_last4: "9012",
+    dl_full: "F123456789012",
+    driver_license: "F123456789012",
     created_at: "2026-09-28T15:04:00.000Z"
   },
   {
@@ -120,9 +123,14 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("[data-app-status='pending-new']").first()).toContainText("New");
     await expect(tool).toContainText("Application fee: single applicant, $50");
     await expect(tool).toContainText("not membership dues");
+    await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
+    await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
+    await expect(tool.locator("[data-app-send='app-nia']")).toHaveText("Send full application");
+    await expect(tool).not.toContainText("Mark next step sent");
     await expect(tool).not.toContainText("123-45-6789");
     await expect(tool).not.toContainText("123456789");
+    await expect(tool).not.toContainText("F123456789012");
     await expect(tool).not.toContainText("Rowan Hale");
     await expect(tool).not.toContainText("Casey Prospect");
 
@@ -185,11 +193,14 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
 
-    await tool.locator("#hubAppNote-app-nia").fill("Asked them to pay membership dues.");
-    await tool.locator("[data-app-next='app-nia']").click();
-    await expect(tool).toContainText("Next step sent.");
+    await tool.locator("#hubAppNote-app-nia").fill("Called and sending the full application.");
+    await tool.locator("[data-app-send='app-nia']").click();
+    await expect(tool).toContainText("secure link");
+    await expect(tool).toContainText("does not include a Social Security number");
     await expect(card).toHaveAttribute("data-app-status", "background-check");
-    await expect(tool.locator("[data-app-history='next_step_sent']")).toContainText("Asked them to pay membership dues.");
+    await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Called and sending the full application.");
+    await expect(tool.locator("[data-app-send='app-nia']")).toHaveText("Send full application again");
+    await expect(tool).not.toContainText("token=");
 
     await tool.locator("[data-app-dues='app-nia']").click();
     await expect(tool).toContainText("Moved to dues pending.");

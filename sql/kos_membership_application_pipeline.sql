@@ -1,5 +1,11 @@
 -- Membership application pipeline (Phase 2).
 --
+-- Phase 1 (interest-only join, token full application, driver's license and
+-- Social Security number) is sql/kos_membership_application_staged.sql.
+-- Apply that file AFTER this one. If you run this file again later, run the
+-- staged file again. This file's join function, list, and reveal function
+-- are the pre-Phase-1 versions and would otherwise come back.
+--
 -- APPLY THIS BEFORE GO-LIVE. The website does not run it.
 --   1. Open Supabase project oazwkwflgbthojvnclfc.
 --   2. SQL Editor -> New query -> paste this whole file -> Run.
@@ -21,16 +27,16 @@
 --     dues_pending, next_step_sent.
 --   * Application fee type on the roster row: single ($50) or dual ($75).
 --     That fee is the background check. It is not membership dues.
---   * Social Security number for the background check, stored in
---     membership_application_ids. Lists return the last 4 only.
---     The full number is available only to application reviewers, through
---     reveal_membership_application_id. It is never written into email.
---     Direct table reads are revoked. Row level security is on with no
---     client policy, so the browser cannot select the table.
---   * New join applications still queue secretary@ and digital@ as before,
---     and queue the Membership Chair (or lsugrue99@gmail.com if nobody
---     holds that role) with the applicant name and a link to Membership
---     Applications.
+--   * Background-check numbers live in membership_application_ids.
+--     Lists return the last 4 only. The full value is available only to
+--     application reviewers, through reveal_membership_application_id.
+--     It is never written into email. Direct table reads are revoked.
+--     Row level security is on with no client policy.
+--   * Join mail goes to the Membership Chair (or lsugrue99@gmail.com if
+--     nobody holds that role) and the President. Not secretary@ and not
+--     digital@. The join form does not store an ID number. Phase 1 in
+--     sql/kos_membership_application_staged.sql is the file to apply for
+--     the token link, driver's license, and the audited reveal.
 --
 -- Until this file is applied, the join form still submits name and address
 -- through the older function. Stage buttons and the background-check number
@@ -206,15 +212,15 @@ begin
                m.join_date, m.created_at,
                (select right(i.id_digits, 4)
                   from public.membership_application_ids i
-                 where i.member_id = m.id and i.person_slot = 'applicant'
+                 where i.member_id = m.id and i.person_slot = 'applicant' and i.id_kind = 'ssn'
                  limit 1) as ssn_last4,
                (select right(i.id_digits, 4)
                   from public.membership_application_ids i
-                 where i.member_id = m.id and i.person_slot = 'partner'
+                 where i.member_id = m.id and i.person_slot = 'partner' and i.id_kind = 'ssn'
                  limit 1) as partner_ssn_last4,
                exists (
                  select 1 from public.membership_application_ids i
-                 where i.member_id = m.id and i.person_slot = 'applicant'
+                 where i.member_id = m.id and i.person_slot = 'applicant' and i.id_kind = 'ssn'
                ) as has_ssn
         from public.members m
         where m.merged_into is null
@@ -558,18 +564,8 @@ begin
   if v_fee <> '' and v_fee not in ('single', 'dual') then
     return jsonb_build_object('ok', false, 'message', 'Choose single applicant or couple for the application fee.');
   end if;
-  if nullif(btrim(coalesce(p_ssn, '')), '') is not null then
-    v_ssn := public.kos_ssn_digits(p_ssn);
-    if v_ssn is null then
-      return jsonb_build_object('ok', false, 'message', 'Enter a 9 digit Social Security number for the background check. Do not send a driver license number.');
-    end if;
-  end if;
-  if nullif(btrim(coalesce(p_partner_ssn, '')), '') is not null then
-    v_partner_ssn := public.kos_ssn_digits(p_partner_ssn);
-    if v_partner_ssn is null then
-      return jsonb_build_object('ok', false, 'message', 'Enter a 9 digit Social Security number for the second applicant. Do not send a driver license number.');
-    end if;
-  end if;
+  -- Join does not store a Social Security number or a driver's license number.
+  -- p_ssn and p_partner_ssn are ignored. The full application link does that later.
 
   select count(*) into v_recent
   from public.members
@@ -618,23 +614,6 @@ begin
     where id = v_id;
   end if;
 
-  -- Store the background-check number only for an open application.
-  -- Active members who hit the join form do not get an ID written.
-  if v_open and v_ssn is not null then
-    insert into public.membership_application_ids (member_id, person_slot, id_kind, id_digits)
-    values (v_id, 'applicant', 'ssn', v_ssn)
-    on conflict (member_id, person_slot) do update
-      set id_digits = excluded.id_digits,
-          updated_at = now();
-  end if;
-  if v_open and v_fee = 'dual' and v_partner_ssn is not null then
-    insert into public.membership_application_ids (member_id, person_slot, id_kind, id_digits)
-    values (v_id, 'partner', 'ssn', v_partner_ssn)
-    on conflict (member_id, person_slot) do update
-      set id_digits = excluded.id_digits,
-          updated_at = now();
-  end if;
-
   v_addr := v_street || ', ' || v_city || ', ' || v_state || ' ' || v_zip;
   v_fee_line := case
     when v_fee = 'dual' then 'Application fee: couple, $75. This is the background check fee, not membership dues.'
@@ -643,28 +622,6 @@ begin
   end;
 
   if v_is_new or v_status in ('prospect', 'pending-new') then
-    perform public.enqueue_email(
-      'secretary@kreweofshamrock.com',
-      'Krewe Secretary',
-      'New membership application: ' || v_first || ' ' || v_last,
-      '<p>A membership application just arrived.</p><p><strong>'
-        || v_first || ' ' || v_last || '</strong><br/>'
-        || v_email || case when v_phone is not null then '<br/>' || v_phone else '' end
-        || '<br/>' || v_addr || '</p>'
-        || case when v_notes is not null then '<p>' || replace(v_notes, E'\n', '<br/>') || '</p>' else '' end
-        || '<p>Review in the Member Hub or v_pending_applications.</p>',
-      'membership_application',
-      v_id
-    );
-    perform public.enqueue_email(
-      'digital@kreweofshamrock.com',
-      'Krewe Digital',
-      'New membership application: ' || v_first || ' ' || v_last,
-      '<p>' || v_first || ' ' || v_last || ' applied (' || v_email || ').</p><p>' || v_addr || '</p>',
-      'membership_application',
-      v_id
-    );
-
     v_chair_html :=
       '<p>A new membership application just arrived from the join form.</p><p><strong>'
       || public.kos_html_text(v_first) || ' ' || public.kos_html_text(v_last) || '</strong><br/>'
@@ -698,9 +655,6 @@ begin
           )
         )
     loop
-      if v_chair.email in ('secretary@kreweofshamrock.com', 'digital@kreweofshamrock.com') then
-        continue;
-      end if;
       perform public.enqueue_email(
         v_chair.email,
         nullif(v_chair.full_name, ''),
@@ -722,6 +676,31 @@ begin
         v_id
       );
     end if;
+
+    for v_chair in
+      select distinct
+        lower(btrim(m.email)) as email,
+        btrim(coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, '')) as full_name
+      from public.members m
+      where m.merged_into is null
+        and coalesce(m.membership_status, 'active') in ('active', 'pending-renewal')
+        and m.email is not null
+        and position('@' in m.email) > 0
+        and exists (
+          select 1
+          from unnest(regexp_split_to_array(coalesce(m.officer_title, ''), '\s*·\s*')) as seg(part)
+          where btrim(seg.part) ilike 'President'
+        )
+    loop
+      perform public.enqueue_email(
+        v_chair.email,
+        nullif(v_chair.full_name, ''),
+        'New membership application: ' || v_first || ' ' || v_last,
+        v_chair_html,
+        'membership_application',
+        v_id
+      );
+    end loop;
   end if;
 
   if v_status in ('active', 'pending-renewal', 'lapsed') then
@@ -733,7 +712,7 @@ begin
 
   return jsonb_build_object(
     'ok', true,
-    'message', 'Application received. Next: the application fee is $50 for one person or $75 for a couple. That fee is the background check. It is not membership dues. Membership dues ($375 full krewe, or $100 leave of absence) come after the background check, when the Membership Chair marks dues pending. We will follow up by email. Sláinte!'
+    'message', 'We received your interest in joining. Someone from the Krewe will call you.'
   );
 end;
 $$;

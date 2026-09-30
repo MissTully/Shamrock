@@ -104,14 +104,15 @@
         <p class="mg-note">Every application needs a background check, a current member as sponsor, and Board approval. No sponsor yet? Apply anyway; we'll invite you along to meet the krewe.</p>
         <div class="mg-pay" id="appFeeBox" style="margin:16px 0 8px;padding:14px 16px;border:1px solid rgba(168,128,28,.35);border-radius:12px;background:#fbf6e9;">
           <p style="margin:0 0 8px;font-weight:600;color:var(--green-800);">Application fee (background check)</p>
-          <p style="margin:0;font-size:15px;color:var(--muted);line-height:1.45;">Single applicant: $50. Couple (two applicants): $75. This is the application fee. It is not membership dues. The payment link is not published on this page. After you submit, the Membership Chair sends the next step.</p>
+          <p style="margin:0;font-size:15px;color:var(--muted);line-height:1.45;">Single applicant: $50. Couple (two applicants): $75. This is the application fee. It is not membership dues. The payment link is not published on this page. After you submit, someone from the Krewe will call you.</p>
         </div>
         <div id="joinNextSteps" style="margin:0 0 8px;padding:14px 16px;border:1px dashed rgba(168,128,28,.55);border-radius:12px;background:#fff;">
           <p style="margin:0 0 8px;font-weight:600;color:var(--green-800);">What happens next</p>
           <ol style="margin:0;padding-left:1.2em;font-size:15px;color:var(--muted);line-height:1.5;">
-            <li>Submit this form. Your application starts as new.</li>
+            <li>Submit this form. It records your interest. It does not ask for a Social Security number or a driver's license number.</li>
+            <li>Someone from the Krewe will call you.</li>
+            <li>The Membership Chair then emails a secure link to the full application for the background check.</li>
             <li>Pay the application fee when the Membership Chair sends that step. $50 for one person, or $75 for a couple. That fee is the background check.</li>
-            <li>The chair moves the application to background check in progress.</li>
             <li>After the background check, membership dues come due. Full krewe is $375. Leave of absence is $100. Those links below are membership dues, not the application fee.</li>
           </ol>
         </div>
@@ -173,18 +174,11 @@
         </fieldset>
 
         <div id="partnerFields" hidden>
-          <label for="partnerFirst">Partner first name</label>
+          <label for="partnerFirst">Second applicant first name</label>
           <input id="partnerFirst" type="text" autocomplete="off" />
-          <label for="partnerLast">Partner last name</label>
+          <label for="partnerLast">Second applicant last name</label>
           <input id="partnerLast" type="text" autocomplete="off" />
-          <label for="partnerSsn">Partner Social Security number</label>
-          <p class="hint">Same rules as the first applicant. Lists in the Hub show the last 4 only.</p>
-          <input id="partnerSsn" type="password" inputmode="numeric" autocomplete="off" maxlength="11" spellcheck="false" />
         </div>
-
-        <label for="appSsn">Social Security number</label>
-        <p class="hint">The board uses this for the background check. A driver license number is the old path. Only the Membership Chair can open the full number. Hub lists show the last 4. Do not email this number.</p>
-        <input id="appSsn" type="password" inputmode="numeric" autocomplete="off" maxlength="11" required spellcheck="false" />
 
         <label for="notes">Tell us a bit about yourself <span class="hint">(optional)</span></label>
         <textarea id="notes" placeholder="Why you'd like to join, how you heard about us, your interests..."></textarea>
@@ -192,7 +186,7 @@
         <button id="submitBtn" type="submit">☘ Submit application</button>
         <div id="message" class="msg"></div>
       </form>
-      <div class="fc-foot">We review every application and follow up by email. Sláinte! 🍀</div>
+      <div class="fc-foot">Someone from the Krewe will call you. Sláinte! 🍀</div>
     </div>
   </div>
 
@@ -239,10 +233,6 @@
     const message = document.getElementById("message");
     const partnerFields = document.getElementById("partnerFields");
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
-    function digitsOf(id) {
-      const el = document.getElementById(id);
-      return ((el && el.value) || "").replace(/\D/g, "");
-    }
     function feeType() {
       const picked = form.querySelector("input[name='feeType']:checked");
       return picked ? picked.value : "";
@@ -252,7 +242,6 @@
       partnerFields.hidden = !dual;
       document.getElementById("partnerFirst").required = dual;
       document.getElementById("partnerLast").required = dual;
-      document.getElementById("partnerSsn").required = dual;
     }
     form.querySelectorAll("input[name='feeType']").forEach((el) => {
       el.addEventListener("change", syncPartner);
@@ -261,17 +250,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       message.className = "msg";
-      const ssn = digitsOf("appSsn");
-      const partnerSsn = digitsOf("partnerSsn");
       const kind = feeType();
-      if (ssn.length !== 9) {
-        showMessage("Enter a 9 digit Social Security number for the background check.", "error");
-        return;
-      }
-      if (kind === "dual" && partnerSsn.length !== 9) {
-        showMessage("Enter a 9 digit Social Security number for the second applicant.", "error");
-        return;
-      }
       btn.disabled = true; btn.textContent = "Submitting…";
       const base = {
         p_first_name: document.getElementById("firstName").value.trim(),
@@ -287,24 +266,19 @@
       const full = Object.assign({}, base, {
         p_fee_type: kind || null,
         p_partner_first: kind === "dual" ? document.getElementById("partnerFirst").value.trim() : null,
-        p_partner_last: kind === "dual" ? document.getElementById("partnerLast").value.trim() : null,
-        p_ssn: ssn,
-        p_partner_ssn: kind === "dual" ? partnerSsn : null
+        p_partner_last: kind === "dual" ? document.getElementById("partnerLast").value.trim() : null
       });
       let result = await supabase.rpc("submit_membership_application", full);
       const errText = (result.error && (result.error.message || String(result.error))) || "";
       if (result.error && /function|schema cache|PGRST202|Could not find/i.test(errText)) {
         result = await supabase.rpc("submit_membership_application", base);
-        if (result.data && result.data.ok) {
-          result.data.message = "Application received. The background check number could not be saved yet because the database update is not applied. Do not email a Social Security number. The Membership Chair will contact you. Next: the application fee is $50 for one person or $75 for a couple. That fee is the background check, not membership dues.";
-        }
       }
-      document.getElementById("appSsn").value = "";
-      document.getElementById("partnerSsn").value = "";
       btn.disabled = false; btn.textContent = "☘ Submit application";
       if (result.error) { showMessage("Something went wrong submitting your application. Please try again.", "error"); return; }
       if (result.data && result.data.ok) {
-        showMessage(result.data.message, "success");
+        const serverMsg = String(result.data.message || "");
+        const interestMsg = "We received your interest in joining. Someone from the Krewe will call you.";
+        showMessage(/already on our roster/i.test(serverMsg) ? serverMsg : interestMsg, "success");
         form.reset();
         syncPartner();
         const steps = document.getElementById("joinNextSteps");

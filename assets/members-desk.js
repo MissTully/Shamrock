@@ -3277,13 +3277,18 @@
 
   function scrubApplicationRow(row) {
     if (!row || typeof row !== "object") return row;
-    delete row.ssn;
-    delete row.ssn_full;
-    delete row.id_digits;
-    delete row.social_security;
-    delete row.partner_ssn;
-    delete row.partner_ssn_full;
+    Object.keys(row).forEach(function (key) {
+      var k = String(key).toLowerCase();
+      if (/last4$/.test(k) || k.indexOf("has_") === 0) return;
+      if (/ssn|social|id_digit|driver|licen[cs]e|token|dl_/.test(k)) delete row[key];
+    });
     return row;
+  }
+
+  function redactDisplayedId(text) {
+    return String(text == null ? "" : text)
+      .replace(/\d{3}[-\s]\d{2}[-\s]\d{4}/g, "[redacted]")
+      .replace(/\d{9,}/g, "[redacted]");
   }
 
   function applyApplicationFixture() {
@@ -3416,6 +3421,9 @@
     if (action === "background_check") return "Background check in progress";
     if (action === "dues_pending") return "Dues pending";
     if (action === "next_step_sent") return "Next step sent";
+    if (action === "full_application_sent") return "Full application sent";
+    if (action === "full_application_received") return "Full application received";
+    if (action === "id_revealed") return "Background-check number opened";
     if (action === "approve") return "Approved";
     return "Updated";
   }
@@ -3431,20 +3439,37 @@
     return "Application fee: $50 single or $75 couple. Membership dues ($375 full krewe, or $100 leave of absence) come after the background check.";
   }
 
-  function applicationLast4(value) {
-    var d = String(value == null ? "" : value).replace(/\D/g, "");
-    if (d.length < 4) return "";
-    return d.slice(-4);
+  function applicationTail4(value) {
+    var s = String(value == null ? "" : value).replace(/[^A-Za-z0-9]/g, "");
+    if (s.length < 4) return "";
+    return s.slice(-4);
   }
 
-  function applicationSsnLine(row, which) {
-    var last = applicationLast4(which === "partner" ? row.partner_ssn_last4 : row.ssn_last4);
-    var label = which === "partner" ? "Partner SSN on file, last 4 only" : "SSN on file, last 4 only";
+  function applicationIdLine(row, which, kind) {
+    var prefix = which === "partner" ? "partner_" : "";
+    var last = applicationTail4(row[prefix + (kind === "dl" ? "dl_last4" : "ssn_last4")]);
+    var hasKey = kind === "dl"
+      ? (which === "partner" ? row.has_partner_dl : row.has_dl)
+      : (which === "partner" ? row.has_partner_ssn : row.has_ssn);
+    var label = kind === "dl"
+      ? (which === "partner" ? "Partner driver's license on file, last 4 only" : "Driver's license on file, last 4 only")
+      : (which === "partner" ? "Partner SSN on file, last 4 only" : "SSN on file, last 4 only");
     if (!last) {
-      if (which !== "partner" && row.has_ssn) return "SSN on file. Lists show the last 4 only.";
+      if (hasKey || (which !== "partner" && kind === "ssn" && row.has_ssn)) {
+        return label.replace(", last 4 only", "") + ". Lists show the last 4 only.";
+      }
       return "";
     }
-    return label + ": •••-••-" + last;
+    return label + ": " + (kind === "dl" ? "••••" : "•••-••-") + last;
+  }
+
+  function applicationPacketLine(row) {
+    var got = !!(row.has_ssn || row.has_dl || row.has_partner_ssn || row.has_partner_dl
+      || applicationTail4(row.ssn_last4) || applicationTail4(row.dl_last4)
+      || applicationTail4(row.partner_ssn_last4) || applicationTail4(row.partner_dl_last4));
+    if (got) return "Full application received. Lists show the last 4 only.";
+    if (row.full_application_sent_at) return "Full application link sent. Waiting for the applicant.";
+    return "Full application: not sent yet.";
   }
 
   function applicationOpenStatus(status) {
@@ -3492,6 +3517,7 @@
     if (action === "background_check") return "Moved to background check in progress. Other officers can see this status and your note.";
     if (action === "dues_pending") return "Moved to dues pending. This is membership dues after the background check, not the application fee.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
+    if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
     return "Saved.";
   }
 
@@ -3593,8 +3619,8 @@
       approved: "Approved applications. These people are active members.",
       declined: "Declined applications stay on file. Nothing was deleted.",
       archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join on the membership form. Newest first. Status: new."
-    }[bucket] || "These people asked to join on the membership form. Newest first. Status: new.";
+      "new": "These people asked to join. Newest first. Interest comes in first. Send the full application when you are ready for the background check."
+    }[bucket] || "These people asked to join. Newest first. Interest comes in first. Send the full application when you are ready for the background check.";
     var empty = {
       renewal: "No pending renewals.",
       prospect: "No event prospects in this list.",
@@ -3610,7 +3636,7 @@
         label + " (" + applicationCountOf(key) + ")</button>";
     }
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Join-form applications. Move each one through new, background check, and dues pending.</small></div></div>' +
+      '<small>Interest comes in first. Send the full application, then background check, then dues pending.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
@@ -3636,8 +3662,10 @@
         var addr = applicationAddress(row);
         var when = formatAppliedEt(row.created_at);
         var partner = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
-        var ssnLine = applicationSsnLine(row, "applicant");
-        var partnerSsn = applicationSsnLine(row, "partner");
+        var dlLine = applicationIdLine(row, "applicant", "dl");
+        var ssnLine = applicationIdLine(row, "applicant", "ssn");
+        var partnerDl = applicationIdLine(row, "partner", "dl");
+        var partnerSsn = applicationIdLine(row, "partner", "ssn");
         var open = applicationOpenStatus(row.membership_status);
         var id = esc(row.id);
         html += '<div class="hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '">' +
@@ -3649,11 +3677,14 @@
           (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
           '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
           '<div class="muted">Membership dues are separate: $375 full krewe, or $100 leave of absence, after the background check. They are not the application fee.</div>' +
+          '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
+          (dlLine ? '<div class="muted" data-app-dl>' + esc(dlLine) + "</div>" : "") +
           (ssnLine ? '<div class="muted" data-app-ssn>' + esc(ssnLine) + "</div>" : "") +
+          (partnerDl ? '<div class="muted" data-app-dl>' + esc(partnerDl) + "</div>" : "") +
           (partnerSsn ? '<div class="muted" data-app-ssn>' + esc(partnerSsn) + "</div>" : "") +
           (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
-          (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(row.interests) + "</div>" : "") +
-          (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(row.notes) + "</div>" : '<div class="muted">Their note: none</div>') +
+          (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
+          (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +
           (open
             ? '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
               '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>'
@@ -3661,7 +3692,7 @@
           "</div>";
         if (open) {
           html += '<div class="hub-appr-btns">' +
-            '<button type="button" class="btn" data-app-next="' + id + '">Mark next step sent</button>' +
+            '<button type="button" class="btn btn-primary" data-app-send="' + id + '">' + (row.full_application_sent_at ? "Send full application again" : "Send full application") + "</button>" +
             (row.membership_status === "background-check" ? "" : '<button type="button" class="btn" data-app-bg="' + id + '">Move to background check</button>') +
             (row.membership_status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
             '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
@@ -3679,10 +3710,14 @@
         var when = formatAppliedEt(r.created_at);
         html += '<div class="hub-appr" data-app-history="' + esc(r.action || "") + '"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
           (r.applicant ? " · " + esc(r.applicant) : "") +
-          '<div class="muted">' + esc(applicationStatusLabel(r.from_status)) + " to " + esc(applicationStatusLabel(r.to_status)) + "</div>" +
+          '<div class="muted">' + (function () {
+            var fromLabel = applicationStatusLabel(r.from_status);
+            var toLabel = applicationStatusLabel(r.to_status);
+            return esc(fromLabel === toLabel ? fromLabel : fromLabel + " to " + toLabel);
+          })() + "</div>" +
           '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") +
           (when ? " · " + esc(when) : "") + "</div>" +
-          (r.note ? '<div class="muted">Note: ' + esc(r.note) + "</div>" : "") +
+          (r.note ? '<div class="muted">Note: ' + esc(redactDisplayedId(r.note)) + "</div>" : "") +
           "</div></div>";
       });
     }
@@ -3736,13 +3771,78 @@
         decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
       });
     });
-    body.querySelectorAll("[data-app-next]").forEach(function (btn) {
+    body.querySelectorAll("[data-app-send]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var id = btn.getAttribute("data-app-next");
-        if (!confirm("Mark the next step as sent? Other officers will see your note.")) return;
-        decideApplication(window.__kosSb || null, "next_step_sent", id, noteFor(id), btn);
+        var id = btn.getAttribute("data-app-send");
+        if (!confirm("Email this applicant a secure link to the full application? The email does not include a Social Security number or a driver's license number.")) return;
+        sendFullApplication(window.__kosSb || null, id, noteFor(id), btn);
       });
     });
+  }
+
+  async function sendFullApplication(client, id, note, btn) {
+    var stamp = "full_application_sent:" + String(id);
+    var now = Date.now();
+    if (lastDecisionStamp.key === stamp && now - lastDecisionStamp.at < 800) return;
+    lastDecisionStamp.key = stamp;
+    lastDecisionStamp.at = now;
+    if (btn) btn.disabled = true;
+    var safeNote = redactDisplayedId(note || "");
+    if (applicationsFixture) {
+      var row = null;
+      (applicationsFixture || []).forEach(function (r) {
+        if (String(r.id) === String(id)) row = r;
+      });
+      if (!row) {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      var from = row.membership_status;
+      row.full_application_sent_at = new Date().toISOString();
+      var actor = fixtureActor();
+      var recent = state.applicationRecent || [];
+      recent.unshift({
+        id: "act-" + Date.now(),
+        member_id: row.id,
+        action: "full_application_sent",
+        note: safeNote,
+        from_status: from,
+        to_status: from,
+        actor_name: actor.actor_name,
+        actor_email: actor.actor_email,
+        created_at: actor.created_at,
+        applicant: ((row.first_name || "") + " " + (row.last_name || "")).trim()
+      });
+      state.applicationRecent = recent.slice(0, 12);
+      if (roleFixture) {
+        roleFixture.applications = applicationsFixture;
+        roleFixture.applicationRecent = state.applicationRecent;
+      }
+      state.applicationRows = applicationsFixture.slice();
+      syncApplicationFixtureCounts();
+      state.applicationFlash = applicationFlashFor("full_application_sent");
+      renderHome();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    try {
+      var res = await client.rpc("send_membership_full_application", {
+        p_member_id: id,
+        p_note: safeNote || null
+      });
+      var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
+      if (missing) throw new Error("Send full application needs the database update in sql/kos_membership_application_staged.sql.");
+      if (res.error) throw res.error;
+      var payload = res.data || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not send the full application.");
+      state.applicationFlash = payload.message || applicationFlashFor("full_application_sent");
+    } catch (e) {
+      alert("Could not send the full application: " + ((e && e.message) || e));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadApplications(client);
   }
 
   // ---- Officer Approvals queue: role requests + duplicate-record merges + media ----

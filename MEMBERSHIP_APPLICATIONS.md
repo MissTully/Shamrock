@@ -39,11 +39,13 @@ Until that file is applied, the Hub hides the tool because `can_review_applicati
 
 ## Notification email
 
-`submit_membership_application` still emails `secretary@kreweofshamrock.com` and `digital@kreweofshamrock.com` with the same message as before.
+The join form is interest only. `submit_membership_application` emails the Membership Chair and the President. It does not email `secretary@kreweofshamrock.com` or `digital@kreweofshamrock.com`.
 
-It also emails whoever currently holds Membership Chair (committee grant or a title containing Chair of Membership). If nobody holds that role, it falls back to `lsugrue99@gmail.com`. The chair copy is skipped when that address is already secretary or digital, so those two are not mailed twice.
+Membership Chair is a committee grant for Membership, or a title containing Chair of Membership. If nobody holds that role, the chair copy falls back to `lsugrue99@gmail.com`. President is the title segment President, not Vice President. One address is not mailed twice when the same person holds both.
 
-The chair letter names the applicant and includes a link to Membership Applications (`members.html#applications`). It names the application fee (single $50 or couple $75). It does not include a Social Security number.
+The letter names the applicant, phone, mailing address, and the application fee (single $50 or couple $75). It asks them to call, then to use Send full application in the Hub. It does not include a Social Security number or a driver's license number.
+
+The person who submitted sees: "We received your interest in joining. Someone from the Krewe will call you."
 
 ## Pipeline stages
 
@@ -51,14 +53,14 @@ Join-form applications move through these `membership_status` values. Officers d
 
 | Stage | Status value | What it means |
 |---|---|---|
-| New | `pending-new` | Submitted on the join form |
+| New | `pending-new` | Interest submitted on the join form. No Social Security number or driver's license number yet. |
 | Background check in progress | `background-check` | Chair started the background check |
 | Dues pending | `dues-pending` | Background check is done. Membership dues are next. This is not the application fee. |
 | Approved | `active` | Approve. Welcome email for new applicants. |
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 
-Mark next step sent keeps the current status and stores the note so other officers can see it.
+Send full application keeps the current status. It emails the applicant a secure link to `membership-full-application.html` and stores the note on the history as `full_application_sent`. The link expires in 21 days. Only a hash of the token is stored. Older `next_step_sent` history rows still display. The button is not a note-only action.
 
 Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own lists.
 
@@ -73,23 +75,28 @@ The roster column `application_fee_type` is `single` or `dual`.
 
 Officers and board members (`member_role` or `member_roles` / `officer_title` of officer, captain, or board, using the same title map as the Hub) do not see a pay-dues checklist item. Regular members do.
 
-## Background check number
+## Background check numbers
 
-The join form collects a Social Security number (the board's preferred ID; a driver license was the old path). It is stored in `membership_application_ids`, not on the public page and not in email.
+The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses Send full application. The applicant opens the token link and completes the full application.
+
+The full application asks for the driver's license number above the Social Security number. There is no driver's license state field. A couple ($75, fee type `dual`) enters both numbers for Applicant 1 and both numbers for Applicant 2. The form says: "The board uses SSN and driver's license for the background check. Your information is held confidentially."
+
+Both values are stored in `membership_application_ids`. `id_kind` is `ssn` or `dl`. `person_slot` is `applicant` or `partner`.
 
 - Lists show the last 4 only.
-- `reveal_membership_application_id` returns the full number only when `can_review_applications()` is true.
-- The table has row level security and no client grants. The browser cannot select it directly.
+- `reveal_membership_application_id` returns one full value only when `can_review_applications()` is true. Each reveal writes `id_revealed` with the last 4, not the full value.
+- The ID table and the link table have row level security and no client grants. The browser cannot select them directly.
+- Interest mail, the secure-link mail, and the received mail do not include a full Social Security number or a full driver's license number. Free-text notes are redacted before they are emailed or listed.
 
-## Apply the pipeline file before go-live
+## Apply the SQL before go-live
 
-The site deploy does not run SQL. Do this in the Supabase SQL editor for project `oazwkwflgbthojvnclfc` before the new stages, the chair letter, and the background-check number are live.
+The site deploy does not run SQL. Do this in the Supabase SQL editor for project `oazwkwflgbthojvnclfc`.
 
 1. If Membership Applications is not installed yet, run `sql/kos_membership_applications.sql` first.
-2. Open `sql/kos_membership_application_pipeline.sql`.
-3. Paste it into a new SQL query and run it.
-4. Safe to run again.
+2. Open `sql/kos_membership_application_pipeline.sql`. Paste it into a new SQL query and run it.
+3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, Send full application, and driver's license plus Social Security number on the token page.
+4. Each file is safe to run again.
 
-If you run the older membership applications file after the pipeline file, run the pipeline file again.
+Run the staged file last. If you run the pipeline file again after it, run `sql/kos_membership_application_staged.sql` again.
 
-Until the pipeline file is applied, the join form still saves the name and address. The background-check number is not stored, and the new stage buttons need the file.
+Until the staged file is applied, the join page still saves the name and address through the older function, and Send full application cannot email the secure link.

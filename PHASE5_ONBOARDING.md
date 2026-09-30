@@ -1,5 +1,7 @@
 # Phase 5 — Onboarding New Members
 
+The live join flow is the staged application in `MEMBERSHIP_APPLICATIONS.md`. This note is the earlier Phase 5 write-up.
+
 This is the final workflow from **AUTOMATIONS_AND_WORKFLOWS_PLAN.md**. It turns a
 prospective member into an active one with almost no manual data entry: they apply
 through a public form, officers get notified and review a queue, and one approval
