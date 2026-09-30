@@ -863,7 +863,8 @@ begin
     ('Sant''Yago Knight Parade', 'assets/img/parades/santyago-knight.webp'),
     ('Tampa Pride', 'assets/img/parades/tampa-pride.webp'),
     ('Rough Riders'' St. Patrick''s Day', 'assets/img/parades/st-patricks.webp'),
-    ('Rough Riders'' St. Patrick''s Day Parade', 'assets/img/parades/st-patricks.webp')
+    ('Rough Riders'' St. Patrick''s Day Parade', 'assets/img/parades/st-patricks.webp'),
+    ('St. Patrick''s Day Parade', 'assets/img/parades/st-patricks.webp')
   ) as v(name, flyer_url)
   where e.event_type = 'parade'
     and coalesce(e.source, 'krewe') = 'krewe'

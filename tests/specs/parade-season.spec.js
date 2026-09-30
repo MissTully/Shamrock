@@ -111,6 +111,13 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   expect(html.indexOf('id="parade-season"')).toBeLessThan(html.indexOf('id="ikc-season"'));
   expect(html).toMatch(/Children'?s Gasparilla/);
   expect(html).toContain("Parade of Pirates");
+  expect(html).toContain("St. Patrick's Day Parade");
+  expect(html).not.toContain("Rough Riders");
+  expect(html).toContain("March 2027 · date to be announced");
+  expect(html).toContain("<b>Where:</b> Tampa</p>");
+  expect(html).toContain("the parade where the Krewe of Shamrock was born in 1999");
+  expect(html).toContain("Kilts and a sea of green.");
+  expect(html).not.toMatch(/born in 1999\.\s*Pipes/);
   for (const file of [
     "santafest",
     "childrens-gasparilla",
@@ -126,6 +133,18 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   const firstSection = page.locator("header.page-head + section");
   await expect(firstSection).toHaveAttribute("id", "parade-season");
   await expect(page.locator("#parade-season")).toBeVisible();
+  const stPatricks = page.locator("#parade-season .parade-card", {
+    has: page.getByRole("heading", { level: 3, name: "St. Patrick's Day Parade" })
+  });
+  await expect(stPatricks).toBeVisible();
+  await expect(stPatricks).toContainText("March 2027");
+  await expect(stPatricks).toContainText("date to be announced");
+  await expect(stPatricks).toContainText("Tampa");
+  await expect(stPatricks).toContainText("born in 1999");
+  await expect(stPatricks).toContainText("Kilts and a sea of green");
+  await expect(stPatricks).not.toContainText(/pipes/i);
+  await expect(stPatricks).not.toContainText(/March \d{1,2}, 2027/);
+  await expect(page.locator("#parade-season")).not.toContainText("Rough Riders");
   await expect(page.locator("header.page-head")).toContainText("Gasparilla");
   await expect(page.locator("#parade-season")).toContainText("Children's Gasparilla");
   await expect(page.locator("#parade-season")).toContainText("Parade of Pirates");
