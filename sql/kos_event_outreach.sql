@@ -301,7 +301,16 @@ begin
   return query
     select v.*
       from public.v_event_outreach v
-     where (coalesce(p_never_applied, true) = false or v.applied_to_join = false)
+     where (
+            coalesce(p_never_applied, true) = false
+            or v.applied_to_join = false
+            -- Off-roster Wild Apricot emails are not applications. Keep them
+            -- even if a later change marks applied_to_join for another reason.
+            or (
+              coalesce(v.on_roster, false) = false
+              and 'legacy' = any (v.source_keys)
+            )
+          )
        and v.event_count >= v_min
        and (v_source is null or v_source = any (v.source_keys))
      order by v.last_event_at desc nulls last, v.email;
@@ -317,7 +326,7 @@ create or replace function public.list_event_outreach(
   p_source text default null,
   p_min_events integer default 0,
   p_never_applied boolean default true,
-  p_limit integer default 300,
+  p_limit integer default 1000,
   p_offset integer default 0
 )
 returns jsonb
@@ -329,7 +338,7 @@ as $$
 declare
   v_source text := lower(btrim(coalesce(p_source, '')));
   v_min integer := least(greatest(coalesce(p_min_events, 0), 0), 1000);
-  v_limit integer := least(greatest(coalesce(p_limit, 300), 1), 300);
+  v_limit integer := least(greatest(coalesce(p_limit, 1000), 1), 1000);
   v_offset integer := greatest(coalesce(p_offset, 0), 0);
   v_never boolean := coalesce(p_never_applied, true);
 begin
@@ -384,7 +393,7 @@ end;
 $$;
 
 comment on function public.list_event_outreach(text, integer, boolean, integer, integer) is
-  'Officer outreach page. p_source is website_rsvp, zeffy, legacy, or blank. p_never_applied defaults true.';
+  'Officer outreach page. p_source is website_rsvp, zeffy, legacy, or blank. p_never_applied defaults true and does not drop off-roster legacy emails. Page size caps at 1000.';
 
 revoke all on function public.list_event_outreach(text, integer, boolean, integer, integer) from public, anon;
 grant execute on function public.list_event_outreach(text, integer, boolean, integer, integer) to authenticated;

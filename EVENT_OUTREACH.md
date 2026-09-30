@@ -23,11 +23,13 @@ One row per email.
 
 Canceled website signups are skipped. Legacy rows marked Canceled or abandoned are skipped. A Zeffy purchase and a website RSVP for the same event count once.
 
-**Never applied to join** is checked by default. It hides Zeffy buyers whose email already matches a roster row that is not still a prospect (active, pending application, declined, and so on). Uncheck it to see those matched members in the same list, marked with their roster status. Legacy emails that already belong to a member are not added as their own rows. If that email is already on the list as a prospect or a Zeffy payer, the Legacy badge still shows.
+**Never applied to join** is checked by default. It hides Zeffy buyers whose email already matches a roster row that is not still a prospect (active, pending application, declined, and so on). Uncheck it to see those matched members in the same list, marked with their roster status. It does **not** hide Wild Apricot emails that are not on the roster. Legacy emails that already belong to a member are not added as their own rows. If that email is already on the list as a prospect or a Zeffy payer, the Legacy badge still shows.
+
+**All sources (includes legacy)** is the default. Choosing **Legacy** shows only those Wild Apricot emails. A signed-in officer desk calls `list_event_outreach` on the live database. The example.com names (Niamh Kelly and the rest) are the offline test fixture. They appear only when there is no signed-in session, and the page says so.
 
 An event counts when there is a website RSVP (including the waitlist), a Zeffy ticket, or a legacy registration. The “at least this many events” box is that count.
 
-The on-screen list shows up to 300 people. **Download CSV** uses `export_event_outreach` and includes the full filtered set, capped at 10,000 rows.
+The on-screen list asks for up to 1,000 people. **Download CSV** uses `export_event_outreach` and includes the full filtered set, capped at 10,000 rows. Re-run this file if an older copy is already applied: that older copy still returns the right totals, but it only sends the first 300 rows to the page.
 
 ## Emailing the list
 
@@ -65,6 +67,6 @@ Then:
 
 1. Open `sql/kos_event_outreach.sql`.
 2. Paste it into a new SQL query and run it. Melissa applies this manually; the site deploy does not.
-3. Safe to run again.
+3. Safe to run again. If this file is already on the project, run it again so the list can return up to 1,000 rows and so “Never applied to join” keeps off-roster Wild Apricot emails even if that flag is set another way. The copy already on the project returns the right totals (about 333 legacy emails) and the first 300 rows.
 
 Until that file is applied, the outreach tool tells the officer to apply it, and Email members shows the same note on Event prospects (the counts come back without `prospects`). The Member Hub scripts are `assets/members-desk.js` and `assets/kos-email-invoices.js` (cache-bust queries on `members.html`).

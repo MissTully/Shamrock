@@ -63,6 +63,18 @@ const ROWS = [
     membership_status: "active",
     on_roster: true,
     applied_to_join: true
+  },
+  {
+    name: "Aoife Brennan",
+    email: "aoife.brennan@example.com",
+    sources: ["Legacy"],
+    source_keys: ["legacy"],
+    event_count: 6,
+    last_event_name: "Craic Cup",
+    last_event_at: "2025-03-01T23:00:00Z",
+    membership_status: null,
+    on_roster: false,
+    applied_to_join: true
   }
 ];
 
@@ -87,10 +99,13 @@ test.describe("Event outreach", () => {
     await expect(tool).toContainText("owen.byrne@example.com");
     await expect(tool).toContainText("Siobhan Walsh");
     await expect(tool).toContainText("Patrick Doyle");
+    await expect(tool).toContainText("Aoife Brennan");
     await expect(tool).not.toContainText("Maeve Collins");
+    await expect(tool.locator("#hubOutreachSample")).toBeVisible();
+    await expect(tool.locator("#hubOutreachLegacyNote")).toHaveCount(0);
     await expect(tool.locator(".hub-outreach-src-website").first()).toHaveText("Website RSVP");
     await expect(tool.locator(".hub-outreach-src-zeffy").first()).toBeVisible();
-    await expect(tool.locator(".hub-outreach-src-legacy")).toHaveText("Legacy");
+    await expect(tool.locator(".hub-outreach-src-legacy").first()).toHaveText("Legacy");
     await expect(tool).toContainText("Not on roster");
     await expect(tool).toContainText("Prospect");
     await expect(page.locator("[data-app-bucket='prospect']")).toHaveCount(0);
@@ -98,8 +113,15 @@ test.describe("Event outreach", () => {
       path: "/opt/cursor/artifacts/event-outreach-list.png"
     });
 
+    await page.locator("#hubOutreachSource").selectOption("legacy");
+    await expect(tool).toContainText("Aoife Brennan");
+    await expect(tool).toContainText("Siobhan Walsh");
+    await expect(tool).not.toContainText("Niamh Kelly");
+    await expect(tool).not.toContainText("Owen Byrne");
+
     await page.locator("#hubOutreachSource").selectOption("zeffy");
     await expect(tool).not.toContainText("Niamh Kelly");
+    await expect(tool).not.toContainText("Aoife Brennan");
     await expect(tool).toContainText("Owen Byrne");
     await expect(tool).toContainText("Siobhan Walsh");
     await expect(tool).toContainText("Patrick Doyle");
@@ -191,5 +213,103 @@ test.describe("Event outreach", () => {
     await expect(page.locator('[data-tool="tool:hubApprovals"]')).toBeVisible();
     await expect(page.locator('[data-tool="tool:hubEventOutreach"]')).toHaveCount(0);
     assertHealthy(expect, report, "outreach hidden");
+  });
+
+  test("a signed-in hub loads list_event_outreach and ignores the offline fixture", async ({ page }) => {
+    const report = watchPage(page);
+    const legacyRows = [];
+    for (let i = 1; i <= 12; i++) {
+      legacyRows.push({
+        name: "Legacy guest " + i,
+        email: "legacy-guest-" + i + "@legacy.invalid",
+        sources: ["Legacy"],
+        source_keys: ["legacy"],
+        event_count: 2,
+        last_event_name: "Wild Apricot event",
+        last_event_at: "2024-11-02T20:00:00Z",
+        membership_status: null,
+        on_roster: false,
+        applied_to_join: false
+      });
+    }
+    const live = {
+      ok: true,
+      total: 335,
+      by_source: { website_rsvp: 1, zeffy: 1, legacy: 333 },
+      rows: legacyRows
+    };
+    await page.addInitScript((payload) => {
+      function wrap(client) {
+        if (!client || client.__kosOutreachWrapped) return client;
+        const origRpc = typeof client.rpc === "function" ? client.rpc.bind(client) : null;
+        client.rpc = async function (name, args) {
+          window.__kosOutreachRpc = window.__kosOutreachRpc || [];
+          window.__kosOutreachRpc.push({ name: name, args: args || null });
+          if (name === "list_event_outreach") {
+            const source = args && args.p_source;
+            if (source === "legacy") {
+              return {
+                data: {
+                  ok: true,
+                  total: 333,
+                  by_source: { website_rsvp: 0, zeffy: 0, legacy: 333 },
+                  rows: payload.rows
+                },
+                error: null
+              };
+            }
+            return { data: payload, error: null };
+          }
+          if (origRpc) {
+            try { return await origRpc(name, args); } catch (err) {
+              return { data: null, error: { message: String(err && err.message || err) } };
+            }
+          }
+          return { data: null, error: null };
+        };
+        if (client.auth) {
+          client.auth.getSession = async () => ({
+            data: { session: { access_token: "officer-session", user: { id: "officer-test" } } },
+            error: null
+          });
+        }
+        client.__kosOutreachWrapped = true;
+        return client;
+      }
+      let inner = null;
+      Object.defineProperty(window, "__kosSb", {
+        configurable: true,
+        enumerable: true,
+        get() { return inner; },
+        set(client) { inner = wrap(client); }
+      });
+    }, live);
+
+    await openOutreach(page, { officer: true, canManageEvents: true });
+    const tool = page.locator("#hubEventOutreach");
+    await expect(tool).toContainText("Live list from the krewe database.");
+    await expect(tool).toContainText("333");
+    await expect(tool).toContainText("legacy Wild Apricot emails are in this list");
+    await expect(tool).toContainText("legacy-guest-1@legacy.invalid");
+    await expect(tool).toContainText("Showing 12 of 335");
+    await expect(tool).not.toContainText("Niamh Kelly");
+    await expect(tool).not.toContainText("example.com");
+    await expect(tool.locator("#hubOutreachSample")).toBeHidden();
+    await expect(tool.locator("#hubOutreachNever")).toBeChecked();
+    await page.locator("#hubOfficer").screenshot({
+      path: "/opt/cursor/artifacts/event-outreach-legacy-live.png"
+    });
+
+    const calls = await page.evaluate(() => window.__kosOutreachRpc || []);
+    expect(calls.some((c) => c.name === "list_event_outreach" && c.args && c.args.p_never_applied === true && !c.args.p_source)).toBe(true);
+
+    await page.locator("#hubOutreachSource").selectOption("legacy");
+    await expect(tool).toContainText("333");
+    await expect(tool).toContainText("legacy-guest-12@legacy.invalid");
+    await expect(tool).not.toContainText("Niamh Kelly");
+    const after = await page.evaluate(() => window.__kosOutreachRpc || []);
+    expect(after.some((c) => c.name === "list_event_outreach" && c.args && c.args.p_source === "legacy")).toBe(true);
+
+    assertHealthy(expect, report, "signed-in outreach");
   });
 });
