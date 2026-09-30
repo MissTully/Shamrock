@@ -633,8 +633,9 @@ grant execute on function public.upsert_shop_vendor_look(jsonb) to authenticated
 -- Inserts a vendor only when its short name is new.
 -- Re-running fills blank contact, blurb, and season fields.
 -- It does not overwrite a store URL an officer has already changed.
--- The four Krewe shirts Melissa sent do not say which printer sells them,
--- so both collages show the same photos. Each tile still opens that vendor's store.
+-- Melissa assigned the family-crest long-sleeve and mermaid tee to Red's.
+-- The hoodie and raglan stay on Studio 19 until she assigns them.
+-- Each tile still opens that vendor's store. No product-page URLs.
 insert into public.shop_vendors (
   name, short_name, store_url, website_url,
   contact_email, contact_phone,
@@ -649,9 +650,7 @@ insert into public.shop_vendors (
   '813-612-5999',
   array[
     '/assets/img/store/vendor-family-crest-ls.png',
-    '/assets/img/store/vendor-mermaid-tee.png',
-    '/assets/img/store/vendor-crest-hoodie.png',
-    '/assets/img/store/vendor-shenanigans-raglan.png'
+    '/assets/img/store/vendor-mermaid-tee.png'
   ],
   'Crest tees, jackets, and parade layers in green and gold.',
   'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.',
@@ -670,8 +669,6 @@ insert into public.shop_vendors (
   'https://studio19shop.com/shop/ols/categories/krewe-of-shamrock',
   'https://studio19shop.com',
   array[
-    '/assets/img/store/vendor-family-crest-ls.png',
-    '/assets/img/store/vendor-mermaid-tee.png',
     '/assets/img/store/vendor-crest-hoodie.png',
     '/assets/img/store/vendor-shenanigans-raglan.png'
   ],
@@ -724,18 +721,44 @@ where v.short_name = 'Studio 19'
     or nullif(btrim(v.fulfillment_note), '') is null
   );
 
--- Apply the shared collage on every run. Does not change store_url.
+-- Set each collage on every run. Does not change store_url.
 update public.shop_vendors
 set showcase_images = array[
   '/assets/img/store/vendor-family-crest-ls.png',
-  '/assets/img/store/vendor-mermaid-tee.png',
+  '/assets/img/store/vendor-mermaid-tee.png'
+]
+where short_name = 'Red''s'
+  and showcase_images is distinct from array[
+    '/assets/img/store/vendor-family-crest-ls.png',
+    '/assets/img/store/vendor-mermaid-tee.png'
+  ];
+
+update public.shop_vendors
+set showcase_images = array[
   '/assets/img/store/vendor-crest-hoodie.png',
   '/assets/img/store/vendor-shenanigans-raglan.png'
 ]
-where short_name in ('Red''s', 'Studio 19')
+where short_name = 'Studio 19'
   and showcase_images is distinct from array[
-    '/assets/img/store/vendor-family-crest-ls.png',
-    '/assets/img/store/vendor-mermaid-tee.png',
     '/assets/img/store/vendor-crest-hoodie.png',
     '/assets/img/store/vendor-shenanigans-raglan.png'
   ];
+
+-- Drop look cards that put a shirt on the wrong vendor.
+delete from public.shop_vendor_looks l
+using public.shop_vendors v
+where l.vendor_id = v.id
+  and v.short_name = 'Red''s'
+  and l.image_url in (
+    '/assets/img/store/vendor-crest-hoodie.png',
+    '/assets/img/store/vendor-shenanigans-raglan.png'
+  );
+
+delete from public.shop_vendor_looks l
+using public.shop_vendors v
+where l.vendor_id = v.id
+  and v.short_name = 'Studio 19'
+  and l.image_url in (
+    '/assets/img/store/vendor-family-crest-ls.png',
+    '/assets/img/store/vendor-mermaid-tee.png'
+  );
