@@ -43,7 +43,7 @@ The join form is interest only. `submit_membership_application` emails the Membe
 
 Membership Chair is a committee grant for Membership, or a title containing Chair of Membership. If nobody holds that role, the chair copy falls back to `lsugrue99@gmail.com`. President is the title segment President, not Vice President. One address is not mailed twice when the same person holds both.
 
-The letter names the applicant, phone, mailing address, and the application fee (single $50 or couple $75). It asks them to call, then to use Send full application in the Hub. It does not include a Social Security number or a driver's license number.
+The letter names the applicant, phone, mailing address, and the application fee (single $50 or couple $75). It asks them to call, then to choose Move to background check in the Hub. That emails the secure link. It does not include a Social Security number or a driver's license number.
 
 The person who submitted sees: "We received your interest in joining. Someone from the Krewe will call you."
 
@@ -54,13 +54,13 @@ Join-form applications move through these `membership_status` values. Officers d
 | Stage | Status value | What it means |
 |---|---|---|
 | New | `pending-new` | Interest submitted on the join form. No Social Security number or driver's license number yet. |
-| Background check in progress | `background-check` | Chair started the background check |
-| Dues pending | `dues-pending` | Background check is done. Membership dues are next. This is not the application fee. |
+| Background check in progress | `background-check` | Chair clicked Move to background check. That emails the secure full-application link. |
+| Dues pending | `dues-pending` | Stage after the check. This is not the application fee. The dues invoice is already emailed when they begin the check. |
 | Approved | `active` | Approve. Welcome email for new applicants. |
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 
-Send full application keeps the current status. It emails the applicant a secure link to `membership-full-application.html` and stores the note on the history as `full_application_sent`. The link expires in 21 days. Only a hash of the token is stored. Older `next_step_sent` history rows still display. The button is not a note-only action.
+Move to background check emails the applicant a secure link to `membership-full-application.html`, stores `full_application_sent`, then sets the status to `background-check`. The link expires in 21 days. Only a hash of the token is stored. If the email cannot be queued, the status does not change. There is no separate Send full application button. Older `next_step_sent` and `full_application_sent` history rows still display.
 
 Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own lists.
 
@@ -69,7 +69,7 @@ Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own 
 Two different fees:
 
 - Application fee (background check): $50 single applicant, $75 couple. The join page says the payment link is not published there. The Membership Chair sends that step. Do not use the dues links for this fee.
-- Membership dues (after the background check): full krewe $375 and leave of absence $100. Those Zeffy links are already on the join page and in the Hub, labeled as membership dues.
+- Membership dues: full krewe $375 and leave of absence $100, from the dues catalog for the member's level. The invoice is emailed when the prospect submits the full application and begins the background check. Those Zeffy links are already on the join page and in the Hub. Move to dues pending does not send a second invoice.
 
 The roster column `application_fee_type` is `single` or `dual`.
 
@@ -77,7 +77,7 @@ Officers and board members (`member_role` or `member_roles` / `officer_title` of
 
 ## Background check numbers
 
-The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses Send full application. The applicant opens the token link and completes the full application.
+The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses Move to background check. That emails the secure link. The applicant opens the token link and completes the full application. Submitting that form is when they begin the background check, and that is when the membership dues invoice is queued.
 
 The full application asks for the driver's license number above the Social Security number. There is no driver's license state field. A couple ($75, fee type `dual`) enters both numbers for Applicant 1 and both numbers for Applicant 2. The form says: "The board uses SSN and driver's license for the background check. Your information is held confidentially."
 
@@ -94,9 +94,10 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 
 1. If Membership Applications is not installed yet, run `sql/kos_membership_applications.sql` first.
 2. Open `sql/kos_membership_application_pipeline.sql`. Paste it into a new SQL query and run it.
-3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, Send full application, and driver's license plus Social Security number on the token page.
-4. Each file is safe to run again.
+3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, the secure link, and driver's license plus Social Security number on the token page.
+4. Open `sql/kos_membership_background_check_invoice.sql`. Paste it into a new SQL query and run it. This folds the secure link into Move to background check and queues the level-based membership dues invoice when the prospect submits the full application.
+5. Each file is safe to run again.
 
-Run the staged file last. If you run the pipeline file again after it, run `sql/kos_membership_application_staged.sql` again.
+Run `sql/kos_membership_background_check_invoice.sql` last. If you run the pipeline file or the staged file again after it, run the background-check invoice file again.
 
-Until the staged file is applied, the join page still saves the name and address through the older function, and Send full application cannot email the secure link.
+Until the staged file is applied, the join page still saves the name and address through the older function. Until the background-check invoice file is applied, Move to background check changes the status and does not email the secure link, and submitting the full application does not queue the dues invoice.

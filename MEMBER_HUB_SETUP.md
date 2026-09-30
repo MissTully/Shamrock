@@ -170,6 +170,7 @@ bootstrap site admin. The Membership Chair needs no extra grant.
 
 Apply `sql/kos_membership_applications.sql` in the Supabase SQL editor
 (project `oazwkwflgbthojvnclfc`) before the tool can load. The staged join
-flow also needs `sql/kos_membership_application_pipeline.sql` and then
-`sql/kos_membership_application_staged.sql`. Details, approve and decline
+flow also needs `sql/kos_membership_application_pipeline.sql`, then
+`sql/kos_membership_application_staged.sql`, then
+`sql/kos_membership_background_check_invoice.sql`. Details, approve and decline
 behavior, and who gets the interest email are in `MEMBERSHIP_APPLICATIONS.md`.
