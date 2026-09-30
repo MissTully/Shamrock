@@ -88,6 +88,126 @@ test.describe("Member Hub Login header control", () => {
   });
 });
 
+test.describe("header auth toggle", () => {
+  const STORAGE_KEY = "sb-oazwkwflgbthojvnclfc-auth-token";
+
+  test("logged out header stays Member Hub Login and opens Hub sign-in", async ({ page }) => {
+    await page.goto("/index.html");
+    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    await expect(hub).toHaveText("Member Hub Login");
+    await expect(hub).toHaveAttribute("href", "members.html");
+    await expect(hub).toHaveAttribute("data-kos-auth", "in");
+    await hub.click();
+    await expect(page).toHaveURL(/members\.html$/);
+    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login");
+  });
+
+  test("an expired access token with a refresh token still shows Log out", async ({ page }) => {
+    await page.addInitScript(({ key, expiresAt }) => {
+      localStorage.setItem(key, JSON.stringify({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: expiresAt,
+        expires_in: 3600,
+        token_type: "bearer",
+        user: { id: "11111111-1111-1111-1111-111111111111", email: "melissa@example.com" }
+      }));
+    }, { key: STORAGE_KEY, expiresAt: Math.floor(Date.now() / 1000) - 120 });
+
+    await page.goto("/index.html");
+    const homeHub = page.locator("nav.krewe-nav > a.nav-hub");
+    await expect(homeHub).toHaveText("Log out");
+    await expect(homeHub).toHaveAttribute("data-kos-auth", "out");
+
+    await page.goto("/gallery.html");
+    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Log out");
+  });
+
+  test("members.html header shows Log out while the Hub session exists", async ({ page }) => {
+    await page.addInitScript(({ key, expiresAt }) => {
+      localStorage.setItem("kosLepWelcomeSeen", "1");
+      localStorage.setItem(key, JSON.stringify({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: expiresAt,
+        expires_in: 3600,
+        token_type: "bearer",
+        user: { id: "11111111-1111-1111-1111-111111111111", email: "melissa@example.com" }
+      }));
+    }, { key: STORAGE_KEY, expiresAt: Math.floor(Date.now() / 1000) + 3600 });
+
+    await page.goto("/members.html#home");
+    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    await expect(hub).toHaveText("Log out");
+    await expect(hub).toHaveAttribute("data-kos-auth", "out");
+    await page.waitForTimeout(1500);
+    await expect(hub).toHaveText("Log out");
+  });
+
+  test("Log out on the home header clears the Hub session", async ({ page }) => {
+    await page.addInitScript((key) => {
+      if (sessionStorage.getItem("kosHeaderSeeded") === "1") return;
+      sessionStorage.setItem("kosHeaderSeeded", "1");
+      localStorage.setItem(key, JSON.stringify({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        expires_in: 3600,
+        token_type: "bearer",
+        user: { id: "11111111-1111-1111-1111-111111111111", email: "melissa@example.com" }
+      }));
+      window.__kosSb = {
+        auth: {
+          getSession: function () {
+            return Promise.resolve({ data: { session: { access_token: "test-access-token" } }, error: null });
+          },
+          onAuthStateChange: function () {
+            return { data: { subscription: { unsubscribe: function () {} } } };
+          },
+          signOut: function () {
+            localStorage.removeItem(key);
+            return Promise.resolve({ error: null });
+          }
+        }
+      };
+    }, STORAGE_KEY);
+
+    await page.goto("/index.html");
+    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    await expect(hub).toHaveText("Log out");
+    await hub.click();
+    await expect(page).toHaveURL(/index\.html$/);
+    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login");
+    const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stillStored).toBeNull();
+  });
+
+  test("Log out on members.html uses the Hub sign-out path", async ({ page }) => {
+    await page.addInitScript((key) => {
+      if (sessionStorage.getItem("kosHeaderSeeded") === "1") return;
+      sessionStorage.setItem("kosHeaderSeeded", "1");
+      localStorage.setItem("kosLepWelcomeSeen", "1");
+      localStorage.setItem(key, JSON.stringify({
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        expires_in: 3600,
+        token_type: "bearer",
+        user: { id: "11111111-1111-1111-1111-111111111111", email: "melissa@example.com" }
+      }));
+    }, STORAGE_KEY);
+    await page.route("**/*supabase.co/**", (route) => route.fulfill({ status: 204, body: "" }));
+
+    await page.goto("/members.html#home");
+    const hub = page.locator("nav.krewe-nav > a.nav-hub");
+    await expect(hub).toHaveText("Log out");
+    await hub.click();
+    await expect(page.locator("nav.krewe-nav > a.nav-hub")).toHaveText("Member Hub Login", { timeout: 15000 });
+    const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    expect(stillStored).toBeNull();
+  });
+});
+
 test.describe("mobile navigation", () => {
   test.use({ viewport: { width: 400, height: 800 } });
 
