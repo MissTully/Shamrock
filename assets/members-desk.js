@@ -234,6 +234,9 @@
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
     ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-fee{margin:6px 0 0;font-size:15px;line-height:1.4;color:#3a3a2e;}",
+    ".hub-app-id{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0;}",
+    ".hub-app-id > span{min-width:0;}",
+    ".hub-app-copy{min-height:36px;padding:6px 14px;}",
     "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
     /* ---- Officer desk layout ---- */
     ".hub-officer-hero{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:18px;padding:18px 20px;margin:0 0 16px;}",
@@ -461,6 +464,8 @@
   var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
+  // Full DL and SSN for the offline fixture only. Never written into the card.
+  var applicationIdVault = {};
   var hourApprovalsFixture = false;
 
   function canOpenOfficerDesk() {
@@ -3297,6 +3302,22 @@
     return row;
   }
 
+  function rememberApplicationIds(row) {
+    if (!row || row.id == null) return;
+    function keep(slot, kind, keys) {
+      var raw = "";
+      keys.forEach(function (key) {
+        if (!raw && row[key] != null && String(row[key]).trim()) raw = String(row[key]).trim();
+      });
+      if (!raw) return;
+      applicationIdVault[String(row.id) + ":" + slot + ":" + kind] = raw;
+    }
+    keep("applicant", "ssn", ["ssn_full", "ssn", "id_digits"]);
+    keep("applicant", "dl", ["dl_full", "driver_license", "dl"]);
+    keep("partner", "ssn", ["partner_ssn_full", "partner_ssn"]);
+    keep("partner", "dl", ["partner_dl_full", "partner_driver_license", "partner_dl"]);
+  }
+
   function redactDisplayedId(text) {
     return String(text == null ? "" : text)
       .replace(/\d{3}[-\s]\d{2}[-\s]\d{4}/g, "[redacted]")
@@ -3306,8 +3327,15 @@
   function applyApplicationFixture() {
     if (!roleFixture) return;
     if ("canReviewApplications" in roleFixture) state.canReviewApplications = !!roleFixture.canReviewApplications;
+    applicationIdVault = {};
     if (Array.isArray(roleFixture.applications)) {
-      applicationsFixture = roleFixture.applications.map(scrubApplicationRow);
+      var applicationClones = roleFixture.applications.map(function (row) {
+        var clone = {};
+        Object.keys(row || {}).forEach(function (key) { clone[key] = row[key]; });
+        return clone;
+      });
+      applicationClones.forEach(rememberApplicationIds);
+      applicationsFixture = applicationClones.map(scrubApplicationRow);
       state.applicationRows = applicationsFixture.slice();
       state.applicationRecent = Array.isArray(roleFixture.applicationRecent) ? roleFixture.applicationRecent : [];
       syncApplicationFixtureCounts();
@@ -3475,6 +3503,66 @@
     return label + ": " + (kind === "dl" ? "••••" : "•••-••-") + last;
   }
 
+  function applicationIdMarkup(row, which, kind) {
+    var line = applicationIdLine(row, which, kind);
+    if (!line || !state.canReviewApplications) return "";
+    var slot = which === "partner" ? "partner" : "applicant";
+    var attr = kind === "dl" ? "data-app-dl" : "data-app-ssn";
+    var copyLabel = kind === "dl"
+      ? (slot === "partner" ? "Copy partner driver's license number" : "Copy driver's license number")
+      : (slot === "partner" ? "Copy partner Social Security number" : "Copy Social Security number");
+    return '<div class="hub-app-id" ' + attr + ' data-app-id-slot="' + slot + '">' +
+      "<span>" + esc(line) + "</span>" +
+      '<button type="button" class="btn hub-app-copy" data-app-copy="' + esc(row.id) + '" data-app-copy-slot="' + slot + '" data-app-copy-kind="' + kind + '" aria-label="' + esc(copyLabel) + '">Copy</button>' +
+      "</div>";
+  }
+
+  function formatCopiedId(kind, raw) {
+    var text = String(raw == null ? "" : raw).trim();
+    var digits = text.replace(/\D/g, "");
+    if (kind === "ssn" && digits.length === 9) {
+      return digits.slice(0, 3) + "-" + digits.slice(3, 5) + "-" + digits.slice(5);
+    }
+    return text;
+  }
+
+  async function copyApplicationId(client, btn) {
+    if (!state.canReviewApplications || !btn) return;
+    var id = btn.getAttribute("data-app-copy");
+    var slot = btn.getAttribute("data-app-copy-slot") || "applicant";
+    var kind = btn.getAttribute("data-app-copy-kind") === "dl" ? "dl" : "ssn";
+    var value = applicationIdVault[String(id) + ":" + slot + ":" + kind] || "";
+    var label = kind === "dl" ? "driver's license number" : "Social Security number";
+    btn.disabled = true;
+    try {
+      if (!value) {
+        if (!client || typeof client.rpc !== "function") throw new Error("Could not copy that " + label + ".");
+        var res = await client.rpc("reveal_membership_application_id", {
+          p_member_id: id,
+          p_slot: slot,
+          p_kind: kind
+        });
+        if (res && res.error) throw res.error;
+        var payload = (res && res.data) || {};
+        if (payload.ok === false) throw new Error(payload.message || ("Could not copy that " + label + "."));
+        value = kind === "dl" ? payload.dl : payload.ssn;
+      }
+      value = formatCopiedId(kind, value);
+      if (!value) throw new Error("No " + label + " is on file for that person.");
+      copyText(value, function () {
+        btn.disabled = false;
+        btn.textContent = "Copied";
+        showToast((kind === "dl" ? "Driver's license number" : "Social Security number") + " copied. The list stays masked.");
+        setTimeout(function () {
+          if (btn.isConnected && btn.textContent === "Copied") btn.textContent = "Copy";
+        }, 2000);
+      });
+    } catch (e) {
+      btn.disabled = false;
+      alert("Could not copy that " + label + ". " + ((e && e.message) || "Please try again."));
+    }
+  }
+
   function applicationPacketLine(row) {
     var got = !!(row.has_ssn || row.has_dl || row.has_partner_ssn || row.has_partner_dl
       || applicationTail4(row.ssn_last4) || applicationTail4(row.dl_last4)
@@ -3526,7 +3614,7 @@
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
     if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check. We emailed them a secure link to the full application. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
+    if (action === "background_check") return "Moved to background check. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
     if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
@@ -3641,13 +3729,13 @@
     var intro = {
       renewal: "These are renewals, not new join-form applications.",
       prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "Background check is in progress. Move to background check already emailed the full application. The dues invoice is sent when they submit that form and begin the check. The application fee is separate from membership dues.",
+      background: "Background check is in progress. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they submit that form and begin the check. The application fee is separate from membership dues.",
       dues: "This list is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.",
       approved: "Approved applications. These people are active members.",
       declined: "Declined applications stay on file. Nothing was deleted.",
       archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check."
-    }[bucket] || "These people asked to join. Newest first. Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check.";
+      "new": "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check."
+    }[bucket] || "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.";
     var empty = {
       renewal: "No pending renewals.",
       prospect: "No event prospects in this list.",
@@ -3663,7 +3751,7 @@
         label + " (" + applicationCountOf(key) + ")</button>";
     }
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check.</small></div></div>' +
+      '<small>Interest comes in first. When prospect emails are on, Move to background check emails the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
@@ -3689,10 +3777,6 @@
         var addr = applicationAddress(row);
         var when = formatAppliedEt(row.created_at);
         var partner = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
-        var dlLine = applicationIdLine(row, "applicant", "dl");
-        var ssnLine = applicationIdLine(row, "applicant", "ssn");
-        var partnerDl = applicationIdLine(row, "partner", "dl");
-        var partnerSsn = applicationIdLine(row, "partner", "ssn");
         var open = applicationOpenStatus(row.membership_status);
         var id = esc(row.id);
         html += '<div class="hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '">' +
@@ -3703,12 +3787,12 @@
           (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
           (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
           '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are not the application fee. The dues invoice is emailed when they submit the full application and begin the background check. Full krewe is $375. Leave of absence is $100.</div>' +
+          '<div class="muted">Membership dues are not the application fee. The dues invoice is emailed when they submit the full application and begin the background check. The background check email lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100.</div>' +
           '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
-          (dlLine ? '<div class="muted" data-app-dl>' + esc(dlLine) + "</div>" : "") +
-          (ssnLine ? '<div class="muted" data-app-ssn>' + esc(ssnLine) + "</div>" : "") +
-          (partnerDl ? '<div class="muted" data-app-dl>' + esc(partnerDl) + "</div>" : "") +
-          (partnerSsn ? '<div class="muted" data-app-ssn>' + esc(partnerSsn) + "</div>" : "") +
+          applicationIdMarkup(row, "applicant", "dl") +
+          applicationIdMarkup(row, "applicant", "ssn") +
+          applicationIdMarkup(row, "partner", "dl") +
+          applicationIdMarkup(row, "partner", "ssn") +
           (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
           (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
           (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +
@@ -3783,10 +3867,15 @@
         decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
       });
     });
+    body.querySelectorAll("[data-app-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        copyApplicationId(window.__kosSb || null, btn);
+      });
+    });
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Move this application to background check? That emails them a secure link to the full application. The email does not include a Social Security number or a driver's license number.")) return;
+        if (!confirm("Move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
       });
     });

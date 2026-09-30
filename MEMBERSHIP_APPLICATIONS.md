@@ -60,7 +60,11 @@ Join-form applications move through these `membership_status` values. Officers d
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 
-Move to background check emails the applicant a secure link to `membership-full-application.html`, stores `full_application_sent`, then sets the status to `background-check`. The link expires in 21 days. Only a hash of the token is stored. If the email cannot be queued, the status does not change. There is no separate Send full application button. Older `next_step_sent` and `full_application_sent` history rows still display.
+Move to background check emails the applicant when prospect email is on. The letter has three parts: a button to finish the full application at `membership-full-application.html`, the background check payment ($50 individual or $75 couple), and each membership level with a short note and then that level's pay link. The link expires in 21 days. Only a hash of the token is stored. The letter does not include a Social Security number or a driver's license number. If the email cannot be queued, the status does not change. There is no separate Send full application button. Older `next_step_sent` and `full_application_sent` history rows still display.
+
+Prospect email can be paused. The switch is `kos_runtime_flags` key `membership_prospect_emails`. `enabled` false means do not email the prospect. Move to background check still changes the stage. Do not turn that pause on from these files. Background check payment links live on a different key, `background_check_payments`. Dues notes and Zeffy links live on `kos_dues_catalog` (`explainer` and `zeffy_url`).
+
+When a full application is on file, each driver's license and Social Security number on the card stays masked (last 4). A Copy button sits beside that line for reviewers who can already open the number. Copy uses `reveal_membership_application_id` and puts the full value on the clipboard. The card stays masked. The number is not emailed. Each copy is the same audited open as before (last 4 only in the history note).
 
 Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own lists.
 
@@ -68,8 +72,8 @@ Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own 
 
 Two different fees:
 
-- Application fee (background check): $50 single applicant, $75 couple. The public Join page does not ask for this choice and does not publish a payment link. The Membership Chair sends that step with the full application. Do not use the dues links for this fee.
-- Membership dues: full krewe $375 and leave of absence $100, from the dues catalog for the member's level. The invoice is emailed when the prospect submits the full application and begins the background check. Those Zeffy links stay in the Member Hub. They are not on the public Join page. Move to dues pending does not send a second invoice.
+- Application fee (background check): $50 individual, $75 couple. The public Join page does not ask for this choice and does not publish a payment link. When prospect email is on, Move to background check includes both Zeffy links. Do not use the dues links for this fee.
+- Membership dues, in the same letter, each with a short note and then the pay link: Full Krewe $375 (voting, all parades, 12/12 volunteer), Associate $450 (one year, two parades, no vote, no 12/12), Auxiliary $200 (non-voting, one major parade; the fee includes the background check and the membership portion), Leave of Absence $100 (social status). Amounts and links come from `kos_dues_catalog`. The separate dues invoice is still emailed when the prospect submits the full application and begins the background check. Those Zeffy links stay off the public Join page. Move to dues pending does not send a second invoice.
 
 The roster column `application_fee_type` is `single` or `dual`.
 
@@ -84,7 +88,7 @@ The full application asks for the driver's license number above the Social Secur
 Both values are stored in `membership_application_ids`. `id_kind` is `ssn` or `dl`. `person_slot` is `applicant` or `partner`.
 
 - Lists show the last 4 only.
-- `reveal_membership_application_id` returns one full value only when `can_review_applications()` is true. Each reveal writes `id_revealed` with the last 4, not the full value.
+- `reveal_membership_application_id` returns one full value only when `can_review_applications()` is true. The Copy button on the card uses that same check. Each open writes `id_revealed` with the last 4, not the full value. The full value is copied to the clipboard and is not shown on the card and not emailed.
 - The ID table and the link table have row level security and no client grants. The browser cannot select them directly.
 - Interest mail, the secure-link mail, and the received mail do not include a full Social Security number or a full driver's license number. Free-text notes are redacted before they are emailed or listed.
 
@@ -96,8 +100,11 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 2. Open `sql/kos_membership_application_pipeline.sql`. Paste it into a new SQL query and run it.
 3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, the secure link, and driver's license plus Social Security number on the token page.
 4. Open `sql/kos_membership_background_check_invoice.sql`. Paste it into a new SQL query and run it. This folds the secure link into Move to background check and queues the level-based membership dues invoice when the prospect submits the full application.
-5. Each file is safe to run again.
+5. Open `sql/kos_prospect_background_check_email.sql`. Paste it into a new SQL query and run it. This stores the dues explainers, the dues Zeffy links, and the background check payment links, and it builds the prospect letter. It does not turn prospect email on.
+6. Each file is safe to run again.
 
-Run `sql/kos_membership_background_check_invoice.sql` last. If you run the pipeline file or the staged file again after it, run the background-check invoice file again.
+Run `sql/kos_prospect_background_check_email.sql` last. If you run the pipeline file, the staged file, or the background-check invoice file again after it, run the prospect email file again.
+
+Do not set `membership_prospect_emails` to enabled. Melissa applies the SQL in the Supabase editor. The site deploy does not run it.
 
 Until the staged file is applied, the join page still saves the name and address through the older function. Until the background-check invoice file is applied, Move to background check changes the status and does not email the secure link, and submitting the full application does not queue the dues invoice.

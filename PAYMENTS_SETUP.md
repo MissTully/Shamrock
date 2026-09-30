@@ -32,9 +32,9 @@ Amounts are level-driven. The rate card is `public.kos_dues_catalog` (one row pe
 | Level | 2026 amount | Public Zeffy link |
 |---|---:|---|
 | full | $375 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership |
-| associate | $450 | none yet (Patrick to create the campaign) |
+| associate | $450 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership |
 | loa | $100 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2 |
-| auxiliary | $200 | none yet (this level may be retired) |
+| auxiliary | $200 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership |
 
 Those amounts and links match the 2026 catalog rows. Campaigns that exist are valid until June 30. Reminder emails must use the link for that member's level and **must never** email members whose `dues_payments.paid` is true (a waiver counts as paid). Zeffy `payment.completed` via `zeffy-webhook` still auto-marks the matching unpaid `dues_payments` row. This catalog does not change that webhook.
 
