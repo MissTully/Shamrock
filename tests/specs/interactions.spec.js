@@ -83,7 +83,7 @@ test.describe("Member Hub Login header control", () => {
     await expect(hero.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toBeVisible();
     await expect(hero.getByRole("link", { name: "Become a Member" })).toBeVisible();
     await expect(hero.getByRole("link", { name: "RSVP to an Event" })).toBeVisible();
-    await expect(hero.getByRole("link", { name: "Access previous site" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
     await expect(hero.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toBeVisible();
   });
 });
