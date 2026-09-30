@@ -175,8 +175,9 @@ Also run `node tests/static-check.mjs` and the full Playwright suite (see `tests
   but it adds security risk and is not needed for public pages. Not recommended now.
 - **A native app store app** (for example, a React Native or Capacitor wrapper).
   Not needed for these requests; the installed web app already covers them.
-- **Decision for the owner:** confirm that signing out should affect **only this
-  device** (recommended, `scope: "local"`), not every device.
+- **Decided (2026-09-30):** signing out affects **only this device**
+  (`scope: "local"`). Built in `assets/krewe.js` (header Log out) and
+  `members.html` (`window.kosSignOut`).
 
 ## 8. Suggested order of work (one pull request each)
 

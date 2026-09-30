@@ -2088,7 +2088,7 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js?v=20260930return1" defer></script>
+  <script src="assets/krewe.js?v=20260930local1" defer></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -4081,7 +4081,8 @@
       if(desk?.scrollIntoView) desk.scrollIntoView({behavior:"smooth",block:"start"});
     });
 
-    window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
+    /* scope "local": sign out on this device only; other phones and computers stay signed in. */
+    window.kosSignOut=async()=>{ await sb.auth.signOut({ scope:"local" }); location.reload(); };
     sb.auth.onAuthStateChange((event)=>{
       if(event==="PASSWORD_RECOVERY"){ awaitingNewPassword=true; }
       route();
