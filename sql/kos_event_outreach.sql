@@ -1,0 +1,43 @@
+-- Event outreach list for the Officer desk.
+--
+-- How to apply (do this in the Supabase SQL editor; the website does not run it):
+--   1. Open project oazwkwflgbthojvnclfc.
+--   2. SQL Editor -> New query -> paste this file -> Run.
+-- Safe to run more than once.
+--
+-- What it does:
+--   * One view, v_event_outreach, unions three email sources. It does not
+--     create a table and it does not insert members.
+--   * Website RSVP: members with membership_status = 'prospect', plus their
+--     event_signups (registered, confirmed, attended, waitlisted).
+--   * Zeffy: payments.payer_email where provider is zeffy and the product is
+--     an event ticket (product_kind event, a raffle tied to an event, or a
+--     still-unclassified row whose Zeffy payload is ticketing). Emails that
+--     already match a non-prospect member stay in the view and are hidden
+--     by the default "never applied" filter.
+--   * Legacy: Wild Apricot rows in legacy_event_registrations whose email is
+--     not on the current roster. Canceled and abandoned registrations are
+--     skipped. Those emails are not imported as members.
+--   * list_event_outreach and export_event_outreach re-check
+--     can_view_event_outreach(). The view is not granted to the API.
+--   * Email members gains an Event prospects audience. Officers
+--     (is_krewe_officer) can queue that blast. It uses this view, not the
+--     active-member list. Apply this file after
+--     sql/kos_officer_email_and_invoices.sql. If that email file is run
+--     again later, run this file again so the prospect audience stays.
+--
+-- Who can read it (can_view_event_outreach):
+--   * can_manage_events() — the same gate as Reports (board, officers,
+--     captains, committee chairs, and matching roster titles).
+--   * or can_review_applications() — the same people who see Event prospects
+--     under Membership Applications (Membership Chair, President, Secretary,
+--     Chair of Technology, and bootstrap site admins).
+--
+-- Apply after these already-live files:
+--   sql/kos_payments.sql
+--   sql/kos_legacy_import_and_reports.sql
+--   sql/kos_event_studio.sql          (can_manage_events)
+--   sql/kos_membership_applications.sql is optional. If
+--   can_review_applications() is missing, event managers still see the list.
+--
+-- This file does not replace officer_event_report or list_membership_applications.
