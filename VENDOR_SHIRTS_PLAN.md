@@ -203,7 +203,60 @@ as today's Shop, but for vendor items):
 4. Phone layout: one column, the collage keeps its shape, the same bottom
    cart dock as today.
 
-#### 3d. Details that make it work well
+#### 3d. Shop page words (marketing copy)
+
+The Shop is open to everyone, so the words speak to members, families, friends
+and parade fans alike. Tone: proud, warm, a little playful, never pushy.
+
+**Page header** (replaces the current sub-heading)
+
+> *Eyebrow:* Wear your green & gold
+> **Krewe Shop**
+> Wear the crest. Carry the shamrock. Fly the colors all year.
+
+**Pride intro** (a short block above the vendor section)
+
+> ### Wear it proud
+> Since 1999, the Krewe of Shamrock has marched Tampa Bay in kilts and green:
+> down Bayshore for Gasparilla, through Ybor for the Knight Parade, and into
+> every St. Patrick's Day we can find. Every shirt, tank and hoodie here
+> carries that story on it: the Family Crest, the Skeleton, the Shenanigator.
+>
+> Wear it to the parade, to the pub, to the office on a Friday. Carry it to the
+> beach and the ballgame. And when someone asks, "What's the Krewe of
+> Shamrock?", you'll be the best answer in the room.
+
+**Vendor section title**
+
+> **Apparel from our vendor partners**
+> Printed to order and shipped to your door. Tap a photo to shop.
+
+**Collage tile captions**
+
+> **Red's Team Sports:** Tees, tanks and outerwear with the Family Crest,
+> Skeleton and Established logos.
+> **Studio 19:** The Shenanigator, the Purveyors raglan and the Krewe
+> full-zip hoodie.
+
+**Krewe Gear section** (items the Krewe sells itself)
+
+> **Krewe Gear**
+> Pins and keepsakes from the Krewe itself, handed out at General Meetings
+> and Krewe events.
+
+**Leaving-the-site line** (under the vendor tiles)
+
+> You're heading to our vendor partner's store to choose your size and color
+> and check out. Every order shows off the Krewe. Thank you!
+
+**Short lines** for buttons, social posts and the homepage (use any):
+"Show your shamrock." · "Kilted since 1999." · "Green on the outside, gold on
+the inside." · "Wear the crest, share the craic."
+
+> Before publishing, check the parade route mentions against `parades.html`
+> for the current season.
+
+#### 3e. Details that make it work well
 
 | Topic | What we do | Why |
 |---|---|---|
@@ -216,7 +269,8 @@ as today's Shop, but for vendor items):
 
 ### Phase 4 — Member Hub FAQ (`members.html`)
 
-Replace the two hard-coded links and the "$0.00" paragraph with a short list
+Change "Log in, then open Shop" to simply "Open Shop" (the Shop is public), and
+replace the two hard-coded links and the "$0.00" paragraph with a short list
 built from `list_public_shop_vendors()`, and a link to the Shop's vendor
 section. When the RTS store moves to a 2026 link, the officer edits it once in
 Shop Studio and every page updates.
@@ -268,8 +322,9 @@ Run with `cd tests && npm test` (static check + Playwright).
 1. ~~**Photos:** may we reuse the vendors' product photos?~~ **Settled
    2026-09-30:** yes, the vendors' product photos are reused as links to their
    sites. (A short courtesy note to each vendor is still a good idea.)
-2. **Who is signed in?** Should vendor shirts be visible to the public, or only
-   to signed-in members like the FAQ says ("Log in, then open Shop")?
+2. ~~**Who can see it?**~~ **Settled 2026-09-30:** the Shop, vendor apparel
+   included, is open to everyone (members, families, friends, parade fans).
+   No sign-in. Phase 4 also removes "Log in, then open Shop" from the FAQ.
 3. **Commission:** does the Krewe earn anything per vendor sale? If yes, the
    treasurer may want a note or a monthly vendor-report field later
    (not part of this build).
