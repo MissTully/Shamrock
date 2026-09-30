@@ -4,44 +4,82 @@
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy } = require("./helpers");
 
-test("membership application: required fields block an empty submit", async ({ page }) => {
+test("join interest form: required fields block an empty submit", async ({ page }) => {
   const report = watchPage(page);
   await page.goto("/membership-application.html");
 
+  await expect(page.locator("h1")).toHaveText("Join the Krewe");
+  await expect(page.locator("nav .nav-cta")).toContainText("Join");
+  await expect(page.locator("#submitBtn")).toHaveText(/Submit interest/);
+
   const form = page.locator("#appForm");
   await expect(form).toBeVisible();
-  for (const id of ["firstName", "lastName", "email"]) {
+  for (const id of ["firstName", "lastName", "email", "phone", "street", "city", "state", "zip"]) {
     await expect(page.locator("#" + id)).toHaveAttribute("required", /.*/);
   }
+  await expect(page.locator("#notes")).not.toHaveAttribute("required", /.*/);
   expect(await form.evaluate((f) => f.checkValidity())).toBe(false);
 
-  // a malformed email must also fail validation
   await page.fill("#firstName", "Test");
   await page.fill("#lastName", "Only");
   await page.fill("#email", "not-an-email");
   expect(await page.locator("#email").evaluate((el) => el.checkValidity())).toBe(false);
 
-  await expect(page.locator("#appFeeBox")).toContainText("Application fee");
-  await expect(page.locator("#appFeeBox")).toContainText("$50");
-  await expect(page.locator("#appFeeBox")).toContainText("$75");
-  await expect(page.locator("#appFeeBox")).toContainText("not membership dues");
-  await expect(page.locator("#joinNextSteps")).toContainText("Someone from the Krewe will call you");
-  await expect(page.locator("#joinNextSteps")).toContainText("does not ask for a Social Security number");
-  await expect(page.locator("#joinNextSteps")).toContainText("begin the background check");
-  await expect(page.locator("#joinNextSteps")).toContainText("membership dues invoice");
-  await expect(page.locator("#duesFeeBox")).toContainText("Membership dues");
-  await expect(page.locator("#duesFeeBox")).toContainText("$375");
-  await expect(page.locator("#appSsn")).toHaveCount(0);
-  await expect(page.locator("#partnerSsn")).toHaveCount(0);
-  await expect(page.locator("#appForm")).not.toContainText("driver license is the old path");
-  await expect(page.locator("#partnerFields")).toBeHidden();
-  await page.locator("#feeDual").check();
-  await expect(page.locator("#partnerFields")).toBeVisible();
-  await expect(page.locator("#partnerFirst")).toHaveAttribute("required", /.*/);
+  const lead = page.locator("#joinLead");
+  await expect(lead).toContainText("Someone from the Krewe will call you");
+  await expect(lead).toContainText("full application comes later by email from the Membership Chair");
+  await expect(lead).toContainText("does not ask for a Social Security number");
+  await expect(lead).toContainText("driver's license");
+  await expect(page.locator("#appFeeBox, #duesFeeBox, #feeTypeField, #partnerFields, #joinNextSteps")).toHaveCount(0);
+  await expect(page.locator('a[href*="zeffy.com"]')).toHaveCount(0);
+  await expect(page.locator("#appSsn, #partnerSsn")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Membership at a Glance");
+  await expect(page.locator("body")).not.toContainText("Submit application");
+  await expect(page.locator("body")).not.toContainText("Pay full krewe dues");
+  await expect(page.locator("body")).not.toContainText("Application fee");
   const html = await page.content();
   expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
 
-  assertHealthy(expect, report, "membership form");
+  assertHealthy(expect, report, "join interest form");
+});
+
+test("join interest submit posts name, email, phone, and address only", async ({ page }) => {
+  const report = watchPage(page);
+  let body = null;
+  await page.route("**/rest/v1/rpc/submit_membership_application", async (route) => {
+    body = route.request().postDataJSON();
+    await route.abort();
+  });
+  await page.goto("/membership-application.html");
+  await page.locator("#submitBtn").click();
+  expect(body, "empty Join form must not call the interest endpoint").toBeNull();
+
+  await page.fill("#firstName", "Test");
+  await page.fill("#lastName", "Prospect");
+  await page.fill("#email", "test.prospect@example.com");
+  await page.fill("#phone", "813-555-0100");
+  await page.fill("#street", "1 Shamrock Way");
+  await page.fill("#city", "Tampa");
+  await page.fill("#state", "FL");
+  await page.fill("#zip", "33602");
+  await page.fill("#notes", "Heard about the krewe at a parade.");
+  await page.locator("#submitBtn").click();
+  await expect.poll(() => body).not.toBeNull();
+  expect(body.p_first_name).toBe("Test");
+  expect(body.p_last_name).toBe("Prospect");
+  expect(body.p_email).toBe("test.prospect@example.com");
+  expect(body.p_phone).toBe("813-555-0100");
+  expect(body.p_street_address).toBe("1 Shamrock Way");
+  expect(body.p_city).toBe("Tampa");
+  expect(body.p_state).toBe("FL");
+  expect(body.p_zip).toBe("33602");
+  expect(body.p_notes).toBe("Heard about the krewe at a parade.");
+  expect(body).not.toHaveProperty("p_fee_type");
+  expect(body).not.toHaveProperty("p_partner_first");
+  expect(body).not.toHaveProperty("p_ssn");
+  expect(body).not.toHaveProperty("p_partner_ssn");
+  await expect(page.locator("#message")).toContainText("Something went wrong sending your interest");
+  assertHealthy(expect, report, "join interest submit");
 });
 
 test("full application is token gated and checks driver's license above SSN", async ({ page }) => {

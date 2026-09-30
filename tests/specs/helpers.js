@@ -96,7 +96,7 @@ const PAGES = [
   { file: "volunteer.html", title: /Service|Charity|Volunteer/ },
   { file: "store.html", title: /Shop/ },
   { file: "members.html", title: /Members/ },
-  { file: "membership-application.html", title: /Membership Application/ },
+  { file: "membership-application.html", title: /Join the Krewe/ },
   { file: "raffle.html", title: /Raffle/ },
 ];
 
