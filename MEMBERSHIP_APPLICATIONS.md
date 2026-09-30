@@ -43,7 +43,7 @@ The join form is interest only. `submit_membership_application` emails the Membe
 
 Membership Chair is a committee grant for Membership, or a title containing Chair of Membership. If nobody holds that role, the chair copy falls back to `lsugrue99@gmail.com`. President is the title segment President, not Vice President. One address is not mailed twice when the same person holds both.
 
-The letter names the applicant, phone, mailing address, and the application fee (single $50 or couple $75). It asks them to call, then to choose Move to background check in the Hub. That emails the secure link. It does not include a Social Security number or a driver's license number.
+The letter names the applicant, phone, and mailing address. The Join form does not choose single or couple, so the letter uses the general application-fee line ($50 or $75). It asks them to call, then to choose Move to background check in the Hub. That emails the secure link. It does not include a Social Security number or a driver's license number.
 
 The person who submitted sees: "We received your interest in joining. Someone from the Krewe will call you."
 
@@ -68,8 +68,8 @@ Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own 
 
 Two different fees:
 
-- Application fee (background check): $50 single applicant, $75 couple. The join page says the payment link is not published there. The Membership Chair sends that step. Do not use the dues links for this fee.
-- Membership dues: full krewe $375 and leave of absence $100, from the dues catalog for the member's level. The invoice is emailed when the prospect submits the full application and begins the background check. Those Zeffy links are already on the join page and in the Hub. Move to dues pending does not send a second invoice.
+- Application fee (background check): $50 single applicant, $75 couple. The public Join page does not ask for this choice and does not publish a payment link. The Membership Chair sends that step with the full application. Do not use the dues links for this fee.
+- Membership dues: full krewe $375 and leave of absence $100, from the dues catalog for the member's level. The invoice is emailed when the prospect submits the full application and begins the background check. Those Zeffy links stay in the Member Hub. They are not on the public Join page. Move to dues pending does not send a second invoice.
 
 The roster column `application_fee_type` is `single` or `dual`.
 
