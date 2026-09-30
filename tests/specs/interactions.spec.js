@@ -34,7 +34,7 @@ test.describe("desktop navigation", () => {
   test("dropdown links navigate to the right page", async ({ page }) => {
     await page.goto("/index.html");
     await page.getByRole("button", { name: /Get Involved/ }).click();
-    await page.getByRole("link", { name: "Volunteer" }).click();
+    await page.locator("#kreweMenu").getByRole("link", { name: "Volunteer" }).click();
     await expect(page).toHaveURL(/volunteer\.html$/);
     await page.getByRole("link", { name: "Member Hub Login" }).click();
     await expect(page).toHaveURL(/members\.html$/);

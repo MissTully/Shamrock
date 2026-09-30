@@ -908,7 +908,7 @@ table{ max-width:100%; }
    "Tartan Ball Tickets"; aria-label keeps "Buy Tartan Ball Tickets".
    Hero member / RSVP stay outline so they do not compete.
    ============================================================ */
-.krewe-nav.has-ball{
+.krewe-nav:has(.nav-ball-row){
   flex-wrap:wrap;
   row-gap:0;
   padding-bottom:0;
@@ -923,7 +923,11 @@ table{ max-width:100%; }
   padding:8px 16px 0;
   position:relative;
   z-index:2;
+  /* The row is full width, but only the button should catch clicks.
+     Otherwise it sits on top of the desktop dropdowns. */
+  pointer-events:none;
 }
+.krewe-nav:has(.nav-ball-row) .nav-dropdown{ z-index:6; }
 .nav-ball{
   display:inline-flex;
   align-items:center;
@@ -947,6 +951,7 @@ table{ max-width:100%; }
     0 0 0 6px rgba(212,175,55,.34),
     0 0 32px rgba(236,208,126,.55);
   position:relative;
+  pointer-events:auto;
 }
 .nav-ball:hover{
   color:#3a2c00;
