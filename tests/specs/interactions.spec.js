@@ -34,7 +34,7 @@ test.describe("desktop navigation", () => {
   test("dropdown links navigate to the right page", async ({ page }) => {
     await page.goto("/index.html");
     await page.getByRole("button", { name: /Get Involved/ }).click();
-    await page.getByRole("link", { name: "Volunteer" }).click();
+    await page.locator("#kreweMenu").getByRole("link", { name: "Volunteer" }).click();
     await expect(page).toHaveURL(/volunteer\.html$/);
     await page.getByRole("link", { name: "Member Hub Login" }).click();
     await expect(page).toHaveURL(/members\.html$/);
@@ -80,11 +80,14 @@ test.describe("Member Hub Login header control", () => {
     expect(phone.height).toBeGreaterThanOrEqual(44);
 
     const hero = page.locator("header.hero");
-    await expect(hero.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toBeVisible();
+    await expect(hero.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toHaveCount(0);
     await expect(hero.getByRole("link", { name: "Become a Member" })).toBeVisible();
     await expect(hero.getByRole("link", { name: "RSVP to an Event" })).toBeVisible();
     await expect(hero.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
-    await expect(hero.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toHaveCount(0);
+    const headerTickets = page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball");
+    await expect(headerTickets).toBeVisible();
+    await expect(headerTickets).toHaveAttribute("aria-label", "Buy Tartan Ball Tickets");
   });
 });
 

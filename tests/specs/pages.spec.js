@@ -48,15 +48,48 @@ for (const { file, title } of PAGES) {
 
 test("homepage hero no longer links to the previous Wild Apricot site", async ({ page }) => {
   await page.goto("/index.html");
-  const heroLinks = page.locator(".hero-links");
-  await expect(heroLinks).toBeVisible();
-  await expect(heroLinks.getByRole("link")).toHaveCount(1);
-  await expect(heroLinks.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
-  await expect(heroLinks.getByRole("link", { name: "TARTAN BALL tickets" })).toBeVisible();
+  await expect(page.locator(".hero-links")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
+
+  const ticketsUrl = "http://www.tampabaytartanball.com/home.html";
   const hero = page.locator("header.hero");
-  await expect(hero.getByRole("link", { name: /Buy Tartan Ball Tickets/ })).toBeVisible();
-  await expect(hero.getByRole("link", { name: /Become a Member/ })).toBeVisible();
-  await expect(hero.getByRole("link", { name: /RSVP to an Event/ })).toBeVisible();
+  await expect(hero.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toHaveCount(0);
+  await expect(hero.getByRole("link", { name: "Become a Member" })).toBeVisible();
+  await expect(hero.getByRole("link", { name: "RSVP to an Event" })).toBeVisible();
+
+  const headerTickets = page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball");
+  await expect(headerTickets).toBeVisible();
+  await expect(headerTickets).toHaveAttribute("href", ticketsUrl);
+  await expect(headerTickets).toHaveAttribute("target", "_blank");
+  await expect(headerTickets).toHaveAttribute("aria-label", "Buy Tartan Ball Tickets");
+  await expect(page.getByRole("link", { name: "Buy Tartan Ball Tickets" })).toHaveCount(1);
+
+  const plain = await page.locator("body").innerText();
+  expect(plain.toLowerCase()).not.toContain("buy tartan ball tickets");
+  expect(plain).not.toContain("TARTAN BALL tickets");
+
+  const place = await page.evaluate(() => {
+    const tickets = document.querySelector("nav.krewe-nav > .nav-ball-row > a.nav-ball").getBoundingClientRect();
+    const memberEl = document.querySelector("header.hero .btns .btn");
+    const memberBox = memberEl.getBoundingClientRect();
+    const join = document.querySelector("nav.krewe-nav .nav-cta").getBoundingClientRect();
+    const heroTop = document.querySelector("header.hero").getBoundingClientRect().top;
+    return {
+      ticketsTop: tickets.top,
+      ticketsBottom: tickets.bottom,
+      memberTop: memberBox.top,
+      ticketsH: tickets.height,
+      memberH: memberBox.height,
+      joinH: join.height,
+      heroTop,
+    };
+  });
+  expect(place.ticketsTop).toBeLessThan(place.memberTop);
+  expect(place.ticketsH).toBeGreaterThan(place.memberH);
+  expect(place.ticketsH).toBeGreaterThan(place.joinH);
+  expect(place.ticketsBottom).toBeGreaterThan(place.heroTop);
+
   await expect(page.locator("nav.krewe-nav").getByRole("link", { name: "Member Hub Login" })).toBeVisible();
 });
 
