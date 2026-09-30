@@ -256,6 +256,11 @@ the inside." · "Wear the crest, share the craic."
 > Before publishing, check the parade route mentions against `parades.html`
 > for the current season.
 
+**Honesty rule for all Shop words:** the Krewe earns nothing from vendor
+sales, so the copy must never say or hint that purchases "support the Krewe,"
+"fund our parades" or "benefit" anyone. The reason to buy is pride and showing
+the colors, not fundraising.
+
 #### 3e. Details that make it work well
 
 | Topic | What we do | Why |
@@ -325,9 +330,9 @@ Run with `cd tests && npm test` (static check + Playwright).
 2. ~~**Who can see it?**~~ **Settled 2026-09-30:** the Shop, vendor apparel
    included, is open to everyone (members, families, friends, parade fans).
    No sign-in. Phase 4 also removes "Log in, then open Shop" from the FAQ.
-3. **Commission:** does the Krewe earn anything per vendor sale? If yes, the
-   treasurer may want a note or a monthly vendor-report field later
-   (not part of this build).
+3. ~~**Commission:**~~ **Settled 2026-09-30:** the Krewe earns **no money**
+   from vendor shirts or gear. Nothing to track for the treasurer, no payment
+   ledger entries, and no sales reports for vendor items.
 4. **RTS 2026 store:** will Red's Team Sports open a new season store link?
 5. **Pins and other items** stay on Zeffy with pickup at General Meetings,
    unchanged — confirm.
