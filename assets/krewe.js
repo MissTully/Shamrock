@@ -267,10 +267,33 @@
       }
     } catch (e) {}
   }
+  /* Signed in, off the Hub: a Member Hub button sits directly under Log out.
+     Not added on members.html, where the member is already in the Hub. */
+  function returnLink(create) {
+    var hub = hubLink();
+    if (!hub || currentFile() === "members.html") return null;
+    var existing = hub.parentNode.querySelector("a.nav-hub-return");
+    if (existing || !create) return existing;
+    var stack = document.createElement("div");
+    stack.className = "nav-hub-stack";
+    hub.parentNode.insertBefore(stack, hub);
+    stack.appendChild(hub);
+    var back = document.createElement("a");
+    back.className = "nav-hub-return";
+    back.href = "members.html";
+    back.textContent = "Member Hub";
+    back.setAttribute("aria-label", "Return to the Member Hub");
+    back.setAttribute("title", "Return to the Member Hub");
+    back.hidden = true;
+    stack.appendChild(back);
+    return back;
+  }
   function paint(on) {
     signedIn = !!on;
     var hub = hubLink();
     if (!hub) return;
+    var back = returnLink(signedIn);
+    if (back) back.hidden = !signedIn;
     if (signedIn) {
       hub.classList.add("is-logout");
       hub.textContent = LOGOUT_LABEL;
