@@ -121,16 +121,36 @@ alter table public.shop_vendor_looks
   add column if not exists created_at timestamptz not null default now(),
   add column if not exists updated_at timestamptz not null default now();
 
+-- A shop photo is an http(s) URL or a file stored on this site under /assets/img/store/.
+-- Store links and product links stay http(s) only.
+create or replace function public.kos_shop_image_ref(p_value text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select case
+    when btrim(p_value) ~* '^https?://[^[:space:]]+$' then btrim(p_value)
+    when btrim(p_value) ~ '^/assets/img/store/[A-Za-z0-9][A-Za-z0-9._/-]*\.(png|jpe?g|webp|gif)$'
+      and btrim(p_value) !~ '\.\.'
+      then btrim(p_value)
+    else null
+  end;
+$$;
+
+alter table public.shop_vendor_looks drop constraint if exists shop_vendor_looks_image_url_http_check;
+alter table public.shop_vendor_looks drop constraint if exists shop_vendor_looks_image_url_check;
+alter table public.shop_vendor_looks
+  add constraint shop_vendor_looks_image_url_check
+  check (
+    image_url is null
+    or (
+      public.kos_shop_image_ref(image_url) is not null
+      and public.kos_shop_image_ref(image_url) = image_url
+    )
+  );
+
 do $$ begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'shop_vendor_looks_image_url_http_check'
-      and conrelid = 'public.shop_vendor_looks'::regclass
-  ) then
-    alter table public.shop_vendor_looks
-      add constraint shop_vendor_looks_image_url_http_check
-      check (image_url is null or image_url ~* '^https?://[^[:space:]]+$');
-  end if;
   if not exists (
     select 1 from pg_constraint
     where conname = 'shop_vendor_looks_product_url_http_check'
@@ -246,9 +266,9 @@ as $$
             'contact_phone', v.contact_phone,
             'logo_url', v.logo_url,
             'showcase_images', coalesce((
-              select jsonb_agg(to_jsonb(btrim(t.u)) order by t.ord)
+              select jsonb_agg(to_jsonb(public.kos_shop_image_ref(t.u)) order by t.ord)
               from unnest(coalesce(v.showcase_images, '{}'::text[])) with ordinality as t(u, ord)
-              where btrim(t.u) ~* '^https?://[^[:space:]]+$'
+              where public.kos_shop_image_ref(t.u) is not null
             ), '[]'::jsonb),
             'blurb', v.blurb,
             'fulfillment_note', v.fulfillment_note,
@@ -286,10 +306,7 @@ as $$
             'id', l.id,
             'vendor_id', l.vendor_id,
             'name', l.name,
-            'image_url', case
-              when btrim(coalesce(l.image_url, '')) ~* '^https?://[^[:space:]]+$' then btrim(l.image_url)
-              else null
-            end,
+            'image_url', public.kos_shop_image_ref(l.image_url),
             'product_url', case
               when btrim(coalesce(l.product_url, '')) ~* '^https?://[^[:space:]]+$' then btrim(l.product_url)
               else null
@@ -422,15 +439,15 @@ begin
     select btrim(e.value) into v_bad_image
     from jsonb_array_elements_text(p->'showcase_images') as e(value)
     where nullif(btrim(e.value), '') is not null
-      and btrim(e.value) !~* '^https?://[^[:space:]]+$'
+      and public.kos_shop_image_ref(e.value) is null
     limit 1;
     if v_bad_image is not null then
-      return jsonb_build_object('ok', false, 'message', 'Showcase photo links must start with http:// or https://.');
+      return jsonb_build_object('ok', false, 'message', 'Showcase photos must be an http(s) link or a Krewe shop image path.');
     end if;
-    select coalesce(array_agg(btrim(x.value) order by x.ordinality), '{}'::text[])
+    select coalesce(array_agg(public.kos_shop_image_ref(x.value) order by x.ordinality), '{}'::text[])
       into v_images
     from jsonb_array_elements_text(p->'showcase_images') with ordinality as x(value, ordinality)
-    where nullif(btrim(x.value), '') is not null;
+    where public.kos_shop_image_ref(x.value) is not null;
     if coalesce(array_length(v_images, 1), 0) > 8 then
       return jsonb_build_object('ok', false, 'message', 'Use at most 8 showcase photos.');
     end if;
@@ -548,9 +565,9 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Look name is too long.');
   end if;
 
-  v_image := nullif(btrim(coalesce(p->>'image_url', '')), '');
-  if v_image is not null and v_image !~* '^https?://[^[:space:]]+$' then
-    return jsonb_build_object('ok', false, 'message', 'Photo link must start with http:// or https://.');
+  v_image := public.kos_shop_image_ref(p->>'image_url');
+  if nullif(btrim(coalesce(p->>'image_url', '')), '') is not null and v_image is null then
+    return jsonb_build_object('ok', false, 'message', 'Photo must be an http(s) link or a Krewe shop image path.');
   end if;
   v_product := nullif(btrim(coalesce(p->>'product_url', '')), '');
   if v_product is not null and v_product !~* '^https?://[^[:space:]]+$' then
@@ -616,9 +633,12 @@ grant execute on function public.upsert_shop_vendor_look(jsonb) to authenticated
 -- Inserts a vendor only when its short name is new.
 -- Re-running fills blank contact, blurb, and season fields.
 -- It does not overwrite a store URL an officer has already changed.
+-- The four Krewe shirts Melissa sent do not say which printer sells them,
+-- so both collages show the same photos. Each tile still opens that vendor's store.
 insert into public.shop_vendors (
   name, short_name, store_url, website_url,
   contact_email, contact_phone,
+  showcase_images,
   blurb, fulfillment_note, season_label, active, sort_order
 ) values (
   'Red''s Team Sports',
@@ -627,6 +647,12 @@ insert into public.shop_vendors (
   'http://www.redsteamsports.com/',
   'teamstores@redsteamsports.com',
   '813-612-5999',
+  array[
+    '/assets/img/store/vendor-family-crest-ls.png',
+    '/assets/img/store/vendor-mermaid-tee.png',
+    '/assets/img/store/vendor-crest-hoodie.png',
+    '/assets/img/store/vendor-shenanigans-raglan.png'
+  ],
   'Crest tees, jackets, and parade layers in green and gold.',
   'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.',
   '2025–26',
@@ -636,12 +662,19 @@ insert into public.shop_vendors (
 
 insert into public.shop_vendors (
   name, short_name, store_url, website_url,
+  showcase_images,
   blurb, fulfillment_note, active, sort_order
 ) values (
   'Studio 19',
   'Studio 19',
   'https://studio19shop.com/shop/ols/categories/krewe-of-shamrock',
   'https://studio19shop.com',
+  array[
+    '/assets/img/store/vendor-family-crest-ls.png',
+    '/assets/img/store/vendor-mermaid-tee.png',
+    '/assets/img/store/vendor-crest-hoodie.png',
+    '/assets/img/store/vendor-shenanigans-raglan.png'
+  ],
   'Tanks, jackets, and extra colors for parade season and the rest of the year.',
   'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.',
   true,
@@ -690,3 +723,19 @@ where v.short_name = 'Studio 19'
     or nullif(btrim(v.blurb), '') is null
     or nullif(btrim(v.fulfillment_note), '') is null
   );
+
+-- Apply the shared collage on every run. Does not change store_url.
+update public.shop_vendors
+set showcase_images = array[
+  '/assets/img/store/vendor-family-crest-ls.png',
+  '/assets/img/store/vendor-mermaid-tee.png',
+  '/assets/img/store/vendor-crest-hoodie.png',
+  '/assets/img/store/vendor-shenanigans-raglan.png'
+]
+where short_name in ('Red''s', 'Studio 19')
+  and showcase_images is distinct from array[
+    '/assets/img/store/vendor-family-crest-ls.png',
+    '/assets/img/store/vendor-mermaid-tee.png',
+    '/assets/img/store/vendor-crest-hoodie.png',
+    '/assets/img/store/vendor-shenanigans-raglan.png'
+  ];

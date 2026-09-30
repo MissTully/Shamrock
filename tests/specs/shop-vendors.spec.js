@@ -84,7 +84,11 @@ test("vendor apparel is links and photos, with Krewe Gear unchanged", async ({ p
       store_url: STUDIO,
       blurb: "Tanks and jackets.",
       fulfillment_note: "Shipped to your home.",
-      showcase_images: [],
+      showcase_images: [
+        "/assets/img/store/vendor-family-crest-ls.png",
+        "../etc/passwd.png",
+        "javascript:alert(1)",
+      ],
       sort_order: 20,
     },
     {
@@ -154,6 +158,8 @@ test("vendor apparel is links and photos, with Krewe Gear unchanged", async ({ p
   await expect(reds.locator("img")).toHaveCount(3);
   await expect(vendorsSection.locator('a[href^="javascript:"]')).toHaveCount(0);
   await expect(vendorsSection.locator('img[src^="javascript:"]')).toHaveCount(0);
+  await expect(vendorsSection.locator('img[src="/assets/img/store/vendor-family-crest-ls.png"]')).toHaveCount(1);
+  await expect(vendorsSection.locator('img[src*="passwd"]')).toHaveCount(0);
 
   const looksGrid = vendorsSection.locator(".vendor-look");
   await expect(looksGrid).toHaveCount(2);

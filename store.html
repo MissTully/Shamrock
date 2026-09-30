@@ -92,14 +92,14 @@
   box-shadow:var(--shadow-sm); transition:transform .15s, box-shadow .15s;
 }
 a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,59,33,.25); }
-.vendor-collage{ min-height:240px; background:#f3ead3; }
-.vendor-collage img{ width:100%; height:100%; object-fit:cover; display:block; }
+.vendor-collage{ min-height:240px; background:#f7f3ea; }
+.vendor-collage img{ width:100%; height:100%; object-fit:contain; object-position:center; background:#f7f3ea; display:block; }
 .vendor-collage-one{ display:grid; }
 .vendor-collage-one img{ min-height:240px; }
 .vendor-collage-two{ display:grid; grid-template-columns:1fr 1fr; }
 .vendor-collage-two img{ min-height:240px; }
-.vendor-collage-grid{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
-.vendor-collage-grid img, .vendor-collage-grid .vendor-more{ min-height:120px; }
+.vendor-collage-grid{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; min-height:560px; }
+.vendor-collage-grid img, .vendor-collage-grid .vendor-more{ min-height:200px; }
 .vendor-more{
   display:grid; place-items:center; background:var(--green-800); color:var(--gold-light);
   font-family:var(--display); font-weight:700; letter-spacing:.4px;
@@ -262,7 +262,7 @@ a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,
   <span class="label" id="kreweMusicLabel">Tap for a tune &#x2618;</span>
 </div>
 <script src="assets/krewe.js" defer></script>
-<script src="assets/kos-shop-vendors.js?v=20260930vendors" defer></script>
+<script src="assets/kos-shop-vendors.js?v=20260930vendors2" defer></script>
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";

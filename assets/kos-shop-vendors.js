@@ -9,6 +9,14 @@
     outerwear: "Outerwear"
   };
 
+  var ASSET_IMAGE = /^\/assets\/img\/store\/[a-z0-9][a-z0-9._/-]*\.(png|jpe?g|webp|gif)$/i;
+  var PHOTO_ALT = {
+    "/assets/img/store/vendor-family-crest-ls.png": "Dark long-sleeve shirt printed with the Krewe of Shamrock family crest",
+    "/assets/img/store/vendor-mermaid-tee.png": "Black tee with a skeleton mermaid and K.O.S. design",
+    "/assets/img/store/vendor-crest-hoodie.png": "Heather grey zip hoodie with the Krewe of Shamrock crest",
+    "/assets/img/store/vendor-shenanigans-raglan.png": "Light green raglan printed with Krewe of Shamrock shenanigans"
+  };
+
   function safeUrl(value) {
     var raw = String(value == null ? "" : value).trim();
     if (!/^https?:\/\//i.test(raw) || /\s/.test(raw)) return "";
@@ -18,6 +26,14 @@
     } catch (e) {
       return "";
     }
+  }
+
+  function safeImage(value) {
+    var raw = String(value == null ? "" : value).trim();
+    var http = safeUrl(raw);
+    if (http) return http;
+    if (ASSET_IMAGE.test(raw) && raw.indexOf("..") === -1) return raw;
+    return "";
   }
 
   function esc(value) {
@@ -46,14 +62,14 @@
   function photosFor(vendor, looks) {
     var shots = [];
     asList(vendor.showcase_images).forEach(function (raw) {
-      var href = safeUrl(raw);
-      if (href) shots.push({ src: href, alt: stripPrices(vendor.name) || "Vendor apparel" });
+      var href = safeImage(raw);
+      if (href) shots.push({ src: href, alt: PHOTO_ALT[href] || stripPrices(vendor.name) || "Vendor apparel" });
     });
     if (shots.length) return shots;
     looks.forEach(function (look) {
-      var href = safeUrl(look.image_url);
+      var href = safeImage(look.image_url);
       if (!href) return;
-      shots.push({ src: href, alt: stripPrices(look.name) || stripPrices(vendor.name) || "Vendor apparel" });
+      shots.push({ src: href, alt: PHOTO_ALT[href] || stripPrices(look.name) || stripPrices(vendor.name) || "Vendor apparel" });
     });
     return shots;
   }
@@ -98,7 +114,7 @@
   }
 
   function lookCard(look, vendor) {
-    var image = safeUrl(look.image_url);
+    var image = safeImage(look.image_url);
     if (!image) return "";
     var store = safeUrl(vendor.store_url);
     var outbound = safeUrl(look.outbound_url) || safeUrl(look.product_url) || store;
@@ -120,7 +136,7 @@
     var season = stripPrices(vendor.season_label);
     var blurb = stripPrices(vendor.blurb);
     var note = stripPrices(vendor.fulfillment_note);
-    var logo = safeUrl(vendor.logo_url);
+    var logo = safeImage(vendor.logo_url);
     var action = store
       ? '<span class="vendor-order">Order from ' + esc(label) + ' ↗</span>'
       : '<p class="vendor-pending">Store link needs an http:// or https:// address.</p>';
@@ -168,5 +184,5 @@
     return { hasPhotos: hasPhotos, vendorCount: list.length };
   }
 
-  window.KosShopVendors = { safeUrl: safeUrl, render: render, stripPrices: stripPrices };
+  window.KosShopVendors = { safeUrl: safeUrl, safeImage: safeImage, render: render, stripPrices: stripPrices };
 })();
