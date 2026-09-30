@@ -7462,10 +7462,19 @@
     return JSON.stringify(filters);
   }
 
+  function outreachHiddenByNeverApplied(row) {
+    if (!row || !row.applied_to_join) return false;
+    var keys = row.source_keys || [];
+    // A Wild Apricot email that is not on the roster is not an application.
+    // Never applied to join only hides a roster member past the prospect stage.
+    if (keys.indexOf("legacy") !== -1 && !row.on_roster) return false;
+    return true;
+  }
+
   function filterOutreachRows(rows, filters) {
     return (rows || []).filter(function (row) {
       if (!row) return false;
-      if (filters.neverApplied && row.applied_to_join) return false;
+      if (filters.neverApplied && outreachHiddenByNeverApplied(row)) return false;
       if ((Number(row.event_count) || 0) < filters.minEvents) return false;
       if (filters.source && (row.source_keys || []).indexOf(filters.source) === -1) return false;
       return true;
@@ -7601,14 +7610,21 @@
     outreachState.total = total;
     if (sample) sample.hidden = !(data && data.sample);
     if (msg) {
-      if (total > rows.length) {
-        msg.textContent = "Showing " + rows.length + " of " + total + ". Download CSV for the full filtered list.";
+      if (data && data.sample) {
+        msg.textContent = "";
+      } else if (total > rows.length) {
+        msg.textContent = "Live list from the krewe database. Showing " + rows.length + " of " + total + ". Download CSV for the full filtered list.";
       } else if (!rows.length) {
-        msg.textContent = "";
+        msg.textContent = "Live list from the krewe database. No one matches these filters.";
       } else {
-        msg.textContent = "";
+        msg.textContent = "Live list from the krewe database.";
       }
     }
+    var legacyCount = Number(by.legacy || 0);
+    var legacyNote = (data && data.sample) ? "" :
+      '<p class="hub-outreach-note" id="hubOutreachLegacyNote">' + esc(legacyCount) +
+      " legacy Wild Apricot " + (legacyCount === 1 ? "email is" : "emails are") +
+      " in this list. They are not on the roster. Never applied to join does not hide them.</p>";
     var chips =
       '<div class="hub-outreach-chips">' +
       '<div class="hub-outreach-chip"><b>' + esc(total) + '</b><span>people</span></div>' +
@@ -7616,7 +7632,8 @@
       '<div class="hub-outreach-chip"><b>' + esc(by.zeffy || 0) + '</b><span>Zeffy</span></div>' +
       '<div class="hub-outreach-chip"><b>' + esc(by.legacy || 0) + '</b><span>Legacy</span></div>' +
       "</div>" +
-      '<p class="hub-outreach-note">A person can carry more than one source, so those counts can add up to more than the number of people.</p>';
+      '<p class="hub-outreach-note">A person can carry more than one source, so those counts can add up to more than the number of people.</p>' +
+      legacyNote;
     if (!rows.length) {
       out.innerHTML = chips + '<p class="empty">No one matches these filters.</p>';
       return;
@@ -7643,11 +7660,11 @@
       '<div class="app-head"><span class="ic">📬</span><div><h2>Event outreach</h2>' +
       "<small>Website RSVP prospects, Zeffy ticket buyers, and legacy emails</small></div></div>" +
       '<div class="app-body">' +
-      '<p class="hub-outreach-lead">People to invite back. Website RSVP is a roster prospect. Zeffy is an event-ticket purchase. Legacy is a Wild Apricot registration. Checked “Never applied to join” hides buyers whose email already belongs to someone past the prospect stage. This list does not create members.</p>' +
+      '<p class="hub-outreach-lead">People to invite back. Website RSVP is a roster prospect. Zeffy is an event-ticket purchase. Legacy is a Wild Apricot registration whose email is not on the roster. All sources includes those legacy emails. “Never applied to join” only hides someone whose email already belongs to a member past the prospect stage. It does not hide legacy emails that are not on the roster. This list does not create members.</p>' +
       '<div class="hub-outreach-controls">' +
       '<div><label for="hubOutreachSource">Source</label>' +
       '<select id="hubOutreachSource">' +
-      '<option value="all">All sources</option>' +
+      '<option value="all">All sources (includes legacy)</option>' +
       '<option value="website_rsvp">Website RSVP</option>' +
       '<option value="zeffy">Zeffy</option>' +
       '<option value="legacy">Legacy</option>' +
@@ -7657,7 +7674,7 @@
       '<label class="hub-outreach-check"><input id="hubOutreachNever" type="checkbox" checked /> Never applied to join</label>' +
       "</div>" +
       '<p class="hub-outreach-note">An event counts when they have a website RSVP (including the waitlist), a Zeffy ticket, or a legacy registration. Canceled rows are left out.</p>' +
-      '<p class="hub-outreach-note" id="hubOutreachSample" hidden>Sample rows for this preview. The live list loads after sql/kos_event_outreach.sql is applied.</p>' +
+      '<p class="hub-outreach-note" id="hubOutreachSample" hidden>Sample rows for an offline preview only. A signed-in officer desk loads the live list from the krewe database.</p>' +
       '<p class="hub-outreach-msg" id="hubOutreachMsg" aria-live="polite"></p>' +
       '<div id="hubOutreachOut"><p class="empty">Open this tool to load the list.</p></div>' +
       '<div class="hub-outreach-actions"><button class="btn" type="button" id="hubOutreachCsv">⬇ Download CSV</button></div>' +
@@ -7671,20 +7688,39 @@
     if (csv) csv.addEventListener("click", function () { exportEventOutreach(); });
   }
 
+  async function outreachSignedInClient() {
+    var client = window.__kosSb || null;
+    var tries = 0;
+    while ((!client || typeof client.rpc !== "function") && tries < 20) {
+      await new Promise(function (r) { setTimeout(r, 100); });
+      client = window.__kosSb || null;
+      tries += 1;
+    }
+    if (!client || typeof client.rpc !== "function") return null;
+    if (!client.auth || typeof client.auth.getSession !== "function") return null;
+    try {
+      var sessionRes = await client.auth.getSession();
+      if (sessionRes && sessionRes.data && sessionRes.data.session) return client;
+    } catch (e) {}
+    return null;
+  }
+
   async function loadEventOutreach(force) {
     paintEventOutreachShell();
     var msg = document.getElementById("hubOutreachMsg");
     var filters = outreachReadFilters();
     var key = outreachFilterKey(filters);
-    if (outreachFixture) {
+    var client = await outreachSignedInClient();
+    // The offline test hook must not cover a signed-in hub. Sample rows are
+    // only for Playwright, when there is no session.
+    if (!client && outreachFixture) {
       renderEventOutreachPayload(outreachPayloadFromRows(outreachFixture, filters, true));
       outreachState.key = key;
       return;
     }
     if (!force && outreachState.key === key) return;
     var gen = ++outreachState.gen;
-    var client = window.__kosSb || null;
-    if (!client || typeof client.rpc !== "function") {
+    if (!client) {
       if (msg) msg.textContent = "Sign in again to load this list.";
       return;
     }
@@ -7694,7 +7730,7 @@
         p_source: filters.source,
         p_min_events: filters.minEvents,
         p_never_applied: filters.neverApplied,
-        p_limit: 300,
+        p_limit: 1000,
         p_offset: 0
       });
       if (gen !== outreachState.gen) return;
@@ -7717,11 +7753,11 @@
     var filters = outreachReadFilters();
     try {
       var rows;
-      if (outreachFixture) {
+      var client = await outreachSignedInClient();
+      if (!client && outreachFixture) {
         rows = outreachPayloadFromRows(outreachFixture, filters, true).rows;
       } else {
-        var client = window.__kosSb || null;
-        if (!client || typeof client.rpc !== "function") throw new Error("Sign in again to download this list.");
+        if (!client) throw new Error("Sign in again to download this list.");
         if (msg) msg.textContent = "Preparing the CSV…";
         var res = await client.rpc("export_event_outreach", {
           p_source: filters.source,
