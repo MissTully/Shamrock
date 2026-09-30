@@ -243,28 +243,53 @@ where coalesce(source, 'krewe') = 'krewe'
   and start_time >= timestamptz '2027-02-13 00:00:00-05'
   and start_time < timestamptz '2027-02-14 12:00:00-05';
 
+-- St. Patrick's Day Parade stays a draft until a firm date is set.
+-- parades.html keeps the general March / Tampa placeholder. Do not publish.
+update public.events
+set name = 'St. Patrick''s Day Parade',
+    description = 'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.',
+    event_type = 'parade',
+    start_time = null,
+    end_time = null,
+    location = 'Tampa',
+    is_public = false,
+    members_only = true,
+    status = 'draft',
+    external_url = 'https://tamparoughriders.org/stpats',
+    flyer_url = coalesce(nullif(flyer_url, ''), 'assets/img/parades/st-patricks.webp'),
+    notes = 'Draft. The public parades page keeps a general placeholder (March, date to be announced, Tampa). Do not publish until a firm date is set. Do not invent a step-off day.'
+where coalesce(source, 'krewe') = 'krewe'
+  and (
+    name ilike '%rough rider%patrick%'
+    or name ilike 'watch:%patrick%'
+  );
+
 insert into public.events (
   name, description, event_type, start_time, end_time, location,
   is_public, members_only, status, source, external_url, flyer_url, notes
 )
 select
-  'Watch: Rough Riders'' St. Patrick''s Day Parade',
-  'March 2027 · date TBA. Shamrock home holiday. Update when IKC posts the firm date.',
+  'St. Patrick''s Day Parade',
+  'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.',
   'parade',
   null,
   null,
-  'Tampa, FL',
+  'Tampa',
+  false,
   true,
-  true,
-  'published',
+  'draft',
   'krewe',
   'https://tamparoughriders.org/stpats',
   'assets/img/parades/st-patricks.webp',
-  'Placeholder until IKC posts a firm date. Do not invent a step-off day.'
+  'Draft. The public parades page keeps a general placeholder (March, date to be announced, Tampa). Do not publish until a firm date is set. Do not invent a step-off day.'
 where not exists (
   select 1 from public.events e
   where coalesce(e.source, 'krewe') = 'krewe'
-    and e.name ilike '%rough rider%patrick%'
+    and (
+      e.name ilike '%st. patrick%parade%'
+      or e.name ilike '%st patrick%parade%'
+      or e.name ilike '%rough rider%patrick%'
+    )
 );
 
 -- ---------------------------------------------------------------------------

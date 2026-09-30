@@ -233,10 +233,10 @@
           <div class="parade-media">
             <picture>
               <source type="image/webp" srcset="assets/img/parades/st-patricks.webp" />
-              <img src="assets/img/parades/st-patricks.jpg" alt="Krewe of Shamrock castle float on the Tampa waterfront at the Rough Riders St. Patrick's Day Parade" width="1632" height="736" loading="lazy" />
+              <img src="assets/img/parades/st-patricks.jpg" alt="Krewe of Shamrock castle float on the Tampa waterfront at the St. Patrick's Day Parade" width="1632" height="736" loading="lazy" />
             </picture>
           </div>
-          <div class="mo">March</div><h3>Rough Riders' St. Patrick's Day</h3>
+          <div class="mo">March</div><h3>St. Patrick's Day Parade</h3>
           <p class="ev-meta"><b>When:</b> March 2027 · date to be announced</p>
           <p class="ev-meta"><b>Where:</b> Tampa</p>
           <p>Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.</p>
@@ -300,7 +300,7 @@
             <tr class="ours"><td class="mo">January</td><td>Gasparilla Parade of Pirates</td><td class="dt">Saturday, January 30, 2027 · about 12:00–6:00 PM</td><td><a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr class="ours"><td class="mo">February</td><td>Sant'Yago Knight Parade</td><td class="dt">Saturday, February 13, 2027 · about 6:00–11:00 PM</td><td><a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">February</td><td>Krewe of St. Andrews Mardi Gras</td><td class="dt">Date TBA</td><td><a href="https://standrewsmardigras.com/festival-info/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">March</td><td>Rough Riders' St. Patrick's Day Parade</td><td class="dt">March 2027 · Date TBA</td><td><a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">March</td><td>St. Patrick's Day Parade</td><td class="dt">March 2027 · Date TBA</td><td><a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -594,7 +594,7 @@
         return { src: "assets/img/parades/tampa-pride.webp", alt: "Krewe of Shamrock castle float at night with a Pride flag at Tampa Pride" };
       }
       if (n.includes("patrick") || n.includes("st pat")) {
-        return { src: "assets/img/parades/st-patricks.webp", alt: "Krewe of Shamrock castle float on the Tampa waterfront at the Rough Riders St. Patrick's Day Parade" };
+        return { src: "assets/img/parades/st-patricks.webp", alt: "Krewe of Shamrock castle float on the Tampa waterfront at the St. Patrick's Day Parade" };
       }
       return null;
     }
@@ -654,7 +654,8 @@
       if (error || !data || !data.length) {
         return;
       }
-      const ours = data.filter((ev) => ev.source !== "ikc" && String(ev.status || "published").toLowerCase() !== "cancelled");
+      // Drafts stay in Event Studio. Only a published parade replaces its static card.
+      const ours = data.filter((ev) => ev.source !== "ikc" && String(ev.status || "published").toLowerCase() === "published");
       if (!ours.length) {
         return;
       }
