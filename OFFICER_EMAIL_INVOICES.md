@@ -8,6 +8,7 @@ Member Hub → **Officer desk** → section **Email & invoices**:
 
 1. **Email members** - choose audience (all active, officers & board, chairs/officers, or pick from roster), write subject and message, preview, confirm, Send.
 2. **Send invoices** - choose the membership year (default 2026), filter unpaid dues, members with no dues row, a level, or a roster search, then create catalog-priced `dues_payments` rows. See DUES_FOUNDATION.md.
+3. **Dues waivers** - request a waiver, approve or deny the queue, and apply President / Vice President / Secretary / Treasurer exemptions for the season after a confirm step. See OFFICER_DUES_WAIVERS.md.
 
 ## How email delivery works
 
@@ -33,4 +34,5 @@ Until the key is set, sends still queue safely and show in history; nothing leav
 ## SQL / functions
 
 - Send invoices: `kos_dues_catalog`, `kos_set_membership_level`, and `kos_create_level_invoices` in `sql/kos_dues_foundation.sql`. Email notices still queue through `officer_send_member_email` and `process-outbound-emails`.
-- Waiver requests and treasurer reports are not on this screen. See DUES_FOUNDATION.md.
+- Dues waivers: `kos_request_dues_waiver`, `kos_decide_dues_waiver`, and `kos_apply_elected_officer_exemptions` in the same SQL file. The screen is the **Dues waivers** card, not Send invoices. See OFFICER_DUES_WAIVERS.md.
+- Treasurer reports are not on this screen.

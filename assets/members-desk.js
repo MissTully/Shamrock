@@ -6233,7 +6233,8 @@
     "hubReports",
     "hubAllKrewe",
     "hubEmailMembers",
-    "hubSendInvoices"
+    "hubSendInvoices",
+    "hubDuesWaivers"
   ];
 
   var OFFICER_TOOL_META = {
@@ -6247,7 +6248,8 @@
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
     hubEmailMembers: { title: "Email members", desc: "Choose audience, write, preview, and send", icon: "✉️", section: "Email & invoices" },
-    hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" }
+    hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
+    hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
   };
 
   var OFFICER_SECTION_ORDER = [
@@ -6270,7 +6272,7 @@
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
     "Money": { icon: "💳", sub: "Dues and payment records." },
-    "Email & invoices": { icon: "✉️", sub: "Write the membership and send dues invoices." },
+    "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
     "More tools": { icon: "☘", sub: "Everything else on the desk." }
   };
@@ -6365,7 +6367,7 @@
         "<h2>🎖️ Your Officer Desk</h2>" +
         "<p>Everything the krewe trusts you with, on one desk: run events and check-ins, " +
         "approve members' photos, videos, and clover claims, publish documents, mind the shop " +
-        "and the money, write the membership, and read the numbers. Pick one tool at a time - " +
+        "and the money, write the membership, record dues waivers, and read the numbers. Pick one tool at a time - " +
         "the desk stays tidy.</p>" +
         '<nav class="desk-nav" id="hubOfficerDeskNav" aria-label="Officer desk sections"></nav>';
       panel.insertBefore(hero, panel.firstChild);
