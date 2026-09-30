@@ -238,6 +238,7 @@
     ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
+    ".hub-vol-text{white-space:pre-wrap;}",
     ".hub-app-flash{background:#e7f3ea;border:1px solid rgba(29,107,62,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#14532d;line-height:1.45;}",
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
     ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
@@ -469,15 +470,16 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
+  var volunteerInquiriesFixture = null;
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
   var hourApprovalsFixture = false;
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours);
+    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
   }
 
   function newApplicationLabel(n) {
@@ -492,6 +494,26 @@
     if (n === 1) return "1 new application. Call, then send the joining packet.";
     if (n === 0) return "No new applications right now";
     return n + " new applications. Call, then send the joining packet.";
+  }
+
+  function volunteerInquiryCountOf(status) {
+    var counts = state.volunteerInquiryCounts || {};
+    if (counts[status] != null) return Number(counts[status]) || 0;
+    return 0;
+  }
+
+  function newVolunteerInquiryLabel(n) {
+    n = Number(n) || 0;
+    if (n === 1) return "1 new volunteer inquiry";
+    if (n === 0) return "No new volunteer inquiries";
+    return n + " new volunteer inquiries";
+  }
+
+  function volunteerInquiriesTileDesc() {
+    var n = volunteerInquiryCountOf("new");
+    if (n === 1) return "1 new person asked to help";
+    if (n === 0) return "No new volunteer inquiries right now";
+    return n + " new people asked to help";
   }
   var hoursDeepLink = false;
 
@@ -2362,7 +2384,7 @@
         officerPulse = " hub-officer-pulse";
       }
     } catch (pe) {}
-    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications;
+    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications && !state.canReviewVolunteerInquiries;
     var officerCard = !canOpenOfficerDesk()
       ? ""
       : hostHoursOnly
@@ -2380,6 +2402,7 @@
         '<div style="font-family:var(--display);font-size:15px;margin:0 0 6px;color:#7a5b00;">What\'s inside</div>' +
         '<ul class="hub-officer-inside" aria-label="Officer desk tools">' +
         (state.canReviewApplications ? '<li>Membership Applications</li>' : '') +
+        (state.canReviewVolunteerInquiries ? '<li>Volunteer inquiries</li>' : '') +
         '<li>Event Studio and calendar</li>' +
         '<li>Approvals (hours, photos, videos, clovers)</li>' +
         '<li>Shop, member records, and money</li>' +
@@ -2390,6 +2413,13 @@
         '<span class="ic" aria-hidden="true">📝</span>' +
         '<span class="copy"><b>' + esc(newApplicationLabel(state.applicationCount)) + '</b>' +
         '<span class="sub">Membership Applications on your Officer desk. Move an applicant through new, background check, and dues pending, or approve, decline, or archive.</span></span>' +
+        '<span class="go">Open</span></button>'
+      : "";
+    var volunteerBanner = state.canReviewVolunteerInquiries
+      ? '<button type="button" class="hub-apps-banner" id="hubVolunteerHomeLink" data-hub-goto="volunteer-inquiries">' +
+        '<span class="ic" aria-hidden="true">🤝</span>' +
+        '<span class="copy"><b>' + esc(newVolunteerInquiryLabel(volunteerInquiryCountOf("new"))) + '</b>' +
+        '<span class="sub">Charity inbox on your Officer desk. New, contacted, and done.</span></span>' +
         '<span class="go">Open</span></button>'
       : "";
     function quickTile(goto, icon, title, sub) {
@@ -2434,7 +2464,7 @@
       welcomeDeskHtml() +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : boardAnnouncementsHtml()) +
-      appsBanner + officerCard + craicHeroHtml() + findCards;
+      appsBanner + volunteerBanner + officerCard + craicHeroHtml() + findCards;
 
     renderProfileCard();
 
@@ -2452,6 +2482,7 @@
         var go = btn.getAttribute("data-hub-goto");
         if (go === "directory") openDirectoryFromHome();
         else if (go === "applications") openApplicationsFromHome();
+        else if (go === "volunteer-inquiries") openVolunteerInquiriesFromHome();
         else if (go === "event-studio") openEventStudioFromHome();
         else if (go === "docs") revealDocsCard();
         else if (go === "events") gotoHubTabFromHome("events", "events");
@@ -2526,6 +2557,18 @@
     }, 80);
   }
 
+  function openVolunteerInquiriesFromHome() {
+    if (!state.canReviewVolunteerInquiries) return;
+    try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (e2) {}
+    appNavApi.openTab("officer");
+    try { wireOfficerDeskPicker(); } catch (e3) {}
+    try { renderVolunteerInquiriesFromState(); } catch (e4) {}
+    openOfficerTool("tool:hubVolunteerInbox", true);
+    setTimeout(function () {
+      focusHubTarget(document.getElementById("hubVolunteerInbox"));
+    }, 80);
+  }
+
   function openEventStudioFromHome() {
     if (!state.officer && !state.canManageEvents) return;
     appNavApi.openTab("officer");
@@ -2568,6 +2611,7 @@
     if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
     if ("canReviewHours" in flags) state.canReviewHours = !!flags.canReviewHours;
     applyApplicationFixture();
+    applyVolunteerInquiryFixture();
     syncOfficerChip();
     renderHome();
     if (canOpenOfficerDesk()) {
@@ -2575,6 +2619,9 @@
     }
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (e2) {}
+    }
+    if (state.canReviewVolunteerInquiries) {
+      try { renderVolunteerInquiriesFromState(); } catch (eVol) {}
     }
     if (state.canManageEvents) {
       var studioClient = window.__kosSb || {
@@ -2729,6 +2776,7 @@
       if ("canReviewHours" in roleFixture) state.canReviewHours = !!roleFixture.canReviewHours;
     }
     await refreshApplicationAccess(client);
+    await refreshVolunteerInquiryAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
@@ -2859,6 +2907,7 @@
     var wantDocs = false;
     var wantShare = false;
     var wantApplications = false;
+    var wantVolunteerInquiries = false;
     try {
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
       if (wantHours) {
@@ -2867,6 +2916,7 @@
       } else if (hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
       else if (hash === "applications") { saved = "officer"; wantApplications = true; }
+      else if (hash === "volunteer-inquiries") { saved = "officer"; wantVolunteerInquiries = true; }
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
       else if (hash === "docs") { saved = "parade"; wantDocs = true; }
       else if (hash === "share") { saved = "parade"; wantShare = true; }
@@ -2905,9 +2955,14 @@
       setTimeout(function () { revealShareGroup(); }, 280);
     } else if (wantApplications) {
       setTimeout(function () { openApplicationsFromHome(); }, 280);
+    } else if (wantVolunteerInquiries) {
+      setTimeout(function () { openVolunteerInquiriesFromHome(); }, 280);
     }
     if (state.canReviewApplications) {
       try { renderApplicationsFromState(); } catch (appPaint) {}
+    }
+    if (state.canReviewVolunteerInquiries) {
+      try { renderVolunteerInquiriesFromState(); } catch (volPaint) {}
     }
     if (feedLock) applyFeedLock();
     try { appNavApi.boot(); } catch (navBootErr) {}
@@ -5699,6 +5754,7 @@
       if (lower === "fun") return { tab: "fun", frames: [{ kind: "root" }] };
       if (lower === "officer") return { tab: "officer", frames: [{ kind: "root" }] };
       if (lower === "applications") return { tab: "officer", frames: [{ kind: "root" }], tool: "applications" };
+      if (lower === "volunteer-inquiries") return { tab: "officer", frames: [{ kind: "root" }], tool: "volunteer-inquiries" };
       if (lower === "event-studio") return { tab: "officer", frames: [{ kind: "root" }], tool: "event-studio" };
       return null;
     }
@@ -5999,6 +6055,12 @@
         try { wireOfficerDeskPicker(); } catch (e2) {}
         try { openOfficerTool("tool:hubApplications", false); } catch (e3) {}
       }
+      if (route.tool === "volunteer-inquiries") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (eVol1) {}
+        try { wireOfficerDeskPicker(); } catch (eVol2) {}
+        try { renderVolunteerInquiriesFromState(); } catch (eVol3) {}
+        try { openOfficerTool("tool:hubVolunteerInbox", false); } catch (eVol4) {}
+      }
       if (route.tool === "event-studio") {
         try { wireOfficerDeskPicker(); } catch (e4) {}
         try { openOfficerTool("tool:hubEventStudio", false); } catch (e5) {}
@@ -6239,6 +6301,11 @@
         try { sessionStorage.setItem("kosOfficerTool", "tool:hubApplications"); } catch (e) {}
         try { wireOfficerDeskPicker(); } catch (e2) {}
         try { openOfficerTool("tool:hubApplications", true); } catch (e3) {}
+      } else if (route.tool === "volunteer-inquiries") {
+        try { sessionStorage.setItem("kosOfficerTool", "tool:hubVolunteerInbox"); } catch (eVol) {}
+        try { wireOfficerDeskPicker(); } catch (eVol2) {}
+        try { renderVolunteerInquiriesFromState(); } catch (eVol3) {}
+        try { openOfficerTool("tool:hubVolunteerInbox", true); } catch (eVol4) {}
       } else if (route.tool === "event-studio") {
         try { wireOfficerDeskPicker(); } catch (e4) {}
         try { openOfficerTool("tool:hubEventStudio", true); } catch (e5) {}
@@ -6454,6 +6521,9 @@
         } else if (hash === "applications") {
           ev.preventDefault();
           openApplicationsFromHome();
+        } else if (hash === "volunteer-inquiries") {
+          ev.preventDefault();
+          openVolunteerInquiriesFromHome();
         } else if (hash === "event-studio") {
           ev.preventDefault();
           openEventStudioFromHome();
@@ -6465,9 +6535,269 @@
     }
   }
 
-  
+  function applyVolunteerInquiryFixture() {
+    if (!roleFixture) return;
+    if ("canReviewVolunteerInquiries" in roleFixture) {
+      state.canReviewVolunteerInquiries = !!roleFixture.canReviewVolunteerInquiries;
+    } else if (!Array.isArray(roleFixture.volunteerInquiries)) {
+      state.canReviewVolunteerInquiries = false;
+      volunteerInquiriesFixture = null;
+    }
+    if (Array.isArray(roleFixture.volunteerInquiries)) {
+      if (!("canReviewVolunteerInquiries" in roleFixture)) state.canReviewVolunteerInquiries = true;
+      volunteerInquiriesFixture = roleFixture.volunteerInquiries.map(function (row) {
+        var clone = {};
+        Object.keys(row || {}).forEach(function (key) { clone[key] = row[key]; });
+        return clone;
+      });
+      state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      state.volunteerInquiryLoadError = "";
+      syncVolunteerInquiryCounts();
+    }
+  }
+
+  function syncVolunteerInquiryCounts() {
+    var rows = volunteerInquiriesFixture || state.volunteerInquiryRows || [];
+    var counts = { "new": 0, contacted: 0, done: 0 };
+    rows.forEach(function (row) {
+      var status = (row && row.status) || "new";
+      if (counts[status] == null) status = "new";
+      counts[status] += 1;
+    });
+    state.volunteerInquiryCounts = counts;
+  }
+
+  function applyVolunteerInquiryPayload(data) {
+    if (!data || data.ok === false) {
+      state.volunteerInquiryRows = [];
+      state.volunteerInquiryLoadError = (data && data.message) || "Could not load volunteer inquiries.";
+      return;
+    }
+    state.volunteerInquiryLoadError = "";
+    state.volunteerInquiryRows = Array.isArray(data.inquiries) ? data.inquiries : [];
+    state.volunteerInquiryCounts = data.counts || state.volunteerInquiryCounts;
+    if (data.status) state.volunteerInquiryStatus = data.status;
+  }
+
+  async function refreshVolunteerInquiryAccess(client) {
+    var fixtureLocks = roleFixture && ("canReviewVolunteerInquiries" in roleFixture || Array.isArray(roleFixture.volunteerInquiries));
+    if (!fixtureLocks && client) {
+      try {
+        var can = await client.rpc("can_review_volunteer_inquiries");
+        if (can && can.error) state.canReviewVolunteerInquiries = false;
+        else state.canReviewVolunteerInquiries = !!(can && can.data);
+      } catch (e) { state.canReviewVolunteerInquiries = false; }
+    }
+    applyVolunteerInquiryFixture();
+    if (!state.canReviewVolunteerInquiries || volunteerInquiriesFixture || !client) return;
+    try {
+      var listed = await client.rpc("list_volunteer_inquiries", { p_status: state.volunteerInquiryStatus || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyVolunteerInquiryPayload(listed && listed.data);
+    } catch (e2) {
+      state.volunteerInquiryLoadError = "Could not load volunteer inquiries. If this stays blank, the database update in sql/kos_volunteer_inquiries.sql may not be applied yet.";
+    }
+  }
+
+  function volunteerAffiliationLabel(row) {
+    var kind = String((row && row.affiliation) || "");
+    if (kind === "krewe_member") return "Krewe member";
+    if (kind === "other_krewe") {
+      var name = String((row && row.other_krewe_name) || "").trim();
+      return name ? ("Friend from another krewe (" + name + ")") : "Friend from another krewe";
+    }
+    if (kind === "neither") return "Neighbor";
+    return kind || "Not given";
+  }
+
+  function volunteerStatusLabel(status) {
+    if (status === "contacted") return "Contacted";
+    if (status === "done") return "Done";
+    return "New";
+  }
+
+  function volunteerInquiryBucketRows() {
+    var want = state.volunteerInquiryStatus || "new";
+    return (state.volunteerInquiryRows || []).filter(function (row) {
+      return row && (row.status || "new") === want;
+    });
+  }
+
+  async function reloadVolunteerInquiries(client) {
+    if (volunteerInquiriesFixture) {
+      syncVolunteerInquiryCounts();
+      renderVolunteerInquiriesFromState();
+      renderHome();
+      return;
+    }
+    if (!client) client = window.__kosSb || null;
+    if (!client) return;
+    try {
+      var listed = await client.rpc("list_volunteer_inquiries", { p_status: state.volunteerInquiryStatus || "new" });
+      if (listed && listed.error) throw listed.error;
+      applyVolunteerInquiryPayload(listed && listed.data);
+    } catch (e) {
+      state.volunteerInquiryLoadError = "Could not refresh volunteer inquiries.";
+    }
+    renderVolunteerInquiriesFromState();
+    renderHome();
+    try { wireOfficerDeskPicker(); } catch (e2) {}
+    openOfficerTool("tool:hubVolunteerInbox", false);
+  }
+
+  var lastVolunteerStamp = { key: "", at: 0 };
+
+  async function decideVolunteerInquiry(client, status, id, note, btn) {
+    var stamp = String(status) + ":" + String(id);
+    var now = Date.now();
+    if (lastVolunteerStamp.key === stamp && now - lastVolunteerStamp.at < 800) return;
+    lastVolunteerStamp.key = stamp;
+    lastVolunteerStamp.at = now;
+    if (btn) btn.disabled = true;
+    if (volunteerInquiriesFixture) {
+      var row = null;
+      volunteerInquiriesFixture.forEach(function (item) {
+        if (String(item.id) === String(id)) row = item;
+      });
+      if (!row) {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      row.status = status;
+      if (status === "contacted" || status === "done") row.contacted_at = row.contacted_at || new Date().toISOString();
+      if (status === "done") row.done_at = row.done_at || new Date().toISOString();
+      row.officer_note = note || "";
+      row.actor_name = ((window.kosProfile || {}).display_name || "Charity Chair");
+      row.updated_at = new Date().toISOString();
+      state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      syncVolunteerInquiryCounts();
+      state.volunteerInquiryFlash = status === "done" ? "Marked done." : "Marked contacted.";
+      renderHome();
+      renderVolunteerInquiriesFromState();
+      openOfficerTool("tool:hubVolunteerInbox", false);
+      return;
+    }
+    try {
+      var res = await client.rpc("update_volunteer_inquiry_status", {
+        p_id: id,
+        p_status: status,
+        p_officer_note: note || ""
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not update that inquiry.");
+      state.volunteerInquiryFlash = payload.message || "Saved.";
+    } catch (e) {
+      alert("Could not update that inquiry. " + ((e && e.message) || "If this keeps happening, sql/kos_volunteer_inquiries.sql may not be applied yet."));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadVolunteerInquiries(client);
+  }
+
+  function renderVolunteerInquiriesFromState() {
+    if (!state.canReviewVolunteerInquiries) return;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel) return;
+    var card = ensureOfficerToolCard("hubVolunteerInbox");
+    if (!card) return;
+    var status = state.volunteerInquiryStatus || "new";
+    var rows = volunteerInquiryBucketRows();
+    var intro = {
+      contacted: "These people have been contacted. Mark one done when the follow-up is finished.",
+      done: "Finished inquiries stay here. Nothing is deleted.",
+      "new": "These people asked to volunteer on the public page. Newest first. The Charity Chair gets an email when a form arrives."
+    }[status];
+    var empty = {
+      contacted: "Nobody is marked contacted right now.",
+      done: "No finished inquiries in this list.",
+      "new": "No new volunteer inquiries. When someone chooses I\u2019d like to volunteer on the public page, they show up here."
+    }[status];
+    function filterBtn(key, label) {
+      return '<button type="button" data-vol-status="' + key + '"' + (status === key ? ' class="on"' : "") + ">" +
+        label + " (" + volunteerInquiryCountOf(key) + ")</button>";
+    }
+    var html = '<div class="app-head"><span class="ic">🤝</span><div><h2>Volunteer inquiries</h2>' +
+      "<small>Charity inbox. New, contacted, and done. The public form emails the current Charity Chair.</small></div></div>" +
+      '<div class="app-body" id="hubVolunteerBody">';
+    if (state.volunteerInquiryFlash) {
+      html += '<div class="hub-app-flash" id="hubVolunteerFlash">' + esc(state.volunteerInquiryFlash) + "</div>";
+    }
+    html += '<div class="hub-app-filters" role="tablist" aria-label="Volunteer inquiry lists">' +
+      filterBtn("new", "New") +
+      filterBtn("contacted", "Contacted") +
+      filterBtn("done", "Done") +
+      "</div>" +
+      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
+    if (state.volunteerInquiryLoadError && !rows.length) {
+      html += '<p class="empty">' + esc(state.volunteerInquiryLoadError) + "</p>";
+    } else if (!rows.length) {
+      html += '<p class="empty">' + esc(empty) + "</p>";
+    } else {
+      rows.forEach(function (row) {
+        var id = esc(row.id);
+        var when = formatAppliedEt(row.created_at);
+        var touched = formatAppliedEt(row.updated_at || row.done_at || row.contacted_at);
+        var open = row.status !== "done";
+        html += '<div class="hub-appr" data-vol-id="' + id + '" data-vol-row-status="' + esc(row.status || "new") + '">' +
+          "<div><b>" + esc(row.full_name || "Volunteer") + "</b>" +
+          '<span class="hub-app-status' + (row.status === "done" ? " ok" : "") + '">' + esc(volunteerStatusLabel(row.status)) + "</span>" +
+          (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
+          (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
+          '<div class="muted">Affiliation: ' + esc(volunteerAffiliationLabel(row)) + "</div>" +
+          (when ? '<div class="muted">Submitted: ' + esc(when) + "</div>" : "") +
+          '<div class="muted hub-vol-text">Interests: ' + esc(row.interests || "") + "</div>" +
+          (row.notes && String(row.notes).trim() ? '<div class="muted hub-vol-text">Notes: ' + esc(row.notes) + "</div>" : "") +
+          (row.actor_name ? '<div class="muted">Last update by ' + esc(row.actor_name) + (touched ? " · " + esc(touched) : "") + "</div>" : "") +
+          (open
+            ? '<label class="muted" style="display:block;margin-top:8px;" for="hubVolNote-' + id + '">Note for the Charity committee</label>' +
+              '<textarea class="hub-app-note" id="hubVolNote-' + id + '" maxlength="1000" placeholder="Short note other officers can see">' + esc(row.officer_note || "") + "</textarea>"
+            : (row.officer_note ? '<div class="muted">Officer note: ' + esc(row.officer_note) + "</div>" : "")) +
+          "</div>";
+        if (open) {
+          html += '<div class="hub-appr-btns">' +
+            (row.status === "contacted" ? "" : '<button type="button" class="btn btn-primary" data-vol-contacted="' + id + '">Mark contacted</button>') +
+            '<button type="button" class="btn" data-vol-done="' + id + '">Mark done</button>' +
+            "</div>";
+        }
+        html += "</div>";
+      });
+    }
+    html += "</div>";
+    card.innerHTML = html;
+    var body = card.querySelector("#hubVolunteerBody");
+    if (!body) return;
+    body.querySelectorAll("[data-vol-status]").forEach(function (filter) {
+      filter.addEventListener("click", function () {
+        state.volunteerInquiryStatus = filter.getAttribute("data-vol-status") || "new";
+        state.volunteerInquiryFlash = "";
+        if (volunteerInquiriesFixture) renderVolunteerInquiriesFromState();
+        else reloadVolunteerInquiries(window.__kosSb || null);
+      });
+    });
+    function noteFor(id) {
+      var el = document.getElementById("hubVolNote-" + id);
+      return el ? (el.value || "").trim() : "";
+    }
+    body.querySelectorAll("[data-vol-contacted]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-vol-contacted");
+        if (!confirm("Mark this person contacted? They stay in the inbox under Contacted.")) return;
+        decideVolunteerInquiry(window.__kosSb || null, "contacted", id, noteFor(id), button);
+      });
+    });
+    body.querySelectorAll("[data-vol-done]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-vol-done");
+        if (!confirm("Mark this inquiry done? It leaves the new list and stays under Done.")) return;
+        decideVolunteerInquiry(window.__kosSb || null, "done", id, noteFor(id), button);
+      });
+    });
+  }
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
+    "hubVolunteerInbox",
     "hubApprovals",
     "hubPayments",
     "hubLockers",
@@ -6484,6 +6814,7 @@
 
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
+    hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
@@ -6500,6 +6831,7 @@
 
   var OFFICER_SECTION_ORDER = [
     "Membership",
+    "Charity",
     "Events",
     "Approvals",
     "Documents",
@@ -6514,6 +6846,7 @@
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
+    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
     "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
@@ -6579,9 +6912,10 @@
 
   function currentOfficerToolOrder() {
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours)) {
+    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
       toolOrder = [];
       if (state.canReviewApplications) toolOrder.push("hubApplications");
+      if (state.canReviewVolunteerInquiries) toolOrder.push("hubVolunteerInbox");
       if (state.canReviewHours) toolOrder.push("hubApprovals");
     } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
@@ -6594,6 +6928,11 @@
       toolOrder = toolOrder.filter(function (id) { return id !== "hubApplications"; });
     } else if (toolOrder.indexOf("hubApplications") === -1) {
       toolOrder.unshift("hubApplications");
+    }
+    if (!state.canReviewVolunteerInquiries) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubVolunteerInbox"; });
+    } else if (toolOrder.indexOf("hubVolunteerInbox") === -1) {
+      toolOrder.push("hubVolunteerInbox");
     }
     if (!state.canViewPayments) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubPayments"; });
@@ -6757,6 +7096,7 @@
       bySection[sec].forEach(function (item) {
         var desc = item.meta.desc || "";
         if (item.id === "hubApplications") desc = applicationsTileDesc();
+        if (item.id === "hubVolunteerInbox") desc = volunteerInquiriesTileDesc();
         h +=
           '<button type="button" class="hub-officer-tile" data-tool="tool:' + item.id + '">' +
           '<span class="tic" aria-hidden="true">' + (item.meta.icon || "☘") + "</span>" +
@@ -6828,7 +7168,9 @@
       } else if (state.shopOnly) {
         hint.textContent = "Merchandise Chair: Shop Studio (products, Zeffy links, shop QR).";
       } else if (state.socialOnly) {
-        hint.textContent = "Social / Charity: Event Studio and event or charity reports.";
+        hint.textContent = state.canReviewVolunteerInquiries
+          ? "Social / Charity: volunteer inquiries, Event Studio, and event or charity reports."
+          : "Social / Charity: Event Studio and event or charity reports.";
       } else {
         hint.textContent = "Optional menu if you prefer searching by name.";
       }
@@ -6837,7 +7179,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }

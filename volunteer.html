@@ -33,6 +33,23 @@
   .past-list{ list-style:none; padding:0; margin:18px auto 0; max-width:760px; display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
   .past-list li{ padding-left:24px; position:relative; font-size:16.5px; }
   .past-list li::before{ content:"☘"; position:absolute; left:0; color:var(--green-600); }
+  button.btn{ font-family:var(--display); }
+  .vol-dialog{
+    border:0; padding:0; max-width:560px; width:calc(100% - 28px);
+    max-height:min(92vh, 760px); overflow:auto;
+    border-radius:18px; background:#fff; color:var(--ink);
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+  }
+  .vol-dialog::backdrop{ background:rgba(8,42,24,.62); }
+  .vol-dialog form.krewe-form{ padding:8px 26px 26px; }
+  .vol-dialog h2{ font-family:var(--display); color:var(--green-800); margin:0; font-size:28px; }
+  .vol-dialog .vol-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:22px 22px 0; }
+  .vol-dialog .vol-x{
+    border:1px solid rgba(168,128,28,.45); background:#fff; color:var(--green-800);
+    width:40px; height:40px; border-radius:999px; font-size:22px; line-height:1; cursor:pointer;
+  }
+  .vol-dialog .vol-lead{ margin:8px 22px 0; color:var(--muted); font-size:16px; }
+  .vol-trap{ position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
   @media (max-width:760px){ .charity-grid,.charity-grid.two,.impact,.past-list{ grid-template-columns:1fr; } }
 </style>
 </head>
@@ -195,22 +212,65 @@
     </ul>
   </section>
 
-  <section class="band band-green">
+  <section class="band band-green" id="lendAHand">
     <div class="wrap" style="text-align:center;">
       <span class="crest float" role="img" aria-label="Shamrock crest"></span>
       <div class="section-title">
         <h2 style="color:#fff;">Lend a Hand</h2>
-        <p class="sub">Roll up your sleeves with the Krewe</p>
+        <p class="sub">Members, friends from other krewes, and neighbors who want to help Tampa Bay kids and families.</p>
       </div>
-      <p style="color:#f1ead4;max-width:680px;margin:14px auto 0;">Krewe members log their service in the Member Hub.
-         Whether it's a warehouse delivery, a charity drive, or a hand at one of our events,
-         every hour makes a difference in Tampa Bay.</p>
+      <p style="color:#f1ead4;max-width:680px;margin:14px auto 0;">The Krewe welcomes volunteers for charity partner days, warehouse moves, drives, and event help. Tell us you&rsquo;re interested and the Charity committee will follow up. Krewe members who already have Hub access can log completed hours below.</p>
       <div class="btns" style="margin-top:22px;">
-        <a class="btn btn-primary" href="members.html?hub=hours#hours">☘ Log Volunteer Hours</a>
-        <a class="btn btn-outline" href="mailto:secretary@kreweofshamrock.com">Get Involved</a>
+        <button type="button" class="btn btn-primary" id="volunteerOpen">I&rsquo;d like to volunteer</button>
+        <a class="btn btn-outline" id="volunteerHoursLink" href="members.html?hub=hours#hours">Log volunteer hours</a>
       </div>
     </div>
   </section>
+
+  <dialog class="vol-dialog" id="volunteerDialog" aria-labelledby="volunteerDialogTitle">
+    <div class="vol-head">
+      <h2 id="volunteerDialogTitle">I&rsquo;d like to volunteer</h2>
+      <button type="button" class="vol-x" id="volunteerClose" aria-label="Close">×</button>
+    </div>
+    <p class="vol-lead">The Charity committee will follow up. This form does not log hours.</p>
+    <form id="volunteerForm" class="krewe-form">
+      <label for="volName">Full name</label>
+      <input id="volName" type="text" required maxlength="120" autocomplete="name" />
+
+      <label for="volEmail">Email</label>
+      <input id="volEmail" type="email" required maxlength="120" autocomplete="email" />
+
+      <label for="volPhone">Phone</label>
+      <input id="volPhone" type="tel" required maxlength="40" autocomplete="tel" />
+
+      <label for="volAffiliation">How you&rsquo;re connected</label>
+      <select id="volAffiliation" required>
+        <option value="">Choose one</option>
+        <option value="krewe_member">Krewe member</option>
+        <option value="other_krewe">Friend from another krewe</option>
+        <option value="neither">Neighbor</option>
+      </select>
+
+      <div id="volOtherWrap" hidden>
+        <label for="volOtherKrewe">Which krewe</label>
+        <input id="volOtherKrewe" type="text" maxlength="120" autocomplete="organization" />
+      </div>
+
+      <label for="volInterests">Interests and availability</label>
+      <textarea id="volInterests" required maxlength="2000" placeholder="What you can help with, and when you are free."></textarea>
+
+      <label for="volNotes">Notes <span class="hint">(optional)</span></label>
+      <textarea id="volNotes" maxlength="2000" placeholder="Anything else the Charity committee should know."></textarea>
+
+      <div class="vol-trap" aria-hidden="true">
+        <label for="companyWebsite">Company website</label>
+        <input id="companyWebsite" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button id="volunteerSubmit" type="submit">Send to the Charity committee</button>
+      <div id="volunteerMessage" class="msg"></div>
+    </form>
+  </dialog>
 
   <footer class="krewe-foot">
     <img class="fimg crest-img" src="assets/img/krewe-crest.png" alt="" />
@@ -243,5 +303,98 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
+  <script>
+    var VOLUNTEER_RPC = "https://oazwkwflgbthojvnclfc.supabase.co/rest/v1/rpc/submit_volunteer_inquiry";
+    var VOLUNTEER_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
+    var dialog = document.getElementById("volunteerDialog");
+    var form = document.getElementById("volunteerForm");
+    var btn = document.getElementById("volunteerSubmit");
+    var message = document.getElementById("volunteerMessage");
+    var affiliation = document.getElementById("volAffiliation");
+    var otherWrap = document.getElementById("volOtherWrap");
+    var otherKrewe = document.getElementById("volOtherKrewe");
+    var submitLabel = "Send to the Charity committee";
+
+    function showVolunteerMessage(text, kind) {
+      message.textContent = text;
+      message.className = "msg " + kind;
+    }
+
+    function syncOtherKrewe() {
+      var show = affiliation.value === "other_krewe";
+      otherWrap.hidden = !show;
+      otherKrewe.required = show;
+      if (!show) otherKrewe.value = "";
+    }
+
+    affiliation.addEventListener("change", syncOtherKrewe);
+
+    document.getElementById("volunteerOpen").addEventListener("click", function () {
+      message.className = "msg";
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+      var name = document.getElementById("volName");
+      if (name) name.focus();
+    });
+
+    document.getElementById("volunteerClose").addEventListener("click", function () {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      message.className = "msg";
+      var payload = {
+        p_full_name: document.getElementById("volName").value.trim(),
+        p_email: document.getElementById("volEmail").value.trim(),
+        p_phone: document.getElementById("volPhone").value.trim(),
+        p_affiliation: affiliation.value,
+        p_other_krewe_name: affiliation.value === "other_krewe" ? otherKrewe.value.trim() : null,
+        p_interests: document.getElementById("volInterests").value.trim(),
+        p_notes: document.getElementById("volNotes").value.trim() || null,
+        p_company_website: document.getElementById("companyWebsite").value.trim() || null
+      };
+      if (payload.p_affiliation === "other_krewe" && !payload.p_other_krewe_name) {
+        showVolunteerMessage("Please tell us which krewe you are with.", "error");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      fetch(VOLUNTEER_RPC, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": VOLUNTEER_KEY,
+          "Authorization": "Bearer " + VOLUNTEER_KEY
+        },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, data: data };
+        }).catch(function () {
+          return { ok: false, data: null };
+        });
+      }).then(function (result) {
+        btn.disabled = false;
+        btn.textContent = submitLabel;
+        if (!result.ok || !result.data) {
+          showVolunteerMessage("Something went wrong sending your interest. Please try again.", "error");
+          return;
+        }
+        if (result.data.ok) {
+          showVolunteerMessage(result.data.message || "Thank you. The Charity committee will follow up.", "success");
+          form.reset();
+          syncOtherKrewe();
+        } else {
+          showVolunteerMessage(result.data.message || "Please check your details and try again.", "error");
+        }
+      }).catch(function () {
+        btn.disabled = false;
+        btn.textContent = submitLabel;
+        showVolunteerMessage("Something went wrong sending your interest. Please try again.", "error");
+      });
+    });
+  </script>
 </body>
 </html>
