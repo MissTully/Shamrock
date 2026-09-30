@@ -44,5 +44,5 @@ Writes go through the three waiver functions in `sql/kos_dues_foundation.sql`. S
 ## What this screen does not do
 
 - It does not send invoices or email. That stays on Send invoices.
-- It does not build a treasurer report.
+- It does not replace the treasurer report. Season totals, the waiver report, aging, and CSV export are on Officer desk → Money → **Dues & Payments**. See TREASURER_DUES_REPORTING.md.
 - It does not change Zeffy webhooks, reminder mail, or parade-ready.

@@ -4075,7 +4075,7 @@
     wireOfficerDeskPicker();
   }
 
-  // ---- Officer payments feed: what Stripe recorded, straight from the ledger ----
+  // ---- Officer payments: Dues & Payments tabs, with the ledger as a fallback ----
   async function loadPaymentsCard(client) {
     if (!state.canViewPayments) return;
     var panel = document.getElementById("hubOfficer");
@@ -4088,6 +4088,15 @@
       var approvals = document.getElementById("hubApprovals");
       if (approvals && approvals.nextSibling) panel.insertBefore(card, approvals.nextSibling);
       else panel.appendChild(card);
+    }
+    if (typeof window.kosRenderDuesPayments === "function") {
+      try {
+        var painted = await window.kosRenderDuesPayments(client);
+        if (painted || card.querySelector("#hubPayTabs")) {
+          wireOfficerDeskPicker();
+          return;
+        }
+      } catch (e) {}
     }
     card.innerHTML =
       '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Treasurer &amp; board - online payments recorded automatically</small></div></div>' +
@@ -6240,7 +6249,7 @@
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Review join-form applications", icon: "📝", section: "Membership" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
-    hubPayments: { title: "Payments", desc: "Dues and payment records", icon: "💳", section: "Money" },
+    hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
@@ -6271,7 +6280,7 @@
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
-    "Money": { icon: "💳", sub: "Dues and payment records." },
+    "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, and the online payments ledger." },
     "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
     "More tools": { icon: "☘", sub: "Everything else on the desk." }
