@@ -36,19 +36,19 @@ insert into public.kos_dues_catalog (membership_year, level, amount, zeffy_url, 
 values
   (2026, 'full', 375,
     'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership',
-    'Voting membership. You march in all parades and meet the 12/12 volunteer commitment (12 hours in the Krewe year, June through May, or the SOP rate of $12 for each hour you do not work).',
+    'You''re a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don''t work.',
     true),
   (2026, 'associate', 450,
     'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership',
-    'One year. You may attend two parades of your choice. Associate membership does not include a vote and does not include the 12/12 volunteer commitment.',
+    'This is for one year. You can join two parades of your choice. There''s no vote, and you don''t take on the 12/12 volunteer commitment.',
     true),
   (2026, 'auxiliary', 200,
     'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership',
-    'Non-voting membership for one major parade. This fee includes the background check and the membership portion.',
+    'This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.',
     true),
   (2026, 'loa', 100,
     'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2',
-    'Social membership for one year away from full participation. This is leave of absence status. You stay connected with the Krewe.',
+    'This is our social membership for a year when you''d like to step back and still stay connected. That''s leave of absence.',
     true)
 on conflict (membership_year, level) do update
   set amount = excluded.amount,
@@ -75,13 +75,13 @@ values (
     'individual', jsonb_build_object(
       'label', 'Individual',
       'amount', 50,
-      'explainer', 'One person on the application.',
+      'explainer', 'Just you on the application.',
       'url', 'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual'
     ),
     'couple', jsonb_build_object(
       'label', 'Couple',
       'amount', 75,
-      'explainer', 'Two people applying together.',
+      'explainer', 'The two of you, applying together.',
       'url', 'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple'
     )
   )
@@ -146,28 +146,28 @@ begin
 
   v_html :=
     '<p>Dear ' || public.kos_email_plain(v_name) || ',</p>'
-    || '<p>The Membership Chair moved your application to the background check. Welcome. Here is how to finish joining.</p>'
-    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Finish the full application</h2>'
-    || '<p>Open this secure link to complete the full application. It asks for a driver''s license number and a Social Security number. The board uses those for the background check. Your information is held confidentially.</p>';
+    || '<p>We''re so glad you''re joining the Krewe of Shamrock. We''re excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you''re ready.</p>'
+    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Let''s finish your application</h2>'
+    || '<p>When you have a quiet moment, open your private link and finish the full application. It asks for a driver''s license number and a Social Security number. We use those only for the background check, and we hold them confidentially.</p>';
 
   if v_app <> '' then
     v_html := v_html
-      || '<p style="margin:8px 0 18px;"><a href="' || v_app || '" style="' || v_btn_style || '">Complete the full application</a></p>';
+      || '<p style="margin:8px 0 18px;"><a href="' || v_app || '" style="' || v_btn_style || '">Finish your application</a></p>';
   else
     v_html := v_html
-      || '<p>The secure link is not ready. Please ask the Membership Chair to send this note again.</p>';
+      || '<p>Your private link isn''t in this note. Please ask the Membership Chair to send it again, and we''ll get you sorted.</p>';
   end if;
 
   v_html := v_html
-    || '<p>This email does not include those numbers. The link expires in 21 days.</p>'
-    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Pay the background check</h2>'
-    || '<p>This fee is separate from membership dues. Pay the one that matches your application.</p>';
+    || '<p>This email doesn''t include those numbers. Your link expires in 21 days.</p>'
+    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Your background check fee</h2>'
+    || '<p>This fee is separate from membership dues. Pick the one that matches your application.</p>';
 
   for v_key, v_label, v_fallback_amount, v_fallback_explainer, v_button in
     select item_key, item_label, item_amount, item_explainer, item_button
       from (values
-        ('individual'::text, 'Individual'::text, 50::numeric, 'One person on the application.'::text, 'Pay the individual background check'::text),
-        ('couple'::text, 'Couple'::text, 75::numeric, 'Two people applying together.'::text, 'Pay the couple background check'::text)
+        ('individual'::text, 'Individual'::text, 50::numeric, 'Just you on the application.'::text, 'Pay the individual fee'::text),
+        ('couple'::text, 'Couple'::text, 75::numeric, 'The two of you, applying together.'::text, 'Pay the couple fee'::text)
       ) as fee(item_key, item_label, item_amount, item_explainer, item_button)
   loop
     v_item := coalesce(v_bg -> v_key, '{}'::jsonb);
@@ -199,25 +199,25 @@ begin
         || '" style="' || v_btn_style || '">' || public.kos_email_plain(v_button) || '</a></p>';
     else
       v_html := v_html
-        || '<p style="margin:0 0 18px;">A pay link for this background check is not set up yet. Please write to treasurer@kreweofshamrock.com before you pay. Do not send card numbers by email.</p>';
+        || '<p style="margin:0 0 18px;">We don''t have that pay link ready yet. Please write to treasurer@kreweofshamrock.com before you pay, and please don''t send card numbers by email.</p>';
     end if;
   end loop;
 
   v_html := v_html
-    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Choose your membership</h2>'
-    || '<p>Membership dues are separate from the background check fee. Read the short note for each level, then use that level''s pay button. If you choose Auxiliary, that fee already includes the background check and the membership portion. You do not also pay the separate background check above. If you are not sure which level fits, write to treasurer@kreweofshamrock.com before you pay.</p>';
+    || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Pick the membership that fits</h2>'
+    || '<p>Membership dues are separate from the background check fee. Read the short note for each level, then use that level''s button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don''t also pay the background check above. If you''re not sure which level fits, write to treasurer@kreweofshamrock.com and we''ll help before you pay.</p>';
 
   for v_level, v_title, v_button, v_fallback_amount, v_fallback_explainer in
     select item_level, item_title, item_button, item_amount, item_explainer
       from (values
-        ('full'::text, 'Full Krewe Membership'::text, 'Pay Full Krewe Membership'::text, 375::numeric,
-          'Voting membership. You march in all parades and meet the 12/12 volunteer commitment (12 hours in the Krewe year, June through May, or the SOP rate of $12 for each hour you do not work).'::text),
-        ('associate'::text, 'Associate'::text, 'Pay Associate membership'::text, 450::numeric,
-          'One year. You may attend two parades of your choice. Associate membership does not include a vote and does not include the 12/12 volunteer commitment.'::text),
-        ('auxiliary'::text, 'Auxiliary'::text, 'Pay Auxiliary membership'::text, 200::numeric,
-          'Non-voting membership for one major parade. This fee includes the background check and the membership portion.'::text),
-        ('loa'::text, 'Leave of Absence (LOA)'::text, 'Pay Leave of Absence'::text, 100::numeric,
-          'Social membership for one year away from full participation. This is leave of absence status. You stay connected with the Krewe.'::text)
+        ('full'::text, 'Full Krewe Membership'::text, 'Pay Full Krewe dues'::text, 375::numeric,
+          'You''re a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don''t work.'::text),
+        ('associate'::text, 'Associate'::text, 'Pay Associate dues'::text, 450::numeric,
+          'This is for one year. You can join two parades of your choice. There''s no vote, and you don''t take on the 12/12 volunteer commitment.'::text),
+        ('auxiliary'::text, 'Auxiliary'::text, 'Pay Auxiliary dues'::text, 200::numeric,
+          'This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.'::text),
+        ('loa'::text, 'Leave of Absence (LOA)'::text, 'Pay leave of absence dues'::text, 100::numeric,
+          'This is our social membership for a year when you''d like to step back and still stay connected. That''s leave of absence.'::text)
       ) as levels(item_level, item_title, item_button, item_amount, item_explainer)
   loop
     v_amount := v_fallback_amount;
@@ -253,12 +253,12 @@ begin
         || '" style="' || v_btn_style || '">' || public.kos_email_plain(v_button) || '</a></p>';
     else
       v_html := v_html
-        || '<p style="margin:0 0 18px;">A pay link for this membership level is not set up yet. Please write to treasurer@kreweofshamrock.com before you pay. Do not send card numbers by email.</p>';
+        || '<p style="margin:0 0 18px;">We don''t have that pay link ready yet. Please write to treasurer@kreweofshamrock.com before you pay, and please don''t send card numbers by email.</p>';
     end if;
   end loop;
 
   v_html := v_html
-    || '<p>If you did not ask to join, you can ignore this message.</p>'
+    || '<p>If you didn''t ask to join, you can set this aside. Otherwise, we can''t wait to welcome you.</p>'
     || '<p>Sláinte,<br>Krewe of Shamrock</p>';
 
   return v_html;
@@ -350,7 +350,7 @@ begin
   v_mail := public.enqueue_email(
     rec.email,
     nullif(v_name, ''),
-    'Your Krewe of Shamrock application',
+    'We''re glad you''re joining the Krewe',
     v_html,
     'membership_full_application',
     rec.id

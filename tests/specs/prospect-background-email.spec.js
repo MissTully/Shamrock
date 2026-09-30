@@ -11,30 +11,33 @@ const SQL = fs.readFileSync(
 );
 
 const LINKS = [
-  ["Complete the full application", "membership-full-application.html?token="],
-  ["Pay the individual background check", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"],
-  ["Pay the couple background check", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"],
-  ["Pay Full Krewe Membership", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"],
-  ["Pay Associate membership", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership"],
-  ["Pay Auxiliary membership", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership"],
-  ["Pay Leave of Absence", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2"]
+  ["Finish your application", "membership-full-application.html?token="],
+  ["Pay the individual fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"],
+  ["Pay the couple fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"],
+  ["Pay Full Krewe dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"],
+  ["Pay Associate dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership"],
+  ["Pay Auxiliary dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership"],
+  ["Pay leave of absence dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2"]
 ];
 
 const EXPLAINERS = [
-  ["One person on the application.", "Pay the individual background check"],
-  ["Two people applying together.", "Pay the couple background check"],
-  ["Voting membership. You march in all parades", "Pay Full Krewe Membership"],
-  ["Associate membership does not include a vote", "Pay Associate membership"],
-  ["This fee includes the background check and the membership portion.", "Pay Auxiliary membership"],
-  ["This is leave of absence status.", "Pay Leave of Absence"]
+  ["Just you on the application.", "Pay the individual fee"],
+  ["The two of you, applying together.", "Pay the couple fee"],
+  ["You're a voting member, and you march in all the parades", "Pay Full Krewe dues"],
+  ["There's no vote, and you don't take on the 12/12 volunteer commitment.", "Pay Associate dues"],
+  ["The fee already includes the background check and the membership portion.", "Pay Auxiliary dues"],
+  ["That's leave of absence.", "Pay leave of absence dues"]
 ];
 
 test("prospect email sample shows an explainer before each pay link", async ({ page }) => {
   await page.goto("/previews/prospect-background-check-email.html");
   const body = page.locator("#emailBody");
-  await expect(body).toContainText("Complete the full application");
-  await expect(body).toContainText("Pay the background check");
-  await expect(body).toContainText("Choose your membership");
+  await expect(body).toContainText("We're so glad you're joining the Krewe of Shamrock");
+  await expect(body).toContainText("Let's finish your application");
+  await expect(body).toContainText("Your background check fee");
+  await expect(body).toContainText("Pick the membership that fits");
+  await expect(body).toContainText("treasurer@kreweofshamrock.com");
+  await expect(body).toContainText("Sláinte");
   for (const [label, href] of LINKS) {
     const link = body.locator("a", { hasText: label });
     await expect(link).toHaveAttribute("href", new RegExp(href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -57,7 +60,9 @@ test("prospect email SQL stores links outside the letter and does not turn the p
   expect(SQL).toContain("background_check_payments");
   expect(SQL).toContain("explainer");
   for (const [, href] of LINKS.slice(1)) expect(SQL).toContain(href);
-  for (const [note] of EXPLAINERS) expect(SQL).toContain(note);
+  for (const [note] of EXPLAINERS) expect(SQL).toContain(note.replaceAll("'", "''"));
+  expect(SQL).toContain("We''re so glad you''re joining the Krewe of Shamrock");
+  expect(SQL).toContain("We''re glad you''re joining the Krewe");
   expect(SQL).toContain("kos_membership_prospect_emails_enabled");
   expect(SQL).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
   expect(SQL).not.toContain("update public.kos_runtime_flags");
