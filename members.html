@@ -194,6 +194,15 @@
   .badge.assigned{ background:#cfe6d4; color:#1d5b34; }
   .badge.paid{ background:#bfe0c6; color:#14532d; }
   .badge.available{ background:#e6e6e6; color:#444; }
+  .badge.queued{ background:#f0e2bd; color:var(--gold-text); }
+  .locker-counts{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 12px; }
+  .locker-count{ background:#f6efdd; border:1px solid rgba(168,128,28,.35); border-radius:12px; padding:10px 14px; min-width:148px; }
+  .locker-count b{ display:block; font-family:var(--display); color:var(--green-800); font-size:28px; line-height:1.1; }
+  .locker-count span{ font-size:15px; color:var(--muted); }
+  .locker-pay-row{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+  a.locker-pay[aria-disabled="true"]{ opacity:.45; pointer-events:none; }
+  .locker-note{ font-size:16px; color:var(--muted); margin:0 0 12px; line-height:1.45; }
+  .locker-subhead{ margin:16px 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
   .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
   .seg button.on{ background:var(--green-700); color:#fff; }
@@ -1858,8 +1867,18 @@
 
       <!-- LOCKERS -->
       <section class="app-card hub-tool tool-green" id="lockerCard" data-hub="parade">
-        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Request and track your krewe locker</small></div></div>
+        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Reserve a locker</small></div></div>
         <div class="app-body">
+          <div class="locker-counts" id="lockerCounts">
+            <div class="locker-count"><b id="lockerLargeCount">...</b><span>large available</span></div>
+            <div class="locker-count"><b id="lockerSmallCount">...</b><span>small available</span></div>
+          </div>
+          <p class="locker-note" id="lockerIntro">Large lockers are $200. Small lockers are $75. Join the list first, using the same email you will use on Zeffy. Paying claims a rental for that size. When Zeffy confirms the payment, the Hub marks you paid and assigns the next open locker. If none are open, an officer assigns the LL, RL, or RS number after payment.</p>
+          <div class="locker-pay-row" id="lockerPay">
+            <a id="lockerPaySmall" class="btn btn-green locker-pay" aria-disabled="true" href="https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small" target="_blank" rel="noopener noreferrer" title="Krewe locker rental – Small">Pay Small locker $75</a>
+            <a id="lockerPayLarge" class="btn btn-green locker-pay" aria-disabled="true" href="https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-large" target="_blank" rel="noopener noreferrer" title="Krewe locker rental – Large">Pay Large locker $200</a>
+          </div>
+          <p class="locker-note" id="lockerPayNote"></p>
           <form id="lockerForm" class="krewe-form">
             <div class="row">
               <div><label for="lkName">Your name</label><input id="lkName" required /></div>
@@ -1869,10 +1888,11 @@
             <select id="lkSize"><option value="small" selected>Small</option><option value="large">Large</option></select>
             <label for="lkNotes">Notes (optional)</label>
             <input id="lkNotes" placeholder="e.g. prefer near the entrance" />
-            <button class="btn btn-primary" type="submit">☘ Request a locker</button>
+            <button class="btn btn-primary" type="submit">☘ Join the list</button>
             <div class="msg" id="lkMsg"></div>
           </form>
-          <ul class="data-list" id="lockerList"><li class="empty">Loading lockers…</li></ul>
+          <h3 class="locker-subhead">Your place in line</h3>
+          <div id="lockerMine"><p class="empty">Loading your reservation...</p></div>
         </div>
       </section>
 
@@ -2151,23 +2171,10 @@
 
     function initAll(){ prefillIdentity(); loadParadeReady(); handlePendingCheckin(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
-    /* ---------------- LOCKERS ---------------- */
-    async function loadLockers(){
-      const list=document.getElementById("lockerList");
-      const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
-      if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
-      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet. Be the first!</li>'; return; }
-      list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
+    /* Locker list, counts, and Zeffy pay links live in assets/kos-lockers.js. */
+    function loadLockers(){
+      if (typeof window.kosLoadLockers === "function") return window.kosLoadLockers();
     }
-    document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
-      e.preventDefault();
-      const idn=kosIdentity();
-      const payload={ holder_name: idn.name || document.getElementById("lkName").value.trim(), holder_email: idn.email || (document.getElementById("lkEmail").value.trim()||null), size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
-      if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
-      const { error } = await supabase.from("lockers").insert(payload);
-      if (error){ show("lkMsg","Something went wrong. Please try again.","error"); return; }
-      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); prefillIdentity(); loadLockers();
-    });
 
     /* ---------------- CARPOOLS ---------------- */
     let carKind="offer";
@@ -3052,15 +3059,26 @@
         }},
 
       /* ---- Logistics & Coordination ---- */
-      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
-        desc:"Locker status breakdown and current holders.",
+      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments", secure:true,
+        desc:"Physical lockers and who holds them. Open means available.",
         run: async()=>{
-          const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
+          const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status,notes");
           if(error) throw error;
-          const rows=(data||[]); const by={};
+          const rows=(data||[]).slice().sort((a,b)=>{
+            const rank=(n)=>{ const m=/^([A-Za-z]+)(\d+)$/.exec(n||""); if(!m) return [9,0]; const p=m[1].toUpperCase(); return [p==="LL"?0:p==="RL"?1:p==="RS"?2:3, parseInt(m[2],10)]; };
+            const A=rank(a.locker_number), B=rank(b.locker_number);
+            return A[0]-B[0] || A[1]-B[1];
+          });
+          const by={};
           rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
           return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
-            rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"-",l.holder_name||"-",l.status]));
+            rTable(["Locker","Size","Holder","Status","Notes"], rows.map(l=>[
+              l.locker_number||"(to assign)",
+              l.size||"-",
+              l.status==="available" && !l.holder_name ? "Open" : (l.holder_name||"-"),
+              l.status,
+              l.notes||"-"
+            ]));
         }},
       { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
         desc:"Drivers offering rides vs members needing one.",
@@ -4345,6 +4363,7 @@
   <script src="assets/kos-email-invoices.js?v=20260930inv1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20260930wav1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20260930rep1" defer></script>
+<script src="assets/kos-lockers.js?v=20260930lockers1" defer></script>
 </body>
 </html>
 
