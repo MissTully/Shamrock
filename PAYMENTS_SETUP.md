@@ -25,14 +25,18 @@ which records payments and can auto-mark matching membership dues as paid.
    matching.
 4. Copy the public form links into the appropriate site buttons or store products.
 
-## Live dues / membership campaigns (2026-09-07)
+## Live dues / membership campaigns
 
-| Level | Amount | Public Zeffy link |
+Amounts are level-driven. The rate card is `public.kos_dues_catalog` (one row per membership year and level), seeded for 2026 by `sql/kos_dues_foundation.sql`. A member's rate is `members.membership_level`: `full`, `associate`, `loa`, or `auxiliary`. Do not hardcode a single $375 dues amount. See DUES_FOUNDATION.md.
+
+| Level | 2026 amount | Public Zeffy link |
 |---|---:|---|
-| Full Krewe Membership | $375 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership |
-| Leave of Absence (non-voting) | $100 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2 |
+| full | $375 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership |
+| associate | $450 | none yet (Patrick to create the campaign) |
+| loa | $100 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2 |
+| auxiliary | $200 | none yet (this level may be retired) |
 
-Both are valid until June 30. Reminder emails must use the matching link by level and **must never** email members whose `dues_payments.paid` is true. Zeffy `payment.completed` via `zeffy-webhook` should auto-mark matching unpaid dues.
+Those amounts and links match the 2026 catalog rows. Campaigns that exist are valid until June 30. Reminder emails must use the link for that member's level and **must never** email members whose `dues_payments.paid` is true (a waiver counts as paid). Zeffy `payment.completed` via `zeffy-webhook` still auto-marks the matching unpaid `dues_payments` row. This catalog does not change that webhook.
 
 ## Step 2 — Add the webhook in Zeffy (Patrick)
 
