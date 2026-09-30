@@ -172,5 +172,6 @@ Apply `sql/kos_membership_applications.sql` in the Supabase SQL editor
 (project `oazwkwflgbthojvnclfc`) before the tool can load. The staged join
 flow also needs `sql/kos_membership_application_pipeline.sql`, then
 `sql/kos_membership_application_staged.sql`, then
-`sql/kos_membership_background_check_invoice.sql`. Details, approve and decline
+`sql/kos_membership_background_check_invoice.sql`, then
+`sql/kos_membership_prospect_emails_pause.sql`. Details, approve and decline
 behavior, and who gets the interest email are in `MEMBERSHIP_APPLICATIONS.md`.

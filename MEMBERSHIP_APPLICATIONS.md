@@ -96,8 +96,15 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 2. Open `sql/kos_membership_application_pipeline.sql`. Paste it into a new SQL query and run it.
 3. Open `sql/kos_membership_application_staged.sql`. Paste it into a new SQL query and run it. This is the Phase 1 file: interest-only join, the secure link, and driver's license plus Social Security number on the token page.
 4. Open `sql/kos_membership_background_check_invoice.sql`. Paste it into a new SQL query and run it. This folds the secure link into Move to background check and queues the level-based membership dues invoice when the prospect submits the full application.
-5. Each file is safe to run again.
+5. Open `sql/kos_membership_prospect_emails_pause.sql`. Paste it into a new SQL query and run it. This is already on the live project. Flag key `membership_prospect_emails` is `enabled` false, so prospect emails stay off. Move to background check still moves the card. Chair and President notices still send. Re-running this file does not change an existing flag value.
+6. Each file is safe to run again.
 
-Run `sql/kos_membership_background_check_invoice.sql` last. If you run the pipeline file or the staged file again after it, run the background-check invoice file again.
+Run `sql/kos_membership_prospect_emails_pause.sql` last. If you run the pipeline, staged, or background-check invoice file again later, run the pause file again.
+
+To turn prospect emails back on:
+
+```sql
+update kos_runtime_flags set value = jsonb_set(value,'{enabled}','true') where key='membership_prospect_emails';
+```
 
 Until the staged file is applied, the join page still saves the name and address through the older function. Until the background-check invoice file is applied, Move to background check changes the status and does not email the secure link, and submitting the full application does not queue the dues invoice.
