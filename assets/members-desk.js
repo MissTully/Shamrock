@@ -461,7 +461,7 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
   var feedLock = null;
   var applicationsFixture = null;
   // Full DL and SSN for the offline fixture only. Never written into the card.
@@ -662,13 +662,15 @@
       var dateBlock = bits
         ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
         : '<span class="app-date"><b>TBD</b><span></span></span>';
+      var going = eventIsRsvpd(ev);
       return '<button type="button" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
         dateBlock +
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         where +
         (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
-        '</span><span class="app-rsvp">RSVP</span></button>';
+        '</span><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
+        (going ? "Already RSVP'd" : "RSVP") + "</span></button>";
     }).join("");
   }
 
@@ -684,8 +686,19 @@
 
   function calendarBtn(ev, label) {
     if (!ev || !ev.start_time) return "";
-    return '<button type="button" class="btn" data-hub-ics="' + esc(ev.id || ev.name || "") + '">' +
+    return '<button type="button" class="btn kos-cal-btn" data-hub-ics="' + esc(ev.id || ev.name || "") + '">' +
       esc(label || "Add to calendar") + "</button>";
+  }
+
+  function rsvpActionButtons(eventId, going, freshLabel) {
+    if (!eventId) return [];
+    if (going) {
+      return [
+        '<button type="button" class="btn hub-rsvp-going" disabled>Already RSVP\'d</button>',
+        '<button type="button" class="btn hub-rsvp-cancel" data-hub-parade-cancel="' + esc(eventId) + '">Cancel RSVP</button>'
+      ];
+    }
+    return ['<button type="button" class="btn btn-primary" data-hub-parade-rsvp="' + esc(eventId) + '">' + esc(freshLabel) + "</button>"];
   }
 
   function paradeSeasonCardHtml(row) {
@@ -706,13 +719,11 @@
     var warn = gated
       ? '<p class="hub-parade-warn">Door Check-In for this parade will warn and stay blocked until you check in at the mandatory meeting. RSVP is still open.</p>'
       : "";
+    var meetGoing = !!(meeting && (meeting.rsvpd || eventIsRsvpd(meeting)));
+    var paradeGoing = !!row.parade_rsvpd || eventIsRsvpd(row);
     var btns = [];
-    if (meeting && !meeting.rsvpd) {
-      btns.push('<button type="button" class="btn btn-primary" data-hub-parade-rsvp="' + esc(meeting.id) + '">RSVP to meeting</button>');
-    }
-    if (!row.parade_rsvpd) {
-      btns.push('<button type="button" class="btn btn-primary" data-hub-parade-rsvp="' + esc(row.id) + '">RSVP to parade</button>');
-    }
+    if (meeting) btns = btns.concat(rsvpActionButtons(meeting.id, meetGoing, "RSVP to meeting"));
+    btns = btns.concat(rsvpActionButtons(row.id, paradeGoing, "RSVP to parade"));
     if (meeting) btns.push(calendarBtn(meeting, "Add meeting to calendar"));
     btns.push(calendarBtn(row, "Add parade to calendar"));
     return '<div class="hub-event-row" data-parade-card="' + esc(row.id) + '">' +
@@ -722,9 +733,9 @@
       (row.location && row.member_address ? '<div class="muted" style="margin-top:2px;">Public note: ' + esc(row.location) + "</div>" : "") +
       (row.notes ? '<div style="margin:6px 0 0;"><b>Role notes:</b> ' + esc(row.notes) + "</div>" : "") +
       '<div class="hub-parade-status">' +
-      statusPill(!!(meeting && meeting.rsvpd), "Meeting RSVP’d", meeting ? "Meeting not RSVP’d" : "No meeting linked") +
+      statusPill(meetGoing, "Meeting RSVP’d", meeting ? "Meeting not RSVP’d" : "No meeting linked") +
       statusPill(!!(meeting && meeting.checked_in), "Meeting checked in", meeting ? "Meeting not checked in" : "Meeting check-in n/a") +
-      statusPill(!!row.parade_rsvpd, "Parade RSVP’d", "Parade not RSVP’d") +
+      statusPill(paradeGoing, "Parade RSVP’d", "Parade not RSVP’d") +
       statusPill(eligible, "Eligible", "Not yet eligible") +
       statusPill(!!row.parade_checked_in, "Parade checked in", "Parade not checked in") +
       "</div>" +
@@ -738,6 +749,11 @@
     root.querySelectorAll("[data-hub-parade-rsvp]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         hubRsvpParadeEvent(btn.getAttribute("data-hub-parade-rsvp"), btn);
+      });
+    });
+    root.querySelectorAll("[data-hub-parade-cancel]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        hubCancelRsvp(btn.getAttribute("data-hub-parade-cancel"), btn);
       });
     });
     root.querySelectorAll("[data-hub-ics]").forEach(function (btn) {
@@ -777,11 +793,139 @@
   }
   window.__kosRenderParadeSeason = renderHubParadeSeason;
 
+  var ACTIVE_RSVP = { registered: 1, confirmed: 1, attended: 1, waitlisted: 1 };
+
+  function rememberSignups(rows) {
+    var map = {};
+    (rows || []).forEach(function (r) {
+      if (!r || !r.event_id) return;
+      var st = String(r.status || "").toLowerCase();
+      if (!ACTIVE_RSVP[st]) return;
+      map[String(r.event_id)] = st;
+    });
+    state.rsvpByEvent = map;
+  }
+
+  function eventIsRsvpd(ev) {
+    if (!ev) return false;
+    if (ev.parade_rsvpd || ev.rsvpd) return true;
+    var st = "";
+    if (state.rsvpByEvent && ev.id) st = state.rsvpByEvent[String(ev.id)] || "";
+    if (!st) st = ev.parade_rsvp_status || ev.rsvp_status || "";
+    return !!ACTIVE_RSVP[String(st).toLowerCase()];
+  }
+
+  function mergeRsvp(row) {
+    if (!row) return null;
+    var copy = {};
+    Object.keys(row).forEach(function (k) { copy[k] = row[k]; });
+    var id = String(row.id || "");
+    var st = state.rsvpByEvent && id ? state.rsvpByEvent[id] : "";
+    if (st) {
+      copy.rsvpd = true;
+      copy.rsvp_status = st;
+    }
+    (state.paradeSeason || []).forEach(function (p) {
+      if (!p) return;
+      if (String(p.id) === id) {
+        if (p.parade_rsvpd) copy.parade_rsvpd = true;
+        if (p.parade_rsvp_status) copy.parade_rsvp_status = p.parade_rsvp_status;
+        copy.event_type = copy.event_type || "parade";
+        if (!copy.description && p.description) copy.description = p.description;
+        if (!copy.end_time && p.end_time) copy.end_time = p.end_time;
+        if (!copy.member_address && p.member_address) copy.member_address = p.member_address;
+      }
+      if (p.meeting && String(p.meeting.id) === id && p.meeting.rsvpd) {
+        copy.rsvpd = true;
+        copy.rsvp_status = p.meeting.rsvp_status || copy.rsvp_status || "registered";
+      }
+    });
+    if (copy.parade_rsvpd) copy.rsvpd = true;
+    return copy;
+  }
+
+  function applyLocalRsvp(rows) {
+    (rows || []).forEach(function (row) {
+      if (!row || !state.rsvpByEvent) return;
+      var paradeStatus = state.rsvpByEvent[String(row.id)];
+      if (paradeStatus) {
+        row.parade_rsvpd = true;
+        row.parade_rsvp_status = row.parade_rsvp_status || paradeStatus;
+      }
+      if (row.meeting && state.rsvpByEvent[String(row.meeting.id)]) {
+        row.meeting.rsvpd = true;
+        row.meeting.rsvp_status = row.meeting.rsvp_status || state.rsvpByEvent[String(row.meeting.id)];
+      }
+    });
+  }
+
+  function markRsvpd(eventId, status) {
+    var id = String(eventId || "");
+    if (!id) return;
+    if (!state.rsvpByEvent) state.rsvpByEvent = {};
+    state.rsvpByEvent[id] = status || "registered";
+    (state.hubEvents || []).forEach(function (ev) {
+      if (ev && String(ev.id) === id) ev.rsvpd = true;
+    });
+    (state.paradeSeason || []).forEach(function (row) {
+      if (!row) return;
+      if (String(row.id) === id) {
+        row.parade_rsvpd = true;
+        row.parade_rsvp_status = state.rsvpByEvent[id];
+      }
+      if (row.meeting && String(row.meeting.id) === id) {
+        row.meeting.rsvpd = true;
+        row.meeting.rsvp_status = state.rsvpByEvent[id];
+      }
+    });
+  }
+
+  function clearRsvpd(eventId) {
+    var id = String(eventId || "");
+    if (!id || !state.rsvpByEvent) return;
+    delete state.rsvpByEvent[id];
+    (state.hubEvents || []).forEach(function (ev) {
+      if (ev && String(ev.id) === id) ev.rsvpd = false;
+    });
+    (state.paradeSeason || []).forEach(function (row) {
+      if (!row) return;
+      if (String(row.id) === id) {
+        row.parade_rsvpd = false;
+        row.parade_rsvp_status = null;
+      }
+      if (row.meeting && String(row.meeting.id) === id) {
+        row.meeting.rsvpd = false;
+        row.meeting.rsvp_status = null;
+      }
+    });
+  }
+
+  function paintRsvpChips() {
+    try { renderHubMemberEvents(state.hubEvents); } catch (e) {}
+    var nextBtn = document.querySelector("#appNextUp .app-rsvp");
+    if (nextBtn && state.nextEvent) {
+      var going = eventIsRsvpd(state.nextEvent);
+      nextBtn.textContent = going ? "Already RSVP'd" : "RSVP";
+      nextBtn.classList.toggle("is-going", going);
+    }
+  }
+
+  function paradeMsg(btn) {
+    var card = btn && btn.closest ? btn.closest("[data-parade-card]") : null;
+    return card ? card.querySelector("[data-parade-msg]") : null;
+  }
+
   async function hubRsvpParadeEvent(eventId, btn) {
     var client = window.__kosSb;
-    var card = btn && btn.closest ? btn.closest("[data-parade-card]") : null;
-    var msg = card ? card.querySelector("[data-parade-msg]") : null;
+    var msg = paradeMsg(btn);
     if (!client || !eventId) return;
+    if (eventIsRsvpd({ id: eventId })) {
+      markRsvpd(eventId, (state.rsvpByEvent && state.rsvpByEvent[String(eventId)]) || "registered");
+      renderHubParadeSeason(state.paradeSeason);
+      paintRsvpChips();
+      if (msg) msg.textContent = "You're already signed up.";
+      return;
+    }
     var p = window.kosProfile || {};
     var first = p.first_name || firstName();
     var last = p.last_name || "";
@@ -802,11 +946,52 @@
       });
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not RSVP.");
+      markRsvpd(eventId, (res.data && res.data.status) || "registered");
+      renderHubParadeSeason(state.paradeSeason);
+      paintRsvpChips();
       if (msg) msg.textContent = (res.data && res.data.message) || "You're signed up.";
       await loadParadeSeason(client);
     } catch (e) {
       if (msg) msg.textContent = (e && e.message) || "Could not RSVP. Try again.";
       if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
+    }
+  }
+
+  async function hubCancelRsvp(eventId, btn) {
+    var client = window.__kosSb;
+    var msg = paradeMsg(btn);
+    var meId = (window.kosProfile || {}).member_id || null;
+    if (!client || !eventId) return;
+    if (!meId) {
+      var need = "Cancel RSVP needs the member record on your profile.";
+      if (msg) msg.textContent = need;
+      if (typeof showToast === "function") showToast(need);
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = "Cancelling..."; }
+    try {
+      var res = await client.from("event_signups")
+        .update({ status: "cancelled" })
+        .eq("event_id", eventId)
+        .eq("member_id", meId)
+        .in("status", ["registered", "confirmed", "waitlisted"])
+        .select("id");
+      if (res.error) throw res.error;
+      if (!res.data || !res.data.length) {
+        throw new Error("No RSVP was on file to cancel.");
+      }
+      clearRsvpd(eventId);
+      renderHubParadeSeason(state.paradeSeason);
+      paintRsvpChips();
+      if (msg) msg.textContent = "RSVP cancelled.";
+      if (typeof showToast === "function") showToast("RSVP cancelled.");
+      await loadParadeSeason(client);
+      if (typeof window.__kosRepaintEvent === "function") window.__kosRepaintEvent(eventId);
+    } catch (e) {
+      var text = (e && e.message) || "Could not cancel that RSVP.";
+      if (msg) msg.textContent = text;
+      if (typeof showToast === "function") showToast(text);
+      if (btn) { btn.disabled = false; btn.textContent = "Cancel RSVP"; }
     }
   }
 
@@ -867,7 +1052,9 @@
     try {
       var res = await client.rpc("member_parade_season");
       if (!res.error && res.data && res.data.ok) {
-        renderHubParadeSeason(res.data.parades || []);
+        var paradeRows = res.data.parades || [];
+        applyLocalRsvp(paradeRows);
+        renderHubParadeSeason(paradeRows);
         return;
       }
     } catch (e) {}
@@ -891,7 +1078,9 @@
           .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
         signed = su.data || [];
       }
-      renderHubParadeSeason(deriveParadeSeason(list, signed));
+      var derived = deriveParadeSeason(list, signed);
+      applyLocalRsvp(derived);
+      renderHubParadeSeason(derived);
     } catch (e2) {
       renderHubParadeSeason([]);
     }
@@ -2005,11 +2194,13 @@
     } else {
       var bits = appEventBits(ev.start_time) || { month: "TBD", day: "", line: "Date to be announced" };
       var loc = ev.member_address || ev.location || "";
+      var goingNext = eventIsRsvpd(ev);
       next = '<article class="app-event" data-app-event="' + esc(ev.id || "") + '">' +
         '<div class="app-date"><b>' + esc(bits.month) + "</b><span>" + esc(bits.day) + "</span></div>" +
         '<div class="app-event-copy"><h3>' + esc(ev.name || "Krewe event") + "</h3><p>" + esc(bits.line) + "</p>" +
         (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
-        '</div><button type="button" class="app-rsvp" data-app-event="' + esc(ev.id || "") + '">RSVP</button></article>';
+        '</div><button type="button" class="app-rsvp' + (goingNext ? " is-going" : "") + '" data-app-event="' + esc(ev.id || "") + '">' +
+        (goingNext ? "Already RSVP'd" : "RSVP") + "</button></article>";
     }
     return '<div id="appDash">' +
       getAppBannerHtml() +
@@ -2786,8 +2977,6 @@
       });
       var lockedEvents = !!(feedLock && Array.isArray(feedLock.events));
       if (!lockedEvents) state.hubEvents = list.slice(0, 12);
-      renderHubMemberEvents(state.hubEvents);
-      await loadParadeSeason(client);
       if (!lockedEvents) {
         var open = list.slice();
         var meId = (window.kosProfile || {}).member_id || null;
@@ -2797,14 +2986,15 @@
               .select("event_id,status")
               .eq("member_id", meId)
               .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
-            var taken = {};
-            (signed.data || []).forEach(function (r) { if (r.event_id) taken[r.event_id] = true; });
-            open = open.filter(function (e) { return !taken[e.id]; });
+            rememberSignups(signed.data || []);
+            open = open.filter(function (e) { return !eventIsRsvpd(e); });
           } catch (signupErr) { /* keep unfiltered krewe list */ }
         }
         state.nextEvents = open.slice(0, 4);
         state.nextEvent = state.nextEvents[0] || null;
       }
+      renderHubMemberEvents(state.hubEvents);
+      await loadParadeSeason(client);
     } catch (e) {
       if (!(feedLock && Array.isArray(feedLock.events))) {
         state.nextEvents = [];
@@ -4441,7 +4631,7 @@
       '<h4>Delete this event permanently?</h4>' +
       '<p id="hubEventDeleteSummary"></p>' +
       '<p>This removes the event from Event Studio and the public calendar. RSVPs for this event are deleted. Payment records stay; the event link on them is cleared. Linked raffles are unlinked, not deleted. Cancelled status hides an event without destroying it.</p>' +
-      '<label for="hubEventDeleteTyped">Type the event name or Delete permanently to confirm</label>' +
+      '<label for="hubEventDeleteTyped">Type the name shown above, or Delete permanently</label>' +
       '<input id="hubEventDeleteTyped" autocomplete="off" />' +
       '<div class="hub-appr-btns" style="margin-top:10px;">' +
       '<button class="btn" type="button" id="hubEventDeleteCancel">Cancel</button>' +
@@ -4742,11 +4932,35 @@
     fillRaffleEventSelect(current ? current.value : "");
   }
 
-  function confirmDeleteTextMatches(typed, name) {
-    var t = String(typed || "").trim().toLowerCase();
+  function normalizeConfirmText(value) {
+    return String(value || "")
+      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function confirmDeleteTextMatches(typed, name, when) {
+    var t = normalizeConfirmText(typed);
     if (!t) return false;
     if (t === "delete permanently") return true;
-    return t === String(name || "").trim().toLowerCase();
+    var n = normalizeConfirmText(name);
+    if (!n) return false;
+    if (t === n) return true;
+    var w = normalizeConfirmText(when);
+    if (!w) return false;
+    if (t === n + " - " + w || t === n + " " + w) return true;
+    var squash = function (s) { return normalizeConfirmText(s).replace(/[^a-z0-9]+/g, ""); };
+    return squash(typed) === squash(String(name || "") + " " + String(when || ""));
+  }
+
+  function confirmTokenForRpc(typed, name, when) {
+    if (!confirmDeleteTextMatches(typed, name, when)) return "";
+    var raw = String(typed || "").trim();
+    var stored = String(name || "").trim();
+    if (raw.toLowerCase() === "delete permanently") return "Delete permanently";
+    if (stored && raw.toLowerCase() === stored.toLowerCase()) return stored;
+    return "Delete permanently";
   }
 
   function showEventDeleteButton(on) {
@@ -4785,24 +4999,25 @@
     var go = document.getElementById("hubEventDeleteGo");
     var typed = document.getElementById("hubEventDeleteTyped");
     if (!go) return;
-    go.disabled = !pendingDelete || !confirmDeleteTextMatches(typed && typed.value, pendingDelete.name);
+    go.disabled = !pendingDelete || !confirmDeleteTextMatches(typed && typed.value, pendingDelete.name, pendingDelete.when);
   }
 
   function showDeletePanel(event) {
     var row = event || {};
     if (!row.id) return;
+    var whenLabelText = eventLocalDisplay(row.start_time);
     pendingDelete = {
       id: row.id,
       name: row.name || "",
-      start_time: row.start_time || ""
+      start_time: row.start_time || "",
+      when: whenLabelText
     };
     var panel = document.getElementById("hubEventDeletePanel");
     var summary = document.getElementById("hubEventDeleteSummary");
     var typed = document.getElementById("hubEventDeleteTyped");
     var err = document.getElementById("hubEventDeleteErr");
-    var when = eventLocalDisplay(pendingDelete.start_time);
     if (summary) {
-      summary.textContent = (pendingDelete.name || "This event") + (when ? " — " + when : "");
+      summary.textContent = (pendingDelete.name || "This event") + (pendingDelete.when ? " - " + pendingDelete.when : "");
     }
     if (typed) typed.value = "";
     if (err) err.textContent = "";
@@ -4837,13 +5052,14 @@
     var go = document.getElementById("hubEventDeleteGo");
     var typed = document.getElementById("hubEventDeleteTyped");
     var msg = document.getElementById("hubEventMsg");
-    var confirm = typed ? typed.value.trim() : "";
+    var typedText = typed ? typed.value.trim() : "";
     if (!pendingDelete || !pendingDelete.id) {
       if (err) err.textContent = "Choose an event to delete.";
       return;
     }
-    if (!confirmDeleteTextMatches(confirm, pendingDelete.name)) {
-      if (err) err.textContent = "Type the event name or Delete permanently to confirm.";
+    var confirm = confirmTokenForRpc(typedText, pendingDelete.name, pendingDelete.when);
+    if (!confirm) {
+      if (err) err.textContent = "Type the name shown above, or Delete permanently.";
       return;
     }
     if (go) {
@@ -5623,9 +5839,9 @@
         for (j = 0; j < list.length; j++) {
           row = list[j];
           if (!row) continue;
-          if (String(row.id) === key) return row;
+          if (String(row.id) === key) return mergeRsvp(row);
           meet = row.meeting;
-          if (meet && String(meet.id) === key) return meet;
+          if (meet && String(meet.id) === key) return mergeRsvp(meet);
         }
       }
       return null;
@@ -5688,7 +5904,7 @@
         return;
       }
       if (window.kosCalendar && typeof window.kosCalendar.download === "function") {
-        window.kosCalendar.download({
+        var saved = window.kosCalendar.download({
           id: ev.id,
           name: ev.name,
           start_time: ev.start_time,
@@ -5696,6 +5912,7 @@
           location: ev.location,
           description: ev.description || ""
         });
+        if (!saved) showToast("This event does not have a date yet.");
         return;
       }
       showToast("Calendar download is not available in this browser.");
@@ -5703,6 +5920,10 @@
 
     async function rsvpFromDetail(ev, btn) {
       var client = window.__kosSb;
+      if (eventIsRsvpd(ev)) {
+        paintEvent(ev.id);
+        return;
+      }
       if (!client) {
         showToast("RSVP needs a connection. The full signup form is linked below.");
         return;
@@ -5726,8 +5947,12 @@
         });
         if (res.error) throw res.error;
         if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not RSVP.");
-        if (btn) { btn.textContent = "You're going"; btn.disabled = true; }
+        markRsvpd(ev.id, (res.data && res.data.status) || "registered");
+        renderHubParadeSeason(state.paradeSeason);
+        paintRsvpChips();
+        paintEvent(ev.id);
         showToast((res.data && res.data.message) || "You're signed up.");
+        loadParadeSeason(client);
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
         showToast((err && err.message) || "Could not RSVP. Try again.");
@@ -5750,9 +5975,14 @@
       var when = bits ? bits.line : whenLabel(ev.start_time);
       var loc = ev.member_address || ev.location || "";
       var desc = ev.description ? String(ev.description) : "";
-      var more = ev.id
+      var isParade = String(ev.event_type || "").toLowerCase() === "parade";
+      var more = (ev.id && !isParade)
         ? '<p><a class="app-detail-more" href="event-signup.html?event=' + encodeURIComponent(ev.id) + '">Full signup form</a></p>'
         : "";
+      var note = isParade
+        ? "Parade RSVP stays on this screen."
+        : "RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.";
+      var going = eventIsRsvpd(ev);
       scroll.innerHTML =
         '<article class="app-detail" id="appEventDetail">' +
         '<p class="app-detail-kicker">' + esc(String(ev.event_type || "event")) + "</p>" +
@@ -5761,19 +5991,28 @@
         (loc ? "<p>" + esc(loc) + "</p>" : "") +
         (desc ? "<p>" + esc(desc) + "</p>" : "") +
         more +
-        "<p>RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.</p>" +
+        "<p>" + note + "</p>" +
         "</article>";
-      actions.innerHTML =
-        '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
-        '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
+      actions.innerHTML = going
+        ? '<button type="button" class="app-rsvp is-going" id="appRsvpBtn" disabled>Already RSVP\'d</button>' +
+          '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>' +
+          '<button type="button" class="app-cal app-cancel" id="appCancelRsvp">Cancel RSVP</button>'
+        : '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
+          '<button type="button" class="app-cal" id="appCalBtn">Add to calendar</button>';
       var rsvpBtn = document.getElementById("appRsvpBtn");
       var calBtn = document.getElementById("appCalBtn");
-      if (ev.parade_rsvpd || ev.rsvpd) {
-        if (rsvpBtn) { rsvpBtn.textContent = "You're going"; rsvpBtn.disabled = true; }
-      }
-      if (rsvpBtn) rsvpBtn.addEventListener("click", function () { rsvpFromDetail(ev, rsvpBtn); });
+      var cancelBtn = document.getElementById("appCancelRsvp");
+      if (rsvpBtn && !going) rsvpBtn.addEventListener("click", function () { rsvpFromDetail(ev, rsvpBtn); });
+      if (cancelBtn) cancelBtn.addEventListener("click", function () {
+        hubCancelRsvp(ev.id, cancelBtn).then(function () { paintEvent(ev.id); });
+      });
       if (calBtn) calBtn.addEventListener("click", function () { addEventCalendar(ev); });
     }
+
+    window.__kosRepaintEvent = function (eventId) {
+      var top = framesOf(appNav.tab).slice(-1)[0] || {};
+      if (top.kind === "event" && (!eventId || String(top.id) === String(eventId))) paintEvent(top.id);
+    };
 
     function paintCard() {
       var scroll = document.getElementById("appDrillScroll");

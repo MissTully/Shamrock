@@ -30,6 +30,11 @@ as $$
 declare
   v_row public.events%rowtype;
   v_confirm text;
+  v_name text;
+  v_tail text;
+  v_typed_key text;
+  v_name_key text;
+  v_ok boolean := false;
   v_signups integer := 0;
   v_payments integer := 0;
   v_raffles integer := 0;
@@ -54,13 +59,34 @@ begin
       'IKC sync events cannot be deleted.');
   end if;
 
-  v_confirm := btrim(coalesce(p_confirm, ''));
+  -- Officers often paste the label on screen (name, dash, date and time).
+  -- Em dash, en dash, and hyphen all count as the same separator.
+  v_confirm := lower(regexp_replace(btrim(coalesce(p_confirm, '')), '[[:space:]]+', ' ', 'g'));
+  v_confirm := translate(v_confirm, E'\u2010\u2011\u2012\u2013\u2014\u2015\u2212', '-------');
+  v_name := lower(regexp_replace(btrim(coalesce(v_row.name, '')), '[[:space:]]+', ' ', 'g'));
+  v_name := translate(v_name, E'\u2010\u2011\u2012\u2013\u2014\u2015\u2212', '-------');
   if v_confirm = '' then
     return jsonb_build_object('ok', false, 'message',
       'Type the event name or Delete permanently to confirm.');
   end if;
-  if lower(v_confirm) is distinct from lower(btrim(coalesce(v_row.name, '')))
-     and lower(v_confirm) is distinct from 'delete permanently' then
+  v_ok := v_confirm = 'delete permanently' or (v_name <> '' and v_confirm = v_name);
+  if not v_ok and v_name <> '' and v_confirm like v_name || ' - %' then
+    v_tail := btrim(substr(v_confirm, length(v_name) + 4));
+    v_ok := v_tail ~ '[0-9]'
+      and v_tail ~ '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|am|pm)';
+  end if;
+  if not v_ok and v_name <> '' then
+    v_typed_key := regexp_replace(v_confirm, '[^a-z0-9]+', '', 'g');
+    v_name_key := regexp_replace(v_name, '[^a-z0-9]+', '', 'g');
+    if v_typed_key = v_name_key then
+      v_ok := true;
+    elsif length(v_name_key) >= 4
+      and v_typed_key like v_name_key || '%'
+      and substr(v_typed_key, length(v_name_key) + 1) ~ '[0-9]' then
+      v_ok := true;
+    end if;
+  end if;
+  if not v_ok then
     return jsonb_build_object('ok', false, 'message',
       'Confirmation did not match. Type the event name or Delete permanently.');
   end if;
@@ -130,4 +156,4 @@ revoke all on function public.officer_delete_event(uuid, text) from public;
 grant execute on function public.officer_delete_event(uuid, text) to authenticated;
 
 comment on function public.officer_delete_event(uuid, text) is
-  'Officer Event Studio hard-delete. Requires can_manage_events() and a confirm token (event name or Delete permanently). Keeps payments and raffles; removes RSVPs; blocks Tartan Ball orders.';
+  'Officer Event Studio hard-delete. Requires can_manage_events() and a confirm token (event name, the name plus the date shown in Event Studio, or Delete permanently). Dash characters are treated the same. Keeps payments and raffles; removes RSVPs; blocks Tartan Ball orders.';

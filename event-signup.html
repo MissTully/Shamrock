@@ -16,6 +16,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260930return1" />
 <style>
+.kos-cal-card{margin-top:14px;padding:12px 14px;border:1px solid rgba(168,128,28,.45);border-radius:12px;background:#fffdf8;}
+.kos-cal-card p{margin:0 0 10px;font-size:15px;color:#3a3a2e;line-height:1.4;}
+.kos-cal-btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;background:#fff;color:#14532d;border:1px solid rgba(20,83,45,.45);font-family:var(--display);font-weight:700;font-size:15px;}
+.kos-cal-btn:hover{background:#f3efe2;}
+</style>
+<style>
 /* MOBILE EVENT SIGNUP */
 @media (max-width:680px){
   .krewe-form .row{ flex-direction:column; gap:0; }
@@ -331,7 +337,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20260920p1"></script>
+  <script src="assets/kos-calendar.js?v=20260930cal1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -363,6 +369,19 @@
     const dateStrShort = (d)=> d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric", timeZone: TZ });
 
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
+
+    function paintCalendarOffer(target, ev) {
+      if (!target || !ev || !ev.start_time || !window.kosCalendar) return;
+      target.hidden = false;
+      target.innerHTML = '<div class="kos-cal-card">' +
+        '<p>Add this event to your calendar. The file uses the public location, and the time is Tampa local time.</p>' +
+        '<button type="button" class="kos-cal-btn" id="rsvpAddCalendar">Add to calendar</button></div>';
+      const addBtn = document.getElementById("rsvpAddCalendar");
+      if (addBtn) addBtn.addEventListener("click", function () {
+        const ok = window.kosCalendar.download(ev);
+        if (!ok) addBtn.textContent = "This event has no date yet";
+      });
+    }
 
 
     function isRegistrationClosed(ev) {
@@ -424,13 +443,17 @@
       sub.textContent = "Full details for our next public Krewe event";
       const closedFeat = isRegistrationClosed(event);
       const membersOnlyFeat = !!event.members_only;
-      const ctaFeat = membersOnlyFeat
+      const featAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
+        ? window.kosCalendar.publicSignupAction(event) : "";
+      const ctaFeat = (featAction === "members" || membersOnlyFeat)
         ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-        : (closedFeat
+        : (featAction === "closed" || closedFeat)
         ? '<a class="btn" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">Registration closed</a>'
+        : (featAction === "tickets-soon")
+        ? '<span class="btn">Tickets coming soon</span>'
         : (payFeat
-        ? '<a class="btn btn-primary" href="' + esc(payFeat) + '" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>'
-        : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">☘ Sign Up Today</a>'));
+        ? '<a class="btn btn-primary" href="' + esc(payFeat) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
+        : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">RSVP</a>');
       content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + '</div></div>' +
         '<div class="ft-text"><h2>' + esc(event.name || "Upcoming event") + '</h2>' +
         '<p><b>' + esc(when + until) + '</b></p>' +
@@ -448,9 +471,12 @@
       const strip = document.getElementById("eventPreviewStrip");
       if (!wrap || !strip) return;
       const now = new Date();
-      const upcoming = (events || []).filter((ev) =>
-        ev.source !== "ikc" && ev.status === "published" && ev.start_time && new Date(ev.start_time) >= now
-      ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time)).slice(0, 6);
+      const upcoming = (events || []).filter((ev) => {
+        if (window.kosCalendar && window.kosCalendar.publicSignupAction && window.kosCalendar.signupDropdownAction) {
+          return window.kosCalendar.signupDropdownAction(window.kosCalendar.publicSignupAction(ev, now));
+        }
+        return ev.source !== "ikc" && ev.status === "published" && ev.start_time && new Date(ev.start_time) >= now;
+      }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time)).slice(0, 6);
       if (!upcoming.length) {
         wrap.hidden = true;
         strip.innerHTML = "";
@@ -473,13 +499,17 @@
         }
         const closedPrev = isRegistrationClosed(ev);
         const membersOnlyPrev = !!ev.members_only;
-        const cta = membersOnlyPrev
+        const prevAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
+          ? window.kosCalendar.publicSignupAction(ev) : "";
+        const cta = (prevAction === "members" || membersOnlyPrev)
           ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-          : (closedPrev
+          : (prevAction === "closed" || closedPrev)
           ? '<a class="btn" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">Registration closed</a>'
+          : (prevAction === "tickets-soon")
+          ? '<span class="btn">Tickets coming soon</span>'
           : (pay
           ? '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
-          : '<a class="btn btn-primary" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">Sign up</a>'));
+          : '<a class="btn btn-primary" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">RSVP</a>');
         return '<article class="ev-card">' +
           '<div class="ev-media">' + media + '</div>' +
           '<div class="ev-body"><h3>' + esc(ev.name) + '</h3>' +
@@ -567,7 +597,12 @@
           when = hasTime(d) ? ds + ", " + timeStr(d) : ds + ", Time TBA";
         }
         const loc = publicWhere(ev) ? " · " + publicWhere(ev) : "";
-        if (String(ev.event_type || "").toLowerCase() === "parade") continue;
+        const signupAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
+          ? window.kosCalendar.publicSignupAction(ev) : "";
+        const inDropdown = window.kosCalendar && window.kosCalendar.signupDropdownAction
+          ? window.kosCalendar.signupDropdownAction(signupAction)
+          : String(ev.event_type || "").toLowerCase() !== "parade";
+        if (!inDropdown) continue;
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc}${ev.members_only ? " · Members only" : ""})`;
         if (ev.members_only) opt.dataset.membersOnly = "1";
@@ -773,12 +808,21 @@
       const pre = params.get("event");
       if (pre) {
         eventSelect.value = pre;
+        if (eventSelect.value !== pre) {
+          showMessage("That event is not open for public signup. Choose a published event below.", "error");
+        }
       }
       syncSignupButton();
-      const signupEvents = (ours || []).filter((ev) => String(ev.event_type || "").toLowerCase() !== "parade");
-      const upcomingPublished = signupEvents.filter((ev) => ev.status === "published" && ev.start_time && new Date(ev.start_time) >= new Date());
-      const pinned = upcomingPublished.find((ev) => ev.is_featured) || null;
-      const featured = pinned || upcomingPublished.sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0] || null;
+      const dropdownActions = { members: 1, closed: 1, tickets: 1, "tickets-soon": 1, rsvp: 1 };
+      const signupEvents = (ours || []).filter((ev) => {
+        if (window.kosCalendar && window.kosCalendar.publicSignupAction && window.kosCalendar.signupDropdownAction) {
+          return window.kosCalendar.signupDropdownAction(window.kosCalendar.publicSignupAction(ev));
+        }
+        const action = String(ev.event_type || "").toLowerCase() === "parade" ? "parade" : "rsvp";
+        return !!dropdownActions[action];
+      });
+      const pinned = signupEvents.find((ev) => ev.is_featured) || null;
+      const featured = pinned || signupEvents[0] || null;
       renderFeaturedEvent(featured);
       renderEventPreviews(signupEvents);
       injectEventSchema(ours);
@@ -1052,10 +1096,7 @@
             end_time: selected.dataset.endTime || "",
             location: selected.dataset.location || ""
           };
-          calPending.hidden = false;
-          calPending.innerHTML = '<button type="button" class="btn" id="rsvpAddCalendar">Add to calendar</button>';
-          const addPending = document.getElementById("rsvpAddCalendar");
-          if (addPending) addPending.addEventListener("click", function () { window.kosCalendar.download(icsPending); });
+          paintCalendarOffer(calPending, icsPending);
         }
         return;
       }
@@ -1087,11 +1128,7 @@
         } : null;
         form.reset(); document.getElementById("guests").value = "0"; if (raffleEl) raffleEl.value = "0"; if (mealWrapEl) mealWrapEl.style.display = "none"; resync(); showMessage(doneMsg, "success");
         if (cal && icsEvent && icsEvent.start_time && window.kosCalendar) {
-          cal.hidden = false;
-          cal.innerHTML = '<button type="button" class="btn" id="rsvpAddCalendar">Add to calendar</button>' +
-            '<p class="hint" style="margin:8px 0 0;">Adds this event with the public location teaser. Full staging stays in the Member Hub.</p>';
-          const addBtn = document.getElementById("rsvpAddCalendar");
-          if (addBtn) addBtn.addEventListener("click", function () { window.kosCalendar.download(icsEvent); });
+          paintCalendarOffer(cal, icsEvent);
         }
       }
     });

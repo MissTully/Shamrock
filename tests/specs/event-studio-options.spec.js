@@ -116,6 +116,12 @@ test.describe("Event Studio permanent delete", () => {
     await openDeleteConfirm(page);
     await page.locator("#hubEventDeleteTyped").fill("Delete permanently");
     await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
+
+    const summary = await page.locator("#hubEventDeleteSummary").innerText();
+    await page.locator("#hubEventDeleteTyped").fill(summary.replace(" - ", " — "));
+    await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
+    await page.locator("#hubEventDeleteTyped").fill(summary);
+    await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
     await page.locator("#hubEventDeleteGo").click();
     await expect(page.locator("#hubEventDeleteErr")).not.toHaveText("", { timeout: 8000 });
     await expect(page.locator("#hubEventDeletePanel")).toBeVisible();

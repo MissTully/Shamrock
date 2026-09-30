@@ -924,6 +924,27 @@
     min-height:40px; padding:8px 14px; border-radius:999px; text-decoration:none;
     background:#e2c15a; color:#14532d; font-family:var(--display); font-weight:700; font-size:14px;
   }
+  .app-rsvp.is-going,
+  .app-drill-actions .app-rsvp:disabled{
+    background:rgba(255,255,255,.14); color:#f6efdc;
+    border:1px solid rgba(226,193,90,.65); box-shadow:none; cursor:default;
+  }
+  body.hub-desk .app-rsvp.is-going,
+  body.hub-desk .app-event-hit .app-rsvp.is-going{
+    background:#e7f0e4; color:#14532d; border:1px solid #14532d;
+  }
+  .kos-cal-btn{
+    background:#fffdf8 !important; color:#14532d !important;
+    border:1px solid rgba(168,128,28,.7) !important; box-shadow:none !important;
+    border-radius:999px !important; padding:8px 14px !important;
+  }
+  .hub-rsvp-going{
+    background:#e7f0e4 !important; color:#14532d !important;
+    border:1px solid #14532d !important; cursor:default;
+  }
+  .hub-rsvp-cancel{
+    background:#fff !important; color:#8b2e1c !important; border:1px solid #b3452e !important;
+  }
   .app-sheet{
     position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
     padding:18px; background:rgba(4,16,10,.62);
@@ -1045,6 +1066,7 @@
   .app-drill-actions .app-cal{
     background:transparent; color:#f0d78c; border:1px solid rgba(226,193,90,.7);
   }
+  .app-drill-actions .app-cancel{ grid-column:1 / -1; }
   .app-detail-kicker{
     margin:0 0 6px; font-family:var(--display); letter-spacing:.14em; text-transform:uppercase;
     font-size:12px; color:#e2c15a;
@@ -1250,11 +1272,14 @@
     background:linear-gradient(180deg, #143526 0%, #07160f 100%);
     border:1px solid rgba(226,193,90,.5);
     border-top:0;
-    border-radius:0 0 22px 22px;
+    border-bottom:0;
+    border-radius:0;
     padding:8px 16px 18px;
   }
   body.hub-desk.app-screen #appDrillActions{
     width:min(520px, 100%);
+    border:1px solid rgba(226,193,90,.5);
+    border-top:0;
     border-radius:0 0 22px 22px;
   }
   body.hub-desk.app-screen #appDrillActions:empty{ display:none !important; }
@@ -4351,11 +4376,11 @@
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
-<script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260930welcome1" defer></script>
+<script src="assets/kos-calendar.js?v=20260930cal1"></script>
+<script src="assets/members-desk.js?v=20260930rsvp1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
-  <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
+  <script src="assets/kos-event-studio.js?v=20260930del1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260930shopwrap" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
   <script src="assets/kos-reports.js?v=20260914t1" defer></script>

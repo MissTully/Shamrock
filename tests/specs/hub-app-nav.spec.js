@@ -171,6 +171,28 @@ test.describe("Member Hub app navigation", () => {
     assertHealthy(expect, report, "event detail from home and events");
   });
 
+  test("an event the member already RSVP'd does not offer a fresh RSVP", async ({ page }) => {
+    const report = watchPage(page);
+    await openApp(page);
+    await page.evaluate((next) => {
+      window.__kosHubSetFeed({
+        profile: { first_name: "Maeve", last_name: "Kelly", email: "maeve@example.com" },
+        events: [next]
+      });
+    }, Object.assign({}, NEXT, { rsvpd: true }));
+    await page.locator('[data-hub-tab="events"]').click();
+    const hit = page.locator('#hubMemberEventList [data-app-event="evt-basket"]');
+    await expect(hit).toContainText("Already RSVP'd");
+    await expect(hit.locator(".app-rsvp")).toHaveClass(/is-going/);
+    await hit.click();
+    await eventDetail(page);
+    await expect(page.locator("#appRsvpBtn")).toBeDisabled();
+    await expect(page.locator("#appRsvpBtn")).toHaveText("Already RSVP'd");
+    await expect(page.locator("#appCancelRsvp")).toHaveText("Cancel RSVP");
+    await expect(page.locator("#appCalBtn")).toHaveText("Add to calendar");
+    assertHealthy(expect, report, "already rsvpd detail");
+  });
+
   test("deep link #events/id opens the detail and back returns to the Events list", async ({ page }) => {
     const report = watchPage(page);
     await page.goto("/members.html#events/evt-basket");
