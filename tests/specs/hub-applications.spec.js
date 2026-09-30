@@ -21,6 +21,9 @@ const APPLICATIONS = [
     ssn_last4: "6789",
     ssn_full: "123-45-6789",
     id_digits: "123456789",
+    dl_last4: "9012",
+    dl_full: "F123456789012",
+    driver_license: "F123456789012",
     created_at: "2026-09-28T15:04:00.000Z"
   },
   {
@@ -120,9 +123,16 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("[data-app-status='pending-new']").first()).toContainText("New");
     await expect(tool).toContainText("Application fee: single applicant, $50");
     await expect(tool).toContainText("not membership dues");
+    await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
+    await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Move to background check");
+    await expect(tool.locator("[data-app-send]")).toHaveCount(0);
+    await expect(tool).not.toContainText("Send full application");
+    await expect(tool).not.toContainText("Mark next step sent");
     await expect(tool).not.toContainText("123-45-6789");
     await expect(tool).not.toContainText("123456789");
+    await expect(tool).not.toContainText("F123456789012");
     await expect(tool).not.toContainText("Rowan Hale");
     await expect(tool).not.toContainText("Casey Prospect");
 
@@ -146,7 +156,11 @@ test.describe("Membership Applications", () => {
 
   test("chair moves an application through background check and dues pending", async ({ page }) => {
     const report = watchPage(page);
-    page.on("dialog", (dialog) => dialog.accept());
+    let confirmMessage = "";
+    page.on("dialog", (dialog) => {
+      confirmMessage = dialog.message();
+      dialog.accept();
+    });
     await unlockMemberHub(page, {
       role: {
         officer: false,
@@ -175,21 +189,28 @@ test.describe("Membership Applications", () => {
 
     await tool.locator("#hubAppNote-app-nia").fill("Sent the background check form.");
     await tool.locator("[data-app-bg='app-nia']").click();
-    await expect(tool).toContainText("Moved to background check in progress.");
+    expect(confirmMessage).toContain("finish the full application");
+    expect(confirmMessage).toContain("$50");
+    expect(confirmMessage).toContain("$75");
+    expect(confirmMessage).toContain("paused");
+    expect(confirmMessage).not.toContain("—");
+    await expect(tool).toContainText("Moved to background check.");
+    await expect(tool).toContainText("secure link");
+    await expect(tool).toContainText("does not include a Social Security number");
     await expect(tool.locator("[data-app-id='app-nia']")).toHaveCount(0);
 
     await tool.locator("[data-app-bucket='background']").click();
     const card = tool.locator("[data-app-id='app-nia']");
     await expect(card).toContainText("Background check in progress");
+    await expect(card).toContainText("Full application received. Lists show the last 4 only.");
     await expect(card).not.toContainText("123-45-6789");
+    await expect(card.locator("[data-app-send]")).toHaveCount(0);
+    await expect(card.locator("[data-app-bg]")).toHaveCount(0);
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
-
-    await tool.locator("#hubAppNote-app-nia").fill("Asked them to pay membership dues.");
-    await tool.locator("[data-app-next='app-nia']").click();
-    await expect(tool).toContainText("Next step sent.");
+    await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Sent the background check form.");
     await expect(card).toHaveAttribute("data-app-status", "background-check");
-    await expect(tool.locator("[data-app-history='next_step_sent']")).toContainText("Asked them to pay membership dues.");
+    await expect(tool).not.toContainText("token=");
 
     await tool.locator("[data-app-dues='app-nia']").click();
     await expect(tool).toContainText("Moved to dues pending.");
@@ -217,5 +238,122 @@ test.describe("Membership Applications", () => {
     await expect(page.locator("#hubApplications")).toContainText("Nia Byrne");
     await expect(page.locator("#hubApplications")).toContainText("New");
     assertHealthy(expect, report, "officer without payments");
+  });
+
+  test("chair copies a driver's license and SSN without showing the full numbers", async ({ page }) => {
+    const report = watchPage(page);
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    const withPartner = APPLICATIONS.map((row) => row.id === "app-nia" ? {
+      ...row,
+      partner_first_name: "Maeve",
+      partner_last_name: "Byrne",
+      partner_dl_last4: "4321",
+      partner_ssn_last4: "9876",
+      partner_dl_full: "G987654321098",
+      partner_ssn_full: "987-65-4321"
+    } : row);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: withPartner
+      }
+    });
+    await page.locator("#hubAppsHomeLink").click();
+    const tool = page.locator("#hubApplications");
+    const nia = tool.locator("[data-app-id='app-nia']");
+    const owen = tool.locator("[data-app-id='app-owen']");
+    await expect(nia.locator("[data-app-dl]").first()).toContainText("Driver's license on file, last 4 only: ••••9012");
+    await expect(nia.locator("[data-app-ssn]").first()).toContainText("SSN on file, last 4 only: •••-••-6789");
+    await expect(nia.locator("[data-app-copy-kind='dl']")).toHaveCount(2);
+    await expect(nia.locator("[data-app-copy-kind='ssn']")).toHaveCount(2);
+    await expect(owen.locator("[data-app-copy]")).toHaveCount(0);
+    await expect(tool).not.toContainText("F123456789012");
+    await expect(tool).not.toContainText("123-45-6789");
+    await expect(tool).not.toContainText("G987654321098");
+    await expect(tool).not.toContainText("987-65-4321");
+
+    const dlRow = nia.locator("[data-app-dl]").first();
+    const dlText = await dlRow.locator("span").boundingBox();
+    const dlBtn = await dlRow.locator("[data-app-copy]").boundingBox();
+    expect(dlBtn.x).toBeGreaterThan(dlText.x);
+    expect(Math.abs((dlBtn.y + dlBtn.height / 2) - (dlText.y + dlText.height / 2))).toBeLessThan(24);
+    await nia.screenshot({ path: "/opt/cursor/artifacts/screenshots/membership-chair-copy-dl-ssn.png" });
+
+    await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']").click();
+    await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']")).toHaveText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("F123456789012");
+    await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
+    await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']")).toHaveText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("123-45-6789");
+    await nia.locator("[data-app-copy-slot='partner'][data-app-copy-kind='dl']").click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("G987654321098");
+    await nia.locator("[data-app-copy-slot='partner'][data-app-copy-kind='ssn']").click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("987-65-4321");
+
+    await expect(tool).not.toContainText("F123456789012");
+    await expect(tool).not.toContainText("123-45-6789");
+    await expect(tool).not.toContainText("G987654321098");
+    await expect(tool).not.toContainText("987-65-4321");
+    await expect(nia.locator("[data-app-dl]").first()).toContainText("••••9012");
+    await expect(nia.locator("[data-app-ssn]").first()).toContainText("•••-••-6789");
+    assertHealthy(expect, report, "copy background check ids");
+  });
+
+  test("copy uses the reviewer reveal when the full number is not on the card", async ({ page }) => {
+    const report = watchPage(page);
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    const masked = APPLICATIONS.map((row) => {
+      if (row.id !== "app-nia") return row;
+      const copy = { ...row };
+      delete copy.ssn_full;
+      delete copy.ssn;
+      delete copy.id_digits;
+      delete copy.dl_full;
+      delete copy.driver_license;
+      delete copy.dl;
+      return copy;
+    });
+    await unlockMemberHub(page, {
+      role: { officer: true, canReviewApplications: true, applications: masked }
+    });
+    await page.evaluate(() => {
+      function query() {
+        const builder = {
+          select: () => builder,
+          eq: () => builder,
+          neq: () => builder,
+          in: () => builder,
+          order: () => builder,
+          limit: () => builder,
+          maybeSingle: () => Promise.resolve({ data: null, error: null }),
+          single: () => Promise.resolve({ data: null, error: null }),
+          then: (resolve) => resolve({ data: [], error: null })
+        };
+        return builder;
+      }
+      window.__kosSb = {
+        from: () => query(),
+        rpc: async (name, args) => {
+          window.__revealArgs = args;
+          if (name !== "reveal_membership_application_id") return { data: { ok: false, message: "no" } };
+          if (args.p_kind === "dl") return { data: { ok: true, dl: "F123456789012" } };
+          return { data: { ok: true, ssn: "123456789" } };
+        }
+      };
+    });
+    await page.locator("#hubAppsHomeLink").click();
+    const nia = page.locator("#hubApplications [data-app-id='app-nia']");
+    await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
+    await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']")).toHaveText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("123-45-6789");
+    expect(await page.evaluate(() => window.__revealArgs)).toMatchObject({
+      p_member_id: "app-nia",
+      p_slot: "applicant",
+      p_kind: "ssn"
+    });
+    await expect(nia).not.toContainText("123-45-6789");
+    await expect(nia).not.toContainText("123456789");
+    assertHealthy(expect, report, "copy through reveal");
   });
 });

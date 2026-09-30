@@ -39,7 +39,7 @@ No new SQL is required. Officers already can read:
 - `kos_dues_events` (the request reason is in `payload.reason`; notes on the dues row are the fallback)
 - `kos_dues_catalog` (the year's rate, so the card can show the catalog amount)
 
-Writes go through the three waiver functions in `sql/kos_dues_foundation.sql`. See DUES_FOUNDATION.md. Do not invent Zeffy links for associate or auxiliary. This card does not show pay links.
+Writes go through the three waiver functions in `sql/kos_dues_foundation.sql`. See DUES_FOUNDATION.md. This card does not show pay links.
 
 ## What this screen does not do
 

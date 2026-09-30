@@ -223,58 +223,173 @@
 })();
 
 
-(function kosNavSignedChip() {
-  function hasActiveSession() {
+/* Header Member Hub control: Login while signed out, Log out while a Hub session exists.
+   Uses the same Supabase client as the Hub (window.__kosSb / window.kosSignOut). */
+(function kosNavHubAuth() {
+  var LOGIN_LABEL = "Member Hub Login";
+  var LOGOUT_LABEL = "Log out";
+  var signedIn = false;
+  var signingOut = false;
+  var clientBound = false;
+
+  function currentFile() {
+    return (location.pathname.split("/").pop() || "index.html").toLowerCase();
+  }
+  function hubLink() {
+    var nav = document.querySelector("nav.krewe-nav");
+    return nav ? nav.querySelector("a.nav-hub") : null;
+  }
+  function readStoredSession() {
     try {
       var keys = Object.keys(localStorage);
       for (var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        if (k.indexOf("sb-") !== 0 || k.indexOf("auth-token") === -1) continue;
-        var raw = localStorage.getItem(k);
+        var key = keys[i];
+        if (key.indexOf("sb-") !== 0 || key.indexOf("auth-token") === -1) continue;
+        if (key.indexOf("code-verifier") !== -1) continue;
+        var raw = localStorage.getItem(key);
         if (!raw) continue;
         var parsed = JSON.parse(raw);
-        if (!parsed || !parsed.access_token) continue;
-        if (parsed.expires_at && parsed.expires_at * 1000 < Date.now()) continue;
-        return true;
+        if (!parsed || typeof parsed !== "object") continue;
+        if (parsed.access_token || parsed.refresh_token) return parsed;
+        if (parsed.currentSession && (parsed.currentSession.access_token || parsed.currentSession.refresh_token)) {
+          return parsed.currentSession;
+        }
       }
     } catch (e) {}
-    return false;
+    return null;
   }
-  function place() {
-    if (!hasActiveSession()) return;
-    if (document.getElementById("kosNavSigned")) return;
-    var path = (location.pathname.split("/").pop() || "").toLowerCase();
-    var onHub = path === "members.html";
-    var nav = document.querySelector(".krewe-nav");
-    if (!nav) return;
-    var hub = nav.querySelector(".nav-hub");
-    if (hub) {
-      hub.classList.add("is-signed");
-      hub.title = onHub ? "You are signed in" : "Open Member Hub";
-      hub.innerHTML = onHub
-        ? '<span class="dot" aria-hidden="true"></span>Signed in'
-        : '<span class="dot" aria-hidden="true"></span>Member Hub';
+  function clearStoredSession() {
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (key.indexOf("sb-") === 0 && key.indexOf("auth-token") !== -1) localStorage.removeItem(key);
+      }
+    } catch (e) {}
+  }
+  function paint(on) {
+    signedIn = !!on;
+    var hub = hubLink();
+    if (!hub) return;
+    if (signedIn) {
+      hub.classList.add("is-logout");
+      hub.textContent = LOGOUT_LABEL;
+      hub.setAttribute("aria-label", "Log out");
+      hub.setAttribute("title", "Log out of the Member Hub");
+      hub.setAttribute("data-kos-auth", "out");
+    } else {
+      hub.classList.remove("is-logout");
+      hub.textContent = LOGIN_LABEL;
+      hub.setAttribute("aria-label", "Member Hub Login");
+      hub.setAttribute("title", "Member Hub Login");
+      hub.setAttribute("href", "members.html");
+      hub.setAttribute("data-kos-auth", "in");
+    }
+  }
+  function bindClient(client) {
+    if (!client || !client.auth || clientBound) return;
+    clientBound = true;
+    client.auth.getSession().then(function (res) {
+      var session = res && res.data && res.data.session;
+      if (session) paint(true);
+      else if (!readStoredSession()) paint(false);
+    }).catch(function () {});
+    client.auth.onAuthStateChange(function (event, session) {
+      if (session) paint(true);
+      else if (event === "SIGNED_OUT") paint(false);
+      else if (event === "INITIAL_SESSION" && !readStoredSession()) paint(false);
+    });
+  }
+  function watchClient() {
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries += 1;
+      if (window.__kosSb && window.__kosSb.auth) {
+        bindClient(window.__kosSb);
+        clearInterval(timer);
+        return;
+      }
+      if (signedIn && !signingOut && !readStoredSession()) paint(false);
+      if (tries >= 240) clearInterval(timer);
+    }, 50);
+  }
+  function waitFor(pred, ms) {
+    return new Promise(function (resolve) {
+      var start = Date.now();
+      (function tick() {
+        if (pred()) return resolve(true);
+        if (Date.now() - start >= ms) return resolve(false);
+        setTimeout(tick, 40);
+      })();
+    });
+  }
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_, reject) {
+        setTimeout(function () { reject(new Error("timeout")); }, ms);
+      })
+    ]);
+  }
+  function loadConfig() {
+    if (window.KOS_SB_URL && window.KOS_SB_KEY) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "assets/kos-supabase.js";
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("config")); };
+      document.head.appendChild(s);
+    });
+  }
+  function createSharedClient() {
+    return loadConfig().then(function () {
+      return import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    }).then(function (mod) {
+      if (window.__kosSb && window.__kosSb.auth) return window.__kosSb;
+      return mod.createClient(window.KOS_SB_URL, window.KOS_SB_KEY);
+    });
+  }
+  function leaveAfterLogout() {
+    clearStoredSession();
+    if (currentFile() === "members.html") location.href = "index.html";
+    else location.reload();
+  }
+  function runClientSignOut(client) {
+    var done = Promise.resolve();
+    if (client && client.auth && client.auth.signOut) {
+      done = Promise.resolve(client.auth.signOut()).catch(function () {});
+    }
+    return done.then(leaveAfterLogout, leaveAfterLogout);
+  }
+  function logOut(e) {
+    if (!signedIn) return;
+    e.preventDefault();
+    if (signingOut) return;
+    signingOut = true;
+    var hub = hubLink();
+    if (hub) hub.setAttribute("aria-busy", "true");
+    if (currentFile() === "members.html") {
+      waitFor(function () { return typeof window.kosSignOut === "function"; }, 8000).then(function (ready) {
+        if (ready) {
+          withTimeout(Promise.resolve(window.kosSignOut()), 8000).then(function () {}, leaveAfterLogout);
+          return;
+        }
+        var client = window.__kosSb;
+        if (client && client.auth) runClientSignOut(client);
+        else withTimeout(createSharedClient(), 5000).then(runClientSignOut, leaveAfterLogout);
+      });
       return;
     }
-    var chip = document.createElement("a");
-    chip.id = "kosNavSigned";
-    chip.className = "kos-nav-signed";
-    chip.href = "members.html";
-    chip.innerHTML = onHub
-      ? '<span class="dot" aria-hidden="true"></span>Signed in'
-      : '<span class="dot" aria-hidden="true"></span>Member Hub';
-    chip.title = onHub ? "You are signed in" : "Open Member Hub";
-    var cta = nav.querySelector(".nav-cta");
-    var menu = nav.querySelector(".krewe-menu");
-    var login = nav.querySelector('[data-nav="members.html"]');
-    if (login && !onHub) {
-      login.textContent = "Member Hub";
-      login.classList.add("kos-nav-hub-link");
-    }
-    if (cta && cta.parentNode) cta.parentNode.insertBefore(chip, cta);
-    else if (menu) menu.appendChild(chip);
-    else nav.appendChild(chip);
+    var client = window.__kosSb;
+    if (client && client.auth) runClientSignOut(client);
+    else withTimeout(createSharedClient(), 5000).then(runClientSignOut, leaveAfterLogout);
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", place);
-  else place();
+  function init() {
+    if (!hubLink()) return;
+    paint(!!readStoredSession());
+    hubLink().addEventListener("click", logOut);
+    watchClient();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();

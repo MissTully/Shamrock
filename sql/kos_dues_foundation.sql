@@ -153,19 +153,38 @@ alter table public.kos_dues_catalog
 create unique index if not exists kos_dues_catalog_year_level_uidx
   on public.kos_dues_catalog (membership_year, level);
 
-comment on table public.kos_dues_catalog is
-  'Dues rate card. One active amount and optional Zeffy URL per year and level. 2026 rates are locked in sql/kos_dues_foundation.sql.';
+alter table public.kos_dues_catalog
+  add column if not exists explainer text;
 
--- Locked 2026 season rates. Associate and auxiliary have no campaign yet.
-insert into public.kos_dues_catalog (membership_year, level, amount, zeffy_url, active)
+comment on table public.kos_dues_catalog is
+  'Dues rate card. One active amount, optional Zeffy URL, and optional explainer per year and level. 2026 rates are locked in sql/kos_dues_foundation.sql.';
+
+comment on column public.kos_dues_catalog.explainer is
+  'Short plain-language note for this level. The Move to background check email prints this before the pay link.';
+
+-- Locked 2026 season rates and the live Zeffy campaigns.
+insert into public.kos_dues_catalog (membership_year, level, amount, zeffy_url, explainer, active)
 values
-  (2026, 'full',       375, 'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership', true),
-  (2026, 'associate',  450, null, true),
-  (2026, 'loa',        100, 'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2', true),
-  (2026, 'auxiliary',  200, null, true)
+  (2026, 'full', 375,
+    'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership',
+    'You''re a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don''t work.',
+    true),
+  (2026, 'associate', 450,
+    'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership',
+    'This is for one year. You can join two parades of your choice. There''s no vote, and you don''t take on the 12/12 volunteer commitment.',
+    true),
+  (2026, 'loa', 100,
+    'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2',
+    'This is our social membership for a year when you''d like to step back and still stay connected. That''s leave of absence.',
+    true),
+  (2026, 'auxiliary', 200,
+    'https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership',
+    'This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.',
+    true)
 on conflict (membership_year, level) do update
   set amount    = excluded.amount,
       zeffy_url = excluded.zeffy_url,
+      explainer = excluded.explainer,
       active    = excluded.active;
 
 alter table public.kos_dues_catalog enable row level security;

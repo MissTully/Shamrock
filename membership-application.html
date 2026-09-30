@@ -4,25 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="assets/img/kos-emblem.png" />
-<title>Krewe of Shamrock · Membership Application</title>
-<meta name="description" content="Join the Krewe of Shamrock. Apply for membership and celebrate Irish heritage in Tampa Bay." />
+<title>Krewe of Shamrock · Join the Krewe</title>
+<meta name="description" content="Join the Krewe of Shamrock. Share your name, email, phone, and mailing address. Someone from the Krewe will call you." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260930hub1" />
 <style>
-.mem-glance{padding:20px 26px 4px;}
-.mem-glance h2{font-family:var(--display);color:var(--green-800);text-align:center;margin:0 0 6px;}
-.mg-sub{text-align:center;color:var(--muted);font-family:var(--fancy);font-style:italic;margin:0 0 14px;}
-.mem-table{width:100%;border-collapse:collapse;font-size:15px;}
-.mem-table th,.mem-table td{padding:8px 10px;border:1px solid rgba(168,128,28,.3);text-align:left;}
-.mem-table thead th{background:var(--green-800);color:#f6efdc;font-family:var(--display);letter-spacing:.4px;}
-.mem-table td:first-child{font-weight:600;color:var(--green-800);}
-.mg-note{font-size:14px;color:var(--muted);margin:12px 0 4px;}
-</style>
-<style>
-/* MOBILE MEMBERSHIP APP */
+.join-lead{margin:0;padding:20px 28px 0;text-align:center;color:var(--green-800);font-size:17px;line-height:1.55;}
 @media (max-width:680px){
+  .join-lead{padding:16px 16px 0;font-size:16px;}
   .krewe-form .row{ flex-direction:column; gap:0; }
   form.krewe-form{ padding:20px 16px 24px; }
 }
@@ -88,42 +79,7 @@
         <p>A hundred thousand welcomes await</p>
         <div class="banner-flourish" style="height:40px;margin:12px auto 0;width:80%;" aria-hidden="true"></div>
       </div>
-      <div class="mem-glance">
-        <h2>Membership at a Glance</h2>
-        <p class="mg-sub">Every seat matters. No Irish or Scottish ancestry required; only a commitment to community.</p>
-        <table class="mem-table">
-          <thead><tr><th></th><th>Full Member</th><th>Associate</th></tr></thead>
-          <tbody>
-            <tr><td>Annual dues</td><td>$375</td><td>$450</td></tr>
-            <tr><td>Parade access</td><td>All krewe parades</td><td>2 parades of choice</td></tr>
-            <tr><td>Volunteer commitment</td><td>12 hours (or $12/hr donation)</td><td>None required</td></tr>
-            <tr><td>Voting rights</td><td>Full</td><td>None</td></tr>
-            <tr><td>Duration</td><td>Permanent</td><td>1 year, then renew as Full</td></tr>
-          </tbody>
-        </table>
-        <p class="mg-note">Every application needs a background check, a current member as sponsor, and Board approval. No sponsor yet? Apply anyway; we'll invite you along to meet the krewe.</p>
-        <div class="mg-pay" id="appFeeBox" style="margin:16px 0 8px;padding:14px 16px;border:1px solid rgba(168,128,28,.35);border-radius:12px;background:#fbf6e9;">
-          <p style="margin:0 0 8px;font-weight:600;color:var(--green-800);">Application fee (background check)</p>
-          <p style="margin:0;font-size:15px;color:var(--muted);line-height:1.45;">Single applicant: $50. Couple (two applicants): $75. This is the application fee. It is not membership dues. The payment link is not published on this page. After you submit, the Membership Chair sends the next step.</p>
-        </div>
-        <div id="joinNextSteps" style="margin:0 0 8px;padding:14px 16px;border:1px dashed rgba(168,128,28,.55);border-radius:12px;background:#fff;">
-          <p style="margin:0 0 8px;font-weight:600;color:var(--green-800);">What happens next</p>
-          <ol style="margin:0;padding-left:1.2em;font-size:15px;color:var(--muted);line-height:1.5;">
-            <li>Submit this form. Your application starts as new.</li>
-            <li>Pay the application fee when the Membership Chair sends that step. $50 for one person, or $75 for a couple. That fee is the background check.</li>
-            <li>The chair moves the application to background check in progress.</li>
-            <li>After the background check, membership dues come due. Full krewe is $375. Leave of absence is $100. Those links below are membership dues, not the application fee.</li>
-          </ol>
-        </div>
-        <div class="mg-pay" id="duesFeeBox" style="margin:16px 0 8px;padding:14px 16px;border:1px solid rgba(168,128,28,.35);border-radius:12px;background:#fbf6e9;text-align:center;">
-          <p style="margin:0 0 10px;font-weight:600;color:var(--green-800);">Membership dues (after the background check)</p>
-          <p style="margin:0 0 12px;font-size:14px;color:var(--muted);">Already a member, or the chair marked dues pending? These Zeffy links are membership dues, not the application fee. Questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></p>
-          <p style="margin:0;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
-            <a class="nav-cta" style="display:inline-block;" href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" target="_blank" rel="noopener">Pay full krewe dues ($375)</a>
-            <a class="nav-cta" style="display:inline-block;background:var(--green-800);" href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2" target="_blank" rel="noopener">Pay leave of absence dues ($100)</a>
-          </p>
-        </div>
-      </div>
+      <p class="join-lead" id="joinLead">Tell us you'd like to join. Someone from the Krewe will call you. The full application comes later by email from the Membership Chair. This form does not ask for a Social Security number or a driver's license number.</p>
       <form id="appForm" class="krewe-form">
         <div class="row">
           <div>
@@ -139,8 +95,8 @@
         <label for="email">Email</label>
         <input id="email" type="email" required autocomplete="email" />
 
-        <label for="phone">Phone <span class="hint">(optional)</span></label>
-        <input id="phone" type="tel" autocomplete="tel" />
+        <label for="phone">Phone</label>
+        <input id="phone" type="tel" required autocomplete="tel" />
 
         <label for="street">Mailing address</label>
         <input id="street" type="text" required autocomplete="street-address" placeholder="Street" />
@@ -159,40 +115,13 @@
           </div>
         </div>
 
-        <fieldset id="feeTypeField" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:8px 0 14px;">
-          <legend style="padding:0 6px;color:var(--green-800);font-family:var(--display);">Application fee</legend>
-          <label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 8px;">
-            <input id="feeSingle" type="radio" name="feeType" value="single" required style="margin-top:4px;" />
-            <span>Single applicant. Application fee $50.</span>
-          </label>
-          <label style="display:flex;gap:8px;align-items:flex-start;margin:0;">
-            <input id="feeDual" type="radio" name="feeType" value="dual" style="margin-top:4px;" />
-            <span>Couple, two applicants. Application fee $75.</span>
-          </label>
-          <p class="hint" style="margin:8px 0 0;">This choice is the application fee for the background check. It is not annual membership dues.</p>
-        </fieldset>
+        <label for="notes">A short note <span class="hint">(optional)</span></label>
+        <textarea id="notes" placeholder="Why you'd like to join, or how you heard about us."></textarea>
 
-        <div id="partnerFields" hidden>
-          <label for="partnerFirst">Partner first name</label>
-          <input id="partnerFirst" type="text" autocomplete="off" />
-          <label for="partnerLast">Partner last name</label>
-          <input id="partnerLast" type="text" autocomplete="off" />
-          <label for="partnerSsn">Partner Social Security number</label>
-          <p class="hint">Same rules as the first applicant. Lists in the Hub show the last 4 only.</p>
-          <input id="partnerSsn" type="password" inputmode="numeric" autocomplete="off" maxlength="11" spellcheck="false" />
-        </div>
-
-        <label for="appSsn">Social Security number</label>
-        <p class="hint">The board uses this for the background check. A driver license number is the old path. Only the Membership Chair can open the full number. Hub lists show the last 4. Do not email this number.</p>
-        <input id="appSsn" type="password" inputmode="numeric" autocomplete="off" maxlength="11" required spellcheck="false" />
-
-        <label for="notes">Tell us a bit about yourself <span class="hint">(optional)</span></label>
-        <textarea id="notes" placeholder="Why you'd like to join, how you heard about us, your interests..."></textarea>
-
-        <button id="submitBtn" type="submit">☘ Submit application</button>
+        <button id="submitBtn" type="submit">☘ Submit interest</button>
         <div id="message" class="msg"></div>
       </form>
-      <div class="fc-foot">We review every application and follow up by email. Sláinte! 🍀</div>
+      <div class="fc-foot">Someone from the Krewe will call you. Sláinte! 🍀</div>
     </div>
   </div>
 
@@ -237,78 +166,32 @@
     const form = document.getElementById("appForm");
     const btn = document.getElementById("submitBtn");
     const message = document.getElementById("message");
-    const partnerFields = document.getElementById("partnerFields");
+    const submitLabel = "☘ Submit interest";
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
-    function digitsOf(id) {
-      const el = document.getElementById(id);
-      return ((el && el.value) || "").replace(/\D/g, "");
-    }
-    function feeType() {
-      const picked = form.querySelector("input[name='feeType']:checked");
-      return picked ? picked.value : "";
-    }
-    function syncPartner() {
-      const dual = feeType() === "dual";
-      partnerFields.hidden = !dual;
-      document.getElementById("partnerFirst").required = dual;
-      document.getElementById("partnerLast").required = dual;
-      document.getElementById("partnerSsn").required = dual;
-    }
-    form.querySelectorAll("input[name='feeType']").forEach((el) => {
-      el.addEventListener("change", syncPartner);
-    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       message.className = "msg";
-      const ssn = digitsOf("appSsn");
-      const partnerSsn = digitsOf("partnerSsn");
-      const kind = feeType();
-      if (ssn.length !== 9) {
-        showMessage("Enter a 9 digit Social Security number for the background check.", "error");
-        return;
-      }
-      if (kind === "dual" && partnerSsn.length !== 9) {
-        showMessage("Enter a 9 digit Social Security number for the second applicant.", "error");
-        return;
-      }
       btn.disabled = true; btn.textContent = "Submitting…";
-      const base = {
+      const interest = {
         p_first_name: document.getElementById("firstName").value.trim(),
         p_last_name: document.getElementById("lastName").value.trim(),
         p_email: document.getElementById("email").value.trim(),
-        p_phone: document.getElementById("phone").value.trim() || null,
+        p_phone: document.getElementById("phone").value.trim(),
         p_street_address: document.getElementById("street").value.trim(),
         p_city: document.getElementById("city").value.trim(),
         p_state: document.getElementById("state").value.trim(),
         p_zip: document.getElementById("zip").value.trim(),
         p_notes: document.getElementById("notes").value.trim() || null
       };
-      const full = Object.assign({}, base, {
-        p_fee_type: kind || null,
-        p_partner_first: kind === "dual" ? document.getElementById("partnerFirst").value.trim() : null,
-        p_partner_last: kind === "dual" ? document.getElementById("partnerLast").value.trim() : null,
-        p_ssn: ssn,
-        p_partner_ssn: kind === "dual" ? partnerSsn : null
-      });
-      let result = await supabase.rpc("submit_membership_application", full);
-      const errText = (result.error && (result.error.message || String(result.error))) || "";
-      if (result.error && /function|schema cache|PGRST202|Could not find/i.test(errText)) {
-        result = await supabase.rpc("submit_membership_application", base);
-        if (result.data && result.data.ok) {
-          result.data.message = "Application received. The background check number could not be saved yet because the database update is not applied. Do not email a Social Security number. The Membership Chair will contact you. Next: the application fee is $50 for one person or $75 for a couple. That fee is the background check, not membership dues.";
-        }
-      }
-      document.getElementById("appSsn").value = "";
-      document.getElementById("partnerSsn").value = "";
-      btn.disabled = false; btn.textContent = "☘ Submit application";
-      if (result.error) { showMessage("Something went wrong submitting your application. Please try again.", "error"); return; }
+      const result = await supabase.rpc("submit_membership_application", interest);
+      btn.disabled = false; btn.textContent = submitLabel;
+      if (result.error) { showMessage("Something went wrong sending your interest. Please try again.", "error"); return; }
       if (result.data && result.data.ok) {
-        showMessage(result.data.message, "success");
+        const serverMsg = String(result.data.message || "");
+        const interestMsg = "We received your interest in joining. Someone from the Krewe will call you.";
+        showMessage(/already on our roster/i.test(serverMsg) ? serverMsg : interestMsg, "success");
         form.reset();
-        syncPartner();
-        const steps = document.getElementById("joinNextSteps");
-        if (steps && steps.scrollIntoView) steps.scrollIntoView({ block: "nearest" });
       } else {
         showMessage((result.data && result.data.message) || "Please check your details and try again.", "error");
       }

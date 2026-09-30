@@ -59,4 +59,4 @@ This screen does not send reminder email. There is no one-click send. Reminders 
 - Zeffy webhooks and `kos_record_payment`
 - Send invoices and `kos_create_level_invoices`
 - The Dues waivers queue and the waiver functions
-- Associate and auxiliary Zeffy links (this screen does not invent any)
+- Zeffy links for a level that is missing from `kos_dues_catalog` (this screen does not invent any)

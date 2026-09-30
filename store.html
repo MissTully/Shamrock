@@ -10,7 +10,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Krewe of Shamrock · Shop</title>
-<meta name="description" content="Krewe of Shamrock gear: logo tees, tartan kilts, and Celtic hats." />
+<meta name="description" content="Krewe of Shamrock gear: wear the crest in green and gold, from the Krewe shop and our vendor partners." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
@@ -80,6 +80,80 @@
   .cartbar button{ padding:8px 12px; font-size:13px; max-width:none; }
   .krewe-music{ bottom:58px !important; }
 }
+.vendor-apparel{ margin-top:18px; }
+.vendor-leave{ margin-top:8px; }
+.vendor-courtesy{ text-align:center; font-family:var(--fancy); font-style:italic; color:var(--muted); margin:14px auto 0; max-width:640px; }
+.vendor-list{ display:grid; gap:28px; margin-top:22px; }
+.vendor-block{ display:grid; gap:12px; }
+.vendor-tile{
+  display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  background:#fff; color:inherit; text-decoration:none;
+  border:1px solid rgba(168,128,28,.28); border-radius:16px; overflow:hidden;
+  box-shadow:var(--shadow-sm); transition:transform .15s, box-shadow .15s;
+}
+a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,59,33,.25); }
+.vendor-collage{ min-height:240px; background:#f7f3ea; }
+.vendor-collage img{ width:100%; height:100%; object-fit:contain; object-position:center; background:#f7f3ea; display:block; }
+.vendor-collage-one{ display:grid; }
+.vendor-collage-one img{ min-height:240px; }
+.vendor-collage-two{ display:grid; grid-template-columns:1fr 1fr; }
+.vendor-collage-two img{ min-height:240px; }
+.vendor-collage-grid{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; min-height:560px; }
+.vendor-collage-grid img, .vendor-collage-grid .vendor-more{ min-height:200px; }
+.vendor-more{
+  display:grid; place-items:center; background:var(--green-800); color:var(--gold-light);
+  font-family:var(--display); font-weight:700; letter-spacing:.4px;
+}
+.vendor-collage-empty{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  min-height:240px; text-align:center; padding:22px;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(236,208,126,.38), transparent 46%),
+    linear-gradient(160deg, var(--green-700), var(--green-900));
+  color:var(--gold-light);
+}
+.vendor-collage-empty img{ width:92px; height:92px; object-fit:contain; filter:drop-shadow(0 8px 16px rgba(0,0,0,.35)); }
+.vendor-collage-empty span{ font-family:var(--display); font-size:14px; letter-spacing:.4px; }
+.vendor-copy{ padding:18px 20px 20px; display:flex; flex-direction:column; gap:8px; }
+.vendor-copy h3{ margin:0; color:var(--green-800); font-family:var(--display); font-size:22px; }
+.vendor-season{
+  align-self:flex-start; margin:0; background:rgba(236,208,126,.28); color:var(--gold-deep);
+  border:1px solid var(--gold); border-radius:999px; padding:3px 10px;
+  font-family:var(--display); font-size:12px; font-weight:700; letter-spacing:.4px;
+}
+.vendor-logo{ width:54px; height:54px; object-fit:contain; }
+.vendor-blurb{ margin:0; color:var(--green-900); font-size:15.5px; }
+.vendor-fulfill{ margin:0; color:var(--muted); font-size:14px; }
+.vendor-order{
+  margin-top:6px; align-self:flex-start; display:inline-block;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold)); color:#3a2c00;
+  border:2px solid var(--gold-deep); border-radius:999px; padding:10px 16px;
+  font-family:var(--display); font-weight:700; font-size:15px;
+}
+.vendor-contact{ margin:0; font-size:14px; color:var(--green-800); }
+.vendor-contact a{ color:var(--green-700); }
+.vendor-pending{ margin:6px 0 0; color:var(--muted); font-size:14px; }
+.vendor-looks{ list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+.vendor-look a{
+  display:flex; flex-direction:column; height:100%; text-decoration:none; color:inherit;
+  background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:14px; overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.vendor-look a:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(12,59,33,.2); }
+.vendor-look img{ aspect-ratio:1/1; width:100%; object-fit:cover; background:#f3ead3; }
+.vendor-look-copy{ padding:12px 12px 14px; display:flex; flex-direction:column; gap:4px; flex:1; }
+.vendor-look-name{ font-family:var(--display); color:var(--green-800); font-size:16px; }
+.vendor-look-cat{ font-size:12px; letter-spacing:.4px; text-transform:uppercase; color:var(--gold-deep); }
+.vendor-look-order{ margin-top:auto; font-family:var(--display); font-weight:700; font-size:14px; color:var(--green-800); }
+.vendor-empty{ text-align:center; }
+@media (max-width:680px){
+  .vendor-tile{ grid-template-columns:1fr; }
+  .vendor-looks{ grid-template-columns:1fr 1fr; }
+  .vendor-collage-empty{ min-height:200px; }
+}
+@media (max-width:420px){
+  .vendor-looks{ grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
@@ -135,13 +209,20 @@
   <div class="ph-bg" style="background-image:url('assets/img/festival-pipeband.jpg')"></div>
   <p class="eyebrow">Wear your green &amp; gold</p>
   <h1>Krewe Shop</h1>
-  <p class="sub">Logo tees, tartan kilts, and Celtic hats. Fly the colors all year.</p>
+  <p class="sub">Wear the crest. Carry the shamrock. Fly the colors all year.</p>
 </header>
 <main class="wrap">
   <p class="shop-note" id="shopNote">&#x1F340; <b>Shop catalog.</b> Loading the latest Krewe merchandise…</p>
   <div class="section-title" style="margin-top:30px;"><h2>Krewe Gear</h2><p class="sub">Officially crested, Tampa-proud</p></div>
   <div class="knot-divider"><span class="knot"></span></div>
   <div class="shop-grid" id="shopGrid"></div>
+  <section class="vendor-apparel" id="vendors" aria-labelledby="vendorApparelTitle">
+    <div class="section-title" style="margin-top:54px;"><h2 id="vendorApparelTitle">Apparel from our vendors</h2><p class="sub">Printed to order and shipped to your door. Tap a photo to shop.</p></div>
+    <div class="knot-divider"><span class="knot"></span></div>
+    <p class="shop-note vendor-leave" id="vendorLeave" hidden>You&#x2019;re heading to our vendor partner&#x2019;s store to choose size and color and pay them there. Prices are on their site.</p>
+    <p class="vendor-courtesy" id="vendorCourtesy" hidden>Product photos are shown courtesy of our vendor partners.</p>
+    <div class="vendor-list" id="vendorApparel"><p class="empty vendor-empty">Loading apparel links&#x2026;</p></div>
+  </section>
 </main>
 <div class="cartbar"><button id="cartBtn" onclick="openCart()">&#x1F6D2; Cart (<span id="cartCount">0</span>)</button></div>
 <div class="cart-panel" id="cartPanel">
@@ -181,6 +262,7 @@
   <span class="label" id="kreweMusicLabel">Tap for a tune &#x2618;</span>
 </div>
 <script src="assets/krewe.js" defer></script>
+<script src="assets/kos-shop-vendors.js?v=20260930vendors2" defer></script>
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -195,7 +277,8 @@ function addToCart(id){let p=PRODUCTS.find(x=>String(x.id||x.slug)===String(id))
 function renderCart(){let ks=Object.keys(cart),n=ks.reduce((a,k)=>a+cart[k].qty,0);document.getElementById("cartCount").textContent=n;let u=document.getElementById("cartItems");if(!ks.length){u.innerHTML="<li>Your cart is empty.</li>";document.getElementById("cartTotal").textContent="";return}u.innerHTML=ks.map(k=>'<li><span>'+esc(cart[k].name)+' ('+esc(cart[k].size)+') x'+cart[k].qty+'</span><span>$'+(cart[k].price*cart[k].qty).toFixed(2)+'</span></li>').join("");document.getElementById("cartTotal").textContent="Total: $"+ks.reduce((a,k)=>a+cart[k].price*cart[k].qty,0).toFixed(2)}
 function openCart(){renderCart();document.getElementById("cartPanel").classList.add("open")}function closeCart(){document.getElementById("cartPanel").classList.remove("open")}
 window.openCart=openCart;window.closeCart=closeCart;window.addToCart=addToCart;document.getElementById("cartPanel").addEventListener("click",e=>{if(e.target===e.currentTarget)closeCart()});
-async function load(){let note=document.getElementById("shopNote");try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");buildGrid();if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Buy below — checkout opens in a secure payment window. Questions? <a href="mailto:secretary@kreweofshamrock.com">Email the Krewe</a>.';}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now — <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a> if you need something sooner.';}}catch(e){document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>';note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, <a href="mailto:secretary@kreweofshamrock.com">email the Krewe</a>.'}}
+function paintVendors(vendors,looks,failed){let root=document.getElementById("vendorApparel"),leave=document.getElementById("vendorLeave"),courtesy=document.getElementById("vendorCourtesy");if(!root)return 0;if(failed||!window.KosShopVendors){root.innerHTML='<p class="empty vendor-empty">Vendor apparel links are temporarily unavailable. Please check back soon.</p>';if(leave)leave.hidden=true;if(courtesy)courtesy.hidden=true;return 0}let result=KosShopVendors.render(root,vendors,looks);if(leave)leave.hidden=!result.vendorCount;if(courtesy)courtesy.hidden=!result.hasPhotos;return result.vendorCount}
+async function load(){let note=document.getElementById("shopNote"),productError=false,vendorCount=0;try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");buildGrid()}catch(e){productError=true;document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>'}try{let pair=await Promise.all([supabase.rpc("list_public_shop_vendors"),supabase.rpc("list_public_shop_vendor_looks")]);if(pair[0].error)throw pair[0].error;let vendors=Array.isArray(pair[0].data)?pair[0].data:[];let looks=!pair[1].error&&Array.isArray(pair[1].data)?pair[1].data:[];vendorCount=paintVendors(vendors,looks,false)}catch(e){paintVendors([],[],true)}let ask='<a href="mailto:secretary@kreweofshamrock.com">Email the Krewe</a>';if(productError){note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, '+ask+'.'}else if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Krewe Gear below checks out in a secure payment window. Apparel further down is ordered from our vendor partners, and prices are on their sites. Questions? '+ask+'.'}else if(vendorCount){note.innerHTML='🍀 <b>Krewe Gear</b> is not listed for sale right now. Apparel further down is ordered from our vendor partners, where you choose size and color. Questions? '+ask+'.'}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now — '+ask+' if you need something sooner.'}}
 load();
 </script>
 
