@@ -172,3 +172,25 @@ Apply `sql/kos_membership_applications.sql` in the Supabase SQL editor
 (project `oazwkwflgbthojvnclfc`) before the tool can load. Details, approve
 and decline behavior, and the Membership Chair notification are in
 `MEMBERSHIP_APPLICATIONS.md`.
+
+## Lockers (added 2026-09-30)
+
+Tim Fitzpatrick's locker inventory (large $200, small $75) is the Member Hub
+locker roster. `sql/kos_lockers.sql` was applied to project
+`oazwkwflgbthojvnclfc` on 2026-09-30. Run that same file in the Supabase SQL
+editor if you ever need to rebuild it. The script is safe to run again: it
+only inserts a locker code that is not already there.
+
+- **Member desk → Locker Rentals** shows the signed-in member's locker and
+  the lockers still open. It does not list other people's names.
+- **Officer desk → Locker board** is for the same people as the rest of the
+  officer desk (`is_krewe_officer()`: President, Secretary, board, and
+  non-merchandise chairs). They can assign a free-text owner, link one or
+  two member profiles, set the cost, and mark paid or open.
+- Names that match one roster profile are linked. Lisa & Stephanie,
+  King & Queen, Jeannette, Patrick & Scott, and Tess stay as free-text
+  owner labels. RL3 and RL6 were blank on the inventory and are seeded open.
+- The older request form is retired in this build. Three earlier requests
+  stay visible at the top of the officer board. The old `lockers` table is
+  left in place so the currently deployed request form keeps working until
+  this change is on the live site.

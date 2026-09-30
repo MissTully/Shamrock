@@ -1854,22 +1854,8 @@
 
       <!-- LOCKERS -->
       <section class="app-card hub-tool tool-green" id="lockerCard" data-hub="parade">
-        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Request and track your krewe locker</small></div></div>
-        <div class="app-body">
-          <form id="lockerForm" class="krewe-form">
-            <div class="row">
-              <div><label for="lkName">Your name</label><input id="lkName" required /></div>
-              <div><label for="lkEmail">Email</label><input id="lkEmail" type="email" /></div>
-            </div>
-            <label for="lkSize">Locker size</label>
-            <select id="lkSize"><option value="small" selected>Small</option><option value="large">Large</option></select>
-            <label for="lkNotes">Notes (optional)</label>
-            <input id="lkNotes" placeholder="e.g. prefer near the entrance" />
-            <button class="btn btn-primary" type="submit">☘ Request a locker</button>
-            <div class="msg" id="lkMsg"></div>
-          </form>
-          <ul class="data-list" id="lockerList"><li class="empty">Loading lockers…</li></ul>
-        </div>
+        <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Your locker, and lockers still open</small></div></div>
+        <div class="app-body" id="lockerBody"><p class="empty">Loading lockers…</p></div>
       </section>
 
       <!-- CARPOOLS -->
@@ -2140,29 +2126,23 @@
     }
     function prefillIdentity(){
       const { name, email } = kosIdentity();
-      [["lkName",name],["cpName",name]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
-      [["lkEmail",email],["cpEmail",email]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+      [["cpName",name]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
+      [["cpEmail",email]].forEach(([id,v])=>{ const el=document.getElementById(id); if(el&&v){ el.value=v; el.readOnly=true; } });
     }
 
     function initAll(){ prefillIdentity(); loadParadeReady(); handlePendingCheckin(); loadLockers(); loadCarpools(); loadVans(); loadDir(); }
 
-    /* ---------------- LOCKERS ---------------- */
+    /* ---------------- LOCKERS ----------------
+       The inventory lives in locker_units (sql/kos_lockers.sql). Members see
+       their own locker and open lockers; officers edit on the officer desk. */
     async function loadLockers(){
-      const list=document.getElementById("lockerList");
-      const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
-      if (error){ list.innerHTML='<li class="empty">Could not load lockers.</li>'; return; }
-      if (!data.length){ list.innerHTML='<li class="empty">No locker requests yet. Be the first!</li>'; return; }
-      list.innerHTML=data.map(l=>`<li class="data-row"><b>${l.locker_number?("Locker "+esc(l.locker_number)):"Locker (to be assigned)"}</b> · ${esc(l.size)} · ${esc(l.holder_name)} <span class="badge ${esc(l.status)}">${esc(l.status)}</span></li>`).join("");
+      if (typeof window.kosPaintMemberLockers === "function") {
+        await window.kosPaintMemberLockers(supabase);
+        return;
+      }
+      const body = document.getElementById("lockerBody");
+      if (body) body.innerHTML = '<p class="empty">Loading lockers…</p>';
     }
-    document.getElementById("lockerForm").addEventListener("submit",async(e)=>{
-      e.preventDefault();
-      const idn=kosIdentity();
-      const payload={ holder_name: idn.name || document.getElementById("lkName").value.trim(), holder_email: idn.email || (document.getElementById("lkEmail").value.trim()||null), size:document.getElementById("lkSize").value, notes:document.getElementById("lkNotes").value.trim()||null, status:"requested" };
-      if(!payload.holder_name){ show("lkMsg","Please enter your name.","error"); return; }
-      const { error } = await supabase.from("lockers").insert(payload);
-      if (error){ show("lkMsg","Something went wrong. Please try again.","error"); return; }
-      show("lkMsg","Locker request submitted! 🍀","success"); e.target.reset(); prefillIdentity(); loadLockers();
-    });
 
     /* ---------------- CARPOOLS ---------------- */
     let carKind="offer";
@@ -3047,15 +3027,19 @@
         }},
 
       /* ---- Logistics & Coordination ---- */
-      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments",
-        desc:"Locker status breakdown and current holders.",
+      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments", secure:true,
+        desc:"Who holds each locker, what it costs, and whether it is paid.",
         run: async()=>{
-          const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status").order("created_at",{ascending:true});
+          const { data, error } = await supabase.from("locker_units").select("code,size,owner_name,cost_cents,paid,status").order("sort_key",{ascending:true});
           if(error) throw error;
-          const rows=(data||[]); const by={};
-          rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
-          return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
-            rTable(["Locker","Size","Holder","Status"], rows.map(l=>[l.locker_number||"(to assign)",l.size||"-",l.holder_name||"-",l.status]));
+          const rows=(data||[]);
+          const open=rows.filter(l=>l.status==="open").length;
+          const unpaid=rows.filter(l=>l.status==="assigned"&&!l.paid).length;
+          return rStats([{l:"Lockers",v:rows.length},{l:"Open",v:open},{l:"Assigned, not paid",v:unpaid}]) +
+            rTable(["Locker","Size","Owner","Cost","Paid","Status"], rows.map(l=>[
+              l.code||"-", l.size||"-", l.owner_name||(l.status==="open"?"Open":"-"),
+              fmtMoney((Number(l.cost_cents)||0)/100), l.paid?"Yes":"No", l.status||"-"
+            ]));
         }},
       { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
         desc:"Drivers offering rides vs members needing one.",
@@ -4282,6 +4266,7 @@
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
   <script src="assets/kos-shop-studio.js?v=20260910shopfix" defer></script>
+  <script src="assets/kos-lockers.js?v=20260930lockers1" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
   <script src="assets/kos-reports.js?v=20260914t1" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>

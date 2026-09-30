@@ -1148,7 +1148,7 @@
       sub: "Photos and videos for the public site - an officer approves each one - plus artwork, poems, stories, and recipes.",
       cards: ["shareCard"] },
     { id: "deskTravel", icon: "🚐", chip: "Rides & locker", title: "Getting There & Your Gear",
-      sub: "Carpools, seats on the krewe vans, and locker rentals.",
+      sub: "Carpools, seats on the krewe vans, and your locker.",
       cards: ["carpoolCard", "vanCard", "lockerCard"] },
     { id: "deskLearn", icon: "📜", chip: "Learn & documents", title: "Learn & Look Up",
       sub: "The new member orientation video and the governing documents.",
@@ -6237,6 +6237,7 @@
     "hubPayments",
     "hubEventStudio",
     "hubShopStudio",
+    "hubLockers",
     "hubQrStudio",
     "hubDocStudio",
     "hubReports",
@@ -6252,6 +6253,7 @@
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
+    hubLockers: { title: "Locker board", desc: "Assignments, paid flags, and open lockers", icon: "🔑", section: "Lockers" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
     hubDocStudio: { title: "Document Studio", desc: "Upload, publish, and hide library documents", icon: "📜", section: "Documents" },
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
@@ -6267,6 +6269,7 @@
     "Approvals",
     "Documents",
     "Shop",
+    "Lockers",
     "Money",
     "Email & invoices",
     "Reports"
@@ -6280,6 +6283,7 @@
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
+    "Lockers": { icon: "🔑", sub: "Who has each locker, who has paid, and which ones are still open." },
     "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, and the online payments ledger." },
     "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
@@ -6376,7 +6380,7 @@
         "<h2>🎖️ Your Officer Desk</h2>" +
         "<p>Everything the krewe trusts you with, on one desk: run events and check-ins, " +
         "approve members' photos, videos, and clover claims, publish documents, mind the shop " +
-        "and the money, write the membership, record dues waivers, and read the numbers. Pick one tool at a time - " +
+        "and the money, assign lockers, write the membership, record dues waivers, and read the numbers. Pick one tool at a time - " +
         "the desk stays tidy.</p>" +
         '<nav class="desk-nav" id="hubOfficerDeskNav" aria-label="Officer desk sections"></nav>';
       panel.insertBefore(hero, panel.firstChild);
