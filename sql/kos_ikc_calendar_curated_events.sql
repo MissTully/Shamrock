@@ -247,7 +247,7 @@ where coalesce(source, 'krewe') = 'krewe'
 -- parades.html keeps the general March / Tampa placeholder. Do not publish.
 update public.events
 set name = 'St. Patrick''s Day Parade',
-    description = 'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.',
+    description = 'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Kilts and a sea of green.',
     event_type = 'parade',
     start_time = null,
     end_time = null,
@@ -270,7 +270,7 @@ insert into public.events (
 )
 select
   'St. Patrick''s Day Parade',
-  'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Pipes, kilts, and a sea of green.',
+  'Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Kilts and a sea of green.',
   'parade',
   null,
   null,

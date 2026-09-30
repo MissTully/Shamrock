@@ -116,6 +116,8 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   expect(html).toContain("March 2027 · date to be announced");
   expect(html).toContain("<b>Where:</b> Tampa</p>");
   expect(html).toContain("the parade where the Krewe of Shamrock was born in 1999");
+  expect(html).toContain("Kilts and a sea of green.");
+  expect(html).not.toMatch(/born in 1999\.\s*Pipes/);
   for (const file of [
     "santafest",
     "childrens-gasparilla",
@@ -139,6 +141,8 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   await expect(stPatricks).toContainText("date to be announced");
   await expect(stPatricks).toContainText("Tampa");
   await expect(stPatricks).toContainText("born in 1999");
+  await expect(stPatricks).toContainText("Kilts and a sea of green");
+  await expect(stPatricks).not.toContainText(/pipes/i);
   await expect(stPatricks).not.toContainText(/March \d{1,2}, 2027/);
   await expect(page.locator("#parade-season")).not.toContainText("Rough Riders");
   await expect(page.locator("header.page-head")).toContainText("Gasparilla");
