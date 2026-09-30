@@ -1,5 +1,7 @@
-/* Officer desk: Email members + Send invoices.
-   Any krewe officer (is_krewe_officer). Uses officer_* RPCs → outbound_emails / dues_payments. */
+/* Officer desk: Email members + level-based Send invoices.
+   Any krewe officer (is_krewe_officer).
+   Invoices: kos_dues_catalog, kos_set_membership_level, kos_create_level_invoices.
+   Email notices: officer_send_member_email → outbound_emails / Resend. */
 (function () {
   var CSS =
     ".hub-ei label{display:block;font-size:13px;color:var(--muted);margin:0 0 4px;}" +
@@ -20,6 +22,12 @@
     ".hub-ei .hub-ei-pill.on{background:#14532d;color:#fff;border-color:#14532d;}" +
     ".hub-ei .hub-ei-list{max-height:240px;overflow:auto;border:1px solid rgba(168,128,28,.25);border-radius:12px;" +
     "background:#fff;margin-top:8px;}" +
+    ".hub-ei .hub-ei-list.hub-ei-invlist{max-height:440px;}" +
+    ".hub-ei .hub-ei-catalog{border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:10px 12px;background:#fff;font-size:14px;line-height:1.45;}" +
+    ".hub-ei .hub-ei-catalog div{margin-top:4px;}" +
+    ".hub-ei .hub-ei-warn{margin:8px 0 0;font-size:13px;color:#8a4b08;line-height:1.45;}" +
+    ".hub-ei .hub-ei-counts{margin-top:8px;padding:10px 12px;border-radius:12px;background:#f6efdd;font-size:14px;line-height:1.45;}" +
+    ".hub-ei select.hub-ei-levelsel{width:auto;min-width:11rem;min-height:44px;padding:8px 10px;margin-top:6px;}" +
     ".hub-ei .hub-ei-item{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;" +
     "border-top:1px solid rgba(168,128,28,.18);font-size:15px;}" +
     ".hub-ei .hub-ei-item:first-child{border-top:0;}" +
@@ -40,11 +48,23 @@
     ".hub-ei .hub-ei-confirm input{margin-top:3px;width:20px;height:20px;}";
 
   var LOGO = "https://www.kreweofshamrock.com/assets/img/emblem-shamrock.png";
-  var ZEFFY_DUES = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-  var ZEFFY_LOA = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
 
   var emailState = { audience: "active", selected: {}, counts: {} };
-  var invState = { filter: "unpaid", selected: {}, targets: [] };
+  var LEVELS = [
+    { id: "full", label: "Full" },
+    { id: "associate", label: "Associate" },
+    { id: "loa", label: "Leave of absence" },
+    { id: "auxiliary", label: "Auxiliary" }
+  ];
+  var LEVEL_LABEL = { full: "Full", associate: "Associate", loa: "Leave of absence", auxiliary: "Auxiliary" };
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var invState = {
+    filter: "unpaid",
+    selected: {},
+    roster: [],
+    duesByMember: {},
+    catalog: {}
+  };
 
   function injectCss() {
     if (document.getElementById("kosEmailInvoicesCss")) return;
@@ -315,45 +335,381 @@
     await loadEmailHistory(client);
   }
 
-  async function loadInvoiceTargets(client) {
-    var yearEl = document.getElementById("hubInvYear");
-    var year = yearEl && yearEl.value ? parseInt(yearEl.value, 10) : new Date().getFullYear();
-    var q = val("hubInvSearch");
-    var filter = invState.filter;
-    var res = await client.rpc("officer_list_invoice_targets", {
-      p_filter: filter === "search" ? "search" : filter,
-      p_year: year,
-      p_q: q,
-      p_limit: 100
+  function levelLabel(level) {
+    return LEVEL_LABEL[level] || level || "Full";
+  }
+
+  function money(amount) {
+    var n = Number(amount);
+    if (!isFinite(n)) return "";
+    return "$" + n.toFixed(2);
+  }
+
+  function invoiceYear() {
+    var n = parseInt(val("hubInvYear") || "2026", 10);
+    if (!n || n < 2000 || n > 2100) return 2026;
+    return n;
+  }
+
+  function excludeOfficers() {
+    var el = document.getElementById("hubInvExclude");
+    return el ? !!el.checked : true;
+  }
+
+  function isElectedOfficerTitle(title) {
+    return String(title || "").split(/\s*·\s*/).some(function (part) {
+      return /^(president|vice president|secretary|treasurer)$/i.test(part.trim());
     });
-    if (res.error) throw res.error;
-    invState.targets = (res.data && res.data.targets) || [];
-    function refreshSelCount() {
-      var count = document.getElementById("hubInvSelCount");
-      if (count) count.textContent = selectedIds(invState.selected).length + " selected";
+  }
+
+  function quoteFor(level) {
+    var key = LEVEL_LABEL[level] ? level : "full";
+    var row = invState.catalog[key];
+    if (!row) return { level: key, amount: null, zeffy_url: null, from_catalog: false };
+    var url = row.zeffy_url == null ? "" : String(row.zeffy_url).trim();
+    return {
+      level: key,
+      amount: Number(row.amount),
+      zeffy_url: url || null,
+      from_catalog: true
+    };
+  }
+
+  function dueDateIso(dues, year) {
+    var raw = dues && dues.due_date ? String(dues.due_date).slice(0, 10) : "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    return year + "-06-30";
+  }
+
+  function formatDue(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!m) return iso || "";
+    return MONTHS[Number(m[2]) - 1] + " " + Number(m[3]) + ", " + m[1];
+  }
+
+  function classifyMember(m) {
+    var dues = invState.duesByMember[m.id] || null;
+    if (dues && dues.waiver_status === "applied") return { result: "skipped_waiver", dues: dues, quote: quoteFor(m.membership_level) };
+    if (dues && dues.paid) return { result: "skipped_paid", dues: dues, quote: quoteFor(m.membership_level) };
+    if (excludeOfficers() && isElectedOfficerTitle(m.officer_title)) {
+      return { result: "skipped_officer", dues: dues, quote: quoteFor(m.membership_level) };
     }
-    renderPickList("hubInvList", invState.targets, invState.selected, {
-      extra: function (m) {
-        var bits = [];
-        if (m.membership_year) bits.push("year " + m.membership_year);
-        if (m.amount != null) bits.push("$" + Number(m.amount).toFixed(2));
-        if (m.paid) bits.push("paid");
-        else bits.push("unpaid");
-        return bits.length ? " · " + bits.join(" · ") : "";
-      },
-      onChange: refreshSelCount
+    var quote = quoteFor(m.membership_level || "full");
+    if (!quote.from_catalog) return { result: "skipped_no_catalog", dues: dues, quote: quote };
+    if (!dues) return { result: "created", dues: null, quote: quote };
+    return { result: "updated", dues: dues, quote: quote };
+  }
+
+  function resultLabel(result) {
+    if (result === "created") return "Will create";
+    if (result === "updated") return "Will update";
+    if (result === "skipped_paid") return "Skip: paid";
+    if (result === "skipped_waiver") return "Skip: applied waiver";
+    if (result === "skipped_officer") return "Skip: elected officer";
+    if (result === "skipped_no_catalog") return "Skip: no catalog rate";
+    return result || "";
+  }
+
+  function previewFor(ids) {
+    var counts = {
+      created: 0, updated: 0, skipped_paid: 0, skipped_waiver: 0,
+      skipped_officer: 0, skipped_no_catalog: 0, skipped_missing: 0, missing_url: 0
+    };
+    var byId = {};
+    invState.roster.forEach(function (m) { byId[m.id] = m; });
+    ids.forEach(function (id) {
+      var m = byId[id];
+      if (!m) { counts.skipped_missing += 1; return; }
+      var c = classifyMember(m);
+      if (counts[c.result] != null) counts[c.result] += 1;
+      if ((c.result === "created" || c.result === "updated") && c.quote && !c.quote.zeffy_url &&
+          (c.quote.level === "associate" || c.quote.level === "auxiliary")) {
+        counts.missing_url += 1;
+      }
     });
-    refreshSelCount();
+    return counts;
+  }
+
+  function visibleMembers() {
+    var q = val("hubInvSearch").toLowerCase();
+    var level = val("hubInvLevel") || "full";
+    var rows = invState.roster.filter(function (m) {
+      var dues = invState.duesByMember[m.id];
+      if (invState.filter === "unpaid") return !!(dues && !dues.paid);
+      if (invState.filter === "norow") return !dues;
+      if (invState.filter === "level") return (m.membership_level || "full") === level;
+      var blob = ((m.first_name || "") + " " + (m.last_name || "") + " " + (m.email || "") + " " + (m.officer_title || "")).toLowerCase();
+      if (!q) return false;
+      return blob.indexOf(q) !== -1;
+    });
+    rows.sort(function (a, b) {
+      var ln = String(a.last_name || "").localeCompare(String(b.last_name || ""));
+      if (ln) return ln;
+      return String(a.first_name || "").localeCompare(String(b.first_name || ""));
+    });
+    return rows;
+  }
+
+  function paintCatalog() {
+    var box = document.getElementById("hubInvCatalog");
+    var warn = document.getElementById("hubInvUrlWarn");
+    if (!box) return;
+    var year = invoiceYear();
+    var missing = [];
+    box.innerHTML = "<b>" + year + " dues catalog</b>" + LEVELS.map(function (lv) {
+      var q = quoteFor(lv.id);
+      var link = !q.from_catalog ? "No catalog row" : (q.zeffy_url ? "Zeffy link ready" : "No Zeffy link yet");
+      if (q.from_catalog && !q.zeffy_url && (lv.id === "associate" || lv.id === "auxiliary")) missing.push(lv.label);
+      return "<div>" + esc(lv.label) + " · " + (q.from_catalog ? esc(money(q.amount)) : "—") + " · " + esc(link) + "</div>";
+    }).join("");
+    if (warn) {
+      warn.textContent = missing.length
+        ? missing.join(" and ") + (missing.length > 1 ? " have" : " has") +
+          " no Zeffy link yet. Emails for those levels will not include a pay button."
+        : "";
+    }
+  }
+
+  function paintPreview() {
+    var box = document.getElementById("hubInvPreview");
+    var count = document.getElementById("hubInvSelCount");
+    var ids = selectedIds(invState.selected);
+    if (count) count.textContent = ids.length + " selected";
+    if (!box) return;
+    if (!ids.length) {
+      box.textContent = "Select members to preview how many invoices will be created, updated, or skipped.";
+      return;
+    }
+    var c = previewFor(ids);
+    var text = "Preview for " + ids.length + " selected: create " + c.created +
+      ", update " + c.updated +
+      ". Skips: paid " + c.skipped_paid +
+      ", applied waiver " + c.skipped_waiver +
+      ", elected officer " + c.skipped_officer +
+      ", no catalog " + c.skipped_no_catalog +
+      (c.skipped_missing ? ", missing " + c.skipped_missing : "") + ".";
+    if (c.missing_url) {
+      text += " " + c.missing_url + " associate or auxiliary invoice(s) have no Zeffy link. Those emails will not include a pay button.";
+    }
+    box.textContent = text;
+  }
+
+  function renderInvoiceList(client) {
+    var target = document.getElementById("hubInvList");
+    if (!target) return;
+    var scroll = target.scrollTop;
+    var rows = visibleMembers();
+    if (invState.filter === "roster" && !val("hubInvSearch")) {
+      target.innerHTML = '<p class="empty" style="padding:12px;">Type a name or email to pick from the roster.</p>';
+      paintPreview();
+      return;
+    }
+    if (!rows.length) {
+      target.innerHTML = '<p class="empty" style="padding:12px;">No members match.</p>';
+      paintPreview();
+      return;
+    }
+    target.innerHTML = rows.map(function (m) {
+      var c = classifyMember(m);
+      var q = c.quote || quoteFor(m.membership_level);
+      var checked = invState.selected[m.id] ? " checked" : "";
+      var options = LEVELS.map(function (lv) {
+        var sel = (m.membership_level || "full") === lv.id ? " selected" : "";
+        return '<option value="' + lv.id + '"' + sel + ">" + esc(lv.label) + "</option>";
+      }).join("");
+      var link = !q.from_catalog ? "No catalog rate for this year" :
+        (q.zeffy_url ? '<a href="' + esc(q.zeffy_url) + '" target="_blank" rel="noopener">Zeffy link</a>' : "No Zeffy link yet");
+      var duesBit = !c.dues ? "No dues row" : (c.dues.paid ? "Paid" : "Unpaid " + money(c.dues.amount));
+      return '<div class="hub-ei-item">' +
+        '<input type="checkbox" data-id="' + esc(m.id) + '" aria-label="' + esc((m.first_name || "") + " " + (m.last_name || "")) + '"' + checked + " />" +
+        "<div><b>" + esc(m.first_name || "") + " " + esc(m.last_name || "") + "</b>" +
+        '<div class="meta">' + esc(m.email || "No email") +
+        (m.officer_title ? " · " + esc(m.officer_title) : "") +
+        " · " + esc(duesBit) + "</div>" +
+        '<label>Membership level <select class="hub-ei-levelsel" data-level-for="' + esc(m.id) + '">' + options + "</select></label>" +
+        '<div class="meta">Quote: ' + esc(levelLabel(q.level)) + " · " + (q.from_catalog ? esc(money(q.amount)) : "—") + " · " + link + "</div>" +
+        '<div class="meta">' + esc(resultLabel(c.result)) + "</div></div></div>";
+    }).join("");
+    target.scrollTop = scroll;
+    target.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var mid = cb.getAttribute("data-id");
+        if (cb.checked) invState.selected[mid] = true;
+        else delete invState.selected[mid];
+        paintPreview();
+      });
+    });
+    target.querySelectorAll("select[data-level-for]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        changeMemberLevel(client, sel.getAttribute("data-level-for"), sel.value, sel);
+      });
+    });
+    paintPreview();
+  }
+
+  async function rowsOf(builder) {
+    var res = await builder;
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+
+  async function paged(client, table, columns, apply) {
+    var size = 1000;
+    var start = 0;
+    var all = [];
+    while (true) {
+      var q = client.from(table).select(columns);
+      if (apply) q = apply(q);
+      var res = await q.range(start, start + size - 1);
+      if (res.error) throw res.error;
+      var batch = res.data || [];
+      all = all.concat(batch);
+      if (batch.length < size) break;
+      start += size;
+    }
+    return all;
+  }
+
+  async function loadInvoiceData(client) {
+    var year = invoiceYear();
+    var catalogRows = await rowsOf(
+      client.from("kos_dues_catalog")
+        .select("membership_year, level, amount, zeffy_url, active")
+        .eq("membership_year", year)
+        .eq("active", true)
+    );
+    invState.catalog = {};
+    catalogRows.forEach(function (row) {
+      if (row && row.level) invState.catalog[row.level] = row;
+    });
+    invState.roster = await paged(
+      client,
+      "members",
+      "id, first_name, last_name, email, membership_level, officer_title, membership_status",
+      function (q) {
+        return q.is("merged_into", null)
+          .in("membership_status", ["active", "lapsed", "pending-renewal"])
+          .order("last_name", { ascending: true })
+          .order("first_name", { ascending: true });
+      }
+    );
+    var duesRows = await paged(
+      client,
+      "dues_payments",
+      "id, member_id, membership_year, amount, paid, due_date, waiver_status, membership_level",
+      function (q) { return q.eq("membership_year", year); }
+    );
+    invState.duesByMember = {};
+    duesRows.forEach(function (d) {
+      if (d && d.member_id) invState.duesByMember[d.member_id] = d;
+    });
+    paintCatalog();
+    renderInvoiceList(client);
+  }
+
+  async function changeMemberLevel(client, memberId, level, sel) {
+    var member = null;
+    invState.roster.forEach(function (m) { if (m.id === memberId) member = m; });
+    var previous = member ? (member.membership_level || "full") : "full";
+    if (sel) sel.disabled = true;
+    setMsg("hubInvMsg", "");
+    try {
+      var res = await client.rpc("kos_set_membership_level", {
+        p_member_id: memberId,
+        p_level: level
+      });
+      if (res.error) throw res.error;
+      var data = res.data || {};
+      if (data.ok === false) throw new Error(data.message || "Could not change level.");
+      if (member) member.membership_level = data.membership_level || level;
+      setMsg("hubInvMsg", data.message || "Level updated.", "ok");
+      renderInvoiceList(client);
+    } catch (e) {
+      if (sel) { sel.value = previous; sel.disabled = false; }
+      setMsg("hubInvMsg", "Could not change level: " + ((e && e.message) || e), "err");
+    }
   }
 
   function setInvFilter(f) {
     invState.filter = f;
-    ["unpaid", "active", "search"].forEach(function (a) {
+    ["unpaid", "norow", "level", "roster"].forEach(function (a) {
       var btn = document.getElementById("hubInvFilt_" + a);
       if (btn) btn.classList.toggle("on", a === f);
     });
     var sw = document.getElementById("hubInvSearchWrap");
-    if (sw) sw.style.display = f === "search" ? "" : "none";
+    var lw = document.getElementById("hubInvLevelWrap");
+    if (sw) sw.style.display = f === "roster" ? "" : "none";
+    if (lw) lw.style.display = f === "level" ? "" : "none";
+  }
+
+  function invoiceEmailHtml(sample, year, level, amount, dueIso, url) {
+    var hi = sample ? ("Hi " + esc(sample.first_name || "friend") + ",") : "Hi,";
+    var html =
+      "<p>" + hi + "</p>" +
+      "<p>This is your Krewe of Shamrock membership invoice for <b>" + year + "</b>.</p>" +
+      "<p><b>Membership level:</b> " + esc(levelLabel(level)) + "</p>" +
+      "<p><b>Amount due:</b> " + esc(money(amount)) + "</p>" +
+      "<p><b>Due date:</b> " + esc(formatDue(dueIso)) + "</p>";
+    if (url) {
+      html +=
+        "<p>Please pay securely through our Zeffy membership form (no card numbers are collected in the Member Hub):</p>" +
+        '<p style="margin:18px 0;"><a href="' + esc(url) + '" ' +
+        'style="display:inline-block;background:#14532d;color:#fff;padding:12px 18px;border-radius:999px;' +
+        'text-decoration:none;font-weight:700;">Pay dues on Zeffy</a></p>';
+    } else {
+      html +=
+        "<p>A Zeffy pay link for this membership level is not set up yet. Please contact the treasurer at " +
+        "treasurer@kreweofshamrock.com before you pay. Do not send card numbers by email.</p>";
+    }
+    html += "<p>If you already paid, thank you. You can ignore this note.</p><p>Slainte,<br>Krewe of Shamrock</p>";
+    return html;
+  }
+
+  async function emailLevelInvoices(client, details, year) {
+    var byId = {};
+    invState.roster.forEach(function (m) { byId[m.id] = m; });
+    var groups = {};
+    var order = [];
+    (details || []).forEach(function (d) {
+      if (!d || (d.result !== "created" && d.result !== "updated")) return;
+      var member = byId[d.member_id];
+      if (!member || !member.email || member.email.indexOf("@") < 0) return;
+      if (invState.duesByMember[d.member_id] && invState.duesByMember[d.member_id].paid) return;
+      var level = d.membership_level || member.membership_level || "full";
+      var quote = quoteFor(level);
+      var dueIso = dueDateIso(d.result === "created" ? null : invState.duesByMember[d.member_id], year);
+      var amount = d.amount;
+      var key = [level, amount, dueIso, quote.zeffy_url || ""].join("|");
+      if (!groups[key]) {
+        groups[key] = {
+          level: level,
+          amount: amount,
+          dueIso: dueIso,
+          url: quote.zeffy_url,
+          ids: [],
+          sample: null
+        };
+        order.push(key);
+      }
+      groups[key].ids.push(d.member_id);
+      if (groups[key].ids.length === 1) groups[key].sample = member;
+      else groups[key].sample = null;
+    });
+    var emailed = 0;
+    var failed = 0;
+    var subject = "Krewe of Shamrock dues invoice (" + year + ")";
+    for (var i = 0; i < order.length; i++) {
+      var g = groups[order[i]];
+      var res = await client.rpc("officer_send_member_email", {
+        p_subject: subject,
+        p_body_html: invoiceEmailHtml(g.sample, year, g.level, g.amount, g.dueIso, g.url),
+        p_audience: "selected",
+        p_member_ids: g.ids
+      });
+      if (res.error || (res.data && res.data.ok === false)) failed += g.ids.length;
+      else emailed += (res.data && res.data.recipient_count != null) ? res.data.recipient_count : g.ids.length;
+    }
+    return { emailed: emailed, failed: failed };
   }
 
   async function loadInvoiceHistory(client) {
@@ -392,40 +748,67 @@
       setMsg("hubInvMsg", "Please confirm before creating invoices.", "err");
       return;
     }
-    var year = parseInt(val("hubInvYear") || String(new Date().getFullYear()), 10);
-    var type = val("hubInvType") || "dues_year";
-    var amountRaw = val("hubInvAmount");
-    var amount = amountRaw ? Number(amountRaw) : null;
-    var note = val("hubInvNote");
+    var year = invoiceYear();
+    var exclude = excludeOfficers();
     var sendEmail = !!(document.getElementById("hubInvEmail") && document.getElementById("hubInvEmail").checked);
-    var payChoice = val("hubInvPayLink") || "full";
-    var payUrl = payChoice === "loa" ? ZEFFY_LOA : ZEFFY_DUES;
-    if (type === "custom" && !(amount > 0)) {
-      setMsg("hubInvMsg", "Enter a positive custom amount.", "err");
-      return;
-    }
-    if (!window.confirm(
-      "Create invoices for " + ids.length + " member(s)" +
-      (sendEmail ? " and email pay links" : "") + "?"
-    )) return;
+    var preview = previewFor(ids);
+    var prompt = "Create level invoices for " + year + ": " + preview.created + " new, " +
+      preview.updated + " updates. Skips stay unpaid or untouched.";
+    if (sendEmail) prompt += " Email notices will go only to members whose invoice is created or updated.";
+    if (preview.missing_url) prompt += " Some associate or auxiliary invoices have no Zeffy link.";
+    if (!window.confirm(prompt)) return;
     if (btn) { btn.disabled = true; btn.textContent = "Working…"; }
     setMsg("hubInvMsg", "");
     try {
-      var res = await client.rpc("officer_create_and_send_invoices", {
+      var res = await client.rpc("kos_create_level_invoices", {
         p_member_ids: ids,
         p_year: year,
-        p_amount: amount,
-        p_note: note || null,
-        p_invoice_type: type,
-        p_send_email: sendEmail,
-        p_pay_url: payUrl
+        p_exclude_elected_officers: exclude
       });
       if (res.error) throw res.error;
       var data = res.data || {};
       if (data.ok === false) throw new Error(data.message || "Could not create invoices.");
-      setMsg("hubInvMsg", data.message || "Done.", "ok");
+      var emailed = 0;
+      var emailFailed = 0;
+      if (sendEmail) {
+        var mail = await emailLevelInvoices(client, data.details || [], year);
+        emailed = mail.emailed;
+        emailFailed = mail.failed;
+      }
+      var logged = true;
+      try {
+        var logRes = await client.from("officer_outreach_log").insert({
+          kind: "invoice",
+          audience: "level",
+          subject: "Level invoices " + year,
+          body_html: "",
+          recipient_count: (data.created || 0) + (data.updated || 0),
+          member_ids: ids,
+          meta: {
+            year: year,
+            created: data.created || 0,
+            updated: data.updated || 0,
+            skipped_paid: data.skipped_paid || 0,
+            skipped_waiver: data.skipped_waiver || 0,
+            skipped_officer: data.skipped_officer || 0,
+            skipped_no_catalog: data.skipped_no_catalog || 0,
+            emailed: emailed,
+            exclude_elected_officers: exclude,
+            send_email: sendEmail
+          }
+        });
+        if (logRes && logRes.error) logged = false;
+      } catch (logErr) {
+        logged = false;
+      }
+      var msg = data.message || "Invoices saved.";
+      if (sendEmail) msg += " Queued " + emailed + " email notice(s).";
+      if (emailFailed) msg += " " + emailFailed + " email(s) could not be queued.";
+      if (!logged) msg += " Recent history could not be updated.";
+      setMsg("hubInvMsg", msg, emailFailed ? "err" : "ok");
       invState.selected = {};
-      await loadInvoiceTargets(client);
+      if (confirm) confirm.checked = false;
+      await loadInvoiceData(client);
       await loadInvoiceHistory(client);
     } catch (e) {
       setMsg("hubInvMsg", "Could not create: " + ((e && e.message) || e), "err");
@@ -436,40 +819,46 @@
   async function loadInvoiceCard(client) {
     var card = ensureCard("hubSendInvoices");
     if (!card) return;
-    var y = new Date().getFullYear();
     card.innerHTML =
       '<div class="app-head"><span class="ic">🧾</span><div><h2>Send invoices</h2>' +
-      "<small>Create dues invoices and optionally email a Zeffy pay link</small></div></div>" +
+      "<small>Create level-based dues invoices and optionally email the catalog pay link</small></div></div>" +
       '<div class="app-body hub-ei">' +
-      '<p class="hub-ei-note">No card numbers are collected here. Members pay on Zeffy (or the Hub pay-dues path). Paid dues rows are never re-emailed.</p>' +
+      '<p class="hub-ei-note">Amounts come from the dues catalog for each member\'s level. No card numbers are collected here. Paid rows and applied waivers are skipped and never emailed.</p>' +
+      '<div class="hub-ei-catalog" id="hubInvCatalog">Loading catalog…</div>' +
+      '<p class="hub-ei-warn" id="hubInvUrlWarn"></p>' +
       '<div class="hub-ei-grid">' +
+      "<div><label for=\"hubInvYear\">Membership year</label>" +
+      '<input id="hubInvYear" type="number" min="2000" max="2100" value="2026" /></div>' +
       "<div><label>Who to invoice</label>" +
       '<div class="hub-ei-pills">' +
-      '<button type="button" class="hub-ei-pill on" id="hubInvFilt_unpaid">Unpaid dues</button>' +
-      '<button type="button" class="hub-ei-pill" id="hubInvFilt_active">All active</button>' +
-      '<button type="button" class="hub-ei-pill" id="hubInvFilt_search">Search roster</button>' +
+      '<button type="button" class="hub-ei-pill on" id="hubInvFilt_unpaid">Unpaid</button>' +
+      '<button type="button" class="hub-ei-pill" id="hubInvFilt_norow">No dues row</button>' +
+      '<button type="button" class="hub-ei-pill" id="hubInvFilt_level">By level</button>' +
+      '<button type="button" class="hub-ei-pill" id="hubInvFilt_roster">Roster pick</button>' +
       "</div></div>" +
+      '<div id="hubInvLevelWrap" style="display:none;">' +
+      '<label for="hubInvLevel">Level</label>' +
+      '<select id="hubInvLevel">' +
+      '<option value="full">Full</option>' +
+      '<option value="associate">Associate</option>' +
+      '<option value="loa">Leave of absence</option>' +
+      '<option value="auxiliary">Auxiliary</option>' +
+      "</select></div>" +
       '<div id="hubInvSearchWrap" style="display:none;">' +
-      '<label for="hubInvSearch">Search</label>' +
-      '<input id="hubInvSearch" type="search" placeholder="Name or email" /></div>' +
-      '<div><label for="hubInvYear">Membership year</label>' +
-      '<input id="hubInvYear" type="number" min="2020" max="2100" value="' + y + '" /></div>' +
-      '<div class="hub-ei-list" id="hubInvList"><p class="empty" style="padding:12px;">Loading…</p></div>' +
-      '<p class="hub-ei-note" id="hubInvSelCount">0 selected</p>' +
-      '<div><label for="hubInvType">Invoice type</label>' +
-      '<select id="hubInvType"><option value="dues_year">Dues for year</option>' +
-      '<option value="custom">Custom amount + note</option></select></div>' +
-      '<div><label for="hubInvAmount">Amount (optional; default $375 for new rows)</label>' +
-      '<input id="hubInvAmount" type="number" min="1" step="0.01" placeholder="375.00" /></div>' +
-      '<div><label for="hubInvNote">Note (optional)</label>' +
-      '<input id="hubInvNote" type="text" maxlength="300" placeholder="e.g. 2026 full membership" /></div>' +
-      '<div><label for="hubInvPayLink">Pay link in email</label>' +
-      '<select id="hubInvPayLink">' +
-      '<option value="full">Full membership (Zeffy $375)</option>' +
-      '<option value="loa">Leave of absence (Zeffy $100)</option></select></div>' +
+      '<label for="hubInvSearch">Search roster</label>' +
+      '<input id="hubInvSearch" type="search" placeholder="Name or email" autocomplete="off" /></div>' +
+      '<div class="hub-ei-list hub-ei-invlist" id="hubInvList"><p class="empty" style="padding:12px;">Loading…</p></div>' +
+      '<div class="hub-ei-row">' +
+      '<button class="btn" type="button" id="hubInvSelectShown">Select shown</button>' +
+      '<button class="btn" type="button" id="hubInvClear">Clear selection</button>' +
       "</div>" +
+      '<p class="hub-ei-note" id="hubInvSelCount">0 selected</p>' +
+      '<div class="hub-ei-counts" id="hubInvPreview" aria-live="polite">Select members to preview how many invoices will be created, updated, or skipped.</div>' +
+      "</div>" +
+      '<label class="hub-ei-confirm"><input type="checkbox" id="hubInvExclude" checked />' +
+      "<span>Exclude elected officers (President, Vice President, Secretary, Treasurer)</span></label>" +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubInvEmail" checked />' +
-      "<span>Also email each member a pay link / invoice notice</span></label>" +
+      "<span>Also email a notice with level, amount, due date, and the catalog Zeffy link</span></label>" +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubInvConfirm" />' +
       "<span>I confirm these invoice records and any emails look right.</span></label>" +
       '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubInvSend">Create invoices</button></div>' +
@@ -477,36 +866,44 @@
       '<div class="hub-ei-history"><h3>Recent invoice batches</h3><div id="hubInvHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
 
-    ["unpaid", "active", "search"].forEach(function (f) {
+    ["unpaid", "norow", "level", "roster"].forEach(function (f) {
       var btn = document.getElementById("hubInvFilt_" + f);
       if (!btn) return;
       btn.addEventListener("click", function () {
         setInvFilter(f);
-        invState.selected = {};
-        loadInvoiceTargets(client).catch(function (e) {
-          setMsg("hubInvMsg", (e && e.message) || "Could not load list.", "err");
-        });
+        renderInvoiceList(client);
       });
     });
-    var searchTimer = null;
     var search = document.getElementById("hubInvSearch");
-    if (search) {
-      search.addEventListener("input", function () {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(function () {
-          loadInvoiceTargets(client).catch(function () {});
-        }, 220);
-      });
-    }
+    if (search) search.addEventListener("input", function () { renderInvoiceList(client); });
+    var levelEl = document.getElementById("hubInvLevel");
+    if (levelEl) levelEl.addEventListener("change", function () { renderInvoiceList(client); });
     var yearEl = document.getElementById("hubInvYear");
     if (yearEl) {
       yearEl.addEventListener("change", function () {
-        loadInvoiceTargets(client).catch(function () {});
+        invState.selected = {};
+        loadInvoiceData(client).catch(function (e) {
+          setMsg("hubInvMsg", (e && e.message) || "Could not load the catalog.", "err");
+        });
       });
     }
+    var excludeEl = document.getElementById("hubInvExclude");
+    if (excludeEl) excludeEl.addEventListener("change", function () { renderInvoiceList(client); });
+    document.getElementById("hubInvSelectShown").addEventListener("click", function () {
+      visibleMembers().forEach(function (m) { invState.selected[m.id] = true; });
+      renderInvoiceList(client);
+    });
+    document.getElementById("hubInvClear").addEventListener("click", function () {
+      invState.selected = {};
+      renderInvoiceList(client);
+    });
     document.getElementById("hubInvSend").addEventListener("click", function () { sendInvoices(client); });
     setInvFilter("unpaid");
-    await loadInvoiceTargets(client);
+    try {
+      await loadInvoiceData(client);
+    } catch (e) {
+      setMsg("hubInvMsg", (e && e.message) || "Could not load members or the dues catalog.", "err");
+    }
     await loadInvoiceHistory(client);
   }
 

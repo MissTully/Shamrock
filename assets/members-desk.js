@@ -6247,7 +6247,7 @@
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
     hubEmailMembers: { title: "Email members", desc: "Choose audience, write, preview, and send", icon: "✉️", section: "Email & invoices" },
-    hubSendInvoices: { title: "Send invoices", desc: "Create dues invoices and email pay links", icon: "🧾", section: "Email & invoices" }
+    hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" }
   };
 
   var OFFICER_SECTION_ORDER = [

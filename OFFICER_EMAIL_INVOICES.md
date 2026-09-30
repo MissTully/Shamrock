@@ -7,7 +7,7 @@ For any krewe officer with Officer desk access (board, officer, or captain — n
 Member Hub → **Officer desk** → section **Email & invoices**:
 
 1. **Email members** - choose audience (all active, officers & board, chairs/officers, or pick from roster), write subject and message, preview, confirm, Send.
-2. **Send invoices** - filter unpaid dues or pick members, set year/amount/note, create `dues_payments` invoice rows, optionally email a Zeffy pay link. The amount should be that member's catalog rate (`full`, `associate`, `loa`, or `auxiliary`), not always $375. See DUES_FOUNDATION.md.
+2. **Send invoices** - choose the membership year (default 2026), filter unpaid dues, members with no dues row, a level, or a roster search, then create catalog-priced `dues_payments` rows. See DUES_FOUNDATION.md.
 
 ## How email delivery works
 
@@ -22,13 +22,15 @@ Until the key is set, sends still queue safely and show in history; nothing leav
 
 ## Invoices / payments
 
-- Creates or updates unpaid rows on `dues_payments` (no second billing system).
-- 2026 rates live in `kos_dues_catalog`: full $375, associate $450, loa $100, auxiliary $200. `members.membership_level` picks the row. Do not treat $375 as the only dues amount.
-- This Hub screen can still type an amount, and the older invoice function still defaults to $375 when no amount is passed. Until the screen reads the catalog, look up the level in `kos_dues_catalog` or run `kos_create_level_invoices` so associate, loa, and auxiliary are not invoiced at the full rate by mistake.
-- Emails include the Zeffy link for that level when the catalog has one (full and loa today). Associate and auxiliary have no link yet. No card numbers are collected in the Hub.
+- The screen reads `kos_dues_catalog` for the selected year and shows each member's `membership_level` with that year's amount and Zeffy link.
+- A level dropdown calls `kos_set_membership_level` before you invoice. That does not rewrite an invoice already on the books.
+- **Create invoices** calls `kos_create_level_invoices`. The preview counts creates, updates, and skips (paid, applied waiver, elected officer, no catalog row) before anything is written.
+- **Exclude elected officers** is on by default (President, Vice President, Secretary, and Treasurer).
+- Optional email uses the same outbound queue and Resend path as Email members. Each notice includes the level, amount, due date, and the catalog Zeffy link. Paid members are not emailed. Associate and auxiliary have no link yet; the screen warns, and those emails do not invent a pay button.
+- Creates or updates unpaid rows on `dues_payments` (no second billing system). 2026 rates: full $375, associate $450, loa $100, auxiliary $200.
 - When Zeffy webhooks mark dues paid, those members drop off the unpaid list. Applied waivers (`paid` true, method `waiver`) do too.
 
 ## SQL / functions
 
-- Current Hub send path: `sql/kos_officer_email_and_invoices.sql` and Edge Function `process-outbound-emails`.
-- Level catalog, waivers, and officer functions (no Hub screen yet): `sql/kos_dues_foundation.sql` and DUES_FOUNDATION.md.
+- Send invoices: `kos_dues_catalog`, `kos_set_membership_level`, and `kos_create_level_invoices` in `sql/kos_dues_foundation.sql`. Email notices still queue through `officer_send_member_email` and `process-outbound-emails`.
+- Waiver requests and treasurer reports are not on this screen. See DUES_FOUNDATION.md.
