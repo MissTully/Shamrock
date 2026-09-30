@@ -70,4 +70,46 @@ test("prospect email SQL stores links outside the letter and does not turn the p
   expect(SQL).toContain("kos_membership_prospect_emails_enabled");
   expect(SQL).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
   expect(SQL).not.toContain("update public.kos_runtime_flags");
+  expect(SQL).toContain("kos_prospect_background_check_email_html(text,text,jsonb)");
+  expect(SQL).toContain("kos_joining_packet_email_subject");
+});
+
+test("joining packet template SQL keeps payment links out of the editable letter", () => {
+  const templateSql = fs.readFileSync(
+    path.join(__dirname, "../../sql/kos_joining_packet_email_template.sql"),
+    "utf8"
+  );
+  expect(templateSql).toContain("kos_joining_packet_template");
+  expect(templateSql).toContain("on conflict (id) do nothing");
+  expect(templateSql).toContain("save_joining_packet_email_template");
+  expect(templateSql).toContain("preview_joining_packet_email");
+  expect(templateSql).toContain("get_joining_packet_email_template");
+  expect(templateSql).toContain("can_review_applications");
+  expect(templateSql).toContain("{{first_name}}");
+  expect(templateSql).toContain("background_check_payments");
+  expect(templateSql).toContain("kos_dues_catalog");
+  expect(templateSql).toContain("kos_joining_packet_email_subject");
+  expect(templateSql).toContain("repeat('a', 64)");
+  expect(templateSql).not.toContain("zeffy.com");
+  expect(templateSql).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
+  expect(templateSql).not.toContain("update public.kos_runtime_flags");
+  const previewFn = templateSql.slice(
+    templateSql.indexOf("function public.preview_joining_packet_email"),
+    templateSql.indexOf("function public.save_joining_packet_email_template")
+  );
+  const saveFn = templateSql.slice(
+    templateSql.indexOf("function public.save_joining_packet_email_template"),
+    templateSql.indexOf("function public.send_membership_full_application")
+  );
+  expect(previewFn).not.toContain("enqueue_email");
+  expect(saveFn).not.toContain("enqueue_email");
+  expect(templateSql).toContain("v_subject");
+  const defaults = templateSql.slice(
+    templateSql.indexOf("kos_joining_packet_email_defaults"),
+    templateSql.indexOf("revoke all on function public.kos_joining_packet_email_defaults")
+  );
+  expect(defaults).toContain("We're glad you're joining the Krewe");
+  expect(defaults).toContain("We're so glad you're joining the Krewe of Shamrock");
+  expect(defaults).not.toMatch(/https?:\/\//);
+  expect(defaults).not.toContain("—");
 });
