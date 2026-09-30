@@ -1062,7 +1062,15 @@
     border-radius:22px; padding:16px 16px 20px;
   }
   .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
+  .app-event-acts{ display:flex; flex-direction:column; align-items:stretch; gap:6px; }
+  .app-cal-mini{
+    min-height:36px; padding:6px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    background:transparent; color:#f0d78c; border:1px solid rgba(226,193,90,.7);
+    font-family:var(--display); font-weight:700; font-size:13px;
+  }
+  .app-cal-mini:focus-visible, .app-event-hit:focus-visible{ outline:2px solid #e2c15a; outline-offset:2px; }
   .app-event-hit{
+    box-sizing:border-box;
     width:100%; text-align:left; cursor:pointer; color:inherit; font:inherit;
     display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:12px; align-items:center;
     margin:10px 0; padding:12px; border-radius:18px;
@@ -1265,6 +1273,7 @@
     border:1px solid rgba(168,128,28,.4);
   }
   body.hub-desk .app-event-hit .muted{ color:#5f6b5a; }
+  body.hub-desk .app-cal-mini{ color:#14532d; border-color:rgba(20,83,45,.45); background:#fff; }
   body.hub-desk .app-date{ background:#14532d; }
   body.hub-desk .app-date span{ color:#fff; }
   .hub-board{ min-height:248px; }
@@ -4352,8 +4361,8 @@
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
-<script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260930packet1" defer></script>
+<script src="assets/kos-calendar.js?v=20260930cal2"></script>
+<script src="assets/members-desk.js?v=20260930cal3" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
