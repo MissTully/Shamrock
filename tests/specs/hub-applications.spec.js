@@ -111,6 +111,9 @@ test.describe("Membership Applications", () => {
     const tool = page.locator("#hubApplications");
     await expect(tool).toBeVisible();
     await expect(tool.locator("h2")).toHaveText("Membership Applications");
+    await expect(tool).toContainText("Call first");
+    await expect(tool.locator(".hub-app-journey")).toContainText("Joining packet");
+    await expect(tool).toContainText("Next step: call the prospect");
     await expect(tool).toContainText("Nia Byrne");
     await expect(tool).toContainText("nia.byrne@example.com");
     await expect(tool).toContainText("813-555-0199");
@@ -126,7 +129,7 @@ test.describe("Membership Applications", () => {
     await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
     await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
-    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Move to background check");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Send joining packet");
     await expect(tool.locator("[data-app-send]")).toHaveCount(0);
     await expect(tool).not.toContainText("Send full application");
     await expect(tool).not.toContainText("Mark next step sent");
@@ -144,6 +147,7 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-bucket='new']").click();
     await expect(tool).toContainText("Nia Byrne");
 
+    await tool.locator(".hub-app-other summary").first().click();
     page.once("dialog", (dialog) => dialog.accept());
     await tool.locator("[data-app-approve='app-nia']").click();
     await expect(tool).toContainText("Approved.");

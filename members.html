@@ -2088,7 +2088,7 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js?v=20260930return1" defer></script>
+  <script src="assets/krewe.js?v=20260930local1" defer></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -4081,7 +4081,8 @@
       if(desk?.scrollIntoView) desk.scrollIntoView({behavior:"smooth",block:"start"});
     });
 
-    window.kosSignOut=async()=>{ await sb.auth.signOut(); location.reload(); };
+    /* scope "local": sign out on this device only; other phones and computers stay signed in. */
+    window.kosSignOut=async()=>{ await sb.auth.signOut({ scope:"local" }); location.reload(); };
     sb.auth.onAuthStateChange((event)=>{
       if(event==="PASSWORD_RECOVERY"){ awaitingNewPassword=true; }
       route();
@@ -4352,7 +4353,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260930volunteer1" defer></script>
+<script src="assets/members-desk.js?v=20260930volunteer2" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>

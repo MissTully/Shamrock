@@ -227,6 +227,14 @@
     ".hub-apps-banner .sub{display:block;font-size:16px;line-height:1.4;color:#3d5a40;}",
     ".hub-apps-banner .go{margin-left:auto;color:#7a5b00;font-family:var(--display);font-size:18px;font-weight:700;flex:none;}",
     ".hub-app-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}",
+    ".hub-app-journey{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;}",
+    ".hub-app-journey li{border:1px solid rgba(168,128,28,.4);background:#fff;color:var(--green-800);border-radius:999px;padding:6px 12px;font-family:var(--display);font-size:14px;}",
+    ".hub-app-journey li.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
+    ".hub-app-journey li.done{background:#f0e2bd;border-color:#d4b45a;color:#7a5b00;}",
+    ".hub-app-other{margin-top:8px;width:100%;}",
+    ".hub-app-other summary{cursor:pointer;color:var(--green-800);font-family:var(--display);font-size:15px;}",
+    ".hub-app-other .hub-appr-btns{margin-top:8px;}",
+    ".hub-app-next{margin:0 0 10px;font-size:15px;color:var(--green-800);font-weight:600;}",
     ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
@@ -483,9 +491,9 @@
 
   function applicationsTileDesc() {
     var n = Number(state.applicationCount) || 0;
-    if (n === 1) return "1 new join-form application waiting";
-    if (n === 0) return "No new join-form applications right now";
-    return n + " new join-form applications waiting";
+    if (n === 1) return "1 new application. Call, then send the joining packet.";
+    if (n === 0) return "No new applications right now";
+    return n + " new applications. Call, then send the joining packet.";
   }
 
   function volunteerInquiryCountOf(status) {
@@ -3669,7 +3677,7 @@
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
     if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
+    if (action === "background_check") return "Moved to background check. Joining packet sent when prospect emails are on: a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
     if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
@@ -3773,6 +3781,84 @@
     reloadApplications(client);
   }
 
+
+  function applicationJourneyStep(bucket) {
+    if (bucket === "background") return 3;
+    if (bucket === "dues") return 4;
+    if (bucket === "approved") return 5;
+    if (bucket === "declined" || bucket === "archived") return 0;
+    if (bucket === "renewal" || bucket === "prospect") return 0;
+    return 1;
+  }
+
+  function applicationJourneyHtml(bucket) {
+    var step = applicationJourneyStep(bucket);
+    var labels = [
+      "1. Interest",
+      "2. Call",
+      "3. Joining packet",
+      "4. Check and dues",
+      "5. Approve"
+    ];
+    var html = '<ol class="hub-app-journey" aria-label="Member journey for the Membership Chair">';
+    labels.forEach(function (label, i) {
+      var n = i + 1;
+      var cls = "";
+      if (step > 0 && n < step) cls = " class=\"done\"";
+      else if (step > 0 && n === step) cls = " class=\"on\"";
+      html += "<li" + cls + ">" + label + "</li>";
+    });
+    return html + "</ol>";
+  }
+
+  function applicationActionButtons(row) {
+    var id = esc(row.id);
+    var status = row.membership_status || "";
+    var primary = "";
+    var secondary = "";
+    var other = "";
+    if (status === "pending-new" || status === "prospect") {
+      primary = '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+      other =
+        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
+        '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>' +
+        '<button type="button" class="btn" data-app-approve="' + id + '">Approve</button>' +
+        "</div></details>";
+    } else if (status === "background-check") {
+      primary = '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Move to dues pending</button>';
+      secondary =
+        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    } else if (status === "dues-pending") {
+      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+      other =
+        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
+        '<button type="button" class="btn" data-app-bg="' + id + '">Send joining packet again</button>' +
+        "</div></details>";
+    } else if (status === "pending-renewal") {
+      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    } else {
+      primary =
+        (status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>') +
+        (status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
+        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+      secondary =
+        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+    }
+    return '<div class="hub-appr-btns">' + primary + secondary + "</div>" + other;
+  }
+
   function renderApplicationsFromState() {
     if (!state.canReviewApplications) return;
     var panel = document.getElementById("hubOfficer");
@@ -3782,15 +3868,15 @@
     var bucket = state.applicationBucket || "new";
     var rows = applicationBucketRows();
     var intro = {
-      renewal: "These are renewals, not new join-form applications.",
+      renewal: "These are renewals, not new join-form applications. Approve when dues are settled.",
       prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "Background check is in progress. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they submit that form and begin the check. The application fee is separate from membership dues.",
-      dues: "This list is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.",
-      approved: "Approved applications. These people are active members.",
+      background: "You already sent the joining packet. They should finish the full application and pay the background check fee. The dues invoice is emailed when they submit that form and begin the check. The application fee is separate from membership dues.",
+      dues: "You are waiting on membership dues, not the application fee. The dues invoice was emailed when they submitted the full application and began the background check.",
+      approved: "Approved. These people are active members.",
       declined: "Declined applications stay on file. Nothing was deleted.",
       archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check."
-    }[bucket] || "These people asked to join. Newest first. Interest comes in first. When prospect emails are on, Move to background check emails a link to finish the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.";
+      "new": "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check."
+    }[bucket] || "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check.";
     var empty = {
       renewal: "No pending renewals.",
       prospect: "No event prospects in this list.",
@@ -3805,8 +3891,18 @@
       return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on"' : "") + ">" +
         label + " (" + applicationCountOf(key) + ")</button>";
     }
+    var nextStep = {
+      "new": "Next step: call the prospect, then send the joining packet.",
+      background: "Next step: wait for the full application and background check fee, then move to dues pending when ready.",
+      dues: "Next step: confirm dues, then Approve.",
+      approved: "These members are active.",
+      declined: "No next step. Records stay on file.",
+      archived: "No next step. Records stay on file.",
+      renewal: "Next step: Approve when the renewal is ready.",
+      prospect: "Event prospects are not the join-form pipeline."
+    }[bucket] || "Next step: call the prospect, then send the joining packet.";
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Interest comes in first. When prospect emails are on, Move to background check emails the full application, the background check payment, and each membership level. The dues invoice is sent when they begin the check.</small></div></div>' +
+      '<small>Guide each person from interest to active member. Call first. Then send the joining packet. Wait for the check and dues. Approve when they are ready.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
@@ -3821,6 +3917,8 @@
       filterBtn("renewal", "Renewals") +
       filterBtn("prospect", "Event prospects") +
       "</div>" +
+      applicationJourneyHtml(bucket) +
+      '<p class="hub-app-next">' + esc(nextStep) + "</p>" +
       '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
     if (state.applicationLoadError && !rows.length) {
       html += '<p class="empty">' + esc(state.applicationLoadError) + "</p>";
@@ -3842,7 +3940,7 @@
           (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
           (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
           '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are not the application fee. The dues invoice is emailed when they submit the full application and begin the background check. The background check email lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100.</div>' +
+          '<div class="muted">Membership dues are not the application fee. The joining packet lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100. The dues invoice is emailed when they submit the full application and begin the background check.</div>' +
           '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
           applicationIdMarkup(row, "applicant", "dl") +
           applicationIdMarkup(row, "applicant", "ssn") +
@@ -3857,13 +3955,7 @@
             : "") +
           "</div>";
         if (open) {
-          html += '<div class="hub-appr-btns">' +
-            (row.membership_status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Move to background check</button>') +
-            (row.membership_status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
-            '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
-            '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-            '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>' +
-            "</div>";
+          html += applicationActionButtons(row);
         }
         html += "</div>";
       });
@@ -3930,14 +4022,14 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
+        if (!confirm("Send the joining packet and move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
-        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. The dues invoice is emailed when they submit the full application, not by this button.")) return;
+        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. This button does not send another invoice. The dues invoice is emailed when they submit the full application.")) return;
         decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
       });
     });
@@ -6721,7 +6813,7 @@
   ];
 
   var OFFICER_TOOL_META = {
-    hubApplications: { title: "Membership Applications", desc: "Review join-form applications", icon: "📝", section: "Membership" },
+    hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
@@ -6753,7 +6845,7 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
-    "Membership": { icon: "📝", sub: "Join-form applications: new, background check, dues pending, then approve, decline, or archive." },
+    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
     "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
     "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
