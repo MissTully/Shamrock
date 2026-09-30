@@ -258,6 +258,8 @@
     ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
+    ".hub-app-note-hint{margin:8px 0 0;}",
+    ".hub-app-note-save{margin-top:8px;}",
     ".hub-vol-text{white-space:pre-wrap;}",
     ".hub-app-flash{background:#e7f3ea;border:1px solid rgba(29,107,62,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#14532d;line-height:1.45;}",
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
@@ -3803,6 +3805,7 @@
     if (action === "full_application_received") return "Full application received";
     if (action === "id_revealed") return "Background-check number opened";
     if (action === "approve") return "Approved";
+    if (action === "note") return "Note";
     return "Updated";
   }
 
@@ -3956,6 +3959,7 @@
     if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
+    if (action === "note") return "Note saved on the record. Their stage is the same, and the joining packet was not sent.";
     return "Saved.";
   }
 
@@ -3969,6 +3973,96 @@
   }
 
   var lastDecisionStamp = { key: "", at: 0 };
+
+  function applicationRecordNoteHtml(row) {
+    var text = row && row.record_note ? String(row.record_note).trim() : "";
+    if (!text) return "";
+    var when = formatAppliedEt(row.record_note_at);
+    var by = row.record_note_by ? String(row.record_note_by).trim() : "";
+    var meta = [by, when].filter(Boolean).join(" · ");
+    return '<div class="muted" data-app-record-note>Record note: ' + esc(redactDisplayedId(text)) +
+      (meta ? " · " + esc(meta) : "") + "</div>";
+  }
+
+  // Officer notes live in membership_application_actions (action = note).
+  // members.notes stays the applicant's own note ("Their note").
+  async function saveApplicationNote(client, id, note, btn) {
+    var text = (note || "").trim();
+    if (!text) {
+      alert("Write a note before saving.");
+      return;
+    }
+    var stamp = "note:" + String(id);
+    var now = Date.now();
+    if (lastDecisionStamp.key === stamp && now - lastDecisionStamp.at < 800) return;
+    lastDecisionStamp.key = stamp;
+    lastDecisionStamp.at = now;
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      var row = null;
+      (applicationsFixture || []).forEach(function (r) {
+        if (String(r.id) === String(id)) row = r;
+      });
+      if (!row) {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      var from = row.membership_status;
+      var actor = fixtureActor();
+      var recent = state.applicationRecent || [];
+      row.record_note = text;
+      row.record_note_by = actor.actor_name;
+      row.record_note_at = actor.created_at;
+      recent.unshift({
+        id: "act-note-" + Date.now(),
+        member_id: row.id,
+        action: "note",
+        note: text,
+        from_status: from,
+        to_status: from,
+        actor_name: actor.actor_name,
+        actor_email: actor.actor_email,
+        created_at: actor.created_at,
+        applicant: ((row.first_name || "") + " " + (row.last_name || "")).trim()
+      });
+      state.applicationRecent = recent.slice(0, 12);
+      if (roleFixture) {
+        roleFixture.applications = applicationsFixture;
+        roleFixture.applicationRecent = state.applicationRecent;
+      }
+      state.applicationRows = applicationsFixture.slice();
+      syncApplicationFixtureCounts();
+      state.applicationFlash = applicationFlashFor("note");
+      renderHome();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Could not save that note.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc("save_membership_application_note", {
+        p_member_id: id,
+        p_note: text
+      });
+      var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String((res.error && res.error.message) || res.error));
+      if (missing) {
+        throw new Error("Saving a note on its own needs the database update in sql/kos_membership_application_record_note.sql.");
+      }
+      if (res.error) throw res.error;
+      var payload = res.data || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not save that note.");
+      state.applicationFlash = payload.message || applicationFlashFor("note");
+    } catch (e) {
+      alert("Could not save that note: " + ((e && e.message) || e));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadApplications(client);
+  }
 
   async function decideApplication(client, action, id, note, btn) {
     // A status click rebuilds the card. A second click in the same moment
@@ -4545,9 +4639,12 @@
           (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
           (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
           (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +
+          applicationRecordNoteHtml(row) +
           (open
             ? '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
-              '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>'
+              '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
+              '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
+              '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + id + '">Save note</button></div>'
             : "") +
           "</div>";
         if (open) {
@@ -4592,6 +4689,12 @@
       var el = document.getElementById("hubAppNote-" + id);
       return el ? (el.value || "").trim() : "";
     }
+    body.querySelectorAll("[data-app-save-note]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-save-note");
+        saveApplicationNote(window.__kosSb || null, id, noteFor(id), btn);
+      });
+    });
     body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
