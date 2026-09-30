@@ -6,6 +6,7 @@
 --   Melissa applies this file. Do not apply it from the site deploy.
 --   Run after sql/kos_membership_background_check_invoice.sql
 --   and sql/kos_dues_foundation.sql.
+--   Then run sql/kos_joining_packet_email_template.sql last.
 --   Safe to run again.
 --
 -- Does not turn prospect email on. The pause lives in
@@ -123,6 +124,12 @@ declare
   v_level text;
   v_btn_style text := 'display:inline-block;background:#14532d;color:#ffffff;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700;';
 begin
+  -- sql/kos_joining_packet_email_template.sql replaces the letter body.
+  -- Re-running this file keeps that reader when the template function exists.
+  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text,jsonb)') is not null then
+    return public.kos_prospect_background_check_email_html(p_first_name, p_application_url, null::jsonb);
+  end if;
+
   if v_app !~ '^https://www\.kreweofshamrock\.com/membership-full-application\.html\?token=[0-9a-f]{64}$' then
     v_app := '';
   end if;
@@ -294,6 +301,7 @@ declare
   v_mail uuid;
   v_name text;
   v_pause text;
+  v_subject text := 'We''re glad you''re joining the Krewe';
 begin
   if auth.uid() is null or not public.can_review_applications() then
     return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
@@ -346,11 +354,14 @@ begin
     coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
     v_url
   );
+  if to_regprocedure('public.kos_joining_packet_email_subject()') is not null then
+    v_subject := coalesce(nullif(btrim(public.kos_joining_packet_email_subject()), ''), v_subject);
+  end if;
 
   v_mail := public.enqueue_email(
     rec.email,
     nullif(v_name, ''),
-    'We''re glad you''re joining the Krewe',
+    v_subject,
     v_html,
     'membership_full_application',
     rec.id
