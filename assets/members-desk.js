@@ -3124,10 +3124,22 @@
       profileEditing = false;
       renderProfileCard();
       renderHome();
+      try { if (window.kosSyncLepWelcome) window.kosSyncLepWelcome(); } catch (syncErr) {}
     } catch (e) {
       if (msg) msg.textContent = "Couldn't save: " + ((e && e.message) || e);
     }
   }
+
+  // Opens the My Krewe profile editor (Me tab). The welcome modal links here.
+  window.kosEditMyProfile = function () {
+    profileEditing = true;
+    showTab("krewe");
+    renderProfileCard();
+    setTimeout(function () {
+      var card = document.getElementById("hubProfileCard");
+      if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "auto", block: "start" });
+    }, 80);
+  };
 
 
   // ---- Claim Clovers: member submits activities for officer approval ----

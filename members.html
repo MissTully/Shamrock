@@ -599,6 +599,10 @@
   #lepOverlay h2{font-family:var(--display);color:var(--green-800);margin:8px 0 6px;font-size:28px;}
   #lepOverlay .lep-body{text-align:left;color:#3a3a2e;font-size:15px;line-height:1.5;margin:0 0 14px;}
   #lepOverlay .lep-body b{color:var(--green-800);}
+  #lepOverlay .lep-body a{color:var(--green-800);font-weight:700;}
+  #lepOverlay .lep-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  #lepOverlay .lep-actions .btn{flex:1 1 160px;}
+  #lepOverlay .lep-actions #lepGoProfile{flex:1 1 100%;}
 
   /* ---- Signed-in Fáilte hero (members hub) ---- */
   .page-head.is-home{
@@ -1961,8 +1965,9 @@
       </div>
       <h2>Fáilte, new friend!</h2>
       <div class="lep-body" id="lepBody"></div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
-        <button class="btn btn-primary" type="button" id="lepGoDesk">☘ Start on Member desk</button>
+      <div class="lep-actions">
+        <button class="btn btn-primary" type="button" id="lepGoProfile">Complete My Krewe profile</button>
+        <button class="btn" type="button" id="lepGoDesk">☘ Start on Member desk</button>
         <button class="btn" type="button" id="lepLater">Show me the checklist</button>
       </div>
     </div>
@@ -3623,6 +3628,33 @@
       document.getElementById("authPanelSignin").style.display = which==="signin" ? "block":"none";
       document.getElementById("authPanelReset").style.display = which==="reset" ? "block":"none";
     }
+    // Directory details a member adds on My Krewe profile. Name, email, phone,
+    // and mailing address are already on the roster from the join form, so
+    // those alone do not count as profile info. Any one of these does.
+    const KREWE_PROFILE_INFO_FIELDS = [
+      "photo_url","bio","hometown","parade_since","interests",
+      "hobbies","favorite_memory","fun_fact","birthday","anniversary"
+    ];
+    function kreweProfileValueFilled(v){
+      if(v == null || typeof v === "boolean") return false;
+      if(typeof v === "number") return isFinite(v) && v !== 0;
+      return String(v).trim() !== "";
+    }
+    window.kosMemberHasProfileInfo = function(profile){
+      const p = profile || {};
+      return KREWE_PROFILE_INFO_FIELDS.some((key)=>kreweProfileValueFilled(p[key]));
+    };
+    function kreweProfileLoaded(p){
+      return !!(p && (p.user_id || p.member_id || p.email));
+    }
+    function hideLepOverlay(){
+      const o=document.getElementById("lepOverlay");
+      if(o){ o.classList.remove("open"); o.setAttribute("aria-hidden","true"); }
+      document.body.style.overflow="";
+    }
+    function rememberProfileWelcomeDone(){
+      try{ localStorage.removeItem("kosLepWelcome"); localStorage.setItem("kosLepWelcomeSeen","1"); }catch(_){}
+    }
     async function route(){
       if(awaitingNewPassword){ showStage("setpassword"); return; }
       const { data:{ session } } = await sb.auth.getSession();
@@ -3688,20 +3720,28 @@
       }catch(e){}
       showStage("none");
       if(window.kosUnlock) window.kosUnlock();
-      try{
-          if(!localStorage.getItem("kosLepWelcomeSeen")){
-            localStorage.setItem("kosLepWelcome","1");
+      const profileReady = kreweProfileLoaded(prof);
+      const profileHasInfo = profileReady && window.kosMemberHasProfileInfo(prof);
+      if(profileHasInfo) rememberProfileWelcomeDone();
+      else if(profileReady){
+        // Empty profile: keep offering the welcome. A saved "seen" flag from
+        // an earlier visit must not hide it, and must not be what shows it.
+        try{ localStorage.removeItem("kosLepWelcomeSeen"); localStorage.removeItem("kosLepWelcome"); }catch(_){}
+      }
+      // Wait for Member Hub to settle on one tab before overlays (stops post-login snap).
+      setTimeout(function(){
+        try{
+          var hours = false;
+          try{ hours = sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
+          if(hours || !profileReady) return;
+          if(window.kosMemberHasProfileInfo(window.kosProfile)){
+            rememberProfileWelcomeDone();
+            hideLepOverlay();
+            return;
           }
-        }catch(_){ }
-        // Wait for Member Hub to settle on one tab before overlays (stops post-login snap).
-        setTimeout(function(){
-          try{
-            var hours = false;
-            try{ hours = sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
-            if(hours) return;
-            if(window.kosShowLepWelcome) window.kosShowLepWelcome(); else maybeTour();
-          }catch(_){ maybeTour(); }
-        }, 900);
+          if(window.kosShowLepWelcome) window.kosShowLepWelcome();
+        }catch(_){}
+      }, 900);
     }
     var NOT_ON_ROSTER_MSG = "That email is not on the krewe roster. Use the address the krewe has for you, apply on the Join page, or write digital@kreweofshamrock.com.";
     var WRONG_PASSWORD_MSG = "That password is wrong. Old Wild Apricot passwords do not work here. Tap Create or reset your password to get a new link.";
@@ -3948,15 +3988,7 @@
           }
         }catch(err){ /* the profile is saved; a failed role request can be retried from the hub */ }
       }
-      localStorage.removeItem("kosTourDone");
-      try{ localStorage.setItem("kosLepWelcome","1"); }catch(_){}
       await route();
-      setTimeout(()=>{ try{
-        var hours=false;
-        try{ hours=sessionStorage.getItem("kos_hub_intent")==="hours" || /#(hours|volunteer)$/i.test(location.hash); }catch(_){}
-        if(hours) return;
-        if(window.kosShowLepWelcome) window.kosShowLepWelcome();
-      }catch(_){} }, 500);
     });
     function maybeTour(){
       if(localStorage.getItem("kosTourDone")==="1") return;
@@ -3964,16 +3996,36 @@
     }
     window.kosCloseTour=()=>{ localStorage.setItem("kosTourDone","1"); const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
     
+    function escLep(s){
+      return String(s||"").replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+    function openMyKreweProfile(){
+      window.kosCloseLepWelcome();
+      if(typeof window.kosEditMyProfile==="function") window.kosEditMyProfile();
+      else if(typeof window.kosOpenProfileStage==="function") window.kosOpenProfileStage();
+      else if(typeof window.kosShowHub==="function") window.kosShowHub("krewe");
+    }
+    window.kosSyncLepWelcome=()=>{
+      if(!window.kosMemberHasProfileInfo(window.kosProfile||{})) return;
+      rememberProfileWelcomeDone();
+      hideLepOverlay();
+    };
     window.kosShowLepWelcome=()=>{
-      try{
-        if(localStorage.getItem("kosLepWelcome")!=="1") return;
-        if(localStorage.getItem("kosLepWelcomeSeen")==="1" && localStorage.getItem("kosLepWelcome")!=="1") return;
-      }catch(_){ return; }
+      const prof = window.kosProfile || {};
+      const loaded = kreweProfileLoaded(prof);
+      if(!loaded || window.kosMemberHasProfileInfo(prof)){
+        // Roster profile data wins over localStorage. A missing profile
+        // must not be treated as empty, and a filled one never shows this.
+        if(loaded) rememberProfileWelcomeDone();
+        hideLepOverlay();
+        return;
+      }
+      try{ if(sessionStorage.getItem("kosLepWelcomeDismissed")==="1") return; }catch(_){ return; }
       const whoEl=document.getElementById("memberWho");
       const whoRaw=(whoEl && (whoEl.querySelector(".hub-signed-label")?.textContent || whoEl.textContent) || "");
       const who=whoRaw.replace(/^SIGNED IN AS\s+/i,"").trim();
       const first=(who.split(/\s+/)[0]||"friend");
-      const nice=first.charAt(0).toUpperCase()+first.slice(1).toLowerCase();
+      const nice=escLep(first.charAt(0).toUpperCase()+first.slice(1).toLowerCase());
       const body=document.getElementById("lepBody");
       if(body){
         body.innerHTML=
@@ -3983,22 +4035,27 @@
           "<ol style=\"margin:8px 0 12px;padding-left:1.2em;line-height:1.55;\">"+
           "<li><b>Member desk</b> (begin on this tab)</li>"+
           "<li><b>Parade Ready</b>: sign the liability waiver and the Photo &amp; Image Release</li>"+
-          "<li><b>My Krewe profile</b>: photo and a few friendly details</li>"+
+          "<li><a href=\"members.html#krewe\" id=\"lepProfileLink\">My Krewe profile</a>: photo and a few friendly details</li>"+
           "<li><b>Volunteer hours</b>: log this season's hours on Member desk</li>"+
           "</ol>"+
-          "<p style=\"margin:0;\">Then you are ready to connect: Craic Cup, events, Share, lockers, and the rest of the castle.</p>"+
+          "<p style=\"margin:0;\">Add anything on <a href=\"members.html#krewe\" id=\"lepProfileLink2\">My Krewe profile</a> — a photo, your hometown, a fun fact — and this greeting stays tucked away.</p>"+
           "<p style=\"margin:10px 0 0;color:var(--muted);font-size:15px;\">Sláinte, and may your Clovers multiply. ☘️</p>";
+        body.querySelectorAll("#lepProfileLink, #lepProfileLink2").forEach((link)=>{
+          link.addEventListener("click",(ev)=>{ ev.preventDefault(); openMyKreweProfile(); });
+        });
       }
       const o=document.getElementById("lepOverlay");
       if(o){ o.classList.add("open"); o.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; }
     };
     window.kosCloseLepWelcome=()=>{
-      try{ localStorage.removeItem("kosLepWelcome"); localStorage.setItem("kosLepWelcomeSeen","1"); }catch(_){ }
-      const o=document.getElementById("lepOverlay");
-      if(o){ o.classList.remove("open"); o.setAttribute("aria-hidden","true"); }
-      document.body.style.overflow="";
+      try{
+        sessionStorage.setItem("kosLepWelcomeDismissed","1");
+        localStorage.removeItem("kosLepWelcome");
+      }catch(_){ }
+      hideLepOverlay();
     };
     document.getElementById("lepLater")?.addEventListener("click",()=>{ window.kosCloseLepWelcome(); maybeTour(); });
+    document.getElementById("lepGoProfile")?.addEventListener("click",()=>{ openMyKreweProfile(); });
     document.getElementById("lepGoDesk")?.addEventListener("click",()=>{
       window.kosCloseLepWelcome();
       try{ if(window.showHubTab) window.showHubTab("parade"); }catch(_){ }
@@ -4277,7 +4334,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20260920p1"></script>
-<script src="assets/members-desk.js?v=20260930bc1" defer></script>
+<script src="assets/members-desk.js?v=20260930welcome1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260918memb3" defer></script>
