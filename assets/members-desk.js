@@ -459,6 +459,28 @@
        the officer identity, and the illuminated group headers replace the
        old small uppercase section labels. */
     ".desk-hero.desk-officer{background:linear-gradient(180deg,#fffdf4,#f6ecd2);border-color:rgba(166,124,0,.5);}",
+    ".hub-outreach-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:4px 0 12px;}",
+    ".hub-outreach-controls label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;}",
+    ".hub-outreach-controls select,.hub-outreach-controls input[type=number]{padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;min-height:44px;}",
+    ".hub-outreach-check{display:flex;align-items:center;gap:8px;min-height:44px;font-size:15px;color:#23291f;}",
+    ".hub-outreach-check input{width:18px;height:18px;}",
+    ".hub-outreach-lead{margin:0 0 12px;font-size:15px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-outreach-chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;}",
+    ".hub-outreach-chip{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:8px 14px;}",
+    ".hub-outreach-chip b{display:block;font-family:var(--display);font-size:22px;color:var(--green-800);}",
+    ".hub-outreach-chip span{font-size:12px;color:var(--muted);}",
+    ".hub-outreach-note{margin:0 0 10px;font-size:13px;color:var(--muted);}",
+    ".hub-outreach-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:0 0 8px;}",
+    ".hub-outreach-tablewrap{overflow-x:auto;border:1px solid rgba(168,128,28,.3);border-radius:12px;}",
+    ".hub-outreach-table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px;}",
+    ".hub-outreach-table th{background:linear-gradient(180deg,var(--green-700),var(--green-800));color:#fff;text-align:left;padding:8px 10px;font-family:var(--display);font-weight:600;font-size:13px;}",
+    ".hub-outreach-table td{padding:7px 10px;border-top:1px solid rgba(168,128,28,.18);vertical-align:top;}",
+    ".hub-outreach-table tr:nth-child(even) td{background:#fffdf4;}",
+    ".hub-outreach-src{display:inline-block;margin:0 4px 4px 0;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid transparent;}",
+    ".hub-outreach-src-website{background:#e7f3ea;color:#14532d;border-color:#1d6b3e;}",
+    ".hub-outreach-src-zeffy{background:#fff4c2;color:#6b4e00;border-color:#a67c00;}",
+    ".hub-outreach-src-legacy{background:#eef0f8;color:#313770;border-color:#313770;}",
+    ".hub-outreach-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}",
     ".desk-officer .desk-kicker{color:#7a5b00;}",
     ".desk-group-head h3{text-transform:none;opacity:1;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
@@ -2667,6 +2689,8 @@
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
     if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
     if ("canReviewHours" in flags) state.canReviewHours = !!flags.canReviewHours;
+    if ("shopOnly" in flags) state.shopOnly = !!flags.shopOnly;
+    if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
     syncOfficerChip();
@@ -2794,6 +2818,8 @@
     if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
     state.shopOnly = false;
     state.socialOnly = false;
+    if (roleFixture && ("shopOnly" in roleFixture)) state.shopOnly = !!roleFixture.shopOnly;
+    if (roleFixture && ("socialOnly" in roleFixture)) state.socialOnly = !!roleFixture.socialOnly;
     // Committee desks without full board officer access
     if (!state.officer) {
       try {
@@ -2831,6 +2857,8 @@
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
       if ("canReviewHours" in roleFixture) state.canReviewHours = !!roleFixture.canReviewHours;
+      if ("shopOnly" in roleFixture) state.shopOnly = !!roleFixture.shopOnly;
+      if ("socialOnly" in roleFixture) state.socialOnly = !!roleFixture.socialOnly;
     }
     await refreshApplicationAccess(client);
     await refreshVolunteerInquiryAccess(client);
@@ -6473,6 +6501,8 @@
       if (roleFixture && ("officer" in roleFixture)) state.officer = !!roleFixture.officer;
       if (roleFixture && ("canManageEvents" in roleFixture)) state.canManageEvents = !!roleFixture.canManageEvents;
       if (roleFixture && ("canReviewHours" in roleFixture)) state.canReviewHours = !!roleFixture.canReviewHours;
+      if (roleFixture && ("shopOnly" in roleFixture)) state.shopOnly = !!roleFixture.shopOnly;
+      if (roleFixture && ("socialOnly" in roleFixture)) state.socialOnly = !!roleFixture.socialOnly;
       if (!tab) tab = "hub";
       if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
       if (tab !== "parade") clearHoursIntent();
@@ -7165,6 +7195,326 @@
     });
   }
 
+  var outreachFixture = null;
+  var outreachState = { key: "", gen: 0, rows: [], total: 0 };
+
+  function canSeeEventOutreach() {
+    if (state.shopOnly && !state.socialOnly) return false;
+    return !!(state.canManageEvents || state.canReviewApplications || state.socialOnly);
+  }
+
+  function outreachReadFilters() {
+    var sourceEl = document.getElementById("hubOutreachSource");
+    var minEl = document.getElementById("hubOutreachMin");
+    var neverEl = document.getElementById("hubOutreachNever");
+    var source = sourceEl ? String(sourceEl.value || "") : "";
+    var min = 0;
+    if (minEl && String(minEl.value).trim() !== "") {
+      min = parseInt(minEl.value, 10);
+      if (!isFinite(min) || min < 0) min = 0;
+    }
+    return {
+      source: !source || source === "all" ? null : source,
+      minEvents: min,
+      neverApplied: !neverEl || !!neverEl.checked
+    };
+  }
+
+  function outreachFilterKey(filters) {
+    return JSON.stringify(filters);
+  }
+
+  function filterOutreachRows(rows, filters) {
+    return (rows || []).filter(function (row) {
+      if (!row) return false;
+      if (filters.neverApplied && row.applied_to_join) return false;
+      if ((Number(row.event_count) || 0) < filters.minEvents) return false;
+      if (filters.source && (row.source_keys || []).indexOf(filters.source) === -1) return false;
+      return true;
+    });
+  }
+
+  function outreachPayloadFromRows(rows, filters, sample) {
+    var filtered = filterOutreachRows(rows, filters);
+    filtered.sort(function (a, b) {
+      var at = a.last_event_at ? new Date(a.last_event_at).getTime() : 0;
+      var bt = b.last_event_at ? new Date(b.last_event_at).getTime() : 0;
+      if (bt !== at) return bt - at;
+      return String(a.email || "").localeCompare(String(b.email || ""));
+    });
+    function tagged(key) {
+      return filtered.filter(function (row) {
+        return (row.source_keys || []).indexOf(key) !== -1;
+      }).length;
+    }
+    return {
+      ok: true,
+      total: filtered.length,
+      by_source: {
+        website_rsvp: tagged("website_rsvp"),
+        zeffy: tagged("zeffy"),
+        legacy: tagged("legacy")
+      },
+      rows: filtered,
+      sample: !!sample
+    };
+  }
+
+  function outreachWhen(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(d);
+    } catch (e) {
+      return String(iso).slice(0, 10);
+    }
+  }
+
+  function outreachIsoDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(d);
+    } catch (e2) {
+      return String(iso).slice(0, 10);
+    }
+  }
+
+  function outreachRosterLabel(row) {
+    if (!row || !row.on_roster) return "Not on roster";
+    if (row.membership_status === "prospect") return "Prospect";
+    return "On roster · " + (row.membership_status || "member");
+  }
+
+  function outreachSourceHtml(row) {
+    var labels = row.sources || row.source_labels || [];
+    var keys = row.source_keys || [];
+    if (!labels.length) return "";
+    return labels.map(function (label, i) {
+      var key = keys[i] || "";
+      var cls = key === "website_rsvp" ? "website" : (key === "zeffy" ? "zeffy" : (key === "legacy" ? "legacy" : ""));
+      return '<span class="hub-outreach-src' + (cls ? " hub-outreach-src-" + cls : "") + '">' + esc(label) + "</span>";
+    }).join("");
+  }
+
+  function outreachCsvCell(value) {
+    var v = value == null ? "" : String(value);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+
+  function downloadOutreachCsv(rows) {
+    var headers = ["Name", "Email", "Sources", "Event count", "Last event", "Last event date", "Roster", "Applied to join"];
+    var body = (rows || []).map(function (row) {
+      var sources = row.sources || row.source_labels || [];
+      return [
+        row.name || row.display_name || "",
+        row.email || "",
+        sources.join("; "),
+        row.event_count == null ? "" : String(row.event_count),
+        row.last_event_name || "",
+        outreachIsoDate(row.last_event_at),
+        outreachRosterLabel(row),
+        row.applied_to_join ? "yes" : "no"
+      ];
+    });
+    var text = [headers].concat(body).map(function (line) {
+      return line.map(outreachCsvCell).join(",");
+    }).join("\r\n");
+    var blob = new Blob(["\uFEFF" + text], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kos-event-outreach.csv";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  function outreachInstallHint(err) {
+    var msg = "";
+    if (err) msg = String(err.message || err.details || err.hint || err.code || err);
+    if (/PGRST202|schema cache|does not exist|Could not find the function|list_event_outreach|404/i.test(msg)) {
+      return "Event outreach is not installed yet. Apply sql/kos_event_outreach.sql in the Supabase SQL editor, then refresh.";
+    }
+    if (/Not authorized/i.test(msg)) return "You do not have access to the event outreach list.";
+    return "Could not load the outreach list. " + msg;
+  }
+
+  function renderEventOutreachPayload(data) {
+    var out = document.getElementById("hubOutreachOut");
+    var msg = document.getElementById("hubOutreachMsg");
+    var sample = document.getElementById("hubOutreachSample");
+    if (!out) return;
+    var rows = (data && data.rows) || [];
+    var total = data && data.total != null ? Number(data.total) : rows.length;
+    var by = (data && data.by_source) || {};
+    outreachState.rows = rows;
+    outreachState.total = total;
+    if (sample) sample.hidden = !(data && data.sample);
+    if (msg) {
+      if (total > rows.length) {
+        msg.textContent = "Showing " + rows.length + " of " + total + ". Download CSV for the full filtered list.";
+      } else if (!rows.length) {
+        msg.textContent = "";
+      } else {
+        msg.textContent = "";
+      }
+    }
+    var chips =
+      '<div class="hub-outreach-chips">' +
+      '<div class="hub-outreach-chip"><b>' + esc(total) + '</b><span>people</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.website_rsvp || 0) + '</b><span>Website RSVP</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.zeffy || 0) + '</b><span>Zeffy</span></div>' +
+      '<div class="hub-outreach-chip"><b>' + esc(by.legacy || 0) + '</b><span>Legacy</span></div>' +
+      "</div>" +
+      '<p class="hub-outreach-note">A person can carry more than one source, so those counts can add up to more than the number of people.</p>';
+    if (!rows.length) {
+      out.innerHTML = chips + '<p class="empty">No one matches these filters.</p>';
+      return;
+    }
+    var body = rows.map(function (row) {
+      var name = row.name || row.display_name || "";
+      return "<tr><td>" + esc(name || "—") + "</td><td>" +
+        (row.email ? '<a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a>" : "") +
+        "</td><td>" + outreachSourceHtml(row) + "</td><td>" + esc(row.event_count == null ? 0 : row.event_count) +
+        "</td><td>" + esc(row.last_event_name || "") + "</td><td>" + esc(outreachWhen(row.last_event_at)) +
+        "</td><td>" + esc(outreachRosterLabel(row)) + "</td></tr>";
+    }).join("");
+    out.innerHTML = chips +
+      '<div class="hub-outreach-tablewrap"><table class="hub-outreach-table" id="hubOutreachTable"><thead><tr>' +
+      "<th>Name</th><th>Email</th><th>Sources</th><th>Events</th><th>Last event</th><th>Date</th><th>Roster</th>" +
+      "</tr></thead><tbody>" + body + "</tbody></table></div>";
+  }
+
+  function paintEventOutreachShell() {
+    var card = document.getElementById("hubEventOutreach");
+    if (!card || card.getAttribute("data-kos-ready") === "1") return;
+    card.setAttribute("data-kos-ready", "1");
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">📬</span><div><h2>Event outreach</h2>' +
+      "<small>Website RSVP prospects, Zeffy ticket buyers, and legacy emails</small></div></div>" +
+      '<div class="app-body">' +
+      '<p class="hub-outreach-lead">People to invite back. Website RSVP is a roster prospect. Zeffy is an event-ticket purchase. Legacy is a Wild Apricot registration. Checked “Never applied to join” hides buyers whose email already belongs to someone past the prospect stage. This list does not create members.</p>' +
+      '<div class="hub-outreach-controls">' +
+      '<div><label for="hubOutreachSource">Source</label>' +
+      '<select id="hubOutreachSource">' +
+      '<option value="all">All sources</option>' +
+      '<option value="website_rsvp">Website RSVP</option>' +
+      '<option value="zeffy">Zeffy</option>' +
+      '<option value="legacy">Legacy</option>' +
+      "</select></div>" +
+      '<div><label for="hubOutreachMin">At least this many events</label>' +
+      '<input id="hubOutreachMin" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>' +
+      '<label class="hub-outreach-check"><input id="hubOutreachNever" type="checkbox" checked /> Never applied to join</label>' +
+      "</div>" +
+      '<p class="hub-outreach-note">An event counts when they have a website RSVP (including the waitlist), a Zeffy ticket, or a legacy registration. Canceled rows are left out.</p>' +
+      '<p class="hub-outreach-note" id="hubOutreachSample" hidden>Sample rows for this preview. The live list loads after sql/kos_event_outreach.sql is applied.</p>' +
+      '<p class="hub-outreach-msg" id="hubOutreachMsg" aria-live="polite"></p>' +
+      '<div id="hubOutreachOut"><p class="empty">Open this tool to load the list.</p></div>' +
+      '<div class="hub-outreach-actions"><button class="btn" type="button" id="hubOutreachCsv">⬇ Download CSV</button></div>' +
+      "</div>";
+    ["hubOutreachSource", "hubOutreachMin", "hubOutreachNever"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("change", function () { loadEventOutreach(true); });
+    });
+    var csv = document.getElementById("hubOutreachCsv");
+    if (csv) csv.addEventListener("click", function () { exportEventOutreach(); });
+  }
+
+  async function loadEventOutreach(force) {
+    paintEventOutreachShell();
+    var msg = document.getElementById("hubOutreachMsg");
+    var filters = outreachReadFilters();
+    var key = outreachFilterKey(filters);
+    if (outreachFixture) {
+      renderEventOutreachPayload(outreachPayloadFromRows(outreachFixture, filters, true));
+      outreachState.key = key;
+      return;
+    }
+    if (!force && outreachState.key === key) return;
+    var gen = ++outreachState.gen;
+    var client = window.__kosSb || null;
+    if (!client || typeof client.rpc !== "function") {
+      if (msg) msg.textContent = "Sign in again to load this list.";
+      return;
+    }
+    if (msg) msg.textContent = "Loading the outreach list…";
+    try {
+      var res = await client.rpc("list_event_outreach", {
+        p_source: filters.source,
+        p_min_events: filters.minEvents,
+        p_never_applied: filters.neverApplied,
+        p_limit: 300,
+        p_offset: 0
+      });
+      if (gen !== outreachState.gen) return;
+      if (res && res.error) throw res.error;
+      var data = (res && res.data) || {};
+      if (data.ok === false) throw new Error(data.message || "Not authorized.");
+      outreachState.key = key;
+      renderEventOutreachPayload(data);
+    } catch (err) {
+      if (gen !== outreachState.gen) return;
+      outreachState.key = "";
+      var out = document.getElementById("hubOutreachOut");
+      if (out) out.innerHTML = "";
+      if (msg) msg.textContent = outreachInstallHint(err);
+    }
+  }
+
+  async function exportEventOutreach() {
+    var msg = document.getElementById("hubOutreachMsg");
+    var filters = outreachReadFilters();
+    try {
+      var rows;
+      if (outreachFixture) {
+        rows = outreachPayloadFromRows(outreachFixture, filters, true).rows;
+      } else {
+        var client = window.__kosSb || null;
+        if (!client || typeof client.rpc !== "function") throw new Error("Sign in again to download this list.");
+        if (msg) msg.textContent = "Preparing the CSV…";
+        var res = await client.rpc("export_event_outreach", {
+          p_source: filters.source,
+          p_min_events: filters.minEvents,
+          p_never_applied: filters.neverApplied
+        });
+        if (res && res.error) throw res.error;
+        var data = (res && res.data) || {};
+        if (data.ok === false) throw new Error(data.message || "Not authorized.");
+        rows = data.rows || [];
+        if (data.truncated && msg) {
+          msg.textContent = "Downloaded the first 10,000 of " + data.total + " people.";
+        } else if (msg) {
+          msg.textContent = "";
+        }
+      }
+      downloadOutreachCsv(rows);
+    } catch (err) {
+      if (msg) msg.textContent = outreachInstallHint(err);
+    }
+  }
+
+  window.__kosHubSetEventOutreach = function (rows) {
+    outreachFixture = Array.isArray(rows) ? rows : [];
+    outreachState.key = "";
+    var card = document.getElementById("hubEventOutreach");
+    if (card) card.removeAttribute("data-kos-ready");
+    paintEventOutreachShell();
+    if (document.getElementById("hubOutreachOut")) loadEventOutreach(true);
+  };
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubVolunteerInbox",
@@ -7172,6 +7522,7 @@
     "hubPayments",
     "hubLockers",
     "hubEventStudio",
+    "hubEventOutreach",
     "hubShopStudio",
     "hubQrStudio",
     "hubDocStudio",
@@ -7189,12 +7540,13 @@
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
+    hubEventOutreach: { title: "Event outreach", desc: "Website RSVP prospects, unmatched Zeffy buyers, and legacy emails", icon: "📬", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
     hubDocStudio: { title: "Document Studio", desc: "Upload, publish, and hide library documents", icon: "📜", section: "Documents" },
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
-    hubEmailMembers: { title: "Email members", desc: "Choose audience, write, preview, and send", icon: "✉️", section: "Email & invoices" },
+    hubEmailMembers: { title: "Email members", desc: "Choose audience, including event prospects, then write, preview, and send", icon: "✉️", section: "Email & invoices" },
     hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
     hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
   };
@@ -7217,7 +7569,7 @@
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
     "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
-    "Events": { icon: "📅", sub: "Event Studio, QR check-in, and the calendar." },
+    "Events": { icon: "📅", sub: "Event Studio, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
@@ -7310,6 +7662,13 @@
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
     }
+    if (!canSeeEventOutreach()) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubEventOutreach"; });
+    } else if (toolOrder.indexOf("hubEventOutreach") === -1) {
+      var afterStudio = toolOrder.indexOf("hubEventStudio");
+      if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
+      else toolOrder.push("hubEventOutreach");
+    }
     return toolOrder;
   }
 
@@ -7325,7 +7684,7 @@
       hero.innerHTML =
         '<p class="desk-kicker">Céad míle fáilte - a hundred thousand welcomes</p>' +
         "<h2>🎖️ Your Officer Desk</h2>" +
-        "<p>Everything the krewe trusts you with, on one desk: run events and check-ins, " +
+        "<p>Everything the krewe trusts you with, on one desk: run events, check-ins, and outreach, " +
         "approve members' photos, videos, and clover claims, publish documents, mind the shop " +
         "and the money, write the membership, record dues waivers, and read the numbers. Pick one tool at a time - " +
         "the desk stays tidy.</p>" +
@@ -7440,6 +7799,9 @@
       document.querySelectorAll(".hub-officer-tile").forEach(function (t) {
         t.classList.toggle("on", t.getAttribute("data-tool") === ("tool:" + id));
       });
+      if (id === "hubEventOutreach") {
+        try { loadEventOutreach(false); } catch (eOut) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -7524,6 +7886,7 @@
 
     var toolOrder = currentOfficerToolOrder();
     toolOrder.forEach(ensureOfficerToolCard);
+    if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -7549,7 +7912,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
