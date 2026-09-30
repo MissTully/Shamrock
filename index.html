@@ -261,6 +261,7 @@ simply love good music and a good party, there's a place for you at our table.</
 <span class="label" id="kreweMusicLabel">Tap for a tune &#9752;</span>
 </div>
 <script src="assets/krewe.js" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><audio id="failteAudio" src="assets/audio/100 thousand welcomes.mp3" preload="none"></audio><script>(function(){function wire(btnId,audioId){var btn=document.getElementById(btnId);var audio=document.getElementById(audioId);if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});}wire('craicDefBtn','craicAudio');wire('failteDefBtn','failteAudio');})();</script>
+<script src="assets/kos-calendar.js?v=20260930cal3"></script>
 
 <!-- EVENTS DATA -->
 <script type="module">
@@ -273,7 +274,7 @@ const list = document.getElementById("eventList");
 const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
 (async () => {
   const nowIso = new Date().toISOString();
-  const publicCols = "id, name, event_type, start_time, location, source, external_url, ticket_payment_url, members_only";
+  const publicCols = "id, name, event_type, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, members_only, status, registration_closes_at";
   let { data, error } = await supabase
     .from("v_public_events")
     .select(publicCols)
@@ -282,7 +283,7 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
   if (error) {
     ({ data, error } = await supabase
       .from("events")
-      .select("id, name, event_type, start_time, location, source, external_url, ticket_payment_url")
+      .select("id, name, event_type, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, status, registration_closes_at")
       .eq("is_public", true)
       .or(`start_time.gte.${nowIso},start_time.is.null`)
       .order("start_time", { ascending: true }));
@@ -292,7 +293,11 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
   if (!data || data.length === 0) { list.innerHTML = '<p class="empty">No upcoming events yet. Check back soon, or RSVP to be the first to know!</p>'; return; }
 
   list.innerHTML = "";
-  const shown = data.slice(0, 6);
+  const visible = data.filter((ev) => {
+    if (!window.kosCalendar || typeof window.kosCalendar.publicSignupAction !== "function") return true;
+    return window.kosCalendar.publicSignupAction(ev) !== "hide";
+  });
+  const shown = visible.slice(0, 6);
   for (const ev of shown) {
     const when = (() => {
       if (!ev.start_time) return "Date to be announced";
@@ -312,13 +317,23 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
     const where = ev.location
       ? ev.location
       : (membersOnly ? "Address shared with members after signup" : "");
-    const rsvp = isIkc
+    const action = (window.kosCalendar && window.kosCalendar.publicSignupAction)
+      ? window.kosCalendar.publicSignupAction(ev) : "";
+    const rsvp = isIkc || action === "ikc"
       ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
-      : (membersOnly
+      : (action === "parade-members" || (membersOnly && String(ev.event_type || "").toLowerCase() === "parade")
+          ? `<a class="rsvp" href="members.html">Members only. March RSVP is in the Hub &#8594;</a>`
+          : (action === "parade"
+          ? `<a class="rsvp" href="parades.html">Parade details &#8594;</a>`
+          : (action === "members" || membersOnly
           ? `<a class="rsvp" href="members.html">Members only. Sign in for details and address &#8594;</a>`
-          : (pay
+          : (action === "closed"
+          ? `<span class="rsvp">Registration closed</span>`
+          : (action === "tickets-soon"
+          ? `<span class="rsvp">Tickets coming soon</span>`
+          : (pay || action === "tickets"
           ? `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets &#8594;</a>`
-          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`));
+          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`))))));
     const card = document.createElement("div");
     card.className = isIkc ? "event-card ikc" : "event-card";
     card.innerHTML =
@@ -328,12 +343,12 @@ const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
       rsvp;
     list.appendChild(card);
   }
-  if (data.length > shown.length) {
+  if (visible.length > shown.length) {
     const more = document.createElement("p");
     more.className = "empty";
     more.style.gridColumn = "1/-1";
     more.style.textAlign = "center";
-    more.innerHTML = `Plus ${data.length - shown.length} more on the <a href="event-signup.html" style="color:var(--green-700);font-weight:600;">full events page &#8594;</a>` +
+    more.innerHTML = `Plus ${visible.length - shown.length} more on the <a href="event-signup.html" style="color:var(--green-700);font-weight:600;">full events page &#8594;</a>` +
       ` &mdash; the month calendar is Krewe of Shamrock, and Dates to Remember also lists Inter-Krewe Council events.`;
     list.appendChild(more);
   }

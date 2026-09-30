@@ -209,10 +209,86 @@ test("calendar helper writes a teaser-only .ics", async ({ page }) => {
     description: "Briefing for the pirate parade."
   }));
   expect(ics).toMatch(/BEGIN:VCALENDAR/);
+  expect(ics).toMatch(/BEGIN:VTIMEZONE/);
+  expect(ics).toMatch(/TZID:America\/New_York/);
+  expect(ics).toMatch(/DTSTART;TZID=America\/New_York:20270128T180000/);
   expect(ics).toMatch(/SUMMARY:Gasparilla briefing/);
   expect(ics).toMatch(/LOCATION:Members home\\, Tampa/);
   expect(ics).toMatch(/Member Hub/);
   expect(ics).not.toMatch(/123 Secret Staging/);
   expect(ics).not.toMatch(/member_address/);
   assertHealthy(expect, report, "ics teaser only");
+});
+
+test("public signup action matches published events, not drafts, past dates, or parades", async ({ page }) => {
+  const report = watchPage(page);
+  await page.goto("/event-signup.html");
+  await page.waitForFunction(() => window.kosCalendar && typeof window.kosCalendar.publicSignupAction === "function");
+  const action = await page.evaluate(() => {
+    const now = new Date("2026-09-30T22:00:00Z");
+    const fn = window.kosCalendar.publicSignupAction;
+    return {
+      past: fn({ name: "Shamrock Book Club Night", source: "krewe", status: "published", event_type: "social", start_time: "2026-09-17T23:00:00Z", ticket_payment_url: "https://www.zeffy.com/en-US/ticketing/shamrock-book-club-night" }, now),
+      draft: fn({ name: "Test", source: "krewe", status: "draft", event_type: "social", start_time: "2027-01-01T12:00:00Z", ticket_price_cents: 100 }, now),
+      parade: fn({ name: "SantaFest", source: "krewe", status: "published", event_type: "parade", members_only: true, start_time: "2026-12-05T22:00:00Z" }, now),
+      tickets: fn({ name: "Tartan Ball", source: "krewe", status: "published", event_type: "fundraiser", start_time: "2026-10-24T22:00:00Z", ticket_payment_url: "https://www.zeffy.com/ball" }, now),
+      closed: fn({ name: "Mini Golf and Lunch", source: "krewe", status: "published", event_type: "social", start_time: "2026-10-01T14:00:00Z", registration_closes_at: "2026-09-18T03:59:00Z" }, now),
+      members: fn({ name: "Tartan Ball Basket-Making Happy Hour", source: "krewe", status: "published", event_type: "social", members_only: true, start_time: "2026-10-03T19:00:00Z" }, now),
+      rsvp: fn({ name: "Social", source: "krewe", status: "published", event_type: "social", start_time: "2026-10-03T19:00:00Z" }, now)
+    };
+  });
+  expect(action.past).toBe("hide");
+  expect(action.draft).toBe("hide");
+  expect(action.parade).toBe("parade-members");
+  expect(action.tickets).toBe("tickets");
+  expect(action.closed).toBe("closed");
+  expect(action.members).toBe("members");
+  expect(action.rsvp).toBe("rsvp");
+  assertHealthy(expect, report, "public signup action");
+});
+
+test("parade season shows Already RSVP'd instead of a fresh RSVP button", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page);
+  await page.locator('[data-hub-tab="events"]').click();
+  await page.waitForFunction(() => typeof window.__kosRenderParadeSeason === "function");
+  await page.evaluate(() => {
+    window.__kosParadeSeasonLocked = true;
+    window.__kosRenderParadeSeason([{
+      id: "parade-1",
+      name: "Sant'Yago Knight Parade",
+      start_time: "2027-02-13T23:00:00.000Z",
+      location: "Ybor City, Tampa, FL",
+      members_only: true,
+      parade_rsvpd: true,
+      parade_checked_in: false,
+      eligible: true,
+      soft_gate_checkin: false,
+      meeting: null
+    }, {
+      id: "parade-2",
+      name: "SantaFest",
+      start_time: "2026-12-05T22:00:00.000Z",
+      location: "Downtown Tampa, FL",
+      members_only: true,
+      parade_rsvpd: false,
+      parade_rsvp_status: "registered",
+      parade_checked_in: false,
+      eligible: true,
+      soft_gate_checkin: false,
+      meeting: null
+    }]);
+  });
+  const santyago = page.locator("#hubParadeSeasonList [data-parade-card='parade-1']");
+  const santafest = page.locator("#hubParadeSeasonList [data-parade-card='parade-2']");
+  await expect(santyago).toContainText("Already RSVP'd");
+  await expect(santyago).toContainText("Cancel RSVP");
+  await expect(santyago).toContainText("Parade RSVP’d");
+  await expect(santafest).toContainText("Already RSVP'd");
+  await expect(santafest).toContainText("Parade RSVP’d");
+  await expect(santafest.locator("[data-hub-parade-rsvp]")).toHaveCount(0);
+  await expect(page.locator("#hubParadeSeasonList [data-hub-parade-rsvp]")).toHaveCount(0);
+  await expect(santyago.locator(".kos-cal-btn")).toHaveText("Add parade to calendar");
+  await expect(santafest.locator(".kos-cal-btn")).toHaveText("Add parade to calendar");
+  assertHealthy(expect, report, "parade already rsvpd");
 });
