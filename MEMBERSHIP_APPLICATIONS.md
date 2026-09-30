@@ -2,6 +2,8 @@
 
 The Membership Chair reviews join-form applications in the Member Hub. The tool is **Membership Applications**, the first section on the Officer desk. Home also shows a count such as **3 new applications** that opens the tool.
 
+Chair view of the journey: call the prospect, send the joining packet (Move to background check), wait for the full application and dues, then Approve. Decline and Archive keep the record on file.
+
 The old Pending Applications report (Officer desk, Jump by name, Membership) is still a read-only mix of new applications, renewals, and event prospects. It does not approve or decline anyone.
 
 ## Who can see it
