@@ -708,6 +708,8 @@
       end_time: ev.end_time,
       location: ev.location,
       member_address: ev.member_address,
+      // Signed-in Hub only: the member's own calendar gets the street address.
+      include_member_address: true,
       description: ev.description || ""
     };
     if (typeof window.kosCalendar.choose === "function") return window.kosCalendar.choose(cal);

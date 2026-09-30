@@ -61,6 +61,24 @@ test("calendar helper builds Google and Outlook links with the teaser only", asy
   assertHealthy(expect, report, "calendar links teaser only");
 });
 
+test("calendar helper uses the full member address only when the Hub asks for it", async ({ page }) => {
+  const report = watchPage(page);
+  await page.goto("/event-signup.html");
+  await page.waitForFunction(() => window.kosCalendar && typeof window.kosCalendar.links === "function");
+  const out = await page.evaluate((ev) => {
+    const member = Object.assign({}, ev, { include_member_address: true });
+    return { links: window.kosCalendar.links(member), ics: window.kosCalendar.buildIcs(member) };
+  }, BASKET);
+
+  expect(new URL(out.links.google).searchParams.get("location")).toBe("15918 Secret Muirfield Drive");
+  expect(new URL(out.links.outlook).searchParams.get("location")).toBe("15918 Secret Muirfield Drive");
+  expect(new URL(out.links.office365).searchParams.get("location")).toBe("15918 Secret Muirfield Drive");
+  expect(out.ics).toMatch(/LOCATION:15918 Secret Muirfield Drive/);
+  // .ics wraps lines longer than 75 characters; unfold before reading text.
+  expect(out.ics.replace(/\r\n /g, "")).toMatch(/for members only/);
+  assertHealthy(expect, report, "calendar member address");
+});
+
 test.describe("Hub add to my calendar", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
@@ -77,6 +95,9 @@ test.describe("Hub add to my calendar", () => {
 
     const googleHref = await chooser.locator("a.kos-cal-opt").first().getAttribute("href");
     expect(googleHref).toMatch(/^https:\/\/calendar\.google\.com\/calendar\/render\?/);
+    // Signed-in members get the full street address in their own calendar.
+    expect(new URL(googleHref).searchParams.get("location")).toBe("15918 Secret Muirfield Drive");
+    await expect(chooser).toContainText("full member address");
 
     const download = page.waitForEvent("download");
     await chooser.locator("[data-kos-cal-ics]").click();

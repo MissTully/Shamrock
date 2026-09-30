@@ -1,8 +1,10 @@
 /* Personal calendar saves for Hub cards and RSVP confirm: an .ics download
    (Apple Calendar, Outlook desktop, most phones) plus Google Calendar and
    Outlook web links, offered together by choose().
-   LOCATION is always the public teaser. Never write member_address or
-   meeting_url into a file or link someone might forward. */
+   LOCATION is the public teaser by default. The Member Hub (signed-in
+   members only) passes include_member_address so the member's own calendar
+   gets the full street address. Public pages never pass it, and meeting_url
+   is never written into a file or link. */
 (function () {
   "use strict";
 
@@ -47,10 +49,24 @@
     return loc;
   }
 
+  function memberAddress(ev) {
+    if (!ev || !ev.include_member_address || !ev.member_address) return "";
+    return String(ev.member_address).trim();
+  }
+
+  // Full street address for a signed-in member, otherwise the public teaser.
+  function calendarLocation(ev) {
+    return memberAddress(ev) || teaserLocation(ev);
+  }
+
   function publicDescription(ev) {
     var bits = [];
     if (ev && ev.description) bits.push(String(ev.description).trim());
-    bits.push("Krewe of Shamrock. Full staging and member details stay in the Member Hub.");
+    if (memberAddress(ev)) {
+      bits.push("Krewe of Shamrock. The address is for members only; please do not share it.");
+    } else {
+      bits.push("Krewe of Shamrock. Full staging and member details stay in the Member Hub.");
+    }
     return bits.filter(Boolean).join(" ");
   }
 
@@ -87,7 +103,7 @@
       "DTEND:" + end,
       "SUMMARY:" + icsEscape(ev.name || "Krewe of Shamrock event")
     ];
-    var loc = teaserLocation(ev);
+    var loc = calendarLocation(ev);
     if (loc) lines.push("LOCATION:" + icsEscape(loc));
     lines.push("DESCRIPTION:" + icsEscape(publicDescription(ev)));
     lines.push("END:VEVENT");
@@ -136,7 +152,7 @@
       text: (ev && ev.name) || "Krewe of Shamrock event",
       dates: toUtcStamp(range.start) + "/" + toUtcStamp(range.end),
       details: publicDescription(ev),
-      location: teaserLocation(ev)
+      location: calendarLocation(ev)
     });
   }
 
@@ -152,7 +168,7 @@
       startdt: range.start.toISOString(),
       enddt: range.end.toISOString(),
       body: publicDescription(ev),
-      location: teaserLocation(ev)
+      location: calendarLocation(ev)
     });
   }
 
@@ -228,7 +244,9 @@
       option("📧", "Outlook.com", "Personal Outlook, Hotmail, or Live accounts", { href: urls.outlook }) +
       option("💼", "Outlook for work or school", "Microsoft 365 accounts", { href: urls.office365 }) +
       option("📅", "Apple Calendar or other", "Downloads a calendar file (.ics); also works for the Outlook desktop app", { data: "data-kos-cal-ics" }) +
-      '<p class="kos-cal-note">Your calendar gets the public location only. Member-only addresses stay in the Member Hub.</p>' +
+      '<p class="kos-cal-note">' + (memberAddress(ev)
+        ? "Your calendar gets the full member address. Please keep it within the krewe."
+        : "Your calendar gets the public location only. Member-only addresses stay in the Member Hub.") + "</p>" +
       '<button type="button" class="kos-cal-close" data-kos-cal-close>Close</button>' +
       "</div>";
 
@@ -267,6 +285,7 @@
     outlookUrl: outlookUrl,
     links: links,
     choose: choose,
-    teaserLocation: teaserLocation
+    teaserLocation: teaserLocation,
+    calendarLocation: calendarLocation
   };
 })();
