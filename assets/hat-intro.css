@@ -63,6 +63,8 @@ body.hat-intro-lock {
   width: 100%;
   height: auto;
   display: block;
+  -webkit-mask-image: radial-gradient(ellipse 70% 74% at 50% 46%, #000 56%, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 74% at 50% 46%, #000 56%, transparent 80%);
 }
 
 .hat-spark {
