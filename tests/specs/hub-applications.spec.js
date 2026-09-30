@@ -453,4 +453,85 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("#hubPacketSave")).toBeDisabled();
     assertHealthy(expect, report, "joining packet editor");
   });
+
+  test("chair saves a record note without sending the joining packet", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: APPLICATIONS
+      }
+    });
+    await page.evaluate(() => {
+      window.__kosHubSetFeed({
+        profile: {
+          first_name: "Lisa",
+          last_name: "Sugrue",
+          display_name: "Lisa Sugrue",
+          email: "lsugrue99@gmail.com",
+          officer_title: "Board Member · Committee Chair of Membership",
+          member_role: "board"
+        }
+      });
+    });
+    await page.locator("#hubAppsHomeLink").click();
+    const tool = page.locator("#hubApplications");
+
+    await tool.locator("[data-app-bucket='prospect']").click();
+    const casey = tool.locator("[data-app-id='app-casey']");
+    await expect(casey).toContainText("Event prospect");
+    await expect(casey).toContainText("Their note: Signed up for an event.");
+    await expect(casey.locator("[data-app-save-note='app-casey']")).toHaveText("Save note");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(casey).toContainText("leaves their stage as it is");
+
+    await casey.locator("#hubAppNote-app-casey").fill("   ");
+    const emptyDialog = new Promise((resolve) => {
+      page.once("dialog", (dialog) => {
+        resolve(dialog.message());
+        dialog.accept();
+      });
+    });
+    await casey.locator("[data-app-save-note='app-casey']").click();
+    expect(await emptyDialog).toContain("Write a note before saving.");
+    await expect(tool.locator("[data-app-history='note']")).toHaveCount(0);
+    await expect(casey).toHaveAttribute("data-app-status", "prospect");
+
+    await casey.locator("#hubAppNote-app-casey").fill("Called about Tartan Ball. Badge 123456789");
+    await casey.locator("[data-app-save-note='app-casey']").click();
+    await expect(tool.locator("#hubAppFlash")).toContainText("Note saved on the record.");
+    await expect(tool.locator("#hubAppFlash")).toContainText("joining packet was not sent");
+    await expect(casey).toHaveAttribute("data-app-status", "prospect");
+    await expect(casey.locator("[data-app-record-note]")).toContainText("Record note:");
+    await expect(casey.locator("[data-app-record-note]")).toContainText("Called about Tartan Ball.");
+    await expect(casey.locator("[data-app-record-note]")).toContainText("[redacted]");
+    await expect(casey.locator("[data-app-record-note]")).toContainText("Lisa Sugrue");
+    await expect(casey).toContainText("Their note: Signed up for an event.");
+    await expect(casey).not.toContainText("123456789");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(tool.locator("[data-app-bucket='prospect']")).toContainText("Event prospects (1)");
+    await expect(tool.locator("[data-app-history='note']")).toContainText("Casey Prospect");
+    await expect(tool.locator("[data-app-history='note']")).toContainText("Called about Tartan Ball.");
+    await expect(tool.locator("[data-app-history='note']")).toContainText("Event prospect");
+
+    await page.screenshot({
+      path: "/opt/cursor/artifacts/screenshots/event-prospect-save-note.png",
+      fullPage: true
+    });
+
+    await tool.locator("[data-app-bucket='new']").click();
+    const nia = tool.locator("[data-app-id='app-nia']");
+    await expect(nia.locator("[data-app-save-note='app-nia']")).toBeVisible();
+    await nia.locator("#hubAppNote-app-nia").fill("Left a voicemail.");
+    await nia.locator("[data-app-save-note='app-nia']").click();
+    await expect(nia).toHaveAttribute("data-app-status", "pending-new");
+    await expect(nia.locator("[data-app-record-note]")).toContainText("Left a voicemail.");
+    await expect(tool.locator("[data-app-bucket='new']")).toContainText("New applications (3)");
+    await expect(page.locator("#hubAppsHomeLink")).toContainText("3 new applications");
+
+    await tool.locator("[data-app-bucket='renewal']").click();
+    await expect(tool.locator("[data-app-save-note='app-rowan']")).toHaveText("Save note");
+    assertHealthy(expect, report, "save record note");
+  });
 });

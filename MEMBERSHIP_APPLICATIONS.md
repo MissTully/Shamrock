@@ -27,6 +27,8 @@ Pending application means `membership_status = 'pending-new'` (the join form). R
 
 Each decision records the actor auth uid, display name, email, timestamp, from/to status, and note in `membership_application_actions`. Only reviewers can read that table. The browser cannot write it directly.
 
+**Note for the record** is that same history table, with `action = 'note'`. **Save note** writes the row and leaves `membership_status` where it is. It does not send the joining packet. `from_status` and `to_status` are both the current stage, including `prospect` for an event RSVP. `members.notes` stays the applicant's own words, shown as **Their note**. The latest `note` row comes back on the card as **Record note**. Older note rows stay in Recent decisions.
+
 `declined` and `archived` stay out of the member directory (active only), birthday names (`active`, `pending-renewal`, `pending-new`), `v_secretary_engagement`, `v_report_membership`, and `v_parade_ready`.
 
 ## Apply the database file
@@ -106,9 +108,10 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 4. Open `sql/kos_membership_background_check_invoice.sql`. Paste it into a new SQL query and run it. This folds the secure link into Move to background check and queues the level-based membership dues invoice when the prospect submits the full application.
 5. Open `sql/kos_prospect_background_check_email.sql`. Paste it into a new SQL query and run it. This stores the dues explainers, the dues Zeffy links, and the background check payment links, and it builds the prospect letter. It does not turn prospect email on.
 6. Open `sql/kos_joining_packet_email_template.sql`. Paste it into a new SQL query and run it. This stores the editable joining packet draft and points Send joining packet at that draft. It does not turn prospect email on. Running it again does not overwrite a draft you already saved.
-7. Each file is safe to run again.
+7. Open `sql/kos_membership_application_record_note.sql`. Paste it into a new SQL query and run it. This lets **Save note** write a `note` row without moving the stage or sending the joining packet. Running it again is safe. It does not change the joining packet draft.
+8. Each file is safe to run again.
 
-Run `sql/kos_joining_packet_email_template.sql` last. If you run the pipeline file, the staged file, the background-check invoice file, or the prospect email file again after it, run the template file again.
+Run `sql/kos_membership_application_record_note.sql` last. If you run the staged file again after it, run the record-note file again. The staged file replaces the action check and the application list, and that drops `note` until the record-note file is applied. If you run the pipeline file, the background-check invoice file, the prospect email file, or the joining-packet template file again, run the template file and then the record-note file again.
 
 Do not set `membership_prospect_emails` to enabled. Melissa applies the SQL in the Supabase editor. The site deploy does not run it.
 
