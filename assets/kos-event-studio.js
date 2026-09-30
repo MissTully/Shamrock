@@ -188,7 +188,7 @@
       '<h4>Delete this event permanently?</h4>' +
       '<p id="hubEventDeleteSummary"></p>' +
       '<p>This removes the event from Event Studio and the public calendar. RSVPs for this event are deleted. Payment records stay; the event link on them is cleared. Linked raffles are unlinked, not deleted. Cancelled status hides an event without destroying it.</p>' +
-      '<label for="hubEventDeleteTyped">Type the event name or Delete permanently to confirm</label>' +
+      '<label for="hubEventDeleteTyped">Type the name shown above, or Delete permanently</label>' +
       '<input id="hubEventDeleteTyped" autocomplete="off" />' +
       '<div class="hub-appr-btns" style="margin-top:10px;">' +
       '<button class="btn" type="button" id="hubEventDeleteCancel">Cancel</button>' +
@@ -336,11 +336,35 @@
     fillRaffleEventSelect(current ? current.value : "");
   }
 
-  function confirmDeleteTextMatches(typed, name) {
-    var t = String(typed || "").trim().toLowerCase();
+  function normalizeConfirmText(value) {
+    return String(value || "")
+      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function confirmDeleteTextMatches(typed, name, when) {
+    var t = normalizeConfirmText(typed);
     if (!t) return false;
     if (t === "delete permanently") return true;
-    return t === String(name || "").trim().toLowerCase();
+    var n = normalizeConfirmText(name);
+    if (!n) return false;
+    if (t === n) return true;
+    var w = normalizeConfirmText(when);
+    if (!w) return false;
+    if (t === n + " - " + w || t === n + " " + w) return true;
+    var squash = function (s) { return normalizeConfirmText(s).replace(/[^a-z0-9]+/g, ""); };
+    return squash(typed) === squash(String(name || "") + " " + String(when || ""));
+  }
+
+  function confirmTokenForRpc(typed, name, when) {
+    if (!confirmDeleteTextMatches(typed, name, when)) return "";
+    var raw = String(typed || "").trim();
+    var stored = String(name || "").trim();
+    if (raw.toLowerCase() === "delete permanently") return "Delete permanently";
+    if (stored && raw.toLowerCase() === stored.toLowerCase()) return stored;
+    return "Delete permanently";
   }
 
   function showEventDeleteButton(on) {
@@ -379,24 +403,25 @@
     var go = document.getElementById("hubEventDeleteGo");
     var typed = document.getElementById("hubEventDeleteTyped");
     if (!go) return;
-    go.disabled = !pendingDelete || !confirmDeleteTextMatches(typed && typed.value, pendingDelete.name);
+    go.disabled = !pendingDelete || !confirmDeleteTextMatches(typed && typed.value, pendingDelete.name, pendingDelete.when);
   }
 
   function showDeletePanel(event) {
     var row = event || {};
     if (!row.id) return;
+    var whenText = eventLocalDisplay(row.start_time);
     pendingDelete = {
       id: row.id,
       name: row.name || "",
-      start_time: row.start_time || ""
+      start_time: row.start_time || "",
+      when: whenText
     };
     var panel = document.getElementById("hubEventDeletePanel");
     var summary = document.getElementById("hubEventDeleteSummary");
     var typed = document.getElementById("hubEventDeleteTyped");
     var err = document.getElementById("hubEventDeleteErr");
-    var when = eventLocalDisplay(pendingDelete.start_time);
     if (summary) {
-      summary.textContent = (pendingDelete.name || "This event") + (when ? " — " + when : "");
+      summary.textContent = (pendingDelete.name || "This event") + (pendingDelete.when ? " - " + pendingDelete.when : "");
     }
     if (typed) typed.value = "";
     if (err) err.textContent = "";
@@ -431,13 +456,14 @@
     var go = document.getElementById("hubEventDeleteGo");
     var typed = document.getElementById("hubEventDeleteTyped");
     var msg = document.getElementById("hubEventMsg");
-    var confirm = typed ? typed.value.trim() : "";
+    var typedText = typed ? typed.value.trim() : "";
     if (!pendingDelete || !pendingDelete.id) {
       if (err) err.textContent = "Choose an event to delete.";
       return;
     }
-    if (!confirmDeleteTextMatches(confirm, pendingDelete.name)) {
-      if (err) err.textContent = "Type the event name or Delete permanently to confirm.";
+    var confirm = confirmTokenForRpc(typedText, pendingDelete.name, pendingDelete.when);
+    if (!confirm) {
+      if (err) err.textContent = "Type the name shown above, or Delete permanently.";
       return;
     }
     if (go) {

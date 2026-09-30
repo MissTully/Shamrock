@@ -1,12 +1,16 @@
 /* Personal calendar saves for Hub cards and RSVP confirm: an .ics download
    (Apple Calendar, Outlook desktop, most phones) plus Google Calendar and
    Outlook web links, offered together by choose().
+   The .ics file uses America/New_York wall time so phones open the right hour.
+   Google and Outlook web links stay in UTC, which those sites convert.
    LOCATION is the public teaser by default. The Member Hub (signed-in
    members only) passes include_member_address so the member's own calendar
    gets the full street address. Public pages never pass it, and meeting_url
    is never written into a file or link. */
 (function () {
   "use strict";
+
+  var TZ = "America/New_York";
 
   function pad(n) {
     return n < 10 ? "0" + n : String(n);
@@ -32,6 +36,31 @@
       pad(d.getUTCSeconds()) + "Z";
   }
 
+  function nyStamp(value) {
+    var d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return "";
+    var parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(d);
+    function pick(type) {
+      var part = null;
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].type === type) part = parts[i];
+      }
+      return part ? part.value : "00";
+    }
+    var hour = pick("hour");
+    if (hour === "24") hour = "00";
+    return pick("year") + pick("month") + pick("day") + "T" + hour + pick("minute") + pick("second");
+  }
+
   function foldLine(line) {
     var out = "";
     var rest = String(line || "");
@@ -54,7 +83,6 @@
     return String(ev.member_address).trim();
   }
 
-  // Full street address for a signed-in member, otherwise the public teaser.
   function calendarLocation(ev) {
     return memberAddress(ev) || teaserLocation(ev);
   }
@@ -70,39 +98,59 @@
     return bits.filter(Boolean).join(" ");
   }
 
-  // Start and end as Date objects; an event with no end runs two hours.
   function eventRange(ev) {
     var start = new Date(ev && ev.start_time);
     if (!ev || !ev.start_time || isNaN(start.getTime())) return null;
     var end = ev.end_time ? new Date(ev.end_time) : null;
-    if (!end || isNaN(end.getTime())) {
-      end = new Date(start.getTime());
-      end.setHours(end.getHours() + 2);
-    }
+    if (!end || isNaN(end.getTime())) end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     return { start: start, end: end };
+  }
+
+  function vtimezone() {
+    return [
+      "BEGIN:VTIMEZONE",
+      "TZID:" + TZ,
+      "X-LIC-LOCATION:" + TZ,
+      "BEGIN:DAYLIGHT",
+      "TZOFFSETFROM:-0500",
+      "TZOFFSETTO:-0400",
+      "TZNAME:EDT",
+      "DTSTART:19700308T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "TZOFFSETFROM:-0400",
+      "TZOFFSETTO:-0500",
+      "TZNAME:EST",
+      "DTSTART:19701101T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+      "END:STANDARD",
+      "END:VTIMEZONE"
+    ];
   }
 
   function buildIcs(ev) {
     ev = ev || {};
     var range = eventRange(ev);
     if (!range) return "";
-    var start = toUtcStamp(range.start);
-    var end = toUtcStamp(range.end);
+    var start = nyStamp(range.start);
+    var end = nyStamp(range.end);
+    if (!start || !end) return "";
     var uid = String(ev.uid || ev.id || ("kos-" + start)).replace(/[^a-zA-Z0-9@._-]/g, "") + "@kreweofshamrock.com";
-    var stamp = toUtcStamp(new Date());
     var lines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//Krewe of Shamrock//Member Hub//EN",
       "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
+      "METHOD:PUBLISH"
+    ].concat(vtimezone()).concat([
       "BEGIN:VEVENT",
       "UID:" + uid,
-      "DTSTAMP:" + stamp,
-      "DTSTART:" + start,
-      "DTEND:" + end,
+      "DTSTAMP:" + toUtcStamp(new Date()),
+      "DTSTART;TZID=" + TZ + ":" + start,
+      "DTEND;TZID=" + TZ + ":" + end,
       "SUMMARY:" + icsEscape(ev.name || "Krewe of Shamrock event")
-    ];
+    ]);
     var loc = calendarLocation(ev);
     if (loc) lines.push("LOCATION:" + icsEscape(loc));
     lines.push("DESCRIPTION:" + icsEscape(publicDescription(ev)));
@@ -125,13 +173,23 @@
     if (!body) return false;
     var blob = new Blob([body], { type: "text/calendar;charset=utf-8" });
     var url = URL.createObjectURL(blob);
+    var ua = (navigator && navigator.userAgent) || "";
+    var platform = (navigator && navigator.platform) || "";
+    var ios = /iP(ad|hone|od)/.test(ua) || (platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios) {
+      window.location.assign(url);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      return true;
+    }
     var a = document.createElement("a");
     a.href = url;
     a.download = filename(ev);
+    a.rel = "noopener";
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
     return true;
   }
 
@@ -143,7 +201,6 @@
     }).join("&");
   }
 
-  // Google Calendar "create event" template link.
   function googleUrl(ev) {
     var range = eventRange(ev);
     if (!range) return "";
@@ -156,8 +213,6 @@
     });
   }
 
-  // Outlook on the web compose link. host is outlook.live.com for personal
-  // accounts (Hotmail, Outlook.com) or outlook.office.com for work/school.
   function outlookUrl(ev, host) {
     var range = eventRange(ev);
     if (!range) return "";
@@ -183,11 +238,11 @@
   var CHOOSER_CSS =
     ".kos-cal-back{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;" +
     "padding:16px;background:rgba(4,16,10,.62);}" +
-    ".kos-cal-card{width:min(400px,100%);max-height:88vh;overflow:auto;background:#fbf7ec;color:#23291f;" +
+    ".kos-cal-back .kos-cal-card{width:min(400px,100%);max-height:88vh;overflow:auto;margin:0;background:#fbf7ec;color:#23291f;" +
     "border:1px solid rgba(168,128,28,.55);border-radius:20px;padding:16px 16px 18px;box-shadow:0 18px 50px rgba(0,0,0,.35);" +
     "font-family:inherit;text-align:left;}" +
-    ".kos-cal-card h2{margin:0 0 4px;font-size:20px;line-height:1.25;color:#14532d;}" +
-    ".kos-cal-card .kos-cal-sub{margin:0 0 12px;font-size:14px;color:#5f6b5a;}" +
+    ".kos-cal-back .kos-cal-card h2{margin:0 0 4px;font-size:20px;line-height:1.25;color:#14532d;}" +
+    ".kos-cal-back .kos-cal-card .kos-cal-sub{margin:0 0 12px;font-size:14px;color:#5f6b5a;}" +
     ".kos-cal-opt{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;min-height:52px;" +
     "margin:0 0 8px;padding:10px 14px;border-radius:14px;border:1px solid rgba(168,128,28,.45);background:#fff;" +
     "color:#14532d;font:inherit;font-weight:700;font-size:16px;text-decoration:none;text-align:left;cursor:pointer;}" +
@@ -223,9 +278,6 @@
       "</" + (attrs.href ? "a" : "button") + ">";
   }
 
-  // Opens a small chooser: Google, Outlook.com, Outlook work/school, or an
-  // .ics file for Apple Calendar and everything else. Returns false when the
-  // event has no usable date.
   function choose(ev) {
     if (!eventRange(ev)) return false;
     var old = document.getElementById("kosCalChooser");
@@ -268,7 +320,6 @@
         close();
         return;
       }
-      // Web links open in a new tab; close the chooser behind them.
       if (e.target.closest && e.target.closest("a.kos-cal-opt")) setTimeout(close, 0);
     });
     document.addEventListener("keydown", onKey);
@@ -276,6 +327,46 @@
     var first = back.querySelector(".kos-cal-opt");
     if (first) first.focus();
     return true;
+  }
+
+  function ticketCheckoutUrl(ev) {
+    if (!ev) return "";
+    var n = String(ev.name || "").toLowerCase();
+    var isBall = n.indexOf("tartan ball") !== -1 && n.indexOf("basket") === -1 && n.indexOf("happy hour") === -1;
+    if (isBall) return ev.ticket_payment_url || ev.external_url || "http://www.tampabaytartanball.com/home.html";
+    if (ev.ticket_payment_url) return ev.ticket_payment_url;
+    var ext = String(ev.external_url || "").toLowerCase();
+    if (ext.indexOf("zeffy.com") !== -1) return ev.external_url;
+    return "";
+  }
+
+  function publicSignupAction(ev, now) {
+    now = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+    if (!ev) return "hide";
+    var status = String(ev.status || "").toLowerCase();
+    if (status !== "published" && status !== "live") return "hide";
+    var start = ev.start_time ? new Date(ev.start_time) : null;
+    if (!start || isNaN(start.getTime())) return "hide";
+    var end = ev.end_time ? new Date(ev.end_time) : null;
+    var stillOn = end && !isNaN(end.getTime()) ? end.getTime() >= now.getTime() : start.getTime() >= now.getTime();
+    if (!stillOn) return "hide";
+    if (String(ev.source || "").toLowerCase() === "ikc") return "ikc";
+    if (String(ev.event_type || "").toLowerCase() === "parade") {
+      return ev.members_only ? "parade-members" : "parade";
+    }
+    if (ev.members_only) return "members";
+    if (ev.registration_closes_at) {
+      var closes = new Date(ev.registration_closes_at);
+      if (!isNaN(closes.getTime()) && now.getTime() >= closes.getTime()) return "closed";
+    }
+    if (ticketCheckoutUrl(ev)) return "tickets";
+    if (Number(ev.ticket_price_cents || 0) > 0) return "tickets-soon";
+    return "rsvp";
+  }
+
+  function signupDropdownAction(action) {
+    return action === "members" || action === "closed" || action === "tickets" ||
+      action === "tickets-soon" || action === "rsvp";
   }
 
   window.kosCalendar = {
@@ -286,6 +377,9 @@
     links: links,
     choose: choose,
     teaserLocation: teaserLocation,
-    calendarLocation: calendarLocation
+    calendarLocation: calendarLocation,
+    ticketCheckoutUrl: ticketCheckoutUrl,
+    publicSignupAction: publicSignupAction,
+    signupDropdownAction: signupDropdownAction
   };
 })();
