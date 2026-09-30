@@ -106,6 +106,7 @@ Written "safe to run more than once" like the other files in `sql/`.
    | `website_url` | text | http://www.redsteamsports.com/ |
    | `contact_email` / `contact_phone` | text | teamstores@redsteamsports.com / 813-612-5999 |
    | `logo_url` | text | uploaded to the existing `shop-products` storage bucket |
+   | `showcase_images` | text[] | 4–6 picked product photos for the vendor's collage (see Phase 3) |
    | `fulfillment_note` | text | "Shipped to your home. Orders are processed weekly; allow 2–3 weeks." |
    | `season_label` | text | 2025–26 |
    | `active` | boolean, default true | |
@@ -146,21 +147,72 @@ Written "safe to run more than once" like the other files in `sql/`.
    still works each season.
 4. Update `SHOP_STUDIO.md` with the new steps.
 
-### Phase 3 — Public Shop page (`store.html`)
+### Phase 3 — Public Shop page (`store.html`): a picture-first shopping experience
 
-1. Split the page into two sections:
-   - **Krewe Gear** — pins and items the Krewe sells (unchanged; Buy now / cart).
-   - **Apparel from our vendors** — vendor shirts, grouped by vendor, with
-     filter buttons: All · Women's · Men's · Unisex · Outerwear.
-2. Each vendor card shows: photo (or the existing "Photo coming soon"
-   placeholder), name, "From $18.50", "6 colors", a small vendor label, and an
-   **Order from Studio 19 ↗** button (opens a new tab, `rel="noopener noreferrer"`).
-   No size drop-down and no "Add to Cart" — the vendor handles sizes.
-3. Above the vendor section, one plain-language note per vendor:
-   "Ordered and paid on the vendor's website. Shipped to your home. Orders
-   are processed weekly; allow 2–3 weeks." plus the vendor's contact.
-4. Change the top note and the cart message so they no longer mention $0.00.
-5. Phone layout: one column, the same bottom cart dock as today.
+Members shop with their eyes. Instead of a list of text links, the vendor
+section leads with **photo collages** that are themselves the links.
+
+#### 3a. Vendor collage tiles (the main idea)
+
+One large tile per vendor, side by side on a computer and stacked on a phone:
+
+```
+┌──────────────────────────────────┐   ┌──────────────────────────────────┐
+│ ┌───────────┐┌───────┐┌───────┐  │   │ ┌───────────┐┌───────┐┌───────┐  │
+│ │           ││ tank  ││ tee   │  │   │ │           ││hoodie ││raglan │  │
+│ │  big tee  │└───────┘└───────┘  │   │ │ big tee   │└───────┘└───────┘  │
+│ │  photo    │┌───────┐┌───────┐  │   │ │ photo     │┌───────┐┌───────┐  │
+│ │           ││ tee   ││ +9    │  │   │ │           ││ tee   ││ +4    │  │
+│ └───────────┘└───────┘└───────┘  │   │ └───────────┘└───────┘└───────┘  │
+│ RED'S TEAM SPORTS                │   │ STUDIO 19                        │
+│ Tees, tanks & outerwear          │   │ Tees & hoodies · from $16.50     │
+│ [ Shop Red's Team Sports ↗ ]     │   │ [ Shop Studio 19 ↗ ]             │
+└──────────────────────────────────┘   └──────────────────────────────────┘
+```
+
+- **The whole tile is one link** to the vendor's Krewe store (opens in a new
+  tab). Hovering zooms the photos slightly, like the current product cards.
+- The collage uses the vendor's `showcase_images` if an officer picked them;
+  otherwise the first 4–5 photos of that vendor's live products. The last
+  square shows "+9 more" when there are more products than squares.
+- Built with CSS Grid (one large square + four small squares). No extra
+  library is needed.
+
+#### 3b. Clickable product gallery under each collage
+
+Below the tiles, a row per vendor of product photo cards (the same card style
+as today's Shop, but for vendor items):
+
+- **Clicking the photo or the name** opens that exact product on the vendor's
+  site (the product's `vendor_url`); if no product link was saved, it falls
+  back to the vendor's store link.
+- Card text: name, "From $18.50", "6 colors", and a small **Order from
+  Studio 19 ↗** button.
+- Filter buttons above the gallery: All · Women's · Men's · Unisex · Outerwear.
+- No size drop-down and no "Add to Cart": the vendor handles sizes, colors
+  and payment.
+
+#### 3c. The rest of the page
+
+1. The page has two sections: **Krewe Gear** (pins and items the Krewe sells,
+   unchanged, Buy now / cart) and **Apparel from our vendors** (3a + 3b).
+2. A plain-language note per vendor: "Ordered and paid on the vendor's
+   website. Shipped to your home. Orders are processed weekly; allow 2–3
+   weeks." plus the vendor's contact.
+3. The top note and the cart message no longer mention $0.00.
+4. Phone layout: one column, the collage keeps its shape, the same bottom
+   cart dock as today.
+
+#### 3d. Details that make it work well
+
+| Topic | What we do | Why |
+|---|---|---|
+| **Where the photos live** | Copy each vendor photo into our own `shop-products` storage bucket (Shop Studio already uploads there) rather than pointing at the vendor's image address | Vendor image addresses can change or block other sites ("hotlinking"), which would leave broken pictures. Our copy stays put. |
+| **Photo sizes** | Square crop shown with `object-fit: contain` on the cream background, `loading="lazy"` | Shirts are never cut off, and the page loads fast on phones. |
+| **Missing photos** (several Studio 19 items) | Use the existing "Photo coming soon" shamrock placeholder; collages skip products without a photo | No grey broken-image boxes. |
+| **Accessibility** (screen readers and keyboards) | Each link has a readable label, e.g. "Shop Red's Team Sports, opens in a new tab"; every photo has alt text from the product name; tiles show a visible focus outline | Members using screen readers or keyboards can shop too. |
+| **Safety** | Links pass through the page's existing `url()` helper (only `http`/`https`) and use `rel="noopener noreferrer"` | A mistyped or harmful link can't run code or take over our tab. |
+| **Trust** | A small line under the vendor tiles: "You are leaving the Krewe site to order from our vendor partner." | Members know why the page changed to a different website. |
 
 ### Phase 4 — Member Hub FAQ (`members.html`)
 
@@ -180,6 +232,12 @@ touch the real database. New checks:
 - Krewe products still show Buy now / Add to Cart (no regression in
   `forms.spec.js`).
 - Category filters show and hide the right cards.
+- A vendor collage tile renders at most 5 photos, shows "+N more" when there
+  are more, and the whole tile links to the vendor store in a new tab.
+- Clicking a vendor product photo goes to that product's `vendor_url`, and to
+  the vendor store link when the product has none.
+- Products without a photo are left out of the collage and show the
+  placeholder in the gallery.
 - A vendor link that is not `http`/`https` is not rendered as a link
   (the page already has a `url()` safety helper; reuse it).
 - Shop Studio: choosing *Vendor* hides the Zeffy field and requires a vendor.
@@ -192,22 +250,24 @@ Run with `cd tests && npm test` (static check + Playwright).
 
 1. Member Hub → Officer desk → Shop Studio → **Vendors**: check the two seeded
    vendors; add Studio 19's phone and email.
-2. For each shirt on the vendor store: right-click the product photo → *Copy
-   image address* → paste into **Image URL** (or save the image and upload it).
-   Ask the vendor first if you plan to reuse their photos; for Studio 19's
-   products without photos, ask Studio 19 for images.
+2. For each shirt on the vendor store: right-click the product photo → *Save
+   image as…* → upload it in Shop Studio (this keeps a copy in our own
+   storage). For Studio 19's products without photos, ask Studio 19 for images.
 3. Copy the product page link into **Vendor product link**.
 4. Enter the price, tick **starting price** for Studio 19, pick the category,
    set status **Live**, save.
-5. Each new season: update the vendor's store link, click **Check link** on
+5. Optional: on each vendor, pick 4–6 favorite photos as the **collage** images.
+   Without this, the collage uses the first products automatically.
+6. Each new season: update the vendor's store link, click **Check link** on
    each product, archive shirts that are gone.
 
 ---
 
 ## 5. Questions to settle before building
 
-1. **Photos:** may we reuse the vendors' product photos on our site? (A quick
-   email to each vendor settles this.)
+1. ~~**Photos:** may we reuse the vendors' product photos?~~ **Settled
+   2026-09-30:** yes, the vendors' product photos are reused as links to their
+   sites. (A short courtesy note to each vendor is still a good idea.)
 2. **Who is signed in?** Should vendor shirts be visible to the public, or only
    to signed-in members like the FAQ says ("Log in, then open Shop")?
 3. **Commission:** does the Krewe earn anything per vendor sale? If yes, the
@@ -225,7 +285,7 @@ Run with `cd tests && npm test` (static check + Playwright).
 |---|---|---|
 | 1 Database | `sql/kos_shop_vendors.sql` | small–medium |
 | 2 Shop Studio | `assets/kos-shop-studio.js`, `members.html`, `SHOP_STUDIO.md` | medium |
-| 3 Shop page | `store.html` | medium |
+| 3 Shop page (collage + gallery) | `store.html` | medium |
 | 4 FAQ | `members.html` | small |
 | 5 Tests | `tests/specs/shop-vendors.spec.js`, `tests/README.md` | small–medium |
 
