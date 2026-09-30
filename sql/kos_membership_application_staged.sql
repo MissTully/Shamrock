@@ -734,6 +734,15 @@ begin
   if auth.uid() is null or not public.can_review_applications() then
     return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
   end if;
+  if to_regprocedure('public.kos_membership_prospect_emails_enabled()') is not null
+     and not public.kos_membership_prospect_emails_enabled() then
+    return jsonb_build_object(
+      'ok', false,
+      'emailed', false,
+      'emails_paused', true,
+      'message', 'Prospect email is paused while this pipeline is in development. No full-application link was sent.'
+    );
+  end if;
   if p_member_id is null then
     return jsonb_build_object('ok', false, 'message', 'Missing application.');
   end if;
@@ -765,13 +774,20 @@ begin
 
   v_url := 'https://www.kreweofshamrock.com/membership-full-application.html?token=' || v_token;
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
-  v_html :=
-    '<p>Dear ' || public.kos_email_plain(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-    || '<p>The Membership Chair moved your application to the background check.</p>'
-    || '<p>Open this secure link to finish the background-check form. It asks for a driver''s license number and a Social Security number. The board uses SSN and driver''s license for the background check. Your information is held confidentially.</p>'
-    || '<p><a href="' || v_url || '">Open the full application</a></p>'
-    || '<p>This email does not include those numbers. The link expires in 21 days. If you did not ask to join, you can ignore this message.</p>'
-    || '<p>Sláinte!</p>';
+  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
+    v_html := public.kos_prospect_background_check_email_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_url
+    );
+  else
+    v_html :=
+      '<p>Dear ' || public.kos_email_plain(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
+      || '<p>The Membership Chair moved your application to the background check.</p>'
+      || '<p>Open this secure link to finish the background-check form. It asks for a driver''s license number and a Social Security number. The board uses SSN and driver''s license for the background check. Your information is held confidentially.</p>'
+      || '<p><a href="' || v_url || '">Open the full application</a></p>'
+      || '<p>This email does not include those numbers. The link expires in 21 days. If you did not ask to join, you can ignore this message.</p>'
+      || '<p>Sláinte!</p>';
+  end if;
 
   v_mail := public.enqueue_email(
     rec.email,
@@ -808,7 +824,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'emailed', true,
-    'message', 'Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver''s license number.'
+    'message', 'Full application sent. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver''s license number.'
   );
 end;
 $$;

@@ -27,7 +27,7 @@ Until the key is set, sends still queue safely and show in history; nothing leav
 - A level dropdown calls `kos_set_membership_level` before you invoice. That does not rewrite an invoice already on the books.
 - **Create invoices** calls `kos_create_level_invoices`. The preview counts creates, updates, and skips (paid, applied waiver, elected officer, no catalog row) before anything is written.
 - **Exclude elected officers** is on by default (President, Vice President, Secretary, and Treasurer).
-- Optional email uses the same outbound queue and Resend path as Email members. Each notice includes the level, amount, due date, and the catalog Zeffy link. Paid members are not emailed. Associate and auxiliary have no link yet; the screen warns, and those emails do not invent a pay button.
+- Optional email uses the same outbound queue and Resend path as Email members. Each notice includes the level, amount, due date, and the catalog Zeffy link. Paid members are not emailed. If a level has no catalog link, the screen warns, and that email does not invent a pay button.
 - Creates or updates unpaid rows on `dues_payments` (no second billing system). 2026 rates: full $375, associate $450, loa $100, auxiliary $200.
 - When Zeffy webhooks mark dues paid, those members drop off the unpaid list. Applied waivers (`paid` true, method `waiver`) do too.
 

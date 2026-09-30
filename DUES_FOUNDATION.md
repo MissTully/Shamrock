@@ -33,9 +33,11 @@ You should see four 2026 rows: full 375, associate 450, loa 100, auxiliary 200.
 | level | amount | Zeffy link |
 |---|---:|---|
 | full | 375 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership |
-| associate | 450 | none yet (Patrick still needs to create the campaign) |
+| associate | 450 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership |
+| auxiliary | 200 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership |
 | loa | 100 | https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2 |
-| auxiliary | 200 | none yet (this level may be retired) |
+
+Each row also has an `explainer`. The Move to background check letter prints that note, then the pay link.
 
 ## What the migration changes
 
@@ -94,4 +96,4 @@ select public.kos_apply_elected_officer_exemptions(2026);
 - The waiver queue is on the Hub: Officer desk → Email & invoices → **Dues waivers**. See OFFICER_DUES_WAIVERS.md. It reads `dues_payments`, `members`, and `kos_dues_events` with the officer policies already on the project. No new SQL is required for that screen.
 - There is still no treasurer report in the Hub.
 - Send invoices does not type a single dollar amount. It prices from `kos_dues_catalog`. See OFFICER_EMAIL_INVOICES.md.
-- Associate and auxiliary have no Zeffy link yet. Do not invent one. The invoice screen warns, and it will not put a pay button in those emails. The waiver card does not show pay links.
+- 2026 associate and auxiliary campaigns are on the catalog rows above. The invoice screen still warns, and it still skips a pay button, when a level has no `zeffy_url`. The waiver card does not show pay links.
