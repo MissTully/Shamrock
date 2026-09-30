@@ -235,6 +235,26 @@
     ".hub-app-other summary{cursor:pointer;color:var(--green-800);font-family:var(--display);font-size:15px;}",
     ".hub-app-other .hub-appr-btns{margin-top:8px;}",
     ".hub-app-next{margin:0 0 10px;font-size:15px;color:var(--green-800);font-weight:600;}",
+    ".hub-packet-launch{margin:0 0 12px;}",
+    ".hub-packet-launch .muted{display:block;margin-top:6px;color:var(--muted);font-size:15px;line-height:1.4;}",
+    ".hub-packet-editor h3{margin:0 0 8px;font-family:var(--display);color:var(--green-800);font-size:22px;}",
+    ".hub-packet-editor p.lead{margin:0 0 12px;color:var(--muted);font-size:16px;line-height:1.45;}",
+    ".hub-packet-editor label{display:block;margin:12px 0 3px;font-size:15px;color:var(--muted);}",
+    ".hub-packet-editor input,.hub-packet-editor textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-packet-editor textarea{min-height:72px;resize:vertical;}",
+    ".hub-packet-hint{margin:4px 0 0;font-size:14px;color:var(--muted);line-height:1.4;}",
+    ".hub-packet-lock{margin:12px 0;padding:10px 12px;border-radius:10px;background:#f4f1e6;border:1px dashed rgba(20,83,45,.35);color:#3a3a2e;font-size:15px;line-height:1.45;}",
+    ".hub-packet-lock b{display:block;margin:0 0 4px;color:#14532d;font-family:var(--display);}",
+    ".hub-packet-lock p{margin:0;}",
+    ".hub-packet-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}",
+    ".hub-packet-error{background:#fff5f2;border:1px solid #e0b4a8;border-radius:12px;padding:12px 14px;margin:0 0 12px;color:#8b2e1c;line-height:1.45;}",
+    ".hub-packet-preview{margin:0 0 14px;background:#fff;border:1px solid #ecd07e;border-radius:12px;padding:16px;}",
+    ".hub-packet-preview .sample{margin:0 0 10px;font-size:14px;color:var(--muted);line-height:1.4;}",
+    ".hub-packet-preview h1{margin:0 0 12px;font-size:22px;color:#14532d;font-family:var(--display);}",
+    ".hub-packet-preview h2{font-size:18px;margin:18px 0 8px;color:#14532d;}",
+    ".hub-packet-preview h3{margin:14px 0 6px;font-size:17px;color:#14532d;}",
+    ".hub-packet-preview p{margin:0 0 12px;line-height:1.55;}",
+    ".hub-packet-preview a.pay{display:inline-block;background:#14532d;color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none;font-weight:700;margin:8px 0 14px;}",
     ".hub-app-filters button{border:1px solid rgba(168,128,28,.45);background:#fff;color:var(--green-800);border-radius:999px;padding:8px 12px;font-family:var(--display);font-size:15px;cursor:pointer;}",
     ".hub-app-filters button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-note{width:100%;box-sizing:border-box;min-height:68px;margin-top:6px;font:inherit;padding:8px 10px;border:1px solid rgba(168,128,28,.4);border-radius:8px;background:#fff;}",
@@ -470,9 +490,10 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null };
   var feedLock = null;
   var applicationsFixture = null;
+  var joiningPacketLoadGen = 0;
   var volunteerInquiriesFixture = null;
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
@@ -3782,6 +3803,321 @@
   }
 
 
+  var JOINING_PACKET_FIELDS = [
+    { key: "subject", label: "Subject", name: "subject", hint: "The subject line of the email.", max: 140, kind: "input" },
+    { key: "greeting", label: "Greeting", name: "greeting", hint: "Use {{first_name}} where the applicant's first name should appear.", max: 180, kind: "input" },
+    { key: "intro", label: "Opening", name: "opening", hint: "The paragraph after the greeting.", max: 2000, kind: "area" },
+    { key: "finish_heading", label: "Application heading", name: "application heading", hint: "Sits above the application note.", max: 120, kind: "input" },
+    { key: "finish_body", label: "Application note", name: "application note", hint: "Shown above the locked Finish your application button.", max: 2000, kind: "area" },
+    { key: "finish_after", label: "After the application button", name: "note after the application button", hint: "Shown under the locked button. The button itself is added automatically.", max: 2000, kind: "area", lockBefore: "finish" },
+    { key: "fee_heading", label: "Background check heading", name: "background check heading", hint: "Sits above the background check note.", max: 120, kind: "input" },
+    { key: "fee_intro", label: "Background check note", name: "background check note", hint: "Shown above the locked background check pay buttons.", max: 2000, kind: "area" },
+    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the membership note.", max: 120, kind: "input", lockBefore: "fees" },
+    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Shown above the locked dues notes and pay buttons.", max: 2000, kind: "area" },
+    { key: "closing", label: "Closing", name: "closing", hint: "The paragraph before the sign-off.", max: 2000, kind: "area", lockBefore: "dues" },
+    { key: "signoff", label: "Sign-off", name: "sign-off", hint: "You can use two lines.", max: 240, kind: "area" }
+  ];
+
+  var JOINING_PACKET_SAMPLE_TOKEN = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  var JOINING_PACKET_SAMPLE_URL = "https://www.kreweofshamrock.com/membership-full-application.html?token=" + JOINING_PACKET_SAMPLE_TOKEN;
+
+  function joiningPacketDefaults() {
+    return {
+      subject: "We're glad you're joining the Krewe",
+      greeting: "Dear {{first_name}},",
+      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you're ready.",
+      finish_heading: "Let's finish your application",
+      finish_body: "When you have a quiet moment, open your private link and finish the full application. It asks for a driver's license number and a Social Security number. We use those only for the background check, and we hold them confidentially.",
+      finish_after: "This email doesn't include those numbers. Your link expires in 21 days.",
+      fee_heading: "Your background check fee",
+      fee_intro: "This fee is separate from membership dues. Pick the one that matches your application.",
+      dues_heading: "Pick the membership that fits",
+      dues_intro: "Membership dues are separate from the background check fee. Read the short note for each level, then use that level's button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don't also pay the background check above. If you're not sure which level fits, write to treasurer@kreweofshamrock.com and we'll help before you pay.",
+      closing: "Welcome to the Krewe. We can't wait to have you with us.",
+      signoff: "Sláinte,\nKrewe of Shamrock"
+    };
+  }
+
+  function joiningPacketClone(src) {
+    var base = joiningPacketDefaults();
+    JOINING_PACKET_FIELDS.forEach(function (field) {
+      if (src && src[field.key] != null) base[field.key] = String(src[field.key]);
+    });
+    return base;
+  }
+
+  function joiningPacketProblem(draft) {
+    var i, field, text, opens, tokens;
+    for (i = 0; i < JOINING_PACKET_FIELDS.length; i++) {
+      field = JOINING_PACKET_FIELDS[i];
+      text = String((draft && draft[field.key]) || "").trim();
+      if (!text) return "Add the " + field.name + " before you save.";
+      if (text.length > field.max) return "The " + field.name + " is too long.";
+      if (/[—–]/.test(text)) return "Use a period or a comma instead of a long dash in the " + field.name + ".";
+      if (/https?:\/\/|www\.|zeffy\.com|token=|<[a-zA-Z/!]/i.test(text)) {
+        return "Payment links and web addresses stay out of the " + field.name + ". The finish button and pay buttons are added automatically.";
+      }
+      opens = text.split("{{").length - 1;
+      tokens = text.split("{{first_name}}").length - 1;
+      if (opens !== tokens) return "The only placeholder is {{first_name}}.";
+    }
+    return "";
+  }
+
+  function joiningPacketPlain(text, firstName) {
+    var name = (firstName && String(firstName).trim()) || "friend";
+    return esc(text).replace(/\{\{first_name\}\}/g, esc(name)).replace(/\r\n/g, "<br>").replace(/\n/g, "<br>");
+  }
+
+  function joiningPacketButton(href, label) {
+    return '<p><a class="pay" href="' + esc(href) + '">' + esc(label) + "</a></p>";
+  }
+
+  function joiningPacketLockedBlocks() {
+    return {
+      fees: [
+        { title: "Individual, $50", note: "Just you on the application.", label: "Pay the individual fee", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual" },
+        { title: "Couple, $75", note: "The two of you, applying together.", label: "Pay the couple fee", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple" }
+      ],
+      dues: [
+        { title: "Full Krewe Membership, $375", note: "You're a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don't work.", label: "Pay Full Krewe dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" },
+        { title: "Associate, $450", note: "This is for one year. You can join two parades of your choice. There's no vote, and you don't take on the 12/12 volunteer commitment.", label: "Pay Associate dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership" },
+        { title: "Auxiliary, $200", note: "This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.", label: "Pay Auxiliary dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership" },
+        { title: "Leave of Absence (LOA), $100", note: "This is our social membership for a year when you'd like to step back and still stay connected. That's leave of absence.", label: "Pay leave of absence dues", href: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2" }
+      ]
+    };
+  }
+
+  function joiningPacketLevelHtml(rows) {
+    return rows.map(function (row) {
+      return "<h3>" + esc(row.title) + "</h3><p>" + esc(row.note) + "</p>" + joiningPacketButton(row.href, row.label);
+    }).join("");
+  }
+
+  function buildJoiningPacketPreview(draft) {
+    var name = "Nia";
+    var locked = joiningPacketLockedBlocks();
+    var html = "<p>" + joiningPacketPlain(draft.greeting, name) + "</p>"
+      + "<p>" + joiningPacketPlain(draft.intro, name) + "</p>"
+      + "<h2>" + joiningPacketPlain(draft.finish_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.finish_body, name) + "</p>"
+      + joiningPacketButton(JOINING_PACKET_SAMPLE_URL, "Finish your application")
+      + "<p>" + joiningPacketPlain(draft.finish_after, name) + "</p>"
+      + "<h2>" + joiningPacketPlain(draft.fee_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>"
+      + joiningPacketLevelHtml(locked.fees)
+      + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
+      + "<p>" + joiningPacketPlain(draft.dues_intro, name) + "</p>"
+      + joiningPacketLevelHtml(locked.dues)
+      + "<p>" + joiningPacketPlain(draft.closing, name) + "</p>"
+      + "<p>" + joiningPacketPlain(draft.signoff, name) + "</p>";
+    return {
+      subject: String(draft.subject || "").trim(),
+      html: html,
+      sampleName: name
+    };
+  }
+
+  function joiningPacketLockCard(kind) {
+    if (kind === "finish") {
+      return '<div class="hub-packet-lock" data-packet-locked="finish"><b>Locked: Finish your application button</b><p>A fresh 21-day link is added when the letter is sent. The preview uses a placeholder token. This button is not edited here.</p></div>';
+    }
+    if (kind === "fees") {
+      return '<div class="hub-packet-lock" data-packet-locked="fees"><b>Locked: background check pay buttons</b><p>Individual and couple amounts, notes, and pay buttons come from the background check payment settings. They are not edited in this letter.</p></div>';
+    }
+    if (kind === "dues") {
+      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>Locked: dues notes and pay buttons</b><p>Each membership level note and pay button comes from the dues catalog. They are not edited in this letter.</p></div>';
+    }
+    return "";
+  }
+
+  function readJoiningPacketForm() {
+    var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
+    document.querySelectorAll("[data-packet-field]").forEach(function (el) {
+      draft[el.getAttribute("data-packet-field")] = el.value;
+    });
+    state.joiningPacketDraft = draft;
+    return draft;
+  }
+
+  function renderJoiningPacketEditor(card) {
+    var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
+    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === JSON.stringify(draft));
+    var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
+      "<small>Edit the joining packet letter. Send joining packet uses the saved draft.</small></div></div>" +
+      '<div class="app-body hub-packet-editor" id="hubPacketEditor">';
+    if (state.joiningPacketMessage) {
+      html += '<div class="hub-app-flash" id="hubPacketFlash">' + esc(state.joiningPacketMessage) + "</div>";
+    }
+    if (state.joiningPacketError) {
+      html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
+    }
+    html += "<h3>Edit joining packet email</h3>" +
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button, the background check pay buttons, and the dues notes and pay buttons stay locked so the links stay correct. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+    JOINING_PACKET_FIELDS.forEach(function (field) {
+      var value = draft[field.key] == null ? "" : String(draft[field.key]);
+      if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
+      html += '<label for="hubPacketField-' + field.key + '">' + esc(field.label) + "</label>";
+      if (field.kind === "input") {
+        html += '<input id="hubPacketField-' + field.key + '" data-packet-field="' + field.key + '" maxlength="' + field.max + '" value="' + esc(value) + '" autocomplete="off">';
+      } else {
+        html += '<textarea id="hubPacketField-' + field.key + '" data-packet-field="' + field.key + '" maxlength="' + field.max + '">' + esc(value) + "</textarea>";
+      }
+      html += '<p class="hub-packet-hint">' + esc(field.hint) + "</p>";
+    });
+    html += '<div class="hub-packet-actions">' +
+      '<button type="button" class="btn" id="hubPacketPreviewBtn">Preview</button>' +
+      '<button type="button" class="btn btn-primary" id="hubPacketSave"' + (previewReady ? "" : " disabled") + ">Save draft template</button>" +
+      '<button type="button" class="btn" id="hubPacketClose">Back to applications</button>' +
+      "</div>";
+    if (previewReady) {
+      html += '<div class="hub-packet-preview" id="hubPacketPreview">' +
+        '<p class="sample">Preview for the sample name Nia. The finish link uses a placeholder token. This preview is not sent.</p>' +
+        '<div id="hubPacketPreviewBody"><h1>' + esc(state.joiningPacketPreview.subject) + "</h1>" +
+        state.joiningPacketPreview.html + "</div></div>";
+    }
+    html += "</div>";
+    card.innerHTML = html;
+    card.querySelectorAll("[data-packet-field]").forEach(function (el) {
+      el.addEventListener("input", function () {
+        if (!state.joiningPacketDraft) state.joiningPacketDraft = joiningPacketDefaults();
+        state.joiningPacketDraft[el.getAttribute("data-packet-field")] = el.value;
+        state.joiningPacketDirty = true;
+        state.joiningPacketPreview = null;
+        var save = document.getElementById("hubPacketSave");
+        if (save) save.disabled = true;
+        var box = document.getElementById("hubPacketPreview");
+        if (box) box.hidden = true;
+      });
+    });
+    var previewBtn = document.getElementById("hubPacketPreviewBtn");
+    if (previewBtn) previewBtn.addEventListener("click", function () { previewJoiningPacket(); });
+    var saveBtn = document.getElementById("hubPacketSave");
+    if (saveBtn) saveBtn.addEventListener("click", function () { saveJoiningPacket(saveBtn); });
+    var closeBtn = document.getElementById("hubPacketClose");
+    if (closeBtn) closeBtn.addEventListener("click", function () {
+      readJoiningPacketForm();
+      state.joiningPacketEditor = false;
+      state.joiningPacketError = "";
+      renderApplicationsFromState();
+    });
+  }
+
+  async function openJoiningPacketEditor() {
+    var client, gen, res, payload;
+    if (!state.canReviewApplications) return;
+    state.joiningPacketEditor = true;
+    state.joiningPacketError = "";
+    state.joiningPacketMessage = "";
+    if (!state.joiningPacketDraft) {
+      state.joiningPacketDraft = joiningPacketClone(state.joiningPacketTemplate || joiningPacketDefaults());
+    }
+    renderApplicationsFromState();
+    if (applicationsFixture || state.joiningPacketLoaded) return;
+    client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") return;
+    gen = ++joiningPacketLoadGen;
+    try {
+      res = await client.rpc("get_joining_packet_email_template");
+      if (gen !== joiningPacketLoadGen || state.joiningPacketDirty) return;
+      if (res && res.error) return;
+      payload = (res && res.data) || {};
+      if (payload.ok && payload.template) {
+        state.joiningPacketDraft = joiningPacketClone(payload.template);
+        state.joiningPacketTemplate = joiningPacketClone(payload.template);
+        state.joiningPacketLoaded = true;
+        state.joiningPacketPreview = null;
+        renderApplicationsFromState();
+      }
+    } catch (e) {}
+  }
+
+  async function previewJoiningPacket() {
+    var draft = readJoiningPacketForm();
+    var problem = joiningPacketProblem(draft);
+    var local, client, res, payload, message;
+    state.joiningPacketMessage = "";
+    if (problem) {
+      state.joiningPacketError = problem;
+      state.joiningPacketPreview = null;
+      renderApplicationsFromState();
+      return;
+    }
+    local = buildJoiningPacketPreview(draft);
+    client = window.__kosSb;
+    if (!applicationsFixture && client && typeof client.rpc === "function") {
+      try {
+        res = await client.rpc("preview_joining_packet_email", { p_template: draft });
+        if (res && res.error) throw res.error;
+        payload = (res && res.data) || {};
+        if (payload.ok === false) throw new Error(payload.message || "Could not preview that letter.");
+        if (payload.html) {
+          local.subject = payload.subject || local.subject;
+          local.html = payload.html;
+        }
+      } catch (e) {
+        message = (e && e.message) || String(e || "");
+        if (!/function|schema cache|PGRST202|Could not find/i.test(message)) {
+          state.joiningPacketError = message || "Could not preview that letter.";
+          state.joiningPacketPreview = null;
+          renderApplicationsFromState();
+          return;
+        }
+      }
+    }
+    local.fingerprint = JSON.stringify(draft);
+    state.joiningPacketPreview = local;
+    state.joiningPacketError = "";
+    renderApplicationsFromState();
+  }
+
+  async function saveJoiningPacket(btn) {
+    var draft = readJoiningPacketForm();
+    var problem = joiningPacketProblem(draft);
+    var client, res, payload, message;
+    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== JSON.stringify(draft)) {
+      state.joiningPacketError = problem || "Preview the letter before you save.";
+      state.joiningPacketPreview = null;
+      renderApplicationsFromState();
+      return;
+    }
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      state.joiningPacketTemplate = joiningPacketClone(draft);
+      state.joiningPacketDraft = joiningPacketClone(draft);
+      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketError = "";
+      renderApplicationsFromState();
+      return;
+    }
+    client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      state.joiningPacketError = "Could not save the draft template.";
+      renderApplicationsFromState();
+      return;
+    }
+    try {
+      res = await client.rpc("save_joining_packet_email_template", { p_template: draft });
+      if (res && res.error) throw res.error;
+      payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not save the draft template.");
+      state.joiningPacketTemplate = joiningPacketClone(payload.template || draft);
+      state.joiningPacketDraft = joiningPacketClone(payload.template || draft);
+      state.joiningPacketLoaded = true;
+      state.joiningPacketDirty = false;
+      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketError = "";
+      state.joiningPacketPreview.fingerprint = JSON.stringify(state.joiningPacketDraft);
+    } catch (e) {
+      message = (e && e.message) || "Could not save the draft template.";
+      if (/function|schema cache|PGRST202|Could not find/i.test(message)) {
+        message = "Could not save the draft template yet. Apply sql/kos_joining_packet_email_template.sql in the Supabase SQL editor, then try again.";
+      }
+      state.joiningPacketError = message;
+    }
+    renderApplicationsFromState();
+  }
+
   function applicationJourneyStep(bucket) {
     if (bucket === "background") return 3;
     if (bucket === "dues") return 4;
@@ -3865,6 +4201,10 @@
     if (!panel) return;
     var card = ensureOfficerToolCard("hubApplications");
     if (!card) return;
+    if (state.joiningPacketEditor) {
+      renderJoiningPacketEditor(card);
+      return;
+    }
     var bucket = state.applicationBucket || "new";
     var rows = applicationBucketRows();
     var intro = {
@@ -3907,7 +4247,9 @@
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
     }
-    html += '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
+    html += '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
+      '<span class="muted">Change the greeting and the notes. The finish link and pay buttons stay locked.</span></p>' +
+      '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
       filterBtn("new", "New applications") +
       filterBtn("background", "Background check") +
       filterBtn("dues", "Dues pending") +
@@ -3982,6 +4324,8 @@
     card.innerHTML = html;
     var body = card.querySelector("#hubApplicationsBody");
     if (!body) return;
+    var editPacket = document.getElementById("hubEditJoiningPacket");
+    if (editPacket) editPacket.addEventListener("click", function () { openJoiningPacketEditor(); });
     body.querySelectorAll("[data-app-bucket]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         state.applicationBucket = btn.getAttribute("data-app-bucket") || "new";

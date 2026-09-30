@@ -789,14 +789,21 @@ begin
       || '<p>Sláinte!</p>';
   end if;
 
-  v_mail := public.enqueue_email(
-    rec.email,
-    nullif(v_name, ''),
-    'Your Krewe of Shamrock application',
-    v_html,
-    'membership_full_application',
-    rec.id
-  );
+  declare
+    v_subject text := 'Your Krewe of Shamrock application';
+  begin
+    if to_regprocedure('public.kos_joining_packet_email_subject()') is not null then
+      v_subject := coalesce(nullif(btrim(public.kos_joining_packet_email_subject()), ''), v_subject);
+    end if;
+    v_mail := public.enqueue_email(
+      rec.email,
+      nullif(v_name, ''),
+      v_subject,
+      v_html,
+      'membership_full_application',
+      rec.id
+    );
+  end;
 
   if v_mail is null then
     delete from public.membership_application_links where id = v_link_id;
