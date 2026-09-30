@@ -126,7 +126,9 @@ test.describe("Membership Applications", () => {
     await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
     await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
-    await expect(tool.locator("[data-app-send='app-nia']")).toHaveText("Send full application");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Move to background check");
+    await expect(tool.locator("[data-app-send]")).toHaveCount(0);
+    await expect(tool).not.toContainText("Send full application");
     await expect(tool).not.toContainText("Mark next step sent");
     await expect(tool).not.toContainText("123-45-6789");
     await expect(tool).not.toContainText("123456789");
@@ -183,23 +185,22 @@ test.describe("Membership Applications", () => {
 
     await tool.locator("#hubAppNote-app-nia").fill("Sent the background check form.");
     await tool.locator("[data-app-bg='app-nia']").click();
-    await expect(tool).toContainText("Moved to background check in progress.");
+    await expect(tool).toContainText("Moved to background check.");
+    await expect(tool).toContainText("secure link");
+    await expect(tool).toContainText("does not include a Social Security number");
     await expect(tool.locator("[data-app-id='app-nia']")).toHaveCount(0);
 
     await tool.locator("[data-app-bucket='background']").click();
     const card = tool.locator("[data-app-id='app-nia']");
     await expect(card).toContainText("Background check in progress");
+    await expect(card).toContainText("Full application received. Lists show the last 4 only.");
     await expect(card).not.toContainText("123-45-6789");
+    await expect(card.locator("[data-app-send]")).toHaveCount(0);
+    await expect(card.locator("[data-app-bg]")).toHaveCount(0);
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
-
-    await tool.locator("#hubAppNote-app-nia").fill("Called and sending the full application.");
-    await tool.locator("[data-app-send='app-nia']").click();
-    await expect(tool).toContainText("secure link");
-    await expect(tool).toContainText("does not include a Social Security number");
+    await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Sent the background check form.");
     await expect(card).toHaveAttribute("data-app-status", "background-check");
-    await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Called and sending the full application.");
-    await expect(tool.locator("[data-app-send='app-nia']")).toHaveText("Send full application again");
     await expect(tool).not.toContainText("token=");
 
     await tool.locator("[data-app-dues='app-nia']").click();

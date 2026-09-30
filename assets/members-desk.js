@@ -3436,7 +3436,7 @@
     if (t === "single") {
       return "Application fee: single applicant, $50. This is the background check fee, not membership dues.";
     }
-    return "Application fee: $50 single or $75 couple. Membership dues ($375 full krewe, or $100 leave of absence) come after the background check.";
+    return "Application fee: $50 single or $75 couple. This is the background check fee, not membership dues.";
   }
 
   function applicationTail4(value) {
@@ -3514,8 +3514,8 @@
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
     if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check in progress. Other officers can see this status and your note.";
-    if (action === "dues_pending") return "Moved to dues pending. This is membership dues after the background check, not the application fee.";
+    if (action === "background_check") return "Moved to background check. We emailed them a secure link to the full application. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
+    if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
     return "Saved.";
@@ -3552,9 +3552,24 @@
         return;
       }
       var from = row.membership_status;
-      row.membership_status = applicationStatusFor(action, from);
       var actor = fixtureActor();
       var recent = state.applicationRecent || [];
+      if (action === "background_check") {
+        row.full_application_sent_at = new Date().toISOString();
+        recent.unshift({
+          id: "act-link-" + Date.now(),
+          member_id: row.id,
+          action: "full_application_sent",
+          note: note || "",
+          from_status: from,
+          to_status: from,
+          actor_name: actor.actor_name,
+          actor_email: actor.actor_email,
+          created_at: actor.created_at,
+          applicant: ((row.first_name || "") + " " + (row.last_name || "")).trim()
+        });
+      }
+      row.membership_status = applicationStatusFor(action, from);
       recent.unshift({
         id: "act-" + Date.now(),
         member_id: row.id,
@@ -3614,13 +3629,13 @@
     var intro = {
       renewal: "These are renewals, not new join-form applications.",
       prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "Background check is in progress. The application fee covers this step. Membership dues come later.",
-      dues: "Background check is done. Membership dues are pending. This is not the application fee.",
+      background: "Background check is in progress. Move to background check already emailed the full application. The dues invoice is sent when they submit that form and begin the check. The application fee is separate from membership dues.",
+      dues: "This list is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.",
       approved: "Approved applications. These people are active members.",
       declined: "Declined applications stay on file. Nothing was deleted.",
       archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Interest comes in first. Send the full application when you are ready for the background check."
-    }[bucket] || "These people asked to join. Newest first. Interest comes in first. Send the full application when you are ready for the background check.";
+      "new": "These people asked to join. Newest first. Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check."
+    }[bucket] || "These people asked to join. Newest first. Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check.";
     var empty = {
       renewal: "No pending renewals.",
       prospect: "No event prospects in this list.",
@@ -3636,7 +3651,7 @@
         label + " (" + applicationCountOf(key) + ")</button>";
     }
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Interest comes in first. Send the full application, then background check, then dues pending.</small></div></div>' +
+      '<small>Interest comes in first. Move to background check emails the full application. The dues invoice is sent when they begin the check.</small></div></div>' +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) {
       html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
@@ -3676,7 +3691,7 @@
           (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
           (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
           '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are separate: $375 full krewe, or $100 leave of absence, after the background check. They are not the application fee.</div>' +
+          '<div class="muted">Membership dues are not the application fee. The dues invoice is emailed when they submit the full application and begin the background check. Full krewe is $375. Leave of absence is $100.</div>' +
           '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
           (dlLine ? '<div class="muted" data-app-dl>' + esc(dlLine) + "</div>" : "") +
           (ssnLine ? '<div class="muted" data-app-ssn>' + esc(ssnLine) + "</div>" : "") +
@@ -3692,8 +3707,7 @@
           "</div>";
         if (open) {
           html += '<div class="hub-appr-btns">' +
-            '<button type="button" class="btn btn-primary" data-app-send="' + id + '">' + (row.full_application_sent_at ? "Send full application again" : "Send full application") + "</button>" +
-            (row.membership_status === "background-check" ? "" : '<button type="button" class="btn" data-app-bg="' + id + '">Move to background check</button>') +
+            (row.membership_status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Move to background check</button>') +
             (row.membership_status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
             '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
             '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
@@ -3760,89 +3774,17 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Move this application to background check in progress?")) return;
+        if (!confirm("Move this application to background check? That emails them a secure link to the full application. The email does not include a Social Security number or a driver's license number.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
-        if (!confirm("Move this application to dues pending? That means membership dues, after the background check.")) return;
+        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. The dues invoice is emailed when they submit the full application, not by this button.")) return;
         decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
       });
     });
-    body.querySelectorAll("[data-app-send]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var id = btn.getAttribute("data-app-send");
-        if (!confirm("Email this applicant a secure link to the full application? The email does not include a Social Security number or a driver's license number.")) return;
-        sendFullApplication(window.__kosSb || null, id, noteFor(id), btn);
-      });
-    });
-  }
-
-  async function sendFullApplication(client, id, note, btn) {
-    var stamp = "full_application_sent:" + String(id);
-    var now = Date.now();
-    if (lastDecisionStamp.key === stamp && now - lastDecisionStamp.at < 800) return;
-    lastDecisionStamp.key = stamp;
-    lastDecisionStamp.at = now;
-    if (btn) btn.disabled = true;
-    var safeNote = redactDisplayedId(note || "");
-    if (applicationsFixture) {
-      var row = null;
-      (applicationsFixture || []).forEach(function (r) {
-        if (String(r.id) === String(id)) row = r;
-      });
-      if (!row) {
-        if (btn) btn.disabled = false;
-        return;
-      }
-      var from = row.membership_status;
-      row.full_application_sent_at = new Date().toISOString();
-      var actor = fixtureActor();
-      var recent = state.applicationRecent || [];
-      recent.unshift({
-        id: "act-" + Date.now(),
-        member_id: row.id,
-        action: "full_application_sent",
-        note: safeNote,
-        from_status: from,
-        to_status: from,
-        actor_name: actor.actor_name,
-        actor_email: actor.actor_email,
-        created_at: actor.created_at,
-        applicant: ((row.first_name || "") + " " + (row.last_name || "")).trim()
-      });
-      state.applicationRecent = recent.slice(0, 12);
-      if (roleFixture) {
-        roleFixture.applications = applicationsFixture;
-        roleFixture.applicationRecent = state.applicationRecent;
-      }
-      state.applicationRows = applicationsFixture.slice();
-      syncApplicationFixtureCounts();
-      state.applicationFlash = applicationFlashFor("full_application_sent");
-      renderHome();
-      renderApplicationsFromState();
-      openOfficerTool("tool:hubApplications", false);
-      return;
-    }
-    try {
-      var res = await client.rpc("send_membership_full_application", {
-        p_member_id: id,
-        p_note: safeNote || null
-      });
-      var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
-      if (missing) throw new Error("Send full application needs the database update in sql/kos_membership_application_staged.sql.");
-      if (res.error) throw res.error;
-      var payload = res.data || {};
-      if (payload.ok === false) throw new Error(payload.message || "Could not send the full application.");
-      state.applicationFlash = payload.message || applicationFlashFor("full_application_sent");
-    } catch (e) {
-      alert("Could not send the full application: " + ((e && e.message) || e));
-      if (btn) btn.disabled = false;
-      return;
-    }
-    reloadApplications(client);
   }
 
   // ---- Officer Approvals queue: role requests + duplicate-record merges + media ----

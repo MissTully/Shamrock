@@ -27,6 +27,8 @@ test("membership application: required fields block an empty submit", async ({ p
   await expect(page.locator("#appFeeBox")).toContainText("not membership dues");
   await expect(page.locator("#joinNextSteps")).toContainText("Someone from the Krewe will call you");
   await expect(page.locator("#joinNextSteps")).toContainText("does not ask for a Social Security number");
+  await expect(page.locator("#joinNextSteps")).toContainText("begin the background check");
+  await expect(page.locator("#joinNextSteps")).toContainText("membership dues invoice");
   await expect(page.locator("#duesFeeBox")).toContainText("Membership dues");
   await expect(page.locator("#duesFeeBox")).toContainText("$375");
   await expect(page.locator("#appSsn")).toHaveCount(0);

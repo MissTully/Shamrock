@@ -9,7 +9,11 @@
 --   3. Open sql/kos_membership_application_staged.sql.
 --   4. Paste this whole file into a new query and run it.
 --   5. Safe to run again.
--- If you run the pipeline file again after this one, run this file again.
+--   6. Then run sql/kos_membership_background_check_invoice.sql.
+--      Move to background check sends the secure link. The dues invoice
+--      is queued when the prospect submits the full application.
+-- If you run the pipeline file or this staged file again later, run
+-- sql/kos_membership_background_check_invoice.sql again so it stays last.
 --
 -- What this file changes:
 --   Stage 0. The public join form is interest only. It stores name, email,
@@ -23,10 +27,11 @@
 --   If nobody holds Membership Chair, the chair copy falls back to
 --   lsugrue99@gmail.com, same as before. President is the roster title
 --   segment President, not Vice President. The letter asks them to call.
---   Stage 1. send_membership_full_application emails the applicant one
---   secure link. The token is 32 random bytes, hex, and only its SHA-256
---   hash is stored. The link expires in 21 days. The email has no
---   Social Security number and no driver's license number.
+--   Stage 1. Move to background check calls send_membership_full_application.
+--   That emails the applicant one secure link. The token is 32 random
+--   bytes, hex, and only its SHA-256 hash is stored. The link expires in
+--   21 days. The email has no Social Security number and no driver's
+--   license number. The follow-up SQL file is what wires that call.
 --   Stage 2. The token page submits a driver's license number and a
 --   Social Security number for Applicant 1. A couple ($75, fee type dual)
 --   also submits both numbers for Applicant 2. There is no driver's license
@@ -652,7 +657,7 @@ begin
   v_fee_line := case
     when v_fee = 'dual' then 'Application fee: couple, $75. This is the background check fee, not membership dues.'
     when v_fee = 'single' then 'Application fee: single applicant, $50. This is the background check fee, not membership dues.'
-    else 'Application fee: $50 single or $75 couple. Membership dues are separate and come after the background check.'
+    else 'Application fee: $50 single or $75 couple. This is the background check fee, not membership dues.'
   end;
 
   if v_is_new or v_status in ('prospect', 'pending-new') then
@@ -674,7 +679,7 @@ begin
            when v_notes is not null then '<p>' || replace(public.kos_email_plain(v_notes), E'\n', '<br/>') || '</p>'
            else ''
          end
-      || '<p>After the call, sign in to the Member Hub, open Membership Applications, and choose Send full application. That emails them a secure link. This email does not include a Social Security number or a driver''s license number.</p>'
+      || '<p>After the call, sign in to the Member Hub, open Membership Applications, and choose Move to background check. That emails them a secure link to the full application. Membership dues are invoiced when they submit that form and begin the check. This email does not include a Social Security number or a driver''s license number.</p>'
       || '<p><a href="https://www.kreweofshamrock.com/members.html#applications">Open Membership Applications</a></p>';
     perform public.kos_queue_membership_chair_and_president(
       v_subject,
@@ -762,7 +767,7 @@ begin
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
   v_html :=
     '<p>Dear ' || public.kos_email_plain(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-    || '<p>The Membership Chair sent the next step in your Krewe of Shamrock application.</p>'
+    || '<p>The Membership Chair moved your application to the background check.</p>'
     || '<p>Open this secure link to finish the background-check form. It asks for a driver''s license number and a Social Security number. The board uses SSN and driver''s license for the background check. Your information is held confidentially.</p>'
     || '<p><a href="' || v_url || '">Open the full application</a></p>'
     || '<p>This email does not include those numbers. The link expires in 21 days. If you did not ask to join, you can ignore this message.</p>'
@@ -900,6 +905,7 @@ declare
   v_html text;
   v_fee_line text;
   v_subject text;
+  v_invoice jsonb;
 begin
   if v_token !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object(
@@ -1005,7 +1011,7 @@ begin
   v_fee_line := case
     when v_fee = 'dual' then 'Application fee: couple, $75. This is the background check fee, not membership dues.'
     when v_fee = 'single' then 'Application fee: single applicant, $50. This is the background check fee, not membership dues.'
-    else 'Application fee: $50 single or $75 couple. Membership dues are separate and come after the background check.'
+    else 'Application fee: $50 single or $75 couple. This is the background check fee, not membership dues.'
   end;
   v_subject := 'Full application received: ' || public.kos_redact_id_text(v_name);
   v_html :=
@@ -1023,9 +1029,22 @@ begin
     rec.id
   );
 
+  -- The member begins the background check by submitting this form.
+  -- That is when the level-based membership dues invoice is queued.
+  -- Move to background check only emails this link. It does not invoice.
+  v_invoice := null;
+  if to_regprocedure('public.kos_queue_level_dues_invoice(uuid)') is not null then
+    v_invoice := public.kos_queue_level_dues_invoice(rec.id);
+  end if;
+
   return jsonb_build_object(
     'ok', true,
     'message', 'We received your driver''s license number and Social Security number. The board uses SSN and driver''s license for the background check. Your information is held confidentially.'
+      || case
+           when coalesce(v_invoice->>'emailed', '') = 'true'
+             then ' We emailed your membership dues invoice. That is membership dues, not the application fee.'
+           else ''
+         end
   );
 end;
 $$;
