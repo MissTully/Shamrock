@@ -485,6 +485,13 @@
     ".hub-outreach-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}",
     ".desk-officer .desk-kicker{color:#7a5b00;}",
     ".desk-group-head h3{text-transform:none;opacity:1;}",
+    /* Officer section titles were crest green for the parchment member desk.
+       On the phone app they sit on forest green, so Membership, Charity,
+       Events, and the other officer groups were unreadable. Cream and gold
+       match the Good evening / Officer masthead. Desktop parchment keeps
+       the green headings above. */
+    "body.hub-app #hubOfficer .desk-group-head h3{color:#f6efdc;}",
+    "body.hub-app #hubOfficer .desk-group-head .dg-sub{color:#ecd07e;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
     /* Member FAQ tab. The group stays out of the desk until the FAQ chip
        or a #faq link opens it, so the rest of the desk keeps its height.

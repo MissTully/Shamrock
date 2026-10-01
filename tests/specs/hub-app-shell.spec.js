@@ -160,6 +160,20 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator("[data-hub-panel='officer']")).toHaveClass(/hub-on/);
     await expect(page.locator("#appPageTitle")).toHaveText("Officer");
     await expect(page.locator("#hubOfficerHero")).toBeVisible();
+    const membership = page.locator("#deskOff-membership .desk-group-head h3");
+    const events = page.locator("#deskOff-events .desk-group-head h3");
+    await expect(membership).toBeVisible();
+    await expect(events).toBeVisible();
+    const paint = await page.locator("#deskOff-membership .desk-group-head").evaluate((head) => {
+      const title = head.querySelector("h3");
+      const sub = head.querySelector(".dg-sub");
+      return {
+        heading: title ? getComputedStyle(title).color : "",
+        sub: sub ? getComputedStyle(sub).color : ""
+      };
+    });
+    expect(paint.heading).toBe("rgb(246, 239, 220)");
+    expect(paint.sub).toBe("rgb(236, 208, 126)");
     assertHealthy(expect, report, "officer tab");
   });
 });
