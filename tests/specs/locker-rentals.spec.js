@@ -46,6 +46,33 @@ test("Reserve a locker shows Tim's open counts and the real Zeffy pay links", as
   await expect(large).toHaveAttribute("title", "Krewe locker rental – Large");
   await expect(small).not.toHaveAttribute("aria-disabled", "true");
   await expect(large).not.toHaveAttribute("aria-disabled", "true");
+  const payTone = await small.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { color: cs.color, opacity: cs.opacity, backgroundImage: cs.backgroundImage };
+  });
+  expect(payTone.color, "Pay label must be white on the green button").toBe("rgb(255, 255, 255)");
+  expect(Number(payTone.opacity)).toBe(1);
+  expect(payTone.backgroundImage).toContain("rgb(43, 139, 81)");
+  await small.hover();
+  const hovered = await small.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { color: cs.color, backgroundImage: cs.backgroundImage };
+  });
+  expect(hovered.color, "Hover must keep the white Pay label").toBe("rgb(255, 255, 255)");
+  expect(hovered.backgroundImage).toContain("rgb(27, 107, 57)");
+  await page.evaluate(() => {
+    document.getElementById("lockerPayLarge").setAttribute("aria-disabled", "true");
+  });
+  const disabledTone = await large.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { color: cs.color, opacity: cs.opacity, backgroundImage: cs.backgroundImage };
+  });
+  expect(disabledTone.color, "Disabled Pay label must stay white").toBe("rgb(255, 255, 255)");
+  expect(Number(disabledTone.opacity), "Disabled Pay link must not fade below readable contrast").toBe(1);
+  expect(disabledTone.backgroundImage).toContain("rgb(12, 59, 33)");
+  await page.evaluate(() => {
+    document.getElementById("lockerPayLarge").removeAttribute("aria-disabled");
+  });
   await expect(page.locator("#lockerMine")).toContainText("You are not on the list yet.");
   assertHealthy(expect, report, "locker pay links");
 });
