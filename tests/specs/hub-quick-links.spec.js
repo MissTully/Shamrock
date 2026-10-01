@@ -158,6 +158,8 @@ test.describe("Member Hub Quick Links", () => {
 
     // Illuminated section headers with the labeled groups.
     await expect(page.locator("#deskOff-events .desk-group-head h3")).toHaveText("Events");
+    const deskHeading = await page.locator("#deskOff-events .desk-group-head h3").evaluate((el) => getComputedStyle(el).color);
+    expect(deskHeading).toBe("rgb(20, 83, 45)");
     await expect(page.locator("#deskOff-approvals")).toBeAttached();
     await expect(page.locator("#deskOff-reports")).toBeAttached();
 
