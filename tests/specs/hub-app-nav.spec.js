@@ -105,7 +105,7 @@ test.describe("Member Hub app navigation", () => {
     await expect(page.locator("#appBackTitle")).toContainText("Tartan Ball Basket Social");
 
     await page.locator('[data-hub-tab="krewe"]').click();
-    await expect(page.locator("#appPageTitle")).toHaveText("Me");
+    await expect(page.locator("#appPageTitle")).toHaveText("My Krewe");
     await expect(page.locator("#appDrill")).toBeHidden();
     await expect(page.locator("#hubMemberDirectory")).toBeVisible();
 

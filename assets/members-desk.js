@@ -627,7 +627,7 @@
     camera: svgIcon('<path d="M8.2 7.4 9.4 5.4h5.2l1.2 2"/><rect x="4" y="7.4" width="16" height="11.2" rx="2"/><circle cx="12" cy="13" r="2.5"/>'),
     phone: svgIcon('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18.2h2"/>')
   };
-  var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "Me", fun: "Craic Cup", officer: "Officer" };
+  var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "My Krewe", fun: "Craic Cup", officer: "Officer" };
   var DUES_FULL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
   var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
 
@@ -1295,7 +1295,7 @@
       tabButton("hub", "Home", APP_ICO.home) +
       tabButton("events", "Events", APP_ICO.events) +
       tabButton("parade", "Parade", APP_ICO.parade) +
-      tabButton("krewe", "Me", APP_ICO.me) +
+      tabButton("krewe", "My Krewe", APP_ICO.me) +
       tabButton("fun", "Craic Cup", APP_ICO.heart) +
       tabButton("officer", "Officer", APP_ICO.officer, '<span class="app-tab-badge" id="appOfficerBadge" hidden>0</span>') +
       "</nav>";
@@ -2447,7 +2447,7 @@
     if (go === "tune") {
       var music = document.getElementById("kreweMusicBtn");
       if (music) music.click();
-      showToast("The Irish tune is playing. Open Me and tap again to pause it.");
+      showToast("The Irish tune is playing. Open My Krewe and tap again to pause it.");
       return;
     }
     if (go === "signout" && window.kosSignOut) window.kosSignOut();
@@ -3482,7 +3482,7 @@
     }
   }
 
-  // Opens the My Krewe profile editor (Me tab). The welcome modal links here.
+  // Opens the My Krewe profile editor (My Krewe tab). The welcome modal links here.
   window.kosEditMyProfile = function () {
     profileEditing = true;
     showTab("krewe");

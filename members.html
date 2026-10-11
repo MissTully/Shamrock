@@ -1020,7 +1020,10 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     border:0; border-radius:12px; background:transparent; box-shadow:none;
     color:rgba(246,239,220,.66); padding:4px 2px 2px;
-    font-family:var(--display); font-size:11px; font-weight:600; letter-spacing:.01em;
+    font-family:var(--display); font-weight:600; letter-spacing:0;
+    /* 11px on a normal phone. On a narrow bar the longer "My Krewe"
+       label would spill, so the size eases down to 10px and stays one line. */
+    font-size:clamp(10px, 2.82vw, 11px);
     white-space:nowrap; line-height:1.1;
   }
   body.hub-app .hub-tabs button.on,
@@ -1032,6 +1035,12 @@
   body.hub-app .hub-tabs button[data-hub-tab="officer"]{ color:rgba(246,239,220,.66); }
   body.hub-app .hub-tabs button[data-hub-tab="officer"].on{ color:#f0d78c; }
   body.hub-app .hub-tabs button[data-hub-tab="fun"]{ display:none !important; }
+  body.hub-app .hub-tabs .app-tab-tx{
+    display:block;
+    max-width:100%;
+    white-space:nowrap;
+    text-align:center;
+  }
   body.hub-app .hub-tabs .app-tab-ic{ display:block; line-height:0; }
   body.hub-app .hub-tabs .app-tab-ic svg{ width:22px; height:22px; display:block; }
   .app-tab-badge{
@@ -4410,7 +4419,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20260930cal3"></script>
-<script src="assets/members-desk.js?v=20261001offhead1" defer></script>
+<script src="assets/members-desk.js?v=20261011mykrewe1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260930del1" defer></script>
