@@ -519,6 +519,40 @@
     ".faq-block[hidden]{display:none !important;}",
     "@media (max-width:520px){.faq-jump button{font-size:14px;padding:8px 12px;}}",
 
+    /* Krewe Tidings letter. Replaces the short dark drill that used to float
+       over the Hub. The masthead is shamrock and gold; the letter sits on
+       parchment in a centered column. */
+    ".tidings-issue{min-height:100%;background:linear-gradient(180deg,#fbf7ec 0%,#f3ead3 100%);color:#23291f;}",
+    ".tidings-mast{background:linear-gradient(180deg,#14532d 0%,#0f4426 55%,#0c3b21 100%);color:#f6efdc;text-align:center;padding:22px 20px 26px;border-bottom:4px solid #d4af37;}",
+    ".tidings-emblem{margin:0 0 6px;font-size:28px;line-height:1;color:#e2c15a;}",
+    ".tidings-mast h2{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:.08em;color:#fff;}",
+    ".tidings-tag{margin:8px auto 0;max-width:28em;font-family:\"Cormorant Garamond\",Georgia,serif;font-style:italic;font-size:clamp(18px,2.4vw,22px);line-height:1.35;color:#ecd07e;}",
+    ".tidings-column{width:min(38rem,calc(100% - 40px));margin:0 auto;padding:34px 0 72px;}",
+    ".tidings-title{margin:0;text-align:center;text-wrap:balance;font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.2;color:#14532d;}",
+    ".tidings-when{margin:14px 0 0;text-align:center;font-family:var(--display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#5f6b5a;}",
+    ".tidings-from{margin:8px 0 0;text-align:center;font-family:\"Cormorant Garamond\",Georgia,serif;font-style:italic;font-size:22px;line-height:1.3;color:#a9801c;}",
+    ".tidings-rule{height:2px;width:min(160px,36%);margin:22px auto 8px;background:linear-gradient(90deg,transparent,#d4af37,transparent);border:0;}",
+    ".tidings-body{font-family:var(--body);font-size:21px;line-height:1.75;}",
+    ".tidings-body p{margin:0 0 1.15em;color:#23291f;}",
+    ".tidings-body p.dropcap::first-letter{color:#a9801c;}",
+    ".tidings-body a.tidings-link{color:#14532d;font-weight:700;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;}",
+    ".tidings-body a.tidings-link:hover{color:#0c3b21;}",
+    ".tidings-missing{margin:8px 0 0;text-align:center;font-size:18px;color:#3a3a2e;}",
+    ".tidings-archive{appearance:none;background:transparent;border:0;box-shadow:none;color:#ecd07e;font-family:var(--display);font-weight:700;font-size:15px;line-height:1.2;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px 0;min-height:44px;white-space:nowrap;}",
+    ".tidings-archive:hover{color:#fff6d4;}",
+    ".tidings-archive:focus-visible,.tidings-body a.tidings-link:focus-visible{outline:2px solid #e2c15a;outline-offset:3px;}",
+    "body.app-ann #appBackTitle{position:absolute !important;width:1px !important;height:1px !important;padding:0 !important;margin:-1px !important;overflow:hidden !important;clip:rect(0,0,0,0) !important;white-space:nowrap !important;border:0 !important;}",
+    "body.app-ann .app-backbar{position:relative;display:flex !important;flex:1 1 auto;width:100%;align-items:center;justify-content:space-between;gap:12px;min-height:48px;}",
+    "body.hub-app.app-ann .app-top{display:flex !important;align-items:center;background:#14532d;border-bottom:0;box-shadow:none;}",
+    "body.hub-app.app-ann.app-screen #appDrill:not([hidden]){background:#f6efdd;box-shadow:0 -20px 0 0 #14532d;}",
+    "body.hub-app.app-ann .app-drill-scroll{background:#f6efdd;padding:0 0 28px !important;}",
+    "body.hub-desk.app-ann.app-screen .app-top{display:flex !important;align-items:center;position:fixed !important;z-index:1110;top:0 !important;left:0 !important;right:0 !important;width:100% !important;height:56px !important;min-height:56px !important;max-height:56px !important;transform:none !important;margin:0 !important;padding:0 22px !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#14532d !important;}",
+    "body.hub-desk.app-ann.app-screen .app-backbar{flex:0 0 auto;width:min(40rem,calc(100% - 36px));margin:0 auto;}",
+    "body.hub-desk.app-ann.app-screen #appDrill:not([hidden]){display:flex !important;position:fixed !important;z-index:1100;left:0 !important;right:0 !important;bottom:0 !important;top:56px !important;align-items:stretch !important;justify-content:flex-start !important;padding:0 !important;background:#f6efdd !important;overflow:hidden !important;}",
+    "body.hub-desk.app-ann.app-screen #appDrill .app-drill-scroll{width:100% !important;max-width:none !important;max-height:none !important;flex:1 1 auto;height:auto !important;overflow:auto !important;background:#f6efdd !important;border:0 !important;border-radius:0 !important;padding:0 0 40px !important;}",
+    "body.hub-desk.app-ann.app-screen #appDrillActions{display:none !important;}",
+    "@media (max-width:380px){.tidings-archive{font-size:13px;}.tidings-column{width:min(38rem,calc(100% - 28px));padding-top:26px;}}",
+
   ].join("");
 
   var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
@@ -1661,8 +1695,9 @@
 
   /* ---- Krewe Tidings (all-krewe announcements, member view) ---- */
   // The email HTML is reduced to plain paragraphs so the card renders safely
-  // and consistently; the first paragraph gets the illuminated drop capital
-  // (.dropcap in krewe.css, Cinzel Decorative) from the heritage pages.
+  // and consistently. Read more opens the letter as a newsletter: masthead,
+  // centered column, drop cap, and clickable web addresses. The preview on
+  // Home stays plain text.
   function annParagraphs(html) {
     var t = String(html || "")
       .replace(/<\s*(?:br|\/p|\/div|\/h[1-6]|\/li)[^>]*>/gi, "\n")
@@ -1702,6 +1737,47 @@
       '<button type="button" class="hub-board-more" data-ann-id="' + esc(annId(m, i)) + '">Read more</button>';
   }
 
+  /* Plain text in, escaped HTML out, with http(s) addresses as links. */
+  function linkifyText(raw) {
+    var re = /https?:\/\/[^\s<>"']+/gi;
+    var s = String(raw || "");
+    var out = "";
+    var last = 0;
+    var m;
+    while ((m = re.exec(s))) {
+      out += esc(s.slice(last, m.index));
+      var href = m[0];
+      var trail = "";
+      while (href && /[.,);:!?]$/.test(href)) {
+        var ch = href.slice(-1);
+        if (ch === ")" && (href.split("(").length >= href.split(")").length)) break;
+        trail = ch + trail;
+        href = href.slice(0, -1);
+      }
+      if (!/^https?:\/\//i.test(href)) out += esc(m[0]);
+      else {
+        out += '<a class="tidings-link" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' +
+          esc(href) + "</a>" + esc(trail);
+      }
+      last = m.index + m[0].length;
+    }
+    out += esc(s.slice(last));
+    return out;
+  }
+
+  function tidingsMastHtml() {
+    return '<header class="tidings-mast">' +
+      '<p class="tidings-emblem" aria-hidden="true">\u2618</p>' +
+      "<h2>Krewe Tidings</h2>" +
+      '<p class="tidings-tag">News and announcements from the officers</p>' +
+      "</header>";
+  }
+
+  function annFromLine(m) {
+    var name = m && m.sender_name ? String(m.sender_name).trim() : "";
+    return name ? ("From " + esc(name)) : "From the officers";
+  }
+
   function findAnnouncement(id) {
     var key = String(id || "");
     if (!key) return null;
@@ -1718,19 +1794,27 @@
   }
 
   function announcementScreenHtml(m) {
+    var mast = tidingsMastHtml();
     if (!m) {
-      return '<div class="app-detail" id="appAnn"><h2>Krewe Tidings</h2><p>That announcement is not available.</p></div>';
+      return '<article class="tidings-issue" id="appAnn">' + mast +
+        '<div class="tidings-column"><h3 class="tidings-title">Krewe Tidings</h3>' +
+        '<p class="tidings-missing">That announcement is not available.</p></div></article>';
     }
     var paras = annParagraphs(m.body_html);
     if (!paras.length) paras = ["(No message text.)"];
     var body = paras.map(function (p, i) {
-      return "<p" + (i === 0 ? ' class="dropcap"' : "") + ">" + esc(p) + "</p>";
+      var cap = (i === 0 && /^[A-Za-z]/.test(p) && !/^https?:/i.test(p)) ? ' class="dropcap"' : "";
+      return "<p" + cap + ">" + linkifyText(p) + "</p>";
     }).join("");
-    return '<article class="app-detail" id="appAnn">' +
-      '<p class="app-detail-kicker">From the officers</p>' +
-      '<div class="app-ann"><h2>' + esc(m.subject || "Announcement") + "</h2>" +
-      '<p class="app-ann-meta">' + annMeta(m) + "</p>" +
-      body + "</div></article>";
+    var when = annDate(m.created_at);
+    return '<article class="tidings-issue" id="appAnn">' + mast +
+      '<div class="tidings-column">' +
+      '<h3 class="tidings-title">' + esc(m.subject || "Announcement") + "</h3>" +
+      (when ? '<p class="tidings-when">' + esc(when) + "</p>" : "") +
+      '<p class="tidings-from">' + annFromLine(m) + "</p>" +
+      '<div class="tidings-rule" aria-hidden="true"></div>' +
+      '<div class="tidings-body">' + body + "</div>" +
+      "</div></article>";
   }
 
   function tidingsSkeletonHtml() {
@@ -1777,6 +1861,9 @@
      fails we fall back to the announcements already on hand. State lives
      outside the card so background Home re-renders keep the archive open. */
   var boardArchive = { open: false, loading: false, list: null, fellBack: false };
+  /* Set when See all announcements is chosen from a letter, then consumed
+     once Back has returned to the Hub and the archive can paint. */
+  var tidingsWantArchive = false;
   /* Playwright injects announcements before the live hub load finishes.
      That load must not wipe the fixture, or Read more and the archive
      look up an empty list. */
@@ -1828,6 +1915,29 @@
     boardArchive.list = list || state.announcements || [];
     boardArchive.loading = false;
     paintBoardArchive();
+  }
+
+  function removeTidingsArchiveLink() {
+    var btn = document.getElementById("tidingsArchiveLink");
+    if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+  }
+
+  function openTidingsArchive(ev) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    tidingsWantArchive = true;
+    if (appNavApi.back) appNavApi.back();
+  }
+
+  function ensureTidingsArchiveLink() {
+    var bar = document.getElementById("appBackBar");
+    if (!bar || document.getElementById("tidingsArchiveLink")) return;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "tidingsArchiveLink";
+    btn.className = "tidings-archive";
+    btn.textContent = "See all announcements";
+    btn.addEventListener("click", openTidingsArchive);
+    bar.appendChild(btn);
   }
 
   function isHubStandalone() {
@@ -6696,6 +6806,7 @@
       var top = framesOf(appNav.tab).slice(-1)[0] || { kind: "root" };
       var drill = document.getElementById("appDrill");
       document.body.classList.remove("app-screen", "app-focus", "app-nav-push", "app-nav-pop", "app-getapp", "app-ann");
+      removeTidingsArchiveLink();
       clearFocusMarks();
       var skipHome = !(appNav.tab === "hub" && top.kind === "root");
       showTab(appNav.tab, { skipScroll: true, skipHomeRender: skipHome });
@@ -6759,6 +6870,13 @@
         document.body.classList.add(motion === "push" ? "app-nav-push" : "app-nav-pop");
       }
       if (top.kind === "root" && appNav.tab === "hub") startCountdown();
+      if (tidingsWantArchive && top.kind === "root" && appNav.tab === "hub") {
+        tidingsWantArchive = false;
+        loadBoardArchive().then(function () {
+          var box = document.getElementById("hubBoardArchive");
+          if (box && box.scrollIntoView) box.scrollIntoView({ behavior: "auto", block: "nearest" });
+        });
+      }
     }
 
     function applyRoute(tab, frames, motion) {
@@ -7105,10 +7223,12 @@
       var scroll = document.getElementById("appDrillScroll");
       var actions = document.getElementById("appDrillActions");
       var m = findAnnouncement(id);
-      showBack((m && m.subject) || "Krewe Tidings");
+      showBack("Krewe Tidings");
+      ensureTidingsArchiveLink();
       if (actions) actions.innerHTML = "";
       if (!scroll) return;
       scroll.innerHTML = announcementScreenHtml(m);
+      if (scroll.scrollTop) scroll.scrollTop = 0;
     }
 
     function openAnnouncement(id) {

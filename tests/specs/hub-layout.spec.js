@@ -95,7 +95,10 @@ test.describe("Computer Hub on a wide screen", () => {
     await expect(post).toContainText("Toys for the Flight");
     await expect(post).toContainText("Bring a sturdy toy");
     await expect(post).toContainText("Higgins Hall");
+    await expect(post.locator(".tidings-mast h2")).toHaveText("Krewe Tidings");
+    await expect(post.locator(".tidings-from")).toHaveText("From Melissa Tully");
     await expect(page.locator("#appBack")).toBeVisible();
+    await expect(page.locator("#tidingsArchiveLink")).toBeVisible();
     await expect(page.locator("nav.krewe-nav")).toBeVisible();
     await expect(page.locator("body")).not.toHaveClass(/hub-app/);
     const after = await page.evaluate(() => window.scrollY);

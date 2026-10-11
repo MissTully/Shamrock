@@ -158,6 +158,133 @@ test.describe("Krewe Tidings announcements", () => {
     assertHealthy(expect, report, "tidings preview");
   });
 
+  test("Read more opens a newsletter with a live link and the archive", async ({ page }) => {
+    const report = watchPage(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await unlockMemberHub(page);
+    await page.evaluate(() => {
+      window.__kosHubSetAnnouncements([
+        {
+          id: "basket",
+          subject: "Basket Social-Please RSVP",
+          body_html: "<p>Please RSVP for our Basket Social with the link below. If the link doesn't work, please type it in your browser.</p><p>https://www.punchbowl.com/parties/BasketFullofFun</p>",
+          created_at: "2026-09-30T15:00:00Z",
+          sender_name: "Debbie Fitzpatrick"
+        },
+        {
+          id: "ball",
+          subject: "Tartan Ball tickets are live",
+          body_html: "<p>Higgins Hall, October 24.</p>",
+          created_at: "2026-09-18T21:00:00Z",
+          sender_name: "Melissa Tully"
+        }
+      ]);
+    });
+
+    await page.locator("#hubBoardLatest .hub-board-more").click();
+    const post = page.locator("#appAnn");
+    await expect(post).toBeVisible();
+    await expect(post.locator(".tidings-mast h2")).toHaveText("Krewe Tidings");
+    await expect(post.locator(".tidings-tag")).toHaveText("News and announcements from the officers");
+    await expect(post.locator(".tidings-title")).toHaveText("Basket Social-Please RSVP");
+    await expect(post.locator(".tidings-when")).toContainText("2026");
+    await expect(post.locator(".tidings-from")).toHaveText("From Debbie Fitzpatrick");
+    await expect(post.locator("p.dropcap")).toHaveCount(1);
+    const link = post.locator("a.tidings-link");
+    await expect(link).toHaveAttribute("href", "https://www.punchbowl.com/parties/BasketFullofFun");
+    await expect(link).toHaveAttribute("target", "_blank");
+
+    const frame = await page.locator("#appDrill").evaluate((el) => {
+      const style = getComputedStyle(el);
+      const box = el.getBoundingClientRect();
+      return {
+        width: box.width,
+        height: box.height,
+        top: box.top,
+        bg: style.backgroundColor,
+        hub: document.body.classList.contains("hub-desk")
+      };
+    });
+    expect(frame.hub).toBe(true);
+    expect(frame.width).toBeGreaterThan(1200);
+    expect(frame.height).toBeGreaterThan(600);
+    expect(frame.bg).not.toBe("rgba(0, 0, 0, 0)");
+    const covered = await page.evaluate(() => {
+      const el = document.elementFromPoint(window.innerWidth / 2, Math.min(window.innerHeight - 40, 520));
+      return !!(el && el.closest("#appAnn, #appDrill, .tidings-mast, .app-top"));
+    });
+    expect(covered).toBe(true);
+    await expect(page.locator("nav.krewe-nav")).toBeVisible();
+    await expect(page.locator("#appBack")).toContainText("Back");
+    await expect(page.locator("#tidingsArchiveLink")).toHaveText("See all announcements");
+
+    await page.locator("#tidingsArchiveLink").click();
+    const archive = page.locator("#hubBoardArchive");
+    await expect(archive).toBeVisible();
+    await expect(archive).toContainText("Basket Social-Please RSVP");
+    await expect(archive).toContainText("Tartan Ball tickets are live");
+    await expect(page.locator("#appDrill")).toBeHidden();
+    await expect(page.locator(".hub-board")).toBeVisible();
+    assertHealthy(expect, report, "tidings newsletter");
+  });
+
+  test("the phone shell fills with the same newsletter", async ({ page }) => {
+    const report = watchPage(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await unlockMemberHub(page);
+    await page.evaluate(() => {
+      window.__kosHubSetAnnouncements([
+        {
+          id: "basket",
+          subject: "Basket Social-Please RSVP",
+          body_html: "<p>Please RSVP for our Basket Social with the link below.</p><p>https://www.punchbowl.com/parties/BasketFullofFun.</p>",
+          created_at: "2026-09-30T15:00:00Z",
+          sender_name: "Debbie Fitzpatrick"
+        }
+      ]);
+    });
+    await expect(page.locator("body")).toHaveClass(/hub-app/);
+    await page.locator("#hubBoardLatest .hub-board-more").click();
+    const post = page.locator("#appAnn");
+    await expect(post).toBeVisible();
+    await expect(post.locator(".tidings-mast h2")).toHaveText("Krewe Tidings");
+    await expect(post.locator(".tidings-from")).toHaveText("From Debbie Fitzpatrick");
+    const link = post.locator("a.tidings-link");
+    await expect(link).toHaveAttribute("href", "https://www.punchbowl.com/parties/BasketFullofFun");
+    await expect(page.locator("#appBack")).toContainText("Back");
+    await expect(page.locator("#appPageTitle")).toBeHidden();
+    await expect(page.locator("#hubTabs")).toBeVisible();
+    await page.waitForFunction(() => {
+      const el = document.getElementById("appDrill");
+      return !!(el && el.getBoundingClientRect().left < 20);
+    });
+    const frame = await page.locator("#appDrill").evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const root = document.getElementById("hubRoot").getBoundingClientRect();
+      return {
+        width: box.width,
+        top: box.top,
+        bottom: box.bottom,
+        rootTop: root.top,
+        rootBottom: root.bottom,
+        bg: getComputedStyle(el).backgroundColor
+      };
+    });
+    expect(frame.width).toBeGreaterThan(360);
+    expect(frame.top).toBeLessThan(90);
+    expect(frame.rootBottom - frame.bottom).toBeLessThan(90);
+    expect(frame.bg).not.toBe("rgba(0, 0, 0, 0)");
+    const covered = await page.evaluate(() => {
+      const el = document.elementFromPoint(195, 420);
+      return !!(el && el.closest("#appAnn, .tidings-mast, .tidings-column"));
+    });
+    expect(covered).toBe(true);
+    await page.locator("#appBack").click();
+    await expect(page.locator("#appDrill")).toBeHidden();
+    await expect(page.locator(".hub-board")).toBeVisible();
+    assertHealthy(expect, report, "phone tidings newsletter");
+  });
+
   test("card stays absent when there are no announcements", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
