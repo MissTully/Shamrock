@@ -213,7 +213,10 @@
   }
   .locker-note{ font-size:16px; color:var(--muted); margin:0 0 12px; line-height:1.45; }
   .locker-note p{ margin:0; }
-  .locker-note ol{ margin:8px 0 0; padding-left:1.25em; }
+  /* The card clips overflow, so an empty pay note and outside markers
+     would hide the step numbers or leave a blank gap above them. */
+  #lockerPayNote:empty{ display:none; }
+  .locker-note ol{ margin:8px 0 0; padding-left:1.6em; }
   .locker-note li + li{ margin-top:6px; }
   .locker-subhead{ margin:16px 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
