@@ -71,7 +71,7 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator('#hubTabs [data-hub-tab="hub"]')).toContainText("Home");
     await expect(page.locator('#hubTabs [data-hub-tab="events"]')).toContainText("Events");
     await expect(page.locator('#hubTabs [data-hub-tab="parade"]')).toContainText("Parade");
-    await expect(page.locator('#hubTabs [data-hub-tab="krewe"]')).toContainText("Me");
+    await expect(page.locator('#hubTabs [data-hub-tab="krewe"]')).toContainText("My Krewe");
     await expect(page.locator('#hubTabs [data-hub-tab="officer"]')).toBeHidden();
 
     const dashText = await page.locator("#appDash").innerText();
@@ -130,7 +130,7 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator("#carpoolCard")).toBeVisible();
 
     await page.locator('[data-hub-tab="krewe"]').click();
-    await expect(page.locator("#appPageTitle")).toHaveText("Me");
+    await expect(page.locator("#appPageTitle")).toHaveText("My Krewe");
     await expect(page.locator("#appMeLinks a[href='gallery.html']")).toBeVisible();
     await expect(page.locator("#appMeLinks a[href='store.html']")).toBeVisible();
     await expect(page.locator("#appMeLinks a[href='members.html#faq']")).toBeVisible();
@@ -175,5 +175,32 @@ test.describe("Member Hub phone app shell", () => {
     expect(paint.heading).toBe("rgb(246, 239, 220)");
     expect(paint.sub).toBe("rgb(236, 208, 126)");
     assertHealthy(expect, report, "officer tab");
+  });
+
+  test("My Krewe stays on one line in a narrow bottom bar", async ({ page }) => {
+    const report = watchPage(page);
+    await page.setViewportSize({ width: 320, height: 700 });
+    await openApp(page, { role: { officer: true } });
+    const tab = page.locator('#hubTabs [data-hub-tab="krewe"]');
+    await tab.click();
+    await expect(tab).toContainText("My Krewe");
+    await expect(page.locator("#appPageTitle")).toHaveText("My Krewe");
+    await expect(tab).toHaveAttribute("data-hub-tab", "krewe");
+    const fit = await tab.evaluate((btn) => {
+      const tx = btn.querySelector(".app-tab-tx");
+      const range = document.createRange();
+      range.selectNodeContents(tx);
+      const text = range.getBoundingClientRect();
+      const box = btn.getBoundingClientRect();
+      return {
+        lines: tx.getClientRects().length,
+        overflow: text.width - box.width,
+        outside: text.left < box.left - 0.5 || text.right > box.right + 0.5
+      };
+    });
+    expect(fit.lines).toBe(1);
+    expect(fit.overflow).toBeLessThanOrEqual(0);
+    expect(fit.outside).toBe(false);
+    assertHealthy(expect, report, "my krewe tab fit");
   });
 });
