@@ -212,6 +212,12 @@
     box-shadow:none;
   }
   .locker-note{ font-size:16px; color:var(--muted); margin:0 0 12px; line-height:1.45; }
+  .locker-note p{ margin:0; }
+  /* The card clips overflow, so an empty pay note and outside markers
+     would hide the step numbers or leave a blank gap above them. */
+  #lockerPayNote:empty{ display:none; }
+  .locker-note ol{ margin:8px 0 0; padding-left:1.6em; }
+  .locker-note li + li{ margin-top:6px; }
   .locker-subhead{ margin:16px 0 8px; color:var(--green-800); font-family:var(--display); font-size:18px; }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
   .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
@@ -1014,7 +1020,10 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     border:0; border-radius:12px; background:transparent; box-shadow:none;
     color:rgba(246,239,220,.66); padding:4px 2px 2px;
-    font-family:var(--display); font-size:11px; font-weight:600; letter-spacing:.01em;
+    font-family:var(--display); font-weight:600; letter-spacing:0;
+    /* 11px on a normal phone. On a narrow bar the longer "My Krewe"
+       label would spill, so the size eases down to 10px and stays one line. */
+    font-size:clamp(10px, 2.82vw, 11px);
     white-space:nowrap; line-height:1.1;
   }
   body.hub-app .hub-tabs button.on,
@@ -1026,6 +1035,12 @@
   body.hub-app .hub-tabs button[data-hub-tab="officer"]{ color:rgba(246,239,220,.66); }
   body.hub-app .hub-tabs button[data-hub-tab="officer"].on{ color:#f0d78c; }
   body.hub-app .hub-tabs button[data-hub-tab="fun"]{ display:none !important; }
+  body.hub-app .hub-tabs .app-tab-tx{
+    display:block;
+    max-width:100%;
+    white-space:nowrap;
+    text-align:center;
+  }
   body.hub-app .hub-tabs .app-tab-ic{ display:block; line-height:0; }
   body.hub-app .hub-tabs .app-tab-ic svg{ width:22px; height:22px; display:block; }
   .app-tab-badge{
@@ -1917,12 +1932,19 @@
             <div class="locker-count"><b id="lockerLargeCount">...</b><span>large available</span></div>
             <div class="locker-count"><b id="lockerSmallCount">...</b><span>small available</span></div>
           </div>
-          <p class="locker-note" id="lockerIntro">Large lockers are $200. Small lockers are $75. Join the list first, using the same email you will use on Zeffy. Paying claims a rental for that size. When Zeffy confirms the payment, the Hub marks you paid and assigns the next open locker. If none are open, an officer assigns the LL, RL, or RS number after payment.</p>
           <div class="locker-pay-row" id="lockerPay">
             <a id="lockerPaySmall" class="btn btn-green locker-pay" aria-disabled="true" href="https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small" target="_blank" rel="noopener noreferrer" title="Krewe locker rental – Small">Pay Small locker $75</a>
             <a id="lockerPayLarge" class="btn btn-green locker-pay" aria-disabled="true" href="https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-large" target="_blank" rel="noopener noreferrer" title="Krewe locker rental – Large">Pay Large locker $200</a>
           </div>
           <p class="locker-note" id="lockerPayNote"></p>
+          <div class="locker-note" id="lockerIntro">
+            <p>Large lockers are $200 and small lockers are $75 for the season.</p>
+            <ol>
+              <li>Join the list below. Use the same email you'll use to pay on Zeffy.</li>
+              <li>Pay for your locker size with the button above.</li>
+              <li>Once your payment comes through, we mark you paid and give you the next open locker. If none are open yet, an officer will assign you a locker and let you know your number.</li>
+            </ol>
+          </div>
           <form id="lockerForm" class="krewe-form">
             <div class="row">
               <div><label for="lkName">Your name</label><input id="lkName" required /></div>
@@ -4397,7 +4419,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20260930cal3"></script>
-<script src="assets/members-desk.js?v=20261011tidings1" defer></script>
+<script src="assets/members-desk.js?v=20261011tidings2" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20260930del1" defer></script>
@@ -4408,7 +4430,7 @@
   <script src="assets/kos-email-invoices.js?v=20260930prospectmail1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20260930wav1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20260930rep1" defer></script>
-<script src="assets/kos-lockers.js?v=20260930lockers2" defer></script>
+<script src="assets/kos-lockers.js?v=20261011lockercopy1" defer></script>
 </body>
 </html>
 

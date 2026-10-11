@@ -35,7 +35,7 @@ test.describe("Get the App on Home", () => {
     assertHealthy(expect, report, "get app banner");
   });
 
-  test("dismissing the Home banner sticks, and the Me row stays", async ({ page }) => {
+  test("dismissing the Home banner sticks, and the My Krewe install row stays", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
     await page.locator("#hubGetAppDismiss").click();

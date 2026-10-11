@@ -254,6 +254,10 @@ test.describe("Krewe Tidings announcements", () => {
     await expect(page.locator("#appBack")).toContainText("Back");
     await expect(page.locator("#appPageTitle")).toBeHidden();
     await expect(page.locator("#hubTabs")).toBeVisible();
+    await page.waitForFunction(() => {
+      const el = document.getElementById("appDrill");
+      return !!(el && el.getBoundingClientRect().left < 20);
+    });
     const frame = await page.locator("#appDrill").evaluate((el) => {
       const box = el.getBoundingClientRect();
       const root = document.getElementById("hubRoot").getBoundingClientRect();

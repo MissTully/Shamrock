@@ -112,7 +112,7 @@
     var box = document.getElementById("lockerMine");
     if (!box) return;
     if (!rows || !rows.length) {
-      box.innerHTML = '<p class="empty">You are not on the list yet.</p>';
+      box.innerHTML = '<p class="empty">You\'re not on the list yet. Join above to save your spot.</p>';
       return;
     }
     box.innerHTML = '<ul class="data-list">' + rows.map(function (r) {
