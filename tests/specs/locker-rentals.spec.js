@@ -15,7 +15,10 @@ test("Reserve a locker shows Tim's open counts and the real Zeffy pay links", as
   await expect(card.locator("h2")).toHaveText("Locker Rentals");
   await expect(card.locator("#lkSize option")).toHaveCount(2);
   await expect(card.locator("#lkSize")).not.toContainText("medium");
-  await expect(card.locator("#lockerIntro")).toContainText("Join the list first");
+  await expect(card.locator("#lockerIntro")).toContainText("Large lockers are $200 and small lockers are $75 for the season.");
+  await expect(card.locator("#lockerIntro")).toContainText("Join the list below");
+  await expect(card.locator("#lockerIntro")).toContainText("let you know your number");
+  await expect(card.locator("#lockerIntro")).not.toContainText("LL, RL, or RS");
   await expect(card.locator("#lockerIntro")).not.toContainText("\u2014");
 
   await page.evaluate(() => {
@@ -73,7 +76,7 @@ test("Reserve a locker shows Tim's open counts and the real Zeffy pay links", as
   await page.evaluate(() => {
     document.getElementById("lockerPayLarge").removeAttribute("aria-disabled");
   });
-  await expect(page.locator("#lockerMine")).toContainText("You are not on the list yet.");
+  await expect(page.locator("#lockerMine")).toContainText("You're not on the list yet. Join above to save your spot.");
   assertHealthy(expect, report, "locker pay links");
 });
 
