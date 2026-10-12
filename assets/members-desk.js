@@ -2401,6 +2401,13 @@
       "</button>";
   }
 
+  function tartanDeadlineHtml(id) {
+    if (typeof window.kosTartanDeadlineOpen === "function" && !window.kosTartanDeadlineOpen()) return "";
+    return '<div class="tartan-deadline-slot" data-tartan-deadline>' +
+      '<a class="tartan-deadline" id="' + id + '" href="/tartan-ball.html">Tartan Ball ticket deadline of October 15!</a>' +
+      "</div>";
+  }
+
   function appDashHtml() {
     var parade = pickNextParade();
     var photo = paradeHeroPhoto(parade && parade.name);
@@ -2431,6 +2438,7 @@
         (goingNext ? "Already RSVP'd" : "RSVP") + "</button></article>";
     }
     return '<div id="appDash">' +
+      tartanDeadlineHtml("appTartanDeadline") +
       getAppBannerHtml() +
       '<section class="app-hero" style="background-image:url(\'' + photo + '\')">' +
       '<p class="kicker">Countdown to the parade</p><h2>' + esc(title) + "</h2>" + where + count +
@@ -2847,6 +2855,7 @@
     // Phone: the app home (countdown and tiles) stays above that same desk.
     var phoneHome = document.body.classList.contains("hub-app");
     top.innerHTML =
+      (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline")) +
       birthdayCardHtml() +
       (phoneHome ? appDashHtml() : "") +
       (phoneHome ? boardAnnouncementsHtml() : "") +
