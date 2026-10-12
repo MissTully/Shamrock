@@ -417,3 +417,46 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
+/* Hide the Tartan Ball deadline badge after the end of Oct 15, 2026
+   in America/New_York. Visible on that calendar date; gone on Oct 16. */
+(function () {
+  var CUTOFF_UTC = Date.parse("2026-10-16T04:00:00.000Z");
+  function nyParts(now) {
+    try {
+      var fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric"
+      });
+      var year = 0;
+      var month = 0;
+      var day = 0;
+      fmt.formatToParts(now || new Date()).forEach(function (p) {
+        if (p.type === "year") year = Number(p.value);
+        if (p.type === "month") month = Number(p.value);
+        if (p.type === "day") day = Number(p.value);
+      });
+      if (year && month && day) return { year: year, month: month, day: day };
+    } catch (e) {}
+    return null;
+  }
+  function open(now) {
+    var when = now || new Date();
+    var parts = nyParts(when);
+    if (!parts) return when.getTime() < CUTOFF_UTC;
+    if (parts.year !== 2026) return parts.year < 2026;
+    if (parts.month !== 10) return parts.month < 10;
+    return parts.day <= 15;
+  }
+  function apply() {
+    if (open()) return;
+    var nodes = document.querySelectorAll("[data-tartan-deadline]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
+  }
+  window.kosTartanDeadlineOpen = open;
+  window.kosApplyTartanDeadline = apply;
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply);
+  else apply();
+})();

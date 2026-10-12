@@ -1009,3 +1009,80 @@ table{ max-width:100%; }
   .nav-ball{ transition:none; }
   .nav-ball:hover{ transform:none; }
 }
+
+/* Tartan Ball purchase deadline. Visible through the end of Oct 15, 2026
+   America/New_York; krewe.js hides [data-tartan-deadline] after that.
+   Sits under the gold Tickets control on the homepage, with a gap so the
+   two controls do not stack on each other. */
+.tartan-deadline-slot,
+.tartan-deadline-home{
+  position:relative;
+  z-index:2;
+  margin:0;
+  text-align:center;
+}
+.tartan-deadline-home{
+  margin:-48px auto 20px;
+  max-width:780px;
+  padding:0 8px;
+}
+a.tartan-deadline,
+.hub a.tartan-deadline,
+body.hub-app a.tartan-deadline{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  box-sizing:border-box;
+  min-height:52px;
+  margin:0;
+  padding:12px 18px;
+  border-radius:14px;
+  border:3px solid #14532d;
+  background:linear-gradient(180deg,#fff6d2 0%,#f3d56a 58%,#e2b43a);
+  color:#102816;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(17px, 2.3vw, 22px);
+  line-height:1.25;
+  letter-spacing:.2px;
+  text-align:center;
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:3px;
+  white-space:normal;
+  box-shadow:0 8px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.7);
+}
+a.tartan-deadline:hover,
+a.tartan-deadline:focus,
+.hub a.tartan-deadline:hover,
+.hub a.tartan-deadline:focus,
+body.hub-app a.tartan-deadline:hover,
+body.hub-app a.tartan-deadline:focus{
+  color:#102816;
+  background:#fff8dc;
+}
+a.tartan-deadline:focus-visible,
+.hub a.tartan-deadline:focus-visible,
+body.hub-app a.tartan-deadline:focus-visible{
+  outline:3px solid #14532d;
+  outline-offset:3px;
+  box-shadow:0 0 0 6px #fff, 0 8px 18px rgba(0,0,0,.28);
+}
+[data-tartan-deadline][hidden]{ display:none !important; }
+#authStage .tartan-deadline-slot{ margin:8px 0 12px; }
+body.hub-app .tartan-deadline-slot{ margin:12px 0 4px; }
+/* Keep the computer Hub's install card on the first screen. */
+body.hub-desk a.tartan-deadline{
+  min-height:44px;
+  padding:8px 16px;
+  font-size:18px;
+}
+body.hub-desk .tartan-deadline-slot{ margin:0 0 -8px; }
+@media (max-width:680px){
+  .tartan-deadline-home{ margin-top:-36px; margin-bottom:16px; }
+  a.tartan-deadline{ padding:11px 12px; }
+}
+@media (prefers-reduced-motion:reduce){
+  a.tartan-deadline{ transition:none; }
+}

@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260930return1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261012deadline1" />
 </head>
 <body>
 
@@ -90,6 +90,9 @@
 <!-- HERO -->
 <header class="hero">
 <div class="hero-bg bg-shift-left" style="background-image:url('assets/img/hero-fiddler.jpg?v=2')"></div>
+<div class="tartan-deadline-home" data-tartan-deadline>
+  <a class="tartan-deadline" href="/tartan-ball.html">Tartan Ball ticket deadline of October 15!</a>
+</div>
 <img class="emblem crest-img" src="assets/img/krewe-crest.png" alt="Krewe of Shamrock official crest, established 1999" />
 <p class="eyebrow"><button type="button" class="craic-def" id="failteDefBtn" aria-label="Play audio: what does Céad Míle Fáilte mean?" aria-pressed="false"><span class="word">Céad Míle Fáilte: a hundred thousand welcomes</span><span class="ic" aria-hidden="true">&#128266;</span></button></p>
 <h1>Krewe of Shamrock</h1>
@@ -260,7 +263,7 @@ simply love good music and a good party, there's a place for you at our table.</
 </button>
 <span class="label" id="kreweMusicLabel">Tap for a tune &#9752;</span>
 </div>
-<script src="assets/krewe.js" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><audio id="failteAudio" src="assets/audio/100 thousand welcomes.mp3" preload="none"></audio><script>(function(){function wire(btnId,audioId){var btn=document.getElementById(btnId);var audio=document.getElementById(audioId);if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});}wire('craicDefBtn','craicAudio');wire('failteDefBtn','failteAudio');})();</script>
+<script src="assets/krewe.js?v=20261012deadline1" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><audio id="failteAudio" src="assets/audio/100 thousand welcomes.mp3" preload="none"></audio><script>(function(){function wire(btnId,audioId){var btn=document.getElementById(btnId);var audio=document.getElementById(audioId);if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});}wire('craicDefBtn','craicAudio');wire('failteDefBtn','failteAudio');})();</script>
 <script src="assets/kos-calendar.js?v=20260930cal3"></script>
 
 <!-- EVENTS DATA -->
