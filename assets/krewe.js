@@ -418,10 +418,13 @@
   else init();
 })();
 
-/* Hide the Tartan Ball deadline badge after the end of Oct 15, 2026
-   in America/New_York. Visible on that calendar date; gone on Oct 16. */
+/* Hide Tartan Ball badges after their cutoff in America/New_York.
+   Homepage purchase deadline: visible through Oct 15, 2026; gone on Oct 16.
+   Member Hub reminder (data-tartan-through="ball"): visible through Oct 24,
+   2026, the day of the ball; gone on Oct 25. */
 (function () {
-  var CUTOFF_UTC = Date.parse("2026-10-16T04:00:00.000Z");
+  var DEADLINE_UTC = Date.parse("2026-10-16T04:00:00.000Z");
+  var BALL_UTC = Date.parse("2026-10-25T04:00:00.000Z");
   function nyParts(now) {
     try {
       var fmt = new Intl.DateTimeFormat("en-US", {
@@ -442,20 +445,30 @@
     } catch (e) {}
     return null;
   }
-  function open(now) {
+  function openThrough(now, lastDay, fallbackUtc) {
     var when = now || new Date();
     var parts = nyParts(when);
-    if (!parts) return when.getTime() < CUTOFF_UTC;
+    if (!parts) return when.getTime() < fallbackUtc;
     if (parts.year !== 2026) return parts.year < 2026;
     if (parts.month !== 10) return parts.month < 10;
-    return parts.day <= 15;
+    return parts.day <= lastDay;
+  }
+  function open(now) {
+    return openThrough(now, 15, DEADLINE_UTC);
+  }
+  function ballOpen(now) {
+    return openThrough(now, 24, BALL_UTC);
   }
   function apply() {
-    if (open()) return;
     var nodes = document.querySelectorAll("[data-tartan-deadline]");
-    for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var show = node.getAttribute("data-tartan-through") === "ball" ? ballOpen() : open();
+      if (!show) node.hidden = true;
+    }
   }
   window.kosTartanDeadlineOpen = open;
+  window.kosTartanBallOpen = ballOpen;
   window.kosApplyTartanDeadline = apply;
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply);
   else apply();

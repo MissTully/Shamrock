@@ -1,9 +1,13 @@
-// Tartan Ball ticket deadline badge: homepage, sign-in, and both hubs.
-// Hides after the end of October 15, 2026 America/New_York.
+// Tartan Ball badges: homepage deadline, and the Member Hub reminder.
+// Homepage hides after the end of October 15, 2026 America/New_York.
+// Member Hub (sign-in and both hubs) hides after the end of October 24.
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
-const LABEL = "Tartan Ball ticket deadline of October 15!";
+const HOME_LABEL = "Tartan Ball ticket deadline of October 15!";
+const HUB_LABEL = "Tartan Ball is this Saturday, October 24!";
+// Noon in New York on Oct 16: the old ticket deadline has passed, the ball has not.
+const HUB_STILL_OPEN = "2026-10-16T16:00:00.000Z";
 
 function freezeClock(iso) {
   return ({ iso }) => {
@@ -26,11 +30,13 @@ function freezeClock(iso) {
 
 test("homepage shows the deadline in the hero, clear of the gold tickets control", async ({ page }) => {
   const report = watchPage(page);
+  // Last day of the purchase-deadline window. After that the hero badge stays hidden.
+  await page.addInitScript(freezeClock("2026-10-15T16:00:00.000Z"), { iso: "2026-10-15T16:00:00.000Z" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/index.html");
   const badge = page.locator("header.hero a.tartan-deadline");
   await expect(badge).toBeVisible();
-  await expect(badge).toHaveText(LABEL);
+  await expect(badge).toHaveText(HOME_LABEL);
   await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
   await expect(page.locator("nav.krewe-nav a.tartan-deadline")).toHaveCount(0);
   const tickets = page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball");
@@ -69,12 +75,13 @@ test("deadline badge hides after the end of October 15, 2026 New York", async ({
 });
 
 test.describe("signed-out hub", () => {
-  test("phone and the castle door show the deadline", async ({ page }) => {
+  test("phone and the castle door show the Saturday reminder", async ({ page }) => {
+    await page.addInitScript(freezeClock(HUB_STILL_OPEN), { iso: HUB_STILL_OPEN });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/members.html");
     const badge = page.locator("#authStage a.tartan-deadline");
     await expect(badge).toBeVisible();
-    await expect(badge).toHaveText(LABEL);
+    await expect(badge).toHaveText(HUB_LABEL);
     await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
     const box = await badge.boundingBox();
     expect(box.y).toBeLessThan(520);
@@ -82,26 +89,44 @@ test.describe("signed-out hub", () => {
   });
 });
 
+test("member hub reminder hides after the end of October 24, 2026 New York", async ({ page }) => {
+  await page.addInitScript(freezeClock("2026-10-25T04:00:00.000Z"), { iso: "2026-10-25T04:00:00.000Z" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/members.html");
+  const gate = page.locator("#authStage [data-tartan-deadline]");
+  await expect(gate).toBeAttached();
+  await expect(gate).toBeHidden();
+  const stillOpen = await page.evaluate(() => window.kosTartanBallOpen(new Date("2026-10-25T03:59:00.000Z")));
+  expect(stillOpen).toBe(true);
+  const closed = await page.evaluate(() => window.kosTartanBallOpen(new Date("2026-10-25T04:00:00.000Z")));
+  expect(closed).toBe(false);
+  await unlockMemberHub(page);
+  await expect(page.locator("#hubTartanDeadline")).toHaveCount(0);
+});
+
 test.describe("signed-in hubs", () => {
-  test("desktop hub shows the deadline under the tabs", async ({ page }) => {
+  test("desktop hub shows the Saturday reminder under the tabs", async ({ page }) => {
+    await page.addInitScript(freezeClock(HUB_STILL_OPEN), { iso: HUB_STILL_OPEN });
     await page.setViewportSize({ width: 1440, height: 900 });
     await unlockMemberHub(page);
     const badge = page.locator("#hubTartanDeadline");
     await expect(badge).toBeVisible();
-    await expect(badge).toHaveText(LABEL);
+    await expect(badge).toHaveText(HUB_LABEL);
+    await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
     await expect(page.locator("#appTartanDeadline")).toHaveCount(0);
     const welcome = await page.locator("#hubWelcomeCard").boundingBox();
     const box = await badge.boundingBox();
     expect(box.y).toBeLessThan(welcome.y);
   });
 
-  test("phone app shell shows the deadline at the top of home", async ({ page }) => {
+  test("phone app shell shows the Saturday reminder at the top of home", async ({ page }) => {
+    await page.addInitScript(freezeClock(HUB_STILL_OPEN), { iso: HUB_STILL_OPEN });
     await page.setViewportSize({ width: 390, height: 844 });
     await unlockMemberHub(page);
     await expect(page.locator("body")).toHaveClass(/hub-app/);
     const badge = page.locator("#appTartanDeadline");
     await expect(badge).toBeVisible();
-    await expect(badge).toHaveText(LABEL);
+    await expect(badge).toHaveText(HUB_LABEL);
     await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
     await expect(page.locator("#hubTartanDeadline")).toHaveCount(0);
     const top = await page.locator("#appTop").boundingBox();

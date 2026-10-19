@@ -1010,8 +1010,9 @@ table{ max-width:100%; }
   .nav-ball:hover{ transform:none; }
 }
 
-/* Tartan Ball purchase deadline. Visible through the end of Oct 15, 2026
-   America/New_York; krewe.js hides [data-tartan-deadline] after that.
+/* Tartan Ball badges. Homepage purchase deadline stays through Oct 15, 2026
+   America/New_York. The Member Hub reminder stays through Oct 24, 2026,
+   the day of the ball. krewe.js hides [data-tartan-deadline] after each cutoff.
    Sits under the gold Tickets control on the homepage, with a gap so the
    two controls do not stack on each other. */
 .tartan-deadline-slot,
