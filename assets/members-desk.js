@@ -2402,9 +2402,9 @@
   }
 
   function tartanDeadlineHtml(id) {
-    if (typeof window.kosTartanDeadlineOpen === "function" && !window.kosTartanDeadlineOpen()) return "";
-    return '<div class="tartan-deadline-slot" data-tartan-deadline>' +
-      '<a class="tartan-deadline" id="' + id + '" href="/tartan-ball.html">Tartan Ball ticket deadline of October 15!</a>' +
+    if (typeof window.kosTartanBallOpen === "function" && !window.kosTartanBallOpen()) return "";
+    return '<div class="tartan-deadline-slot" data-tartan-deadline data-tartan-through="ball">' +
+      '<a class="tartan-deadline" id="' + id + '" href="/tartan-ball.html">Tartan Ball is this Saturday, October 24!</a>' +
       "</div>";
   }
 
