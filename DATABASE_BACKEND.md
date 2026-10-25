@@ -322,7 +322,10 @@ project — every number a member sees in the game is a live database read:
   every new ledger row and claim (it is the column default);
   `craic_season_start()` returns the July 1 date the current season began.
 - **Views:** `v_season_leaderboard` and `v_volunteer_leaderboard` both count
-  only the current July-start season.
+  only the current July-start season, and both list **members only** —
+  records with `membership_status = 'prospect'` (auto-created when an RSVP
+  email is not in the roster) are excluded until the person is approved into
+  membership (`sql/kos_craic_cup_members_only.sql`).
 - **Functions the Hub calls (RPC):**
   - `submit_clover_request(activity, …)` — member claims, including
     `attend_ikc_event` (+25 for attending another IKC krewe's event).
