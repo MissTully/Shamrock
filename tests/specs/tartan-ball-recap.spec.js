@@ -1,5 +1,5 @@
 // After October 24, 2026 the public Tartan Ball page is a recap.
-// No ticket purchase language, and Melissa's two 2026 photos sit with the older ones.
+// No ticket purchase language, and the 2026 photos sit with the older ones.
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy } = require("./helpers");
 
@@ -27,8 +27,11 @@ test("tartan ball page celebrates the night and does not sell tickets", async ({
 
   const dance = page.locator('img[src*="ball-2026-dance-floor.jpg"]');
   const stage = page.locator('img[src*="ball-2026-stage.jpg"]');
+  const band = page.locator('img[src*="ball-2026-moon-coin-band.jpg"]');
   await expect(dance).toBeVisible();
   await expect(stage).toBeVisible();
+  await expect(band).toBeVisible();
+  await expect(band).toHaveAttribute("src", /v=20261025band1/);
   await expect(page.locator('img[src*="ball-couple.jpg"]')).toBeVisible();
   await expect(page.locator('img[src*="ball-dining.jpg"]')).toBeVisible();
   await expect(page.locator('img[src*="ball-ballroom.jpg"]')).toHaveCount(1);
@@ -36,10 +39,13 @@ test("tartan ball page celebrates the night and does not sell tickets", async ({
 
   const danceBox = await dance.boundingBox();
   const stageBox = await stage.boundingBox();
+  const bandBox = await band.boundingBox();
   expect(danceBox.width).toBeGreaterThan(280);
   expect(stageBox.width).toBeGreaterThan(200);
   expect(danceBox.height).toBeGreaterThan(160);
   expect(stageBox.height).toBeGreaterThan(200);
+  expect(bandBox.width).toBeGreaterThan(danceBox.width);
+  expect(bandBox.y).toBeGreaterThan(danceBox.y);
 
   assertHealthy(expect, report, "tartan ball recap");
 });
@@ -49,14 +55,20 @@ test("tartan ball recap stacks the new photos on a phone", async ({ page }) => {
   await page.goto("/tartan-ball.html");
   const dance = page.locator('img[src*="ball-2026-dance-floor.jpg"]');
   const stage = page.locator('img[src*="ball-2026-stage.jpg"]');
+  const band = page.locator('img[src*="ball-2026-moon-coin-band.jpg"]');
   await dance.scrollIntoViewIfNeeded();
   await expect(dance).toBeVisible();
   await expect(stage).toBeVisible();
+  await band.scrollIntoViewIfNeeded();
+  await expect(band).toBeVisible();
   const danceBox = await dance.boundingBox();
   const stageBox = await stage.boundingBox();
+  const bandBox = await band.boundingBox();
   expect(danceBox.width).toBeGreaterThan(300);
   expect(stageBox.width).toBeGreaterThan(300);
+  expect(bandBox.width).toBeGreaterThan(300);
   expect(stageBox.y).toBeGreaterThan(danceBox.y + danceBox.height - 4);
+  expect(bandBox.y).toBeGreaterThan(stageBox.y + stageBox.height - 4);
   const text = await page.locator("body").innerText();
   expect(text.toLowerCase()).not.toContain("buy ticket");
   expect(text).not.toContain("October 15");

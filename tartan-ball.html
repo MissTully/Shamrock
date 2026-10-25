@@ -55,9 +55,11 @@
     font-family:var(--fancy); font-style:italic; font-size:18px; color:var(--green-800);
   }
   .ball-gallery img{ width:100%; height:auto; display:block; }
+  .ball-gallery figure.ball-wide{ grid-column:1 / -1; }
   @media (max-width:760px){
     .ball-facts{ grid-template-columns:1fr; }
     .ball-gallery{ grid-template-columns:1fr; }
+    .ball-gallery figure.ball-wide{ grid-column:auto; }
   }
 </style>
 </head>
@@ -243,6 +245,13 @@
                alt="Higgins Hall at the Krewe of Shamrock Tartan Ball, with the screen reading Tampa Bay's Original Kilted Krewe" />
         </div>
         <figcaption>The hall, and Tampa Bay&rsquo;s Original Kilted Krewe on the screen.</figcaption>
+      </figure>
+      <figure class="ball-wide">
+        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+          <img src="assets/img/ball-2026-moon-coin-band.jpg?v=20261025band1"
+               alt="The Moon Coin band playing guitar, flute, and cello at the Tartan Ball" />
+        </div>
+        <figcaption>The Moon Coin band.</figcaption>
       </figure>
     </div>
   </section>
