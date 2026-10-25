@@ -10,13 +10,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tartan Ball · Krewe of Shamrock</title>
-<meta name="description" content="The Tartan Ball, presented by the Krewe of Shamrock: an evening of Celtic elegance honoring the crowning of our new King & Queen. October 24, 2026 at Higgins Hall, Tampa, FL. Tickets must be purchased by October 15, 2026." />
+<meta name="description" content="The Tartan Ball, presented by the Krewe of Shamrock: a night of Celtic elegance at Higgins Hall in Tampa. On October 24, 2026, we crowned our new King and Queen, dined, and danced." />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Event",
   "name": "Tartan Ball 2026",
-  "description": "An evening of Celtic elegance presented by the Krewe of Shamrock, honoring the crowning of the new King and Queen.",
+  "description": "A night of Celtic elegance presented by the Krewe of Shamrock at Higgins Hall, honoring the crowning of the new King and Queen.",
   "startDate": "2026-10-24T18:00:00-04:00",
   "endDate": "2026-10-24T22:00:00-04:00",
   "eventStatus": "https://schema.org/EventScheduled",
@@ -26,8 +26,7 @@
     "name": "Higgins Hall",
     "address": { "@type": "PostalAddress", "streetAddress": "5225 N. Himes Ave.", "addressLocality": "Tampa", "addressRegion": "FL", "postalCode": "33614", "addressCountry": "US" }
   },
-  "organizer": { "@type": "Organization", "name": "Krewe of Shamrock", "url": "https://krewe-of-shamrock.vercel.app/" },
-  "offers": { "@type": "Offer", "url": "http://www.tampabaytartanball.com/home.html", "availability": "https://schema.org/InStock", "priceCurrency": "USD" }
+  "organizer": { "@type": "Organization", "name": "Krewe of Shamrock", "url": "https://krewe-of-shamrock.vercel.app/" }
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +45,20 @@
   .ball-facts .fact .ic{ font-size:32px; display:block; margin-bottom:8px; }
   .ball-facts .fact h3{ margin:0 0 6px; color:var(--gold-light); font-family:var(--display); font-size:18px; letter-spacing:.5px; }
   .ball-facts .fact p{ margin:0; color:#f1ead4; font-size:16px; }
-  @media (max-width:760px){ .ball-facts{ grid-template-columns:1fr; } }
+  .ball-program{ grid-template-columns:1fr; max-width:720px; margin-left:auto; margin-right:auto; }
+  .ball-gallery{
+    display:grid; grid-template-columns:1.15fr .85fr; gap:28px; align-items:start; margin-top:8px;
+  }
+  .ball-gallery figure{ margin:0; }
+  .ball-gallery figcaption{
+    margin:12px 0 0; text-align:center;
+    font-family:var(--fancy); font-style:italic; font-size:18px; color:var(--green-800);
+  }
+  .ball-gallery img{ width:100%; height:auto; display:block; }
+  @media (max-width:760px){
+    .ball-facts{ grid-template-columns:1fr; }
+    .ball-gallery{ grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
@@ -106,22 +118,21 @@
   <header class="hero">
     <div class="hero-bg" style="background-image:url('assets/img/ball-ballroom.jpg')"></div>
     <img class="emblem" src="assets/img/emblem-shamrock.png" alt="Ornate shamrock emblem" />
-    <p class="eyebrow">An evening of royal tradition &amp; Irish splendor</p>
+    <p class="eyebrow">A night of royal tradition &amp; Irish splendor</p>
     <h1>The Tartan Ball</h1>
-    <p class="lede">Celtic elegance under the chandeliers. Join us as we honor the ceremonial
-       crowning of our new King &amp; Queen.</p>
+    <p class="lede">Celtic elegance under the chandeliers. On Saturday, October 24, 2026,
+       Higgins Hall filled with kilts, gowns, and the crowning of our new King &amp; Queen.</p>
     <div class="btns">
-      <a class="btn btn-primary" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>
+      <a class="btn btn-primary" href="#from-the-floor">☘ See the Evening</a>
       <a class="btn btn-outline" href="membership-application.html">Become a Member</a>
     </div>
-    <p class="lede" style="margin-top:14px;font-size:1rem;">Last day to purchase tickets: <strong>October 15, 2026</strong></p>
   </header>
 
   <!-- INVITATION + DETAILS -->
   <section class="band band-green">
     <div class="wrap">
       <div class="section-title">
-        <h2 style="color:#fff;">You Are Cordially Invited</h2>
+        <h2 style="color:#fff;">The Night We Gathered</h2>
         <p class="sub">Presented by the Krewe of Shamrock</p>
       </div>
       <div class="knot-divider"><span class="knot"></span></div>
@@ -136,13 +147,11 @@
         </div>
         <div class="ft-text">
           <h2 style="color:#fff;">Celtic Elegance</h2>
-          <p style="color:#f1ead4;">Join us for an evening of tradition, celebration, and distinction
-             as the Krewe of Shamrock honors the ceremonial crowning of our new King &amp; Queen.
-             Expect candlelight and chandeliers, the skirl of the pipes, and a night of royal
+          <p style="color:#f1ead4;">Higgins Hall held an evening of tradition, celebration, and distinction
+             as the Krewe of Shamrock honored the ceremonial crowning of our new King &amp; Queen.
+             Candlelight and chandeliers, the skirl of the pipes, and royal
              Irish splendor with the finest company in Tampa Bay.</p>
-          <p style="color:#f1ead4;">Black-tie and tartan encouraged. A formal invitation will follow.</p>
-          <p style="color:#f1ead4;"><strong>Last day to purchase tickets: October 15, 2026.</strong></p>
-          <a class="btn btn-primary" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>
+          <p style="color:#f1ead4;">Black tie and tartan filled the room, from the first photograph to the last reel.</p>
         </div>
       </div>
 
@@ -151,7 +160,7 @@
         <div class="fact">
           <span class="ic">📅</span>
           <h3>When</h3>
-          <p>Saturday, October 24, 2026<br>6:00&nbsp;&ndash;&nbsp;10:00 PM<br><br>Tickets must be purchased by<br><strong>October 15, 2026</strong></p>
+          <p>Saturday, October 24, 2026<br>6:00 to 10:00 PM<br>Higgins Hall, Tampa</p>
         </div>
         <div class="fact">
           <span class="ic">📍</span>
@@ -168,16 +177,16 @@
       <!-- EVENING SCHEDULE -->
       <div class="section-title" style="margin-top:42px;">
         <h2 style="color:#fff;">The Evening&rsquo;s Program</h2>
-        <p class="sub">How the night unfolds</p>
+        <p class="sub">How the night unfolded</p>
       </div>
       <div class="knot-divider"><span class="knot"></span></div>
-      <div class="ball-facts" style="max-width:720px;margin-left:auto;margin-right:auto;">
+      <div class="ball-facts ball-program">
         <div class="fact" style="text-align:left;">
           <p style="color:#f1ead4;margin:0;">
-            <b>6:00 &ndash; 7:00 PM</b> &mdash; Cocktail hour with pictures and the Moon Coin band<br><br>
-            <b>7:00 &ndash; 8:00 PM</b> &mdash; Dinner with presentations<br><br>
-            <b>8:00 &ndash; 10:00 PM</b> &mdash; Dancing, 50/50 purchases, and raffle ticket purchasing<br><br>
-            <b>10:00 PM</b> &mdash; Bar closes; the 50/50, raffles, and liquor cart are drawn and awarded
+            <b>6:00 to 7:00 PM.</b> Cocktail hour with pictures and the Moon Coin band<br><br>
+            <b>7:00 to 8:00 PM.</b> Dinner with presentations<br><br>
+            <b>8:00 to 10:00 PM.</b> Dancing, the 50/50, and the raffle<br><br>
+            <b>10:00 PM.</b> The bar closed, and the 50/50, raffles, and liquor cart were drawn and awarded
           </p>
         </div>
       </div>
@@ -190,10 +199,9 @@
       <div class="ft-text">
         <h2>An Evening of Dancing &amp; Finery</h2>
         <p>The Tartan Ball is our most elegant night of the year: a grand ballroom, a turn around the
-           floor, and the warmth of old friends. Think formal attire with a Celtic touch: a sash, a
-           tartan, a kilt, or your sharpest black-tie green.</p>
-        <p>From the first waltz to the last reel, it&rsquo;s a night to dress up, dance, and celebrate together.</p>
-        <a class="btn btn-green" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets</a>
+           floor, and the warmth of old friends. Formal attire with a Celtic touch carried the room:
+           a sash, a tartan, a kilt, or the sharpest black-tie green.</p>
+        <p>From the first waltz to the last reel, it was a night to dress up, dance, and celebrate together.</p>
       </div>
       <div class="ft-media">
         <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
@@ -205,7 +213,7 @@
     <div class="feature" style="margin-top:48px;">
       <div class="ft-text">
         <h2>The Setting</h2>
-        <p>An evening of candlelight and chandeliers in a grand Tampa ballroom: fine dining, music,
+        <p>Candlelight and chandeliers in a grand Tampa ballroom: fine dining, music,
            and the ceremonial crowning of our new King &amp; Queen.</p>
         <a class="btn btn-primary" href="membership-application.html">☘ Become a Member</a>
       </div>
@@ -215,24 +223,46 @@
         </div>
       </div>
     </div>
+
+    <div class="section-title" id="from-the-floor" style="margin-top:56px;">
+      <h2>From the Floor</h2>
+      <p class="sub">Higgins Hall, October 24, 2026</p>
+    </div>
+    <div class="banner-flourish" aria-hidden="true"></div>
+    <div class="ball-gallery">
+      <figure>
+        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+          <img src="assets/img/ball-2026-dance-floor.jpg?v=20261025ball1"
+               alt="Krewe members in formal gowns and a kilt gathered on the Tartan Ball dance floor" />
+        </div>
+        <figcaption>The dance floor, dressed for the night.</figcaption>
+      </figure>
+      <figure>
+        <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
+          <img src="assets/img/ball-2026-stage.jpg?v=20261025ball1"
+               alt="Higgins Hall at the Krewe of Shamrock Tartan Ball, with the screen reading Tampa Bay's Original Kilted Krewe" />
+        </div>
+        <figcaption>The hall, and Tampa Bay&rsquo;s Original Kilted Krewe on the screen.</figcaption>
+      </figure>
+    </div>
   </section>
 
   <!-- SPONSORSHIPS -->
   <section class="wrap">
     <div class="feature">
       <div class="ft-text">
-        <h2>Sponsor the Ball</h2>
-        <p>Put your name — or your company&rsquo;s — behind the season&rsquo;s grandest evening.
-           Sponsor the Moon Coin band, the photography, the Irish dancers, or chip in $50 toward
-           the liquor wagon. Sponsors appear on event signage, are thanked during the 7:00&nbsp;PM
-           dinner presentations, and get a social media shoutout.</p>
-        <p>The Krewe of Shamrock is a 501(c)(3) nonprofit, so your payment receipt doubles as
-           your tax receipt.</p>
-        <a class="btn btn-green" href="tartan-ball-sponsors.html">☘ View Sponsorship Opportunities</a>
+        <h2>With Thanks to Our Sponsors</h2>
+        <p>The Moon Coin band, the photography, the Irish dancers, and the liquor wagon
+           were part of the night because sponsors stood behind them. Their names were
+           on the signage, they were thanked during the 7:00&nbsp;PM dinner presentations,
+           and they received a social media shoutout.</p>
+        <p>The Krewe of Shamrock is a 501(c)(3) nonprofit. Questions about the ball can go to
+           <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</p>
+        <a class="btn btn-green" href="tartan-ball-sponsors.html">☘ See Ball Sponsorships</a>
       </div>
       <div class="ft-media">
         <div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>
-          <img src="assets/img/ball-ballroom.jpg" alt="The grand ballroom set for the Tartan Ball, ready for its sponsors' moment" />
+          <img src="assets/img/ball-ballroom.jpg" alt="The grand ballroom set for the Krewe of Shamrock Tartan Ball" />
         </div>
       </div>
     </div>
@@ -243,23 +273,24 @@
     <div class="pb-bg" style="background-image:url('assets/img/ball-dancing.jpg')"></div>
     <div class="pb-inner">
       <div class="banner-flourish" aria-hidden="true"></div>
-      <h2>Take to the Floor</h2>
-      <p>A night of dancing under the chandeliers. Sláinte to good company and good craic!</p>
+      <h2>The Floor Was Theirs</h2>
+      <p>A night of dancing under the chandeliers. Sláinte to good company and good craic.</p>
     </div>
   </section>
 
-  <!-- CTA -->
+  <!-- CLOSE -->
   <section class="band band-green">
     <div class="wrap" style="text-align:center;">
       <span class="crest float" role="img" aria-label="Shamrock crest"></span>
       <div class="section-title">
-        <h2 style="color:#fff;">Will You Join Us?</h2>
-        <p class="sub">Seats are limited, so reserve early</p>
+        <h2 style="color:#fff;">Sláinte to a Grand Night</h2>
+        <p class="sub">Thank you for filling Higgins Hall with music, finery, and friendship</p>
       </div>
       <div class="btns" style="margin-top:22px;">
-        <a class="btn btn-primary" href="http://www.tampabaytartanball.com/home.html" target="_blank" rel="noopener noreferrer">☘ Buy Tickets at Tampa Bay Tartan Ball</a>
+        <a class="btn btn-primary" href="membership-application.html">☘ Become a Member</a>
         <a class="btn btn-outline" href="index.html">Back to Home</a>
       </div>
+      <p class="lede" style="margin-top:18px;font-size:1rem;color:#f1ead4;">Questions about the ball: <a href="mailto:secretary@kreweofshamrock.com" style="color:var(--gold-light);">secretary@kreweofshamrock.com</a></p>
     </div>
   </section>
 

@@ -1,10 +1,11 @@
-// Tartan Ball badges: homepage deadline, and the Member Hub reminder.
-// Homepage hides after the end of October 15, 2026 America/New_York.
-// Member Hub (sign-in and both hubs) hides after the end of October 24.
+// Tartan Ball reminders.
+// The public ticket deadline badge and the gold Tickets button are retired
+// now that the October 24, 2026 ball has passed.
+// Member Hub (sign-in and both hubs) still shows a Saturday reminder through
+// the end of October 24, then hides it. That badge is an event reminder, not a ticket sale.
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
-const HOME_LABEL = "Tartan Ball ticket deadline of October 15!";
 const HUB_LABEL = "Tartan Ball is this Saturday, October 24!";
 // Noon in New York on Oct 16: the old ticket deadline has passed, the ball has not.
 const HUB_STILL_OPEN = "2026-10-16T16:00:00.000Z";
@@ -28,46 +29,22 @@ function freezeClock(iso) {
   };
 }
 
-test("homepage shows the deadline in the hero, clear of the gold tickets control", async ({ page }) => {
+test("homepage no longer sells Tartan Ball tickets or shows the October 15 deadline", async ({ page }) => {
   const report = watchPage(page);
-  // Last day of the purchase-deadline window. After that the hero badge stays hidden.
-  await page.addInitScript(freezeClock("2026-10-15T16:00:00.000Z"), { iso: "2026-10-15T16:00:00.000Z" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/index.html");
-  const badge = page.locator("header.hero a.tartan-deadline");
-  await expect(badge).toBeVisible();
-  await expect(badge).toHaveText(HOME_LABEL);
-  await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
-  await expect(page.locator("nav.krewe-nav a.tartan-deadline")).toHaveCount(0);
-  const tickets = page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball");
-  await expect(tickets).toBeVisible();
-  const gap = await page.evaluate(() => {
-    const goldEl = document.querySelector("nav.krewe-nav > .nav-ball-row > a.nav-ball");
-    const link = document.querySelector("header.hero a.tartan-deadline");
-    const gold = goldEl.getBoundingClientRect();
-    const box = link.getBoundingClientRect();
-    const hero = document.querySelector("header.hero").getBoundingClientRect();
-    return {
-      gap: box.top - gold.bottom,
-      badgeTop: box.top,
-      heroTop: hero.top,
-      weight: getComputedStyle(link).fontWeight
-    };
-  });
-  expect(gap.gap).toBeGreaterThanOrEqual(12);
-  expect(gap.badgeTop).toBeLessThan(gap.heroTop + 160);
-  expect(Number(gap.weight)).toBeGreaterThanOrEqual(700);
-  await badge.click();
-  await expect(page).toHaveURL(/\/tartan-ball\.html$/);
-  assertHealthy(expect, report, "homepage deadline badge");
+  await expect(page.locator("a.nav-ball, .nav-ball-row, a.tartan-deadline, [data-tartan-deadline]")).toHaveCount(0);
+  await expect(page.locator('a[href*="tampabaytartanball.com"]')).toHaveCount(0);
+  const text = await page.locator("body").innerText();
+  expect(text).not.toMatch(/October 15/);
+  expect(text.toLowerCase()).not.toContain("ticket deadline");
+  expect(text.toLowerCase()).not.toContain("tartan ball tickets");
+  assertHealthy(expect, report, "homepage after the ball");
 });
 
-test("deadline badge hides after the end of October 15, 2026 New York", async ({ page }) => {
-  await page.addInitScript(freezeClock("2026-10-16T04:00:00.000Z"), { iso: "2026-10-16T04:00:00.000Z" });
+test("October 15 cutoff helper still closes after that day in New York", async ({ page }) => {
   await page.goto("/index.html");
-  const badge = page.locator("[data-tartan-deadline]");
-  await expect(badge).toBeAttached();
-  await expect(badge).toBeHidden();
+  await expect(page.locator("[data-tartan-deadline]")).toHaveCount(0);
   const open = await page.evaluate(() => window.kosTartanDeadlineOpen(new Date("2026-10-16T03:59:00.000Z")));
   expect(open).toBe(true);
   const closed = await page.evaluate(() => window.kosTartanDeadlineOpen(new Date("2026-10-16T04:00:00.000Z")));

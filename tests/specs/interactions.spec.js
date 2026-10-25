@@ -85,9 +85,8 @@ test.describe("Member Hub Login header control", () => {
     await expect(hero.getByRole("link", { name: "RSVP to an Event" })).toBeVisible();
     await expect(hero.getByRole("link", { name: "Access previous site" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "TARTAN BALL tickets", exact: true })).toHaveCount(0);
-    const headerTickets = page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball");
-    await expect(headerTickets).toBeVisible();
-    await expect(headerTickets).toHaveAttribute("aria-label", "Buy Tartan Ball Tickets");
+    await expect(page.locator("nav.krewe-nav > .nav-ball-row > a.nav-ball")).toHaveCount(0);
+    await expect(page.locator("a.tartan-deadline")).toHaveCount(0);
   });
 });
 
