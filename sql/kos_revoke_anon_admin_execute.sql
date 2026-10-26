@@ -9,6 +9,13 @@
 -- The function bodies do reject a caller with no auth.uid() / no officer check.
 -- This migration removes the grant so PostgREST never enters those functions.
 --
+-- Applied to oazwkwflgbthojvnclfc on 2026-10-26. Afterward the security
+-- advisor no longer reported security_definer_view, and the only anon
+-- SECURITY DEFINER functions left were the public entry RPCs listed below.
+-- Tribe Test (njfzrnqwbnuhmopgpsud) was not in the connected account
+-- (permission denied). Paste this file there if that project still serves
+-- traffic. Do not pause or delete it.
+--
 -- Apply (either project; safe to re-run):
 --   1. Supabase Dashboard → SQL Editor.
 --   2. Paste this file and run it. Do not pause or delete the project.
