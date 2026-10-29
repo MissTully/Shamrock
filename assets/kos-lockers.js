@@ -26,6 +26,8 @@
   var deskHooked = false;
   var memberSeq = 0;
   var officerSeq = 0;
+  var currentUrls = defaultUrls();
+  var heldRows = [];
 
   function sb() {
     return window.__kosSb || null;
@@ -108,11 +110,82 @@
     if (small) small.textContent = counts.small == null ? "..." : String(counts.small);
   }
 
+  function sizeLabel(size) {
+    return size === "large" ? "Large" : "Small";
+  }
+
+  function joinList(items) {
+    if (!items || !items.length) return "";
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return items[0] + " and " + items[1];
+    return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+  }
+
+  function needsRenewal(row) {
+    return !(row && row.renewal_paid && !row.renewal_open);
+  }
+
+  function paintHeld(rows) {
+    var box = document.getElementById("lockerHeld");
+    var list = document.getElementById("lockerHeldList");
+    var qty = document.getElementById("lockerHeldQty");
+    if (!box || !list) return;
+    heldRows = (rows || []).filter(function (row) {
+      return row && (row.status === "paid" || row.status === "assigned") && row.locker_number;
+    });
+    if (!heldRows.length) {
+      box.hidden = true;
+      list.innerHTML = "";
+      if (qty) qty.textContent = "";
+      return;
+    }
+    box.hidden = false;
+    var counts = { small: 0, large: 0 };
+    heldRows.forEach(function (row) {
+      if (!needsRenewal(row)) return;
+      if (row.size === "large") counts.large += 1;
+      else counts.small += 1;
+    });
+    list.innerHTML = heldRows.map(function (row) {
+      var size = sizeLabel(row.size);
+      var who = row.holder_name ? " · " + esc(row.holder_name) : "";
+      var badge = row.status === "paid" ? "paid" : "assigned";
+      var state = "";
+      var button;
+      if (row.renewal_open) {
+        state = '<span class="locker-renew-state">Renewal saved. Payment is still open.</span>';
+      } else if (row.renewal_paid) {
+        state = '<span class="locker-renew-state">Paid for next season.</span>';
+      }
+      if (needsRenewal(row)) {
+        button = '<button type="button" class="btn btn-green locker-renew" data-renew-locker="' + esc(row.id) +
+          '" data-renew-size="' + esc(row.size === "large" ? "large" : "small") +
+          '" aria-label="Renew locker ' + esc(row.locker_number) + ' for next season">Renew for next season</button>';
+      } else {
+        button = '<button type="button" class="btn btn-green locker-renew" disabled>Paid for next season</button>';
+      }
+      return '<div class="data-row locker-held-row"><div><b>Locker ' + esc(row.locker_number) + '</b> · ' +
+        esc(size) + who + ' <span class="badge ' + badge + '">' + badge + '</span>' + state +
+        '</div>' + button + '</div>';
+    }).join("");
+    if (!qty) return;
+    var bits = [];
+    if (counts.small >= 2) {
+      bits.push("You have " + counts.small + " small lockers. You can pay for all of them in one checkout. On the Zeffy page, set the quantity to " + counts.small + ".");
+    }
+    if (counts.large >= 2) {
+      bits.push("You have " + counts.large + " large lockers. You can pay for all of them in one checkout. On the Zeffy page, set the quantity to " + counts.large + ".");
+    }
+    qty.textContent = bits.join(" ");
+  }
+
   function paintMine(rows) {
     var box = document.getElementById("lockerMine");
     if (!box) return;
     if (!rows || !rows.length) {
-      box.innerHTML = '<p class="empty">You\'re not on the list yet. Join above to save your spot.</p>';
+      box.innerHTML = heldRows.length
+        ? '<p class="empty">You are not waiting for a new locker. Use My lockers above to renew one you already have.</p>'
+        : '<p class="empty">You\'re not on the list yet. Join above to save your spot.</p>';
       return;
     }
     box.innerHTML = '<ul class="data-list">' + rows.map(function (r) {
@@ -140,11 +213,16 @@
     var urls = defaultUrls();
     var counts = { small: null, large: null };
     var mine = [];
+    var held = [];
+    var availError = false;
+    var loadError = false;
     var client = sb();
     if (!client) {
       if (seq !== memberSeq) return;
+      currentUrls = urls;
       paintCounts(counts);
       paintPay(urls, counts);
+      paintHeld([]);
       paintMine([]);
       return;
     }
@@ -153,7 +231,7 @@
       if (settings && !settings.error && settings.data) applySettings(settings.data, urls);
       var avail = await client.rpc("locker_availability");
       if (avail && avail.error) {
-        show("lkMsg", "Locker counts are not available yet. An officer still needs to apply the locker update in Supabase.", "error");
+        availError = true;
       } else if (avail && avail.data) {
         counts.small = Number(avail.data.small);
         counts.large = Number(avail.data.large);
@@ -162,16 +240,103 @@
       }
       var mineRes = await client.rpc("my_locker_reservations");
       if (mineRes && !mineRes.error && Array.isArray(mineRes.data)) mine = mineRes.data;
+      var heldRes = await client.rpc("my_held_lockers");
+      if (heldRes && !heldRes.error && Array.isArray(heldRes.data)) held = heldRes.data;
     } catch (e) {
-      show("lkMsg", "Could not load locker availability.", "error");
+      loadError = true;
     }
     if (seq !== memberSeq) return;
+    if (loadError) show("lkMsg", "Could not load locker availability.", "error");
+    else if (availError) show("lkMsg", "Locker counts are not available yet. An officer still needs to apply the locker update in Supabase.", "error");
+    currentUrls = urls;
     paintCounts(counts);
     paintPay(urls, counts);
+    paintHeld(held);
     paintMine(mine);
   }
 
   window.kosLoadLockers = loadMember;
+
+  function payUrl(size) {
+    var key = size === "large" ? "large" : "small";
+    return (currentUrls && currentUrls[key]) || ZEFFY[key].url;
+  }
+
+  function renewalMessage(numbers, size, clicked) {
+    var label = size === "large" ? "large" : "small";
+    var list = joinList(numbers);
+    if (numbers.length >= 2) {
+      return "Renewal saved for " + list + ". Finish payment on Zeffy. Set the quantity to " +
+        numbers.length + " to cover all " + numbers.length + " " + label +
+        " lockers. If you set a smaller quantity, " + clicked + " is marked paid first.";
+    }
+    return "Renewal saved for " + list + ". Finish payment on Zeffy.";
+  }
+
+  async function renewLockers(button, popup) {
+    var client = sb();
+    var clickedId = button.getAttribute("data-renew-locker");
+    var size = button.getAttribute("data-renew-size") === "large" ? "large" : "small";
+    var group = heldRows.filter(function (row) {
+      var rowSize = row.size === "large" ? "large" : "small";
+      return needsRenewal(row) && rowSize === size;
+    });
+    var primary = null;
+    group.forEach(function (row) {
+      if (!primary && String(row.id) === String(clickedId)) primary = row;
+    });
+    if (!primary) primary = group[0] || null;
+    var ordered = [];
+    if (primary) ordered.push(primary);
+    group.forEach(function (row) {
+      if (!primary || String(row.id) !== String(primary.id)) ordered.push(row);
+    });
+    var ids = ordered.map(function (row) { return row.id; });
+    if (!ids.length) {
+      if (popup) { try { popup.close(); } catch (e0) {} }
+      show("lockerRenewMsg", "Choose a locker to renew.", "error");
+      return;
+    }
+    if (!client || !client.rpc) {
+      if (popup) { try { popup.close(); } catch (e1) {} }
+      show("lockerRenewMsg", "Sign in to renew a locker.", "error");
+      return;
+    }
+    var buttons = document.querySelectorAll("#lockerHeld [data-renew-locker]");
+    Array.prototype.forEach.call(buttons, function (b) { b.disabled = true; });
+    var result;
+    try {
+      result = await client.rpc("member_request_locker_renewal", { p_locker_ids: ids });
+    } catch (e2) {
+      result = { error: e2 };
+    }
+    Array.prototype.forEach.call(buttons, function (b) { b.disabled = false; });
+    if (!result || result.error || !result.data || result.data.ok === false) {
+      if (popup) { try { popup.close(); } catch (e3) {} }
+      show("lockerRenewMsg",
+        (result && result.data && result.data.message) ||
+        (result && result.error && result.error.message) ||
+        "Could not save your renewal. Please try again.",
+        "error");
+      return;
+    }
+    var numbers = Array.isArray(result.data.locker_numbers) ? result.data.locker_numbers.slice() : [];
+    if (!numbers.length && primary) numbers = [primary.locker_number];
+    var url = payUrl(size);
+    show("lockerRenewMsg", renewalMessage(numbers, size, primary ? primary.locker_number : numbers[0]), "success");
+    if (popup) {
+      try {
+        popup.opener = null;
+        popup.location.href = url;
+      } catch (e4) {
+        try { popup.close(); } catch (e6) {}
+        window.location.href = url;
+      }
+    } else {
+      window.location.href = url;
+    }
+    try { await loadMember(); } catch (e5) {}
+  }
 
   function bindMember() {
     if (bound) return;
@@ -183,6 +348,17 @@
       var a = ev.target && ev.target.closest ? ev.target.closest("a") : null;
       if (a && a.getAttribute("aria-disabled") === "true") ev.preventDefault();
     });
+    var heldBox = document.getElementById("lockerHeld");
+    if (heldBox) {
+      heldBox.addEventListener("click", function (ev) {
+        var button = ev.target && ev.target.closest ? ev.target.closest("[data-renew-locker]") : null;
+        if (!button || button.disabled) return;
+        ev.preventDefault();
+        var popup = null;
+        try { popup = window.open("about:blank", "_blank"); } catch (e) { popup = null; }
+        renewLockers(button, popup);
+      });
+    }
     form.addEventListener("submit", async function (ev) {
       ev.preventDefault();
       var client = sb();
@@ -284,7 +460,7 @@
       '<div class="app-head"><span class="ic">🔑</span><div><h2>Locker rentals</h2>' +
       '<small>Queue, inventory, and assign a number</small></div></div>' +
       '<div class="app-body hub-ei" id="hubLockerBody">' +
-      '<p class="hub-ei-note">Members join the list first. A Zeffy payment for these campaigns marks the matching reservation paid and claims the next open locker of that size. Assign a number here when none were open, or when the payer email did not match a reservation.</p>' +
+      '<p class="hub-ei-note">Members join the list first. A Zeffy payment for these campaigns marks the matching reservation paid and claims the next open locker of that size. A renewal stays on the locker they already hold. If they pay for more than one, that many lockers are marked paid. Assign a number here when none were open, or when the payer email did not match a reservation.</p>' +
       '<p class="hub-ei-note" id="hubLockerCounts"></p>' +
       '<h3>Zeffy pay links</h3>' +
       '<div class="hub-ei-grid">' +
@@ -403,6 +579,9 @@
   }
 
   function reservationPaid(r, locker) {
+    // A renewal pays again for a locker that is already paid. The locker
+    // status alone does not mean this season's renewal is paid.
+    if (r && r.is_renewal) return !!r.paid_at;
     return !!(r.paid_at || (locker && locker.status === "paid"));
   }
 
@@ -503,7 +682,7 @@
             actions += '<button type="button" class="btn btn-primary" data-assign="' + esc(r.id) + '" style="padding:6px 10px">Assign</button>';
           }
           return '<tr><td>' + esc(queuePlace(reservations, r, lockerOf)) + '</td><td>' + esc(person.display) +
-            '</td><td>' + esc(r.requester_email || "") + '</td><td>' + esc(r.size) +
+            '</td><td>' + esc(r.requester_email || "") + '</td><td>' + esc(r.size) + (r.is_renewal ? " renewal" : "") +
             '</td><td>' + (paid ? "Yes" : "No") + '</td><td>' + esc(locker && locker.locker_number || "") +
             '</td><td>' + actions + '</td></tr>';
         }).join("");
@@ -548,7 +727,10 @@
       var inv = await client.from("lockers").select("id,locker_number,size,holder_name,holder_email,status,notes,member_id");
       if (inv && inv.error) throw inv.error;
       inventory = inv.data || [];
-      var res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id");
+      var res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id,is_renewal");
+      if (res && res.error) {
+        res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id");
+      }
       if (res && res.error) throw res.error;
       reservations = (res.data || []).filter(function (r) { return r.status !== "cancelled"; });
       var members = [];

@@ -1,5 +1,8 @@
 -- Krewe of Shamrock: locker inventory, FCFS reservations, Zeffy pay links.
 -- APPLY IN THE SUPABASE SQL EDITOR. The website does not run this file.
+-- Renewals (My lockers) live in sql/kos_locker_renewals.sql.
+-- If you re-run THIS file, run sql/kos_locker_renewals.sql again afterward.
+-- This file replaces the renewal functions with the earlier single-locker claim.
 -- Project: oazwkwflgbthojvnclfc. Safe to re-run.
 --
 -- Re-running resets the four Zeffy keys below to the URLs in this file.
