@@ -77,6 +77,9 @@ test("Reserve a locker shows Tim's open counts and the real Zeffy pay links", as
     document.getElementById("lockerPayLarge").removeAttribute("aria-disabled");
   });
   await expect(page.locator("#lockerMine")).toContainText("You're not on the list yet. Join above to save your spot.");
+  await expect(page.locator("#lockerHeld")).toBeHidden();
+  await expect(page.locator("#lockerCard").locator("button", { hasText: "Free" })).toHaveCount(0);
+  await expect(page.locator("#lockerCard [data-free]")).toHaveCount(0);
   assertHealthy(expect, report, "locker pay links");
 });
 
@@ -172,6 +175,8 @@ test("Officer locker desk lists the queue and the Zeffy links", async ({ page })
   await expect(page.locator("#hubLockerInventory")).toContainText("LL2");
   await expect(page.locator("#hubLockerInventory")).toContainText("Open");
   await expect(page.locator("#hubLockerInventory")).toContainText("Tim Fitz");
+  await expect(page.locator("#hubLockerInventory").locator("button", { hasText: "Free" })).toHaveCount(2);
+  await expect(page.locator("#lockerCard").locator("button", { hasText: "Free" })).toHaveCount(0);
   assertHealthy(expect, report, "officer locker queue");
 });
 
@@ -311,4 +316,195 @@ test("Reservation names come from the roster, and paid inventory hides the waiti
   await expect(page.locator("#hubLockerInventory")).toContainText("Doug Tully");
   await expect(page.locator("#hubLockerQueue")).not.toContainText("\u2014");
   assertHealthy(expect, report, "reservation name and inventory sync");
+});
+
+test("A member who holds lockers can renew them on the matching Zeffy link", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page);
+  await page.locator('[data-hub-tab="parade"]').click();
+  await page.evaluate(() => {
+    window.__kosRenewal = null;
+    window.__kosOpened = null;
+    window.open = function () {
+      var loc = {};
+      var popup = {
+        location: loc,
+        close: function () { window.__kosClosed = true; }
+      };
+      Object.defineProperty(loc, "href", {
+        set: function (v) { window.__kosOpened = v; },
+        get: function () { return window.__kosOpened; }
+      });
+      return popup;
+    };
+    const held = [
+      { id: "rs1", locker_number: "RS1", size: "small", status: "paid", holder_name: "Tim Fitz", renewal_open: false, renewal_paid: false },
+      { id: "rs2", locker_number: "RS2", size: "small", status: "paid", holder_name: "Debbie Fitz", renewal_open: false, renewal_paid: false }
+    ];
+    const numbers = { rs1: "RS1", rs2: "RS2" };
+    window.__kosSb = {
+      auth: { getSession: async () => ({ data: { session: { user: { id: "tim" } } } }) },
+      from() {
+        return { select: async () => ({ data: [], error: null }) };
+      },
+      rpc: async (name, args) => {
+        if (name === "locker_availability") return { data: { small: 5, large: 8 }, error: null };
+        if (name === "my_locker_reservations") return { data: [], error: null };
+        if (name === "my_held_lockers") return { data: held, error: null };
+        if (name === "is_krewe_officer") return { data: false, error: null };
+        if (name === "member_request_locker_renewal") {
+          window.__kosRenewal = args;
+          return {
+            data: {
+              ok: true,
+              locker_numbers: (args.p_locker_ids || []).map((id) => numbers[id])
+            },
+            error: null
+          };
+        }
+        return { data: null, error: null };
+      }
+    };
+    return window.kosLoadLockers();
+  });
+
+  const card = page.locator("#deskTravel #lockerCard");
+  const held = card.locator("#lockerHeld");
+  await expect(held).toBeVisible();
+  await expect(held.locator("h3")).toHaveText("My lockers");
+  await expect(held).toContainText("Locker RS1");
+  await expect(held).toContainText("Locker RS2");
+  await expect(held).toContainText("Small");
+  await expect(held).toContainText("Tim Fitz");
+  await expect(held).toContainText("Debbie Fitz");
+  await expect(held.locator("#lockerHeldQty")).toHaveText("You have 2 small lockers. You can pay for all of them in one checkout. On the Zeffy page, set the quantity to 2.");
+  await expect(held).not.toContainText("\u2014");
+  await expect(held.locator("button", { hasText: "Renew for next season" })).toHaveCount(2);
+  await expect(card.locator("button", { hasText: "Free" })).toHaveCount(0);
+  await expect(card.locator("[data-free]")).toHaveCount(0);
+  await expect(card.locator("#lkSize")).not.toContainText("available");
+  await expect(card.locator("#lockerMine")).toContainText("Use My lockers above to renew one you already have.");
+
+  const renew = held.locator("button", { hasText: "Renew for next season" }).first();
+  const tone = await renew.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { color: cs.color, opacity: cs.opacity, backgroundImage: cs.backgroundImage };
+  });
+  expect(tone.color, "Renew label must be white on the green button").toBe("rgb(255, 255, 255)");
+  expect(Number(tone.opacity)).toBe(1);
+  expect(tone.backgroundImage).toContain("rgb(43, 139, 81)");
+
+  await held.locator('button[aria-label="Renew locker RS2 for next season"]').click();
+  await expect.poll(async () => page.evaluate(() => window.__kosRenewal && window.__kosRenewal.p_locker_ids)).toEqual(["rs2", "rs1"]);
+  await expect.poll(async () => page.evaluate(() => window.__kosOpened)).toBe(SMALL_URL);
+  await expect(held.locator("#lockerRenewMsg")).toContainText("Renewal saved for RS2 and RS1.");
+  await expect(held.locator("#lockerRenewMsg")).toContainText("Set the quantity to 2");
+  await expect(held.locator("#lockerRenewMsg")).toContainText("RS2 is marked paid first.");
+  await expect(held.locator("#lockerRenewMsg")).not.toContainText("\u2014");
+  assertHealthy(expect, report, "renew held lockers");
+});
+
+test("One large locker renews on the large Zeffy link, and a paid renewal cannot be bought again", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page);
+  await page.locator('[data-hub-tab="parade"]').click();
+  await page.evaluate(() => {
+    window.__kosRenewal = null;
+    window.__kosOpened = null;
+    window.open = function () {
+      var loc = {};
+      Object.defineProperty(loc, "href", {
+        set: function (v) { window.__kosOpened = v; }
+      });
+      return { location: loc, close: function () {} };
+    };
+    window.__kosSb = {
+      auth: { getSession: async () => ({ data: { session: { user: { id: "doug" } } } }) },
+      from() {
+        return { select: async () => ({ data: [], error: null }) };
+      },
+      rpc: async (name, args) => {
+        if (name === "locker_availability") return { data: { small: 1, large: 1 }, error: null };
+        if (name === "my_locker_reservations") return { data: [], error: null };
+        if (name === "my_held_lockers") {
+          return {
+            data: [
+              { id: "rl7", locker_number: "RL7", size: "large", status: "paid", holder_name: "Doug Tully", renewal_open: false, renewal_paid: false },
+              { id: "rs4", locker_number: "RS4", size: "small", status: "assigned", holder_name: "Perkins", renewal_open: false, renewal_paid: true }
+            ],
+            error: null
+          };
+        }
+        if (name === "member_request_locker_renewal") {
+          window.__kosRenewal = args;
+          return { data: { ok: true, locker_numbers: ["RL7"] }, error: null };
+        }
+        return { data: false, error: null };
+      }
+    };
+    return window.kosLoadLockers();
+  });
+
+  const held = page.locator("#lockerHeld");
+  await expect(held).toBeVisible();
+  await expect(held.locator("#lockerHeldQty")).toBeEmpty();
+  await expect(held.locator('button[aria-label="Renew locker RL7 for next season"]')).toBeVisible();
+  const paid = held.locator("button", { hasText: "Paid for next season" });
+  await expect(paid).toBeDisabled();
+  await expect(paid).not.toHaveAttribute("data-renew-locker", /.+/);
+  const paidTone = await paid.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { color: cs.color, opacity: cs.opacity };
+  });
+  expect(paidTone.color).toBe("rgb(255, 255, 255)");
+  expect(Number(paidTone.opacity)).toBe(1);
+
+  await held.locator('button[aria-label="Renew locker RL7 for next season"]').click();
+  await expect.poll(async () => page.evaluate(() => window.__kosRenewal && window.__kosRenewal.p_locker_ids)).toEqual(["rl7"]);
+  await expect.poll(async () => page.evaluate(() => window.__kosOpened)).toBe(LARGE_URL);
+  await expect(held.locator("#lockerRenewMsg")).toContainText("Renewal saved for RL7.");
+  await expect(held.locator("#lockerRenewMsg")).not.toContainText("quantity");
+  assertHealthy(expect, report, "single locker renewal");
+});
+
+test("An unpaid renewal on a locker that is already paid still shows Mark paid", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
+  await page.locator('[data-hub-tab="officer"]').click();
+  await expect(page.locator("#hubLockers")).toBeAttached();
+  await page.evaluate(() => {
+    window.kosPaintLockerOfficer({
+      urls: {
+        small: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small",
+        large: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-large",
+        smallCampaign: "Krewe locker rental – Small",
+        largeCampaign: "Krewe locker rental – Large"
+      },
+      inventory: [
+        { id: "rs1", locker_number: "RS1", size: "small", holder_name: "Tim Fitz", status: "paid" },
+        { id: "rs10", locker_number: "RS10", size: "small", holder_name: null, status: "available" }
+      ],
+      reservations: [
+        {
+          id: "renew1",
+          requester_name: "Tim Fitzpatrick",
+          requester_email: "tim@example.com",
+          size: "small",
+          status: "assigned",
+          is_renewal: true,
+          paid_at: null,
+          locker_id: "rs1",
+          created_at: "2026-10-29T12:00:00Z"
+        }
+      ]
+    });
+  });
+  await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
+  const row = page.locator("#hubLockerQueue tr").filter({ hasText: "tim@example.com" });
+  await expect(row.locator("td").nth(3)).toHaveText("small renewal");
+  await expect(row.locator("td").nth(4)).toHaveText("No");
+  await expect(row.locator("td").nth(5)).toHaveText("RS1");
+  await expect(row.locator("button", { hasText: "Mark paid" })).toBeVisible();
+  await expect(row.locator("button", { hasText: "Assign" })).toHaveCount(0);
+  assertHealthy(expect, report, "unpaid renewal still markable");
 });
