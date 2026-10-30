@@ -369,6 +369,27 @@
       action === "tickets-soon" || action === "rsvp";
   }
 
+  // An event has ended once its end time has passed. With no end time, it
+  // ends when the start time passes. A featured event past that point is
+  // not highlighted on the public site.
+  function eventHasEnded(ev, now) {
+    now = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+    if (!ev) return true;
+    var end = ev.end_time ? new Date(ev.end_time) : null;
+    if (end && !isNaN(end.getTime())) return end.getTime() < now.getTime();
+    var start = ev.start_time ? new Date(ev.start_time) : null;
+    if (!start || isNaN(start.getTime())) return false;
+    return start.getTime() < now.getTime();
+  }
+
+  function isLiveFeatured(ev, now) {
+    if (!ev || !ev.is_featured) return false;
+    var status = String(ev.status || "published").toLowerCase();
+    if (status === "cancelled" || status === "draft") return false;
+    if (ev.is_public === false) return false;
+    return !eventHasEnded(ev, now);
+  }
+
   window.kosCalendar = {
     buildIcs: buildIcs,
     download: download,
@@ -380,6 +401,8 @@
     calendarLocation: calendarLocation,
     ticketCheckoutUrl: ticketCheckoutUrl,
     publicSignupAction: publicSignupAction,
-    signupDropdownAction: signupDropdownAction
+    signupDropdownAction: signupDropdownAction,
+    eventHasEnded: eventHasEnded,
+    isLiveFeatured: isLiveFeatured
   };
 })();
