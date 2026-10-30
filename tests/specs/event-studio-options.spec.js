@@ -37,6 +37,8 @@ test.describe("Event Studio optional fields", () => {
     await expect(page.locator("#hubEventStudio")).toContainText("Public location teaser");
     await expect(page.locator("#hubEventStudio")).toContainText("Private / member address");
     await expect(page.locator("#hubEventStudio")).toContainText("Members only");
+    await expect(page.locator("#hubEventVisibilityHint")).toHaveText("Members only events don't appear on the public website.");
+    await expect(page.locator("#hubEventFeatureToggle")).toContainText("Feature on public site");
     await expect(page.locator("#hubEventStudio")).toContainText("Door check-in");
     await expect(page.locator("#hubEventStudio")).toContainText("RSVP QR");
     await expect(page.locator("#hubEventStart")).toBeVisible();
@@ -89,39 +91,28 @@ test.describe("Event Studio permanent delete", () => {
     await expect(page.locator("#hubEventDeletePanel")).toBeVisible();
   }
 
-  test("keeps Cancelled status and requires typed confirm before delete", async ({ page }) => {
+  test("confirm dialog deletes without typing and keeps Cancelled status", async ({ page }) => {
     const report = watchPage(page);
     await openEventStudio(page);
 
     await expect(page.locator("#hubEventStatus option[value='cancelled']")).toHaveCount(1);
+    await expect(page.locator("#hubEventDelete")).toHaveText("Delete");
     await expect(page.locator("#hubEventDelete")).toBeHidden();
     await expect(page.locator("#hubEventDeletePanel")).toBeHidden();
+    await expect(page.locator("#hubEventDeleteTyped")).toHaveCount(0);
 
     await openDeleteConfirm(page);
-    await expect(page.locator("#hubEventDeletePanel")).toContainText("Mistaken Mixer");
-    await expect(page.locator("#hubEventDeletePanel")).toContainText("Delete permanently");
-    await expect(page.locator("#hubEventDeleteGo")).toBeDisabled();
-
-    await page.locator("#hubEventDeleteTyped").fill("wrong name");
-    await expect(page.locator("#hubEventDeleteGo")).toBeDisabled();
-
-    await page.locator("#hubEventDeleteTyped").fill("Mistaken Mixer");
+    await expect(page.locator("#hubEventDeleteSummary")).toContainText(/Delete Mistaken Mixer on .+?\?/);
+    await expect(page.locator("#hubEventDeleteSummary")).toContainText("This also removes its RSVPs. This can't be undone.");
     await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
+    await expect(page.locator("#hubEventDeleteGo")).toHaveText("Delete");
+    await expect(page.locator("#hubEventDeleteCancel")).toHaveText("Cancel");
 
     await page.locator("#hubEventDeleteCancel").click();
     await expect(page.locator("#hubEventDeletePanel")).toBeHidden();
     await expect(page.locator("#hubEventId")).toHaveValue("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    await expect(page.locator("#hubEventMsg")).toContainText(/Delete cancelled/i);
 
     await openDeleteConfirm(page);
-    await page.locator("#hubEventDeleteTyped").fill("Delete permanently");
-    await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
-
-    const summary = await page.locator("#hubEventDeleteSummary").innerText();
-    await page.locator("#hubEventDeleteTyped").fill(summary.replace(" - ", " — "));
-    await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
-    await page.locator("#hubEventDeleteTyped").fill(summary);
-    await expect(page.locator("#hubEventDeleteGo")).toBeEnabled();
     await page.locator("#hubEventDeleteGo").click();
     await expect(page.locator("#hubEventDeleteErr")).not.toHaveText("", { timeout: 8000 });
     await expect(page.locator("#hubEventDeletePanel")).toBeVisible();
@@ -137,11 +128,145 @@ test.describe("Event Studio permanent delete", () => {
     await openEventStudio(page);
     await openDeleteConfirm(page);
     await expect(page.locator("#hubEventDeleteSummary")).toBeVisible();
-    await expect(page.locator("#hubEventDeleteTyped")).toBeVisible();
     await expect(page.locator("#hubEventDeleteCancel")).toBeVisible();
+    await expect(page.locator("#hubEventDeleteGo")).toBeVisible();
     await page.locator("#hubEventDeleteCancel").click();
     await expect(page.locator("#hubEventDeletePanel")).toBeHidden();
     assertHealthy(expect, report, "event studio permanent delete mobile");
+  });
+
+  test("confirmed delete removes the row and sends the server confirm token", async ({ page }) => {
+    const report = watchPage(page);
+    await page.goto("/members.html");
+    await page.waitForFunction(() => window.__kosSb && typeof window.__kosSb.rpc === "function");
+    await page.evaluate(() => {
+      const events = [
+        { id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", name: "Mistaken Mixer", start_time: "2026-11-02T22:00:00.000Z", status: "published", is_public: true, event_type: "social" },
+        { id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", name: "Keep This Social", start_time: "2026-12-01T23:00:00.000Z", status: "published", is_public: true, event_type: "social" }
+      ];
+      window.__kosStudioEvents = events;
+      const client = window.__kosSb;
+      const orig = client.rpc.bind(client);
+      window.__kosDeleteCalls = [];
+      client.rpc = async function (name, args) {
+        if (name === "officer_list_events") {
+          return { data: { ok: true, events: window.__kosStudioEvents }, error: null };
+        }
+        if (name === "officer_delete_event") {
+          window.__kosDeleteCalls.push(args);
+          window.__kosStudioEvents = window.__kosStudioEvents.filter((row) => String(row.id) !== String(args.p_event_id));
+          return { data: { ok: true, name: "Mistaken Mixer", event_id: args.p_event_id }, error: null };
+        }
+        if (name === "officer_list_event_raffles" || name === "officer_get_event_emails") {
+          return { data: { ok: true, raffles: [] }, error: null };
+        }
+        try { return await orig(name, args); }
+        catch (e) { return { data: null, error: { message: (e && e.message) || String(e) } }; }
+      };
+    });
+    await page.evaluate((role) => {
+      const auth = document.getElementById("authStage");
+      if (auth) auth.style.display = "none";
+      const content = document.getElementById("memberContent");
+      if (content) content.style.display = "block";
+      if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
+      if (typeof window.kosUnlock === "function") window.kosUnlock();
+    }, { officer: true, canManageEvents: true });
+    await page.waitForSelector('[data-hub-goto="event-studio"]');
+    await page.locator('[data-hub-goto="event-studio"]').click();
+    await expect(page.locator("#hubEventStudio")).toBeVisible();
+    await expect(page.locator("[data-event-delete]")).toHaveCount(2);
+    await expect(page.locator("[data-event-delete]").first()).toHaveText("Delete");
+
+    await page.locator("[data-event-delete]").first().click();
+    await expect(page.locator("#hubEventDeletePanel")).toContainText("Mistaken Mixer");
+    await page.locator("#hubEventDeleteCancel").click();
+    await expect(page.locator("#hubEventDeletePanel")).toBeHidden();
+    await expect(page.locator("[data-event-delete]")).toHaveCount(2);
+
+    await page.locator("[data-event-delete]").first().click();
+    await page.locator("#hubEventDeleteGo").click();
+    await expect(page.locator("#hubEventListMsg")).toHaveText("Deleted");
+    await expect(page.locator("#hubEventList")).not.toContainText("Mistaken Mixer");
+    await expect(page.locator("#hubEventList")).toContainText("Keep This Social");
+    const calls = await page.evaluate(() => window.__kosDeleteCalls);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].p_confirm).toBe("Delete permanently");
+    expect(calls[0].p_event_id).toBe("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    assertHealthy(expect, report, "event studio delete removes the row");
+  });
+});
+
+test.describe("Feature on public site", () => {
+  test("star toggle explains a draft members-only event, then publishes it", async ({ page }) => {
+    const report = watchPage(page);
+    await page.goto("/members.html");
+    await page.waitForFunction(() => window.__kosSb && typeof window.__kosSb.rpc === "function");
+    await page.evaluate(() => {
+      window.__kosStudioEvents = [
+        {
+          id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+          name: "House Party",
+          start_time: "2026-12-05T23:00:00.000Z",
+          end_time: "2026-12-06T02:00:00.000Z",
+          status: "draft",
+          is_public: false,
+          members_only: true,
+          is_featured: false,
+          event_type: "social"
+        }
+      ];
+      window.__kosFeatureCalls = [];
+      const client = window.__kosSb;
+      const orig = client.rpc.bind(client);
+      client.rpc = async function (name, args) {
+        if (name === "officer_list_events") return { data: { ok: true, events: window.__kosStudioEvents }, error: null };
+        if (name === "officer_upsert_event") {
+          window.__kosFeatureCalls.push(args && args.p);
+          const row = window.__kosStudioEvents[0];
+          Object.assign(row, args.p);
+          return { data: { ok: true, event: row }, error: null };
+        }
+        if (name === "officer_list_event_raffles" || name === "officer_get_event_emails") {
+          return { data: { ok: true, raffles: [] }, error: null };
+        }
+        try { return await orig(name, args); }
+        catch (e) { return { data: null, error: { message: (e && e.message) || String(e) } }; }
+      };
+    });
+    await page.evaluate((role) => {
+      const auth = document.getElementById("authStage");
+      if (auth) auth.style.display = "none";
+      const content = document.getElementById("memberContent");
+      if (content) content.style.display = "block";
+      if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
+      if (typeof window.kosUnlock === "function") window.kosUnlock();
+    }, { officer: true, canManageEvents: true });
+    await page.locator('[data-hub-goto="event-studio"]').click();
+    await expect(page.locator("#hubEventStudio")).toBeVisible();
+    const star = page.locator("[data-event-feature]");
+    await expect(star).toContainText("Feature on public site");
+    await expect(star).toHaveAttribute("aria-pressed", "false");
+    await star.click();
+    await expect(page.locator("#hubEventFeaturePanel")).toBeVisible();
+    await expect(page.locator("#hubEventFeatureSummary")).toContainText("Feature House Party on the public site?");
+    await expect(page.locator("#hubEventFeatureSummary")).toContainText("members only and still a draft");
+    await expect(page.locator("#hubEventFeatureSummary")).toContainText("Featuring it makes it public and published.");
+    await page.locator("#hubEventFeatureCancel").click();
+    await expect(page.locator("#hubEventFeaturePanel")).toBeHidden();
+    await expect(star).toHaveAttribute("aria-pressed", "false");
+
+    await star.click();
+    await page.locator("#hubEventFeatureGo").click();
+    await expect(page.locator("#hubEventListMsg")).toHaveText("Featured on the public site.");
+    await expect(star).toHaveAttribute("aria-pressed", "true");
+    const calls = await page.evaluate(() => window.__kosFeatureCalls);
+    expect(calls[0].is_featured).toBe(true);
+    expect(calls[0].is_public).toBe(true);
+    expect(calls[0].members_only).toBe(false);
+    expect(calls[0].status).toBe("published");
+    expect(calls[0].p_confirm).toBeUndefined();
+    assertHealthy(expect, report, "feature on public site");
   });
 });
 

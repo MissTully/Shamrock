@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260930return1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261030feature1" />
 <style>
 .kos-cal-offer{margin-top:14px;padding:12px 14px;border:1px solid rgba(168,128,28,.45);border-radius:12px;background:#fffdf8;}
 .kos-cal-offer p{margin:0 0 10px;font-size:15px;color:#3a3a2e;line-height:1.4;}
@@ -61,6 +61,7 @@
     display:block; white-space:pre-wrap; overflow-wrap:anywhere;}
   .ev-card .ev-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
   #featured-event-content.feature{align-items:start;}
+  .ev-card.is-featured{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(20,83,45,.12), var(--shadow);}
   .feature .ft-text, .feature .ft-media{min-width:0;}
   .feature .ft-text{overflow:visible;}
   .feature .ft-text h2, .feature .ft-text p{overflow-wrap:anywhere; white-space:normal;}
@@ -337,7 +338,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20260930cal3"></script>
+  <script src="assets/kos-calendar.js?v=20261030feature1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -410,7 +411,7 @@
       return "Members only. Sign in for details and address.";
     }
 
-    function renderFeaturedEvent(event) {
+    function renderFeaturedEvent(event, officerPinned) {
       const title = document.getElementById("featured-event-title");
       const sub = document.getElementById("featured-event-sub");
       const content = document.getElementById("featured-event-content");
@@ -439,8 +440,8 @@
       } else {
         media = '<div style="display:grid;place-items:center;min-height:220px;padding:24px;background:linear-gradient(160deg,#1a3a24,#0d1f14);color:#f5e6b8;border-radius:12px;font-family:var(--display);text-align:center;">Event image coming soon<br><small style="font-family:var(--fancy);font-style:italic;opacity:.85;">Officers can upload in Event Studio</small></div>';
       }
-      title.textContent = "Featured Event: " + (event.name || "Upcoming Krewe event");
-      sub.textContent = "Full details for our next public Krewe event";
+      title.textContent = (officerPinned ? "Featured event: " : "Featured Event: ") + (event.name || "Upcoming Krewe event");
+      sub.textContent = officerPinned ? "Highlighted on the public site" : "Full details for our next public Krewe event";
       const closedFeat = isRegistrationClosed(event);
       const membersOnlyFeat = !!event.members_only;
       const featAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
@@ -510,9 +511,12 @@
           : (pay
           ? '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
           : '<a class="btn btn-primary" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">RSVP</a>');
-        return '<article class="ev-card">' +
+        const featuredCard = !!(window.kosCalendar && window.kosCalendar.isLiveFeatured && window.kosCalendar.isLiveFeatured(ev));
+        return '<article class="ev-card' + (featuredCard ? ' is-featured' : '') + '">' +
           '<div class="ev-media">' + media + '</div>' +
-          '<div class="ev-body"><h3>' + esc(ev.name) + '</h3>' +
+          '<div class="ev-body">' +
+          (featuredCard ? '<p class="ev-meta"><b>Featured</b></p>' : '') +
+          '<h3>' + esc(ev.name) + '</h3>' +
           '<p class="ev-meta"><b>When:</b> ' + esc(when) + '</p>' +
           '<p class="ev-meta"><b>Where:</b> ' + esc(publicWhere(ev) || 'Address to be announced') + '</p>' +
           (membersOnlyPrev ? '<p class="ev-meta"><b>Members only.</b> ' + esc(membersOnlyLabel()) + '</p>' : '') +
@@ -821,9 +825,9 @@
         const action = String(ev.event_type || "").toLowerCase() === "parade" ? "parade" : "rsvp";
         return !!dropdownActions[action];
       });
-      const pinned = signupEvents.find((ev) => ev.is_featured) || null;
+      const pinned = signupEvents.find((ev) => window.kosCalendar && window.kosCalendar.isLiveFeatured && window.kosCalendar.isLiveFeatured(ev)) || null;
       const featured = pinned || signupEvents[0] || null;
-      renderFeaturedEvent(featured);
+      renderFeaturedEvent(featured, !!pinned);
       renderEventPreviews(signupEvents);
       injectEventSchema(ours);
       buildCalendar(data);

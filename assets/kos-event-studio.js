@@ -18,10 +18,18 @@
     ".hub-event-row .muted{color:var(--muted);font-size:13px;line-height:1.45;}",
     ".hub-event-row .hub-appr-btns{flex:none;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}",
     ".btn.btn-danger,.hub-event-form .btn-danger{border-color:#b3452e;color:#8b2e1c;background:#fff5f2;}",
-    ".hub-event-delete-panel{margin-top:16px;padding:14px;border:1px solid #b3452e;border-radius:12px;background:#fff5f2;}",
-    ".hub-event-delete-panel h4{margin:0 0 8px;font-family:var(--display);color:#8b2e1c;font-size:16px;}",
-    ".hub-event-delete-panel p{font-size:13px;color:#5c2b20;line-height:1.45;margin:0 0 8px;}",
-    ".hub-event-delete-panel #hubEventDeleteErr{color:#8b2e1c;min-height:1.2em;}",
+    ".hub-event-delete-dialog{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(12,40,24,.55);}",
+    ".hub-event-delete-dialog[hidden]{display:none !important;}",
+    ".hub-event-delete-card{width:min(440px,100%);background:#fffdf4;color:var(--green-800);border:2px solid rgba(168,128,28,.75);border-radius:16px;padding:18px 18px 14px;box-shadow:0 16px 40px rgba(12,40,24,.28);}",
+    ".hub-event-delete-card p{font-family:var(--display);font-size:17px;line-height:1.45;margin:0 0 16px;color:var(--green-800);}",
+    ".hub-event-delete-card .hub-appr-btns{justify-content:flex-end;}",
+    ".hub-event-delete-card #hubEventDeleteErr{font-family:inherit;font-size:14px;color:#8b2e1c;min-height:0;margin:10px 0 0;}",
+    ".hub-event-delete-card #hubEventDeleteErr:empty{display:none;}",
+    ".hub-feature-row{margin:0 0 10px;}",
+    ".hub-feature-toggle{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(168,128,28,.7);background:#fffdf4;color:var(--green-800);border-radius:999px;padding:8px 14px;font-family:var(--display);font-size:14px;cursor:pointer;line-height:1.2;}",
+    ".hub-feature-toggle .star{color:var(--gold-deep);font-size:16px;line-height:1;}",
+    ".hub-feature-toggle[aria-pressed='true']{background:var(--green-800);color:#f6efdc;border-color:var(--gold);}",
+    ".hub-feature-toggle[aria-pressed='true'] .star{color:var(--gold);}",
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
     ".hub-flyer-note{font-size:12px;color:var(--muted);margin:4px 0 0;}",
@@ -111,9 +119,11 @@
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
       '<label><input type="checkbox" id="hubEventMembersOnly" /> Members only</label>' +
-      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label>' +
-      '<label><input type="checkbox" id="hubEventFeatured" /> Featured Event</label></div>' +
-      '<p class="hub-opt-hint" style="margin:-4px 0 10px;">Members only: public pages show title, date, and the teaser, plus a sign-in note. Uncheck Public event to hide it from the public calendar. The street address stays off public pages either way.</p>' +
+      '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
+      '<div class="hub-feature-row"><button class="hub-feature-toggle" type="button" id="hubEventFeatureToggle" aria-pressed="false"><span class="star" aria-hidden="true">\u2606</span> Feature on public site</button>' +
+      '<p class="hub-opt-hint" style="margin:6px 0 0;">Featuring an event makes it public and published. Only one event is featured at a time. Ended events are not highlighted.</p></div>' +
+      '<p class="hub-opt-hint" id="hubEventVisibilityHint" style="margin:-4px 0 4px;">Members only events don\'t appear on the public website.</p>' +
+      '<p class="hub-opt-hint" style="margin:0 0 10px;">The street address stays off public pages either way. Uncheck Public event to hide an event from the public calendar.</p>' +
       '<div class="hub-event-grid">' +
       '<div><label for="hubEventStatus">Status</label><select id="hubEventStatus"><option value="draft">Draft</option><option value="cancelled">Cancelled</option></select></div>' +
       '<div><label for="hubEventTicketLabel">Ticket label</label><input id="hubEventTicketLabel" placeholder="e.g. Member ticket" /></div>' +
@@ -177,28 +187,34 @@
       '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"><button class="btn btn-primary" type="submit" id="hubEventSave">☘ Save event</button>' +
       '<button class="btn btn-primary" type="button" id="hubEventPublish" hidden style="display:none">Publish</button>' +
       '<button class="btn" type="button" id="hubEventNew">New / clear</button>' +
-      '<button class="btn btn-danger" type="button" id="hubEventDelete" hidden style="display:none">Delete permanently</button></div>' +
-      '<p class="hub-flyer-note" id="hubEventDeleteHint" hidden>To hide this event without removing it, set Status to Cancelled. Delete permanently is only for mistaken events.</p>' +
+      '<button class="btn btn-danger" type="button" id="hubEventDelete" hidden style="display:none">Delete</button></div>' +
+      '<p class="hub-flyer-note" id="hubEventDeleteHint" hidden>To hide this event without removing it, set Status to Cancelled.</p>' +
       '<p class="hub-event-msg" id="hubEventMsg" aria-live="polite"></p></form>' +
-      eventDeletePanelHtml() + '</div>';
+      eventDeletePanelHtml() + eventFeaturePanelHtml() + '</div>';
   }
 
   function eventDeletePanelHtml() {
-    return '<div class="hub-event-delete-panel" id="hubEventDeletePanel" hidden>' +
-      '<h4>Delete this event permanently?</h4>' +
+    return '<div class="hub-event-delete-dialog" id="hubEventDeletePanel" hidden role="dialog" aria-modal="true" aria-labelledby="hubEventDeleteSummary">' +
+      '<div class="hub-event-delete-card">' +
       '<p id="hubEventDeleteSummary"></p>' +
-      '<p>This removes the event from Event Studio and the public calendar. RSVPs for this event are deleted. Payment records stay; the event link on them is cleared. Linked raffles are unlinked, not deleted. Cancelled status hides an event without destroying it.</p>' +
-      '<label for="hubEventDeleteTyped">Type the name shown above, or Delete permanently</label>' +
-      '<input id="hubEventDeleteTyped" autocomplete="off" />' +
-      '<div class="hub-appr-btns" style="margin-top:10px;">' +
+      '<div class="hub-appr-btns">' +
       '<button class="btn" type="button" id="hubEventDeleteCancel">Cancel</button>' +
-      '<button class="btn btn-danger" type="button" id="hubEventDeleteGo" disabled>Delete permanently</button></div>' +
-      '<p class="hub-event-msg" id="hubEventDeleteErr" aria-live="polite"></p></div>';
+      '<button class="btn btn-danger" type="button" id="hubEventDeleteGo">Delete</button></div>' +
+      '<p class="hub-event-msg" id="hubEventDeleteErr" aria-live="assertive"></p></div></div>';
+  }
+
+  function eventFeaturePanelHtml() {
+    return '<div class="hub-event-delete-dialog" id="hubEventFeaturePanel" hidden role="dialog" aria-modal="true" aria-labelledby="hubEventFeatureSummary">' +
+      '<div class="hub-event-delete-card">' +
+      '<p id="hubEventFeatureSummary"></p>' +
+      '<div class="hub-appr-btns">' +
+      '<button class="btn" type="button" id="hubEventFeatureCancel">Cancel</button>' +
+      '<button class="btn btn-primary" type="button" id="hubEventFeatureGo">Feature</button></div></div></div>';
   }
 
   // Uploads a flyer file to the public "event-flyers" storage bucket and
   // returns its public URL. Storage RLS only lets can_manage_events() write.
-  var FLYER_NOTE_DEFAULT = "Upload fills the URL above. Published public events show on the Events page. Check Featured Event to pin one in the Featured spot (only one at a time).";
+  var FLYER_NOTE_DEFAULT = "Upload fills the URL above. Published public events show on the Events page. Feature on public site highlights one event. Only one event is featured at a time.";
   var FLYER_MAX_BYTES = 10 * 1024 * 1024;
   var FLYER_TYPES = {
     "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"
@@ -239,6 +255,10 @@
   var eventRaffles = [];
   var eventStudioList = [];
   var pendingDelete = null;
+  var deleteBusy = false;
+  var deleteReturnFocus = null;
+  var studioClient = null;
+  var DELETE_RPC_CONFIRM = "Delete permanently";
 
   function showEl(id, on) {
     var el = document.getElementById(id);
@@ -336,35 +356,35 @@
     fillRaffleEventSelect(current ? current.value : "");
   }
 
-  function normalizeConfirmText(value) {
-    return String(value || "")
-      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+  function eventOnDateLabel(value) {
+    if (!value) return "";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
   }
 
-  function confirmDeleteTextMatches(typed, name, when) {
-    var t = normalizeConfirmText(typed);
-    if (!t) return false;
-    if (t === "delete permanently") return true;
-    var n = normalizeConfirmText(name);
-    if (!n) return false;
-    if (t === n) return true;
-    var w = normalizeConfirmText(when);
-    if (!w) return false;
-    if (t === n + " - " + w || t === n + " " + w) return true;
-    var squash = function (s) { return normalizeConfirmText(s).replace(/[^a-z0-9]+/g, ""); };
-    return squash(typed) === squash(String(name || "") + " " + String(when || ""));
+  function deleteConfirmMessage(name, start) {
+    var title = String(name || "").trim() || "this event";
+    var date = eventOnDateLabel(start);
+    var lead = date ? ("Delete " + title + " on " + date + "?") : ("Delete " + title + "?");
+    return lead + " This also removes its RSVPs. This can't be undone.";
   }
 
-  function confirmTokenForRpc(typed, name, when) {
-    if (!confirmDeleteTextMatches(typed, name, when)) return "";
-    var raw = String(typed || "").trim();
-    var stored = String(name || "").trim();
-    if (raw.toLowerCase() === "delete permanently") return "Delete permanently";
-    if (stored && raw.toLowerCase() === stored.toLowerCase()) return stored;
-    return "Delete permanently";
+  function showDeletedMessage() {
+    var msg = document.getElementById("hubEventMsg");
+    var listMsg = document.getElementById("hubEventListMsg");
+    if (msg) msg.textContent = "Deleted";
+    if (listMsg) listMsg.textContent = "Deleted";
+  }
+
+  function removeEventFromList(id) {
+    var before = eventStudioList || [];
+    var next = before.filter(function (row) { return String(row.id) !== String(id); });
+    if (next.length === before.length) return;
+    eventStudioList = next;
+    renderEventList(eventStudioList);
+    var linked = document.getElementById("hubEventLinkedMeeting");
+    fillLinkedMeetingSelect(linked ? linked.value : "");
   }
 
   function showEventDeleteButton(on) {
@@ -381,57 +401,61 @@
     }
   }
 
+  function parkDialog(panel) {
+    if (panel && panel.parentNode !== document.body) document.body.appendChild(panel);
+    return panel;
+  }
+
   function hideDeletePanel() {
+    if (deleteBusy) return;
     pendingDelete = null;
     var panel = document.getElementById("hubEventDeletePanel");
-    var typed = document.getElementById("hubEventDeleteTyped");
     var err = document.getElementById("hubEventDeleteErr");
     var go = document.getElementById("hubEventDeleteGo");
-    if (typed) typed.value = "";
+    var cancel = document.getElementById("hubEventDeleteCancel");
     if (err) err.textContent = "";
     if (go) {
-      go.disabled = true;
-      go.textContent = "Delete permanently";
+      go.disabled = false;
+      go.textContent = "Delete";
     }
+    if (cancel) cancel.disabled = false;
     if (panel) {
       panel.hidden = true;
       panel.style.display = "none";
     }
+    var back = deleteReturnFocus;
+    deleteReturnFocus = null;
+    if (back && document.contains(back) && typeof back.focus === "function") {
+      try { back.focus(); } catch (e) {}
+    }
   }
 
-  function syncDeleteGoEnabled() {
-    var go = document.getElementById("hubEventDeleteGo");
-    var typed = document.getElementById("hubEventDeleteTyped");
-    if (!go) return;
-    go.disabled = !pendingDelete || !confirmDeleteTextMatches(typed && typed.value, pendingDelete.name, pendingDelete.when);
-  }
-
-  function showDeletePanel(event) {
+  function showDeletePanel(event, trigger) {
     var row = event || {};
     if (!row.id) return;
-    var whenText = eventLocalDisplay(row.start_time);
     pendingDelete = {
       id: row.id,
       name: row.name || "",
-      start_time: row.start_time || "",
-      when: whenText
+      start_time: row.start_time || ""
     };
-    var panel = document.getElementById("hubEventDeletePanel");
+    var panel = parkDialog(document.getElementById("hubEventDeletePanel"));
     var summary = document.getElementById("hubEventDeleteSummary");
-    var typed = document.getElementById("hubEventDeleteTyped");
     var err = document.getElementById("hubEventDeleteErr");
-    if (summary) {
-      summary.textContent = (pendingDelete.name || "This event") + (pendingDelete.when ? " - " + pendingDelete.when : "");
-    }
-    if (typed) typed.value = "";
+    var go = document.getElementById("hubEventDeleteGo");
+    var cancel = document.getElementById("hubEventDeleteCancel");
+    if (summary) summary.textContent = deleteConfirmMessage(pendingDelete.name, pendingDelete.start_time);
     if (err) err.textContent = "";
-    syncDeleteGoEnabled();
+    if (go) {
+      go.disabled = false;
+      go.textContent = "Delete";
+    }
+    if (cancel) cancel.disabled = false;
+    deleteReturnFocus = trigger || document.activeElement;
     if (panel) {
       panel.hidden = false;
-      panel.style.display = "";
-      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      panel.style.display = "flex";
     }
-    if (typed) typed.focus();
+    if (cancel) cancel.focus();
   }
 
   function eventFromFormForDelete() {
@@ -454,75 +478,318 @@
   async function runDeleteEvent(client) {
     var err = document.getElementById("hubEventDeleteErr");
     var go = document.getElementById("hubEventDeleteGo");
-    var typed = document.getElementById("hubEventDeleteTyped");
+    var cancel = document.getElementById("hubEventDeleteCancel");
     var msg = document.getElementById("hubEventMsg");
-    var typedText = typed ? typed.value.trim() : "";
+    if (deleteBusy) return;
     if (!pendingDelete || !pendingDelete.id) {
       if (err) err.textContent = "Choose an event to delete.";
       return;
     }
-    var confirm = confirmTokenForRpc(typedText, pendingDelete.name, pendingDelete.when);
-    if (!confirm) {
-      if (err) err.textContent = "Type the name shown above, or Delete permanently.";
-      return;
-    }
+    deleteBusy = true;
     if (go) {
       go.disabled = true;
-      go.textContent = "Deleting…";
+      go.textContent = "Deleting...";
     }
+    if (cancel) cancel.disabled = true;
     if (err) err.textContent = "";
+    var id = String(pendingDelete.id);
     try {
       var res = await client.rpc("officer_delete_event", {
         p_event_id: pendingDelete.id,
-        p_confirm: confirm
+        p_confirm: DELETE_RPC_CONFIRM
       });
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not delete event.");
-      var name = (res.data && res.data.name) || pendingDelete.name || "the event";
-      var id = String(pendingDelete.id);
+      deleteBusy = false;
       hideDeletePanel();
       var idEl = document.getElementById("hubEventId");
       if (idEl && String(idEl.value) === id) clearEventForm();
-      if (msg) msg.textContent = "Deleted " + name + ".";
-      await refreshEventStudio(client);
+      removeEventFromList(id);
+      showDeletedMessage();
+      refreshEventStudio(client, { quiet: true });
     } catch (e) {
+      deleteBusy = false;
       var text = (e && e.message) || String(e);
       if (err) err.textContent = text;
       if (msg) msg.textContent = "Couldn't delete: " + text;
-      if (go) go.textContent = "Delete permanently";
-      syncDeleteGoEnabled();
+      if (go) {
+        go.disabled = false;
+        go.textContent = "Delete";
+      }
+      if (cancel) cancel.disabled = false;
     }
   }
 
   function wireEventDelete(client) {
+    studioClient = client;
+    parkDialog(document.getElementById("hubEventDeletePanel"));
     var formBtn = document.getElementById("hubEventDelete");
     if (formBtn) {
       formBtn.addEventListener("click", function () {
-        showDeletePanel(eventFromFormForDelete());
+        showDeletePanel(eventFromFormForDelete(), formBtn);
       });
     }
     var cancel = document.getElementById("hubEventDeleteCancel");
-    if (cancel) {
-      cancel.addEventListener("click", function () {
-        hideDeletePanel();
-        var msg = document.getElementById("hubEventMsg");
-        if (msg) msg.textContent = "Delete cancelled. Nothing was removed.";
-      });
-    }
+    if (cancel) cancel.addEventListener("click", hideDeletePanel);
     var go = document.getElementById("hubEventDeleteGo");
-    if (go) {
-      go.addEventListener("click", function () { runDeleteEvent(client); });
-    }
-    var typed = document.getElementById("hubEventDeleteTyped");
-    if (typed) {
-      typed.addEventListener("input", syncDeleteGoEnabled);
-      typed.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
+    if (go) go.addEventListener("click", function () { runDeleteEvent(client); });
+    var panel = document.getElementById("hubEventDeletePanel");
+    if (panel) {
+      panel.addEventListener("click", function (e) {
+        if (e.target === panel) hideDeletePanel();
+      });
+      panel.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
           e.preventDefault();
-          runDeleteEvent(client);
+          hideDeletePanel();
         }
       });
     }
+  }
+
+  function featureToggleOn() {
+    var btn = document.getElementById("hubEventFeatureToggle");
+    return !!(btn && btn.getAttribute("aria-pressed") === "true");
+  }
+
+  function setFeatureToggle(on) {
+    var btn = document.getElementById("hubEventFeatureToggle");
+    if (!btn) return;
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    var star = btn.querySelector(".star");
+    if (star) star.textContent = on ? "\u2605" : "\u2606";
+  }
+
+  function eventHasEnded(ev) {
+    if (window.kosCalendar && typeof window.kosCalendar.eventHasEnded === "function") {
+      return window.kosCalendar.eventHasEnded(ev);
+    }
+    var now = Date.now();
+    if (!ev) return false;
+    var end = ev.end_time ? new Date(ev.end_time) : null;
+    if (end && !isNaN(end.getTime())) return end.getTime() < now;
+    var start = ev.start_time ? new Date(ev.start_time) : null;
+    if (!start || isNaN(start.getTime())) return false;
+    return start.getTime() < now;
+  }
+
+  function featureReasons(row) {
+    var reasons = [];
+    if (row && row.members_only) reasons.push("members only");
+    var status = String((row && row.status) || "draft").toLowerCase();
+    if (status === "cancelled") reasons.push("cancelled");
+    else if (status !== "published") reasons.push("still a draft");
+    else if (row && row.is_public === false) reasons.push("hidden from the public site");
+    return reasons;
+  }
+
+  function featureNeedsPrompt(row) {
+    return featureReasons(row).length > 0;
+  }
+
+  function featurePromptCopy(name, row) {
+    var title = String(name || "").trim() || "this event";
+    var reasons = featureReasons(row);
+    var why = reasons.length ? (" This event is " + reasons.join(" and ") + ".") : "";
+    return "Feature " + title + " on the public site?" + why + " Featuring it makes it public and published.";
+  }
+
+  function askFeatureConfirm(copy) {
+    return new Promise(function (resolve) {
+      var panel = parkDialog(document.getElementById("hubEventFeaturePanel"));
+      var summary = document.getElementById("hubEventFeatureSummary");
+      var cancel = document.getElementById("hubEventFeatureCancel");
+      var go = document.getElementById("hubEventFeatureGo");
+      if (!panel || !cancel || !go) {
+        resolve(window.confirm(copy));
+        return;
+      }
+      if (summary) summary.textContent = copy;
+      function finish(ok) {
+        panel.hidden = true;
+        panel.style.display = "none";
+        cancel.removeEventListener("click", onCancel);
+        go.removeEventListener("click", onGo);
+        panel.removeEventListener("click", onBackdrop);
+        panel.removeEventListener("keydown", onKey);
+        resolve(ok);
+      }
+      function onCancel() { finish(false); }
+      function onGo() { finish(true); }
+      function onBackdrop(e) { if (e.target === panel) finish(false); }
+      function onKey(e) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          finish(false);
+        }
+      }
+      cancel.addEventListener("click", onCancel);
+      go.addEventListener("click", onGo);
+      panel.addEventListener("click", onBackdrop);
+      panel.addEventListener("keydown", onKey);
+      panel.hidden = false;
+      panel.style.display = "flex";
+      cancel.focus();
+    });
+  }
+
+  function savedEventById(id) {
+    return (eventStudioList || []).find(function (row) { return String(row.id) === String(id); }) || null;
+  }
+
+  function formFeatureSnapshot() {
+    var idEl = document.getElementById("hubEventId");
+    var nameEl = document.getElementById("hubEventName");
+    var startEl = document.getElementById("hubEventStart");
+    var id = idEl ? idEl.value.trim() : "";
+    var saved = id ? savedEventById(id) : null;
+    var startVal = startEl ? startEl.value.trim() : "";
+    var startIso = "";
+    if (startVal) {
+      var d = new Date(startVal);
+      startIso = isNaN(d.getTime()) ? startVal : d.toISOString();
+    }
+    var statusEl = document.getElementById("hubEventStatus");
+    var statusChoice = statusEl ? statusEl.value : "draft";
+    var status = statusChoice === "cancelled" ? "cancelled" : "draft";
+    if (status !== "cancelled" && saved && String(saved.status || "").toLowerCase() === "published") status = "published";
+    return {
+      id: id,
+      name: (nameEl && nameEl.value.trim()) || (saved && saved.name) || "",
+      start_time: startIso || (saved && saved.start_time) || "",
+      end_time: (saved && saved.end_time) || "",
+      members_only: !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked),
+      is_public: !!(document.getElementById("hubEventPublic") && document.getElementById("hubEventPublic").checked),
+      status: status,
+      is_featured: featureToggleOn()
+    };
+  }
+
+  function applyFeatureLocally(id, on) {
+    var sid = String(id || "");
+    eventStudioList = (eventStudioList || []).map(function (row) {
+      if (!row) return row;
+      var mine = String(row.id) === sid;
+      if (on) {
+        var next = Object.assign({}, row, { is_featured: mine });
+        if (mine) {
+          next.is_public = true;
+          next.members_only = false;
+          next.status = "published";
+        }
+        return next;
+      }
+      if (mine) return Object.assign({}, row, { is_featured: false });
+      return row;
+    });
+    renderEventList(eventStudioList);
+    var linked = document.getElementById("hubEventLinkedMeeting");
+    fillLinkedMeetingSelect(linked ? linked.value : "");
+    var idEl = document.getElementById("hubEventId");
+    if (!idEl || !idEl.value) {
+      if (!sid) setFeatureToggle(!!on);
+      return;
+    }
+    if (String(idEl.value) === sid) {
+      setFeatureToggle(!!on);
+      if (on) {
+        var pub = document.getElementById("hubEventPublic");
+        var mo = document.getElementById("hubEventMembersOnly");
+        if (pub) pub.checked = true;
+        if (mo) mo.checked = false;
+      }
+      return;
+    }
+    var open = savedEventById(idEl.value);
+    if (open) setFeatureToggle(!!open.is_featured);
+  }
+
+  function featureResultMessage(event, on) {
+    if (!on) return "Removed from the public featured spot.";
+    if (eventHasEnded(event)) return "Featured. This event has already ended, so it will not be highlighted on the public site.";
+    return "Featured on the public site.";
+  }
+
+  async function commitFeature(event, on) {
+    var client = studioClient;
+    var msg = document.getElementById("hubEventMsg");
+    var listMsg = document.getElementById("hubEventListMsg");
+    if (!client || !event || !event.id) return;
+    if (!event.name || !event.start_time) {
+      var missing = "Save a name and start time before featuring this event.";
+      if (msg) msg.textContent = missing;
+      if (listMsg) listMsg.textContent = missing;
+      return;
+    }
+    var payload = {
+      id: event.id,
+      name: event.name,
+      start_time: event.start_time,
+      is_featured: !!on
+    };
+    if (on) {
+      payload.is_public = true;
+      payload.members_only = false;
+      payload.status = "published";
+    }
+    var res = await client.rpc("officer_upsert_event", { p: payload });
+    if (res.error) throw res.error;
+    if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not update this event.");
+    applyFeatureLocally(event.id, on);
+    var note = featureResultMessage(event, on);
+    if (msg) msg.textContent = note;
+    if (listMsg) listMsg.textContent = note;
+    refreshEventStudio(client, { quiet: true });
+  }
+
+  async function onFeatureClick(eventRow, fromForm) {
+    var snapshot = fromForm ? formFeatureSnapshot() : (eventRow || {});
+    var turningOn = fromForm ? !featureToggleOn() : !snapshot.is_featured;
+    if (!turningOn) {
+      if (!snapshot.id) {
+        setFeatureToggle(false);
+        return;
+      }
+      try { await commitFeature(snapshot, false); }
+      catch (e) {
+        var offText = (e && e.message) || String(e);
+        var offMsg = document.getElementById("hubEventMsg");
+        if (offMsg) offMsg.textContent = "Couldn't update feature: " + offText;
+      }
+      return;
+    }
+    if (featureNeedsPrompt(snapshot)) {
+      var ok = await askFeatureConfirm(featurePromptCopy(snapshot.name, snapshot));
+      if (!ok) return;
+    }
+    if (!snapshot.id) {
+      setFeatureToggle(true);
+      var pub = document.getElementById("hubEventPublic");
+      var mo = document.getElementById("hubEventMembersOnly");
+      if (pub) pub.checked = true;
+      if (mo) mo.checked = false;
+      var msg = document.getElementById("hubEventMsg");
+      if (msg) msg.textContent = "This event will be public and published when you save.";
+      return;
+    }
+    try { await commitFeature(snapshot, true); }
+    catch (e2) {
+      var onText = (e2 && e2.message) || String(e2);
+      if (/is_featured|column/i.test(onText)) {
+        onText += " Apply sql/kos_event_featured.sql in Supabase, then try again.";
+      }
+      var onMsg = document.getElementById("hubEventMsg");
+      var listMsg = document.getElementById("hubEventListMsg");
+      if (onMsg) onMsg.textContent = "Couldn't feature: " + onText;
+      if (listMsg) listMsg.textContent = "Couldn't feature: " + onText;
+    }
+  }
+
+  function wireFeatureToggle() {
+    var btn = document.getElementById("hubEventFeatureToggle");
+    if (!btn || btn.dataset.kosWired === "1") return;
+    btn.dataset.kosWired = "1";
+    btn.addEventListener("click", function () { onFeatureClick(null, true); });
   }
 
   function clearEventForm() {
@@ -534,7 +801,7 @@
     var moOnly = document.getElementById("hubEventMembersOnly"); if (moOnly) moOnly.checked = false;
     var ma = document.getElementById("hubEventMemberAddress"); if (ma) ma.value = "";
     document.getElementById("hubEventMandatory").checked = false;
-    var feat = document.getElementById("hubEventFeatured"); if (feat) feat.checked = false;
+    setFeatureToggle(false);
     var cg = document.getElementById("hubEventCollectGuests"); if (cg) cg.checked = true;
     var cn = document.getElementById("hubEventCollectGuestNames"); if (cn) cn.checked = true;
     var cr = document.getElementById("hubEventCollectRaffle"); if (cr) cr.checked = false;
@@ -579,7 +846,7 @@
     get("hubEventPublic").checked = event.is_public !== false;
     var monly = get("hubEventMembersOnly"); if (monly) monly.checked = !!event.members_only;
     get("hubEventMandatory").checked = !!event.is_mandatory;
-    var featEl = get("hubEventFeatured"); if (featEl) featEl.checked = !!event.is_featured;
+    setFeatureToggle(!!event.is_featured);
     get("hubEventStatus").value = String(event.status || "").toLowerCase() === "cancelled" ? "cancelled" : "draft";
     get("hubEventTicketLabel").value = event.ticket_label || "";
     get("hubEventTicketPrice").value = event.ticket_price_cents == null ? "" : (Number(event.ticket_price_cents) / 100).toFixed(2);
@@ -650,7 +917,8 @@
         (flyer ? " · has image/PDF" : " · add image/PDF") +
         (readOnly ? " · IKC event (read-only)" : "") + '</div></div>' +
         (readOnly ? "" : '<div class="hub-appr-btns"><button class="btn btn-primary" type="button" data-event-edit="' + esc(event.id) + '">Edit event</button>' +
-        '<button class="btn btn-danger" type="button" data-event-delete="' + esc(event.id) + '">Delete permanently</button></div>') + '</div>';
+        '<button class="hub-feature-toggle" type="button" data-event-feature="' + esc(event.id) + '" aria-pressed="' + (event.is_featured ? "true" : "false") + '"><span class="star" aria-hidden="true">' + (event.is_featured ? "\u2605" : "\u2606") + '</span> Feature on public site</button>' +
+        '<button class="btn btn-danger" type="button" data-event-delete="' + esc(event.id) + '">Delete</button></div>') + '</div>';
     });
     target.innerHTML = html;
     target.querySelectorAll("[data-event-edit]").forEach(function (button) {
@@ -664,15 +932,23 @@
       button.addEventListener("click", function () {
         var id = button.getAttribute("data-event-delete");
         var event = list.find(function (row) { return String(row.id) === String(id); });
-        if (event && String(event.source || "").toLowerCase() !== "ikc") showDeletePanel(event);
+        if (event && String(event.source || "").toLowerCase() !== "ikc") showDeletePanel(event, button);
+      });
+    });
+    target.querySelectorAll("[data-event-feature]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-event-feature");
+        var event = list.find(function (row) { return String(row.id) === String(id); });
+        if (event && String(event.source || "").toLowerCase() !== "ikc") onFeatureClick(event, false);
       });
     });
   }
 
-  async function refreshEventStudio(client) {
+  async function refreshEventStudio(client, opts) {
+    var quiet = !!(opts && opts.quiet);
     var target = document.getElementById("hubEventList");
     if (!target) return;
-    target.innerHTML = '<p class="empty">Loading events…</p>';
+    if (!quiet) target.innerHTML = '<p class="empty">Loading events…</p>';
     try {
       var res = await client.rpc("officer_list_events");
       if (res.error) throw res.error;
@@ -684,6 +960,7 @@
       fillLinkedMeetingSelect(linked ? linked.value : "");
       renderEventList(list);
     } catch (e) {
+      if (quiet) return;
       target.innerHTML = '<p class="empty">Couldn&rsquo;t load events. ' + esc((e && e.message) || "Try again in a moment.") + '</p>';
     }
   }
@@ -874,11 +1151,12 @@
       end_time: end ? end.toISOString() : null, location: value("hubEventLocation") || null,
       member_address: value("hubEventMemberAddress") || null,
       description: value("hubEventDescription") || null, event_type: value("hubEventType") || "other",
-      capacity: capacity, is_public: !!document.getElementById("hubEventPublic").checked,
-      members_only: !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked),
+      capacity: capacity,
       is_mandatory: !!document.getElementById("hubEventMandatory").checked,
-      is_featured: !!(document.getElementById("hubEventFeatured") && document.getElementById("hubEventFeatured").checked),
-      status: value("hubEventStatus") === "cancelled" ? "cancelled" : "draft",
+      is_public: featureToggleOn() ? true : !!document.getElementById("hubEventPublic").checked,
+      members_only: featureToggleOn() ? false : !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked),
+      is_featured: featureToggleOn(),
+      status: featureToggleOn() ? "published" : (value("hubEventStatus") === "cancelled" ? "cancelled" : "draft"),
       ticket_label: value("hubEventTicketLabel") || null,
       ticket_price_cents: ticketValue === "" ? null : Math.round(dollars * 100),
       ticket_payment_url: value("hubEventPaymentUrl") || null, flyer_url: value("hubEventFlyerUrl") || null,
@@ -955,6 +1233,7 @@
     });
     document.getElementById("hubEventNew").addEventListener("click", clearEventForm);
     wireEventDelete(client);
+    wireFeatureToggle();
     var publishBtn = document.getElementById("hubEventPublish");
     if (publishBtn) publishBtn.addEventListener("click", function () { publishReviewedEvent(client); });
     var eventForm = document.getElementById("hubEventForm");

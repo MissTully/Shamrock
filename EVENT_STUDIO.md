@@ -48,18 +48,23 @@ wait while the event is a draft and go out after publish, through the normal
 and the pg_cron job are `sql/kos_event_scheduled_emails.sql` (apply live;
 safe to re-run). Full runbook: `EVENT_SCHEDULED_EMAILS.md`.
 
-## Cancel vs delete permanently
+## Cancel vs delete
 
 **Cancelled** (Status dropdown) keeps the event row and hides it from public signup. Use that when the gathering is off but the record should stay.
 
-**Delete permanently** is a separate dangerous action for mistaken events that should not remain in the system. It is on each Event Studio row and on the editor after you tap Edit event.
+**Delete** is for mistaken events that should not remain in the system. The button is on each Event Studio row and on the editor after you tap Edit event.
 
-1. Tap **Delete permanently**.
-2. Confirm the named event (title and date). Type the event name, or type `Delete permanently`.
-3. Tap **Delete permanently** again. **Cancel** aborts with no changes.
-4. On success the event leaves the list. On failure the server message is shown in the confirm panel.
+1. Tap **Delete**.
+2. Confirm the named event and date. **Cancel** aborts with no changes. **Delete** removes it. Nothing has to be typed.
+3. On success the event leaves the list and Event Studio shows Deleted. On failure the server message stays in the dialog (Tartan Ball orders and IKC events are still refused).
 
-Authorization is `can_manage_events()` inside `officer_delete_event` (`sql/kos_officer_delete_event.sql`). Apply that SQL on live Supabase before the button will succeed.
+The client sends the confirm token `officer_delete_event` already accepts. Authorization stays `can_manage_events()` inside that RPC (`sql/kos_officer_delete_event.sql`).
+
+## Feature on public site
+
+Each event row and the edit form have a star toggle labeled **Feature on public site**. One click features a public published event. If the event is members only, hidden, cancelled, or still a draft, a short prompt explains that featuring makes it public and published. Confirm applies that. Only one event stays featured. A featured event that has already ended is not highlighted on the public home page or the events listing.
+
+Apply `sql/kos_event_featured.sql` in the Supabase SQL editor before relying on the column if it is not already there. Do not apply it from the app.
 
 Related data: RSVPs (`event_signups`) for that event are removed. Payment ledger rows stay; `payments.event_id` is cleared. Linked raffles stay; `raffle_events.krewe_event_id` is cleared. Tartan Ball orders block the delete (cancel that event instead). IKC sync events cannot be deleted.
 
