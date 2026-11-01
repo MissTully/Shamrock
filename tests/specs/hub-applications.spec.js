@@ -255,7 +255,10 @@ test.describe("Membership Applications", () => {
       partner_dl_last4: "4321",
       partner_ssn_last4: "9876",
       partner_dl_full: "G987654321098",
-      partner_ssn_full: "987-65-4321"
+      partner_ssn_full: "987-65-4321",
+      application_fee_type: "dual",
+      birthday: "1988-03-14",
+      partner_birthday: "1991-07-22"
     } : row);
     await unlockMemberHub(page, {
       role: {
@@ -270,8 +273,13 @@ test.describe("Membership Applications", () => {
     const owen = tool.locator("[data-app-id='app-owen']");
     await expect(nia.locator("[data-app-dl]").first()).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(nia.locator("[data-app-ssn]").first()).toContainText("SSN on file, last 4 only: •••-••-6789");
+    await expect(nia.locator("[data-app-dob][data-app-id-slot='applicant']")).toContainText("Date of birth: 03/14/1988");
+    await expect(nia.locator("[data-app-dob][data-app-id-slot='partner']")).toContainText("Partner date of birth: 07/22/1991");
     await expect(nia.locator("[data-app-copy-kind='dl']")).toHaveCount(2);
     await expect(nia.locator("[data-app-copy-kind='ssn']")).toHaveCount(2);
+    await expect(nia.locator("[data-app-copy-kind='dob']")).toHaveCount(2);
+    await expect(nia).not.toContainText("1988-03-14");
+    await expect(nia).not.toContainText("1991-07-22");
     await expect(owen.locator("[data-app-copy]")).toHaveCount(0);
     await expect(tool).not.toContainText("F123456789012");
     await expect(tool).not.toContainText("123-45-6789");
@@ -283,7 +291,9 @@ test.describe("Membership Applications", () => {
     const dlBtn = await dlRow.locator("[data-app-copy]").boundingBox();
     expect(dlBtn.x).toBeGreaterThan(dlText.x);
     expect(Math.abs((dlBtn.y + dlBtn.height / 2) - (dlText.y + dlText.height / 2))).toBeLessThan(24);
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await nia.screenshot({ path: "/opt/cursor/artifacts/screenshots/membership-chair-copy-dl-ssn.png" });
+    await nia.screenshot({ path: "/opt/cursor/artifacts/membership_chair_dob_copy.png" });
 
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']").click();
     await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']")).toHaveText("Copied");
@@ -295,6 +305,16 @@ test.describe("Membership Applications", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("G987654321098");
     await nia.locator("[data-app-copy-slot='partner'][data-app-copy-kind='ssn']").click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("987-65-4321");
+    await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dob']").click();
+    await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dob']")).toHaveText("Copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("03/14/1988");
+    await nia.locator("[data-app-copy-slot='partner'][data-app-copy-kind='dob']").click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("07/22/1991");
+    const dobRow = nia.locator("[data-app-dob][data-app-id-slot='applicant']");
+    const dobText = await dobRow.locator("span").boundingBox();
+    const dobBtn = await dobRow.locator("[data-app-copy]").boundingBox();
+    expect(dobBtn.x).toBeGreaterThan(dobText.x);
+    expect(Math.abs((dobBtn.y + dobBtn.height / 2) - (dobText.y + dobText.height / 2))).toBeLessThan(24);
 
     await expect(tool).not.toContainText("F123456789012");
     await expect(tool).not.toContainText("123-45-6789");

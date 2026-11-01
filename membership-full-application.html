@@ -13,9 +13,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20260909m2" />
 <style>
+.id-pair{align-items:flex-start;}
+.id-pair .dob-col{flex:0 0 210px;max-width:46%;}
+.krewe-form input[type="date"]{font-family:var(--body);color:var(--ink);min-height:48px;}
 @media (max-width:680px){
   .krewe-form .row{ flex-direction:column; gap:0; }
   form.krewe-form{ padding:20px 16px 24px; }
+  .id-pair .dob-col{flex:1 1 auto;max-width:none;}
 }
 .id-copy{margin:0 0 8px;color:var(--green-800);font-family:var(--fancy);font-style:italic;line-height:1.45;}
 </style>
@@ -85,22 +89,38 @@
         <p id="feeLine" hidden style="margin:0 0 8px;font-weight:600;color:var(--green-800);"></p>
       </div>
       <form id="fullForm" class="krewe-form" hidden autocomplete="off">
-        <p id="idConfidentiality" class="id-copy">The board uses SSN and driver's license for the background check. Your information is held confidentially.</p>
+        <p id="idConfidentiality" class="id-copy">The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially.</p>
 
         <fieldset id="applicant1" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:8px 0 14px;">
           <legend id="applicant1Legend" style="padding:0 6px;color:var(--green-800);font-family:var(--display);">Applicant 1</legend>
-          <label for="dl1">Driver's license number</label>
-          <input id="dl1" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" />
-          <label for="ssn1">Social Security number</label>
-          <input id="ssn1" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="20" aria-label="Social Security number" />
+          <div class="row id-pair">
+            <div>
+              <label for="dl1">Driver's license number</label>
+              <input id="dl1" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" />
+              <label for="ssn1">Social Security number</label>
+              <input id="ssn1" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="20" aria-label="Social Security number" />
+            </div>
+            <div class="dob-col">
+              <label for="dob1">Date of birth</label>
+              <input id="dob1" type="date" required autocomplete="bday" min="1900-01-01" />
+            </div>
+          </div>
         </fieldset>
 
         <fieldset id="applicant2" hidden style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:8px 0 14px;">
           <legend id="applicant2Legend" style="padding:0 6px;color:var(--green-800);font-family:var(--display);">Applicant 2</legend>
-          <label for="dl2">Driver's license number</label>
-          <input id="dl2" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" />
-          <label for="ssn2">Social Security number</label>
-          <input id="ssn2" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="20" aria-label="Social Security number for applicant 2" />
+          <div class="row id-pair">
+            <div>
+              <label for="dl2">Driver's license number</label>
+              <input id="dl2" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" />
+              <label for="ssn2">Social Security number</label>
+              <input id="ssn2" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="20" aria-label="Social Security number for applicant 2" />
+            </div>
+            <div class="dob-col">
+              <label for="dob2">Date of birth</label>
+              <input id="dob2" type="date" autocomplete="off" min="1900-01-01" />
+            </div>
+          </div>
         </fieldset>
 
         <button id="fullSubmit" type="submit">☘ Submit full application</button>
@@ -238,6 +258,36 @@
       return (document.getElementById(id).value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     }
     function validDl(value) { return /^[A-Z0-9]{4,20}$/.test(value); }
+    function isoToday() {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return now.getFullYear() + "-" + month + "-" + day;
+    }
+    function prepareDob(id, required) {
+      const input = document.getElementById(id);
+      input.required = !!required;
+      input.min = "1900-01-01";
+      input.max = isoToday();
+    }
+    function dobValue(id) {
+      return (document.getElementById(id).value || "").trim();
+    }
+    function validDob(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const parts = value.split("-");
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      const day = Number(parts[2]);
+      if (year < 1900 || month < 1 || month > 12 || day < 1 || day > 31) return false;
+      const dt = new Date(Date.UTC(year, month - 1, day));
+      if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== month - 1 || dt.getUTCDate() !== day) return false;
+      return value <= isoToday();
+    }
+    function clearDob() {
+      document.getElementById("dob1").value = "";
+      document.getElementById("dob2").value = "";
+    }
 
     function showFullForm(info) {
       feeType = String((info && info.fee_type) || "").toLowerCase() === "dual" ? "dual" : "single";
@@ -254,6 +304,8 @@
       document.getElementById("ssn2").required = false;
       document.getElementById("dl1").required = false;
       document.getElementById("ssn1").required = false;
+      prepareDob("dob1", true);
+      prepareDob("dob2", dual);
       const fee = document.getElementById("feeLine");
       fee.hidden = false;
       fee.textContent = dual
@@ -268,9 +320,11 @@
       message.className = "msg";
       const dl = dlValue("dl1");
       const ssn = ssn1.digits();
+      const dob = dobValue("dob1");
       const dual = feeType === "dual";
       const partnerDl = dlValue("dl2");
       const partnerSsn = ssn2.digits();
+      const partnerDob = dobValue("dob2");
       if (!validDl(dl)) {
         showMessage("Enter the driver's license number using letters and numbers only.", "error");
         return;
@@ -279,8 +333,12 @@
         showMessage("Enter a 9 digit Social Security number.", "error");
         return;
       }
-      if (dual && (!validDl(partnerDl) || partnerSsn.length !== 9)) {
-        showMessage("Enter a driver's license number and a 9 digit Social Security number for Applicant 2.", "error");
+      if (!validDob(dob)) {
+        showMessage("Enter a date of birth.", "error");
+        return;
+      }
+      if (dual && (!validDl(partnerDl) || partnerSsn.length !== 9 || !validDob(partnerDob))) {
+        showMessage("Enter a driver's license number, a 9 digit Social Security number, and a date of birth for Applicant 2.", "error");
         return;
       }
       if (!token) {
@@ -289,6 +347,7 @@
         ssn2.reset();
         document.getElementById("dl1").value = "";
         document.getElementById("dl2").value = "";
+        clearDob();
         return;
       }
       btn.disabled = true;
@@ -300,7 +359,9 @@
           p_dl: dl,
           p_ssn: ssn,
           p_partner_dl: dual ? partnerDl : null,
-          p_partner_ssn: dual ? partnerSsn : null
+          p_partner_ssn: dual ? partnerSsn : null,
+          p_birthday: dob,
+          p_partner_birthday: dual ? partnerDob : null
         });
       } catch (err) {
         result = { error: err };
@@ -309,13 +370,14 @@
       ssn2.reset();
       document.getElementById("dl1").value = "";
       document.getElementById("dl2").value = "";
+      clearDob();
       btn.disabled = false;
       btn.textContent = "☘ Submit full application";
       if (result.error || !result.data || result.data.ok === false) {
         showMessage((result.data && result.data.message) || "Something went wrong submitting the full application. Please try again.", "error");
         return;
       }
-      showMessage(result.data.message || "We received your driver's license number and Social Security number. The board uses SSN and driver's license for the background check. Your information is held confidentially.", "success");
+      showMessage(result.data.message || "We received your date of birth, driver's license number, and Social Security number. The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially.", "success");
       form.reset();
       ssn1.reset();
       ssn2.reset();

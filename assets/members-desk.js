@@ -3961,6 +3961,39 @@
     return s.slice(-4);
   }
 
+  function formatApplicationDob(value) {
+    var s = String(value == null ? "" : value).trim();
+    var year;
+    var month;
+    var day;
+    var iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    var us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
+    if (iso) {
+      year = Number(iso[1]);
+      month = Number(iso[2]);
+      day = Number(iso[3]);
+    } else if (us) {
+      month = Number(us[1]);
+      day = Number(us[2]);
+      year = Number(us[3]);
+    } else {
+      return "";
+    }
+    if (year < 1900 || year > 9999 || month < 1 || month > 12 || day < 1 || day > 31) return "";
+    var dt = new Date(Date.UTC(year, month - 1, day));
+    if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== month - 1 || dt.getUTCDate() !== day) return "";
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    return pad(month) + "/" + pad(day) + "/" + year;
+  }
+
+  function applicationRowById(id) {
+    var found = null;
+    (state.applicationRows || []).forEach(function (row) {
+      if (row && String(row.id) === String(id)) found = row;
+    });
+    return found;
+  }
+
   function applicationIdLine(row, which, kind) {
     var prefix = which === "partner" ? "partner_" : "";
     var last = applicationTail4(row[prefix + (kind === "dl" ? "dl_last4" : "ssn_last4")]);
@@ -3993,6 +4026,19 @@
       "</div>";
   }
 
+  function applicationDobMarkup(row, which) {
+    if (!state.canReviewApplications) return "";
+    var slot = which === "partner" ? "partner" : "applicant";
+    var formatted = formatApplicationDob(slot === "partner" ? row.partner_birthday : row.birthday);
+    if (!formatted) return "";
+    var label = slot === "partner" ? "Partner date of birth" : "Date of birth";
+    var copyLabel = slot === "partner" ? "Copy partner date of birth" : "Copy date of birth";
+    return '<div class="hub-app-id" data-app-dob data-app-id-slot="' + slot + '">' +
+      "<span>" + esc(label + ": " + formatted) + "</span>" +
+      '<button type="button" class="btn hub-app-copy" data-app-copy="' + esc(row.id) + '" data-app-copy-slot="' + slot + '" data-app-copy-kind="dob" aria-label="' + esc(copyLabel) + '">Copy</button>' +
+      "</div>";
+  }
+
   function formatCopiedId(kind, raw) {
     var text = String(raw == null ? "" : raw).trim();
     var digits = text.replace(/\D/g, "");
@@ -4006,12 +4052,18 @@
     if (!state.canReviewApplications || !btn) return;
     var id = btn.getAttribute("data-app-copy");
     var slot = btn.getAttribute("data-app-copy-slot") || "applicant";
-    var kind = btn.getAttribute("data-app-copy-kind") === "dl" ? "dl" : "ssn";
-    var value = applicationIdVault[String(id) + ":" + slot + ":" + kind] || "";
-    var label = kind === "dl" ? "driver's license number" : "Social Security number";
+    var kindAttr = btn.getAttribute("data-app-copy-kind") || "";
+    var kind = kindAttr === "dl" ? "dl" : (kindAttr === "dob" ? "dob" : "ssn");
+    var value = kind === "dob"
+      ? ""
+      : (applicationIdVault[String(id) + ":" + slot + ":" + kind] || "");
+    var label = kind === "dl" ? "driver's license number" : (kind === "dob" ? "date of birth" : "Social Security number");
     btn.disabled = true;
     try {
-      if (!value) {
+      if (kind === "dob") {
+        var dobRow = applicationRowById(id);
+        value = formatApplicationDob(dobRow ? (slot === "partner" ? dobRow.partner_birthday : dobRow.birthday) : "");
+      } else if (!value) {
         if (!client || typeof client.rpc !== "function") throw new Error("Could not copy that " + label + ".");
         var res = await client.rpc("reveal_membership_application_id", {
           p_member_id: id,
@@ -4023,12 +4075,14 @@
         if (payload.ok === false) throw new Error(payload.message || ("Could not copy that " + label + "."));
         value = kind === "dl" ? payload.dl : payload.ssn;
       }
-      value = formatCopiedId(kind, value);
+      if (kind !== "dob") value = formatCopiedId(kind, value);
       if (!value) throw new Error("No " + label + " is on file for that person.");
       copyText(value, function () {
         btn.disabled = false;
         btn.textContent = "Copied";
-        showToast((kind === "dl" ? "Driver's license number" : "Social Security number") + " copied. The list stays masked.");
+        showToast(kind === "dob"
+          ? "Date of birth copied."
+          : ((kind === "dl" ? "Driver's license number" : "Social Security number") + " copied. The list stays masked."));
         setTimeout(function () {
           if (btn.isConnected && btn.textContent === "Copied") btn.textContent = "Copy";
         }, 2000);
@@ -4769,8 +4823,10 @@
           '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
           applicationIdMarkup(row, "applicant", "dl") +
           applicationIdMarkup(row, "applicant", "ssn") +
+          applicationDobMarkup(row, "applicant") +
           applicationIdMarkup(row, "partner", "dl") +
           applicationIdMarkup(row, "partner", "ssn") +
+          applicationDobMarkup(row, "partner") +
           (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
           (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
           (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +

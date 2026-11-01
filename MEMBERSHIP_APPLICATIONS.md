@@ -89,14 +89,16 @@ Officers and board members (`member_role` or `member_roles` / `officer_title` of
 
 The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses Move to background check. That emails the secure link. The applicant opens the token link and completes the full application. Submitting that form is when they begin the background check, and that is when the membership dues invoice is queued.
 
-The full application asks for the driver's license number above the Social Security number. There is no driver's license state field. A couple ($75, fee type `dual`) enters both numbers for Applicant 1 and both numbers for Applicant 2. The form says: "The board uses SSN and driver's license for the background check. Your information is held confidentially."
+The full application asks for the driver's license number above the Social Security number, with date of birth beside those fields. There is no driver's license state field. Applicant 1 date of birth is always required. Applicant 2 date of birth is required only when a partner is being entered (fee type `dual`). A couple enters the license, the Social Security number, and the date of birth for each person. The form says: "The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially."
 
-Both values are stored in `membership_application_ids`. `id_kind` is `ssn` or `dl`. `person_slot` is `applicant` or `partner`.
+Applicant 1 date of birth is saved on `members.birthday`. The partner date of birth is `membership_application_ids.dob`, on the same table as the partner license and Social Security number, with the same row level security and no client grants. Reviewers read both dates from `list_membership_applications`. The chair card shows each date as MM/DD/YYYY with a Copy button beside the license and SSN Copy buttons. Copy puts MM/DD/YYYY on the clipboard. The date is not emailed.
 
-- Lists show the last 4 only.
-- `reveal_membership_application_id` returns one full value only when `can_review_applications()` is true. The Copy button on the card uses that same check. Each open writes `id_revealed` with the last 4, not the full value. The full value is copied to the clipboard and is not shown on the card and not emailed.
-- The ID table and the link table have row level security and no client grants. The browser cannot select them directly.
-- Interest mail, the secure-link mail, and the received mail do not include a full Social Security number or a full driver's license number. Free-text notes are redacted before they are emailed or listed.
+The license and Social Security number are stored in `membership_application_ids`. `id_kind` is `ssn` or `dl`. `person_slot` is `applicant` or `partner`.
+
+- Lists show the last 4 of each license and Social Security number only. Dates of birth are shown in full as MM/DD/YYYY.
+- `reveal_membership_application_id` returns one full license or Social Security number only when `can_review_applications()` is true. The Copy button on those lines uses that same check. The date of birth Copy button copies the MM/DD/YYYY already shown on the card. Each ID open writes `id_revealed` with the last 4, not the full value. The full ID is copied to the clipboard and is not shown on the card and not emailed.
+- The ID table and the link table have row level security and no client grants. The browser cannot select them directly. The partner date of birth lives on that same ID table.
+- Interest mail, the secure-link mail, and the received mail do not include a date of birth, a full Social Security number, or a full driver's license number. Free-text notes are redacted before they are emailed or listed.
 
 ## Apply the SQL before go-live
 
@@ -109,9 +111,10 @@ The site deploy does not run SQL. Do this in the Supabase SQL editor for project
 5. Open `sql/kos_prospect_background_check_email.sql`. Paste it into a new SQL query and run it. This stores the dues explainers, the dues Zeffy links, and the background check payment links, and it builds the prospect letter. It does not turn prospect email on.
 6. Open `sql/kos_joining_packet_email_template.sql`. Paste it into a new SQL query and run it. This stores the editable joining packet draft and points Send joining packet at that draft. It does not turn prospect email on. Running it again does not overwrite a draft you already saved.
 7. Open `sql/kos_membership_application_record_note.sql`. Paste it into a new SQL query and run it. This lets **Save note** write a `note` row without moving the stage or sending the joining packet. Running it again is safe. It does not change the joining packet draft.
-8. Each file is safe to run again.
+8. Open `sql/kos_application_dob.sql`. Paste it into a new SQL query and run it. This stores Applicant 1 date of birth on `members.birthday` and the partner date of birth on `membership_application_ids.dob`. Running it again is safe. It does not turn prospect email on.
+9. Each file is safe to run again.
 
-Run `sql/kos_membership_application_record_note.sql` last. If you run the staged file again after it, run the record-note file again. The staged file replaces the action check and the application list, and that drops `note` until the record-note file is applied. If you run the pipeline file, the background-check invoice file, the prospect email file, or the joining-packet template file again, run the template file and then the record-note file again.
+Run `sql/kos_application_dob.sql` last. If you run the staged file again after it, run the record-note file again, then the date-of-birth file. The staged file replaces the action check and the application list, and that drops `note` until the record-note file is applied. If you run the pipeline file, the background-check invoice file, the prospect email file, or the joining-packet template file again, run the template file, then the record-note file, then `sql/kos_application_dob.sql`. The invoice file replaces the full-application save, and the record-note file replaces the chair list. The date-of-birth file puts both back with the date fields.
 
 Do not set `membership_prospect_emails` to enabled. Melissa applies the SQL in the Supabase editor. The site deploy does not run it.
 
