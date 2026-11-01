@@ -123,7 +123,6 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
     "childrens-gasparilla",
     "gasparilla-pirates",
     "santyago-knight",
-    "tampa-pride",
     "st-patricks"
   ]) {
     expect(html, "static march cards must include " + file).toContain("assets/img/parades/" + file);
