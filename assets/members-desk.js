@@ -2987,8 +2987,8 @@
     // Phone: the app home (countdown and tiles) stays above that same desk.
     // Order by importance to a member: Krewe Tidings, birthdays, Quick links, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
-    // then officer tools, the app card, and deadlines. Parade Ready and dues
-    // live on the Parade tab. Member Resources follow below this stack.
+    // then the app card and deadlines. Parade Ready and dues live on the
+    // Parade tab, and officer tools live only on the Officer tab. Member Resources follow below this stack.
     var phoneHome = document.body.classList.contains("hub-app");
     var hoursCard = document.getElementById("hubHoursCard");
     if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
@@ -2998,7 +2998,6 @@
       findCards +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
-      appsBanner + volunteerBanner + officerCard +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline"));
     placeHomeHours(hoursCard);
