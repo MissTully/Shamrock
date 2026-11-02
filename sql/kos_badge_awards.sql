@@ -215,3 +215,48 @@ select m.id, 'parade_ready', now()
 from public.members m
 where coalesce(public.kos_member_parade_ready(m.id), false)
 on conflict (member_id, badge_id) do nothing;
+
+-- 9. Backfill: ticket buyers count as Showed Up (first_attend)
+--    Events: Mini Golf and Lunch (d0ed40e0-f242-4532-88e1-89ff5bf1d3ea, 2026-09-19)
+--            Tartan Ball (c64d25bb-90cb-4350-a141-b4f8ade1e9d1, 2026-10-24)
+--    No picnic event exists in the database, so none is included.
+--    Matching: member_id when present, else member email, else an exact
+--    first + last name that matches exactly one member. Unmatched buyers are skipped.
+with mem as (
+  select id, lower(trim(email)) em, lower(trim(first_name)) fn, lower(trim(last_name)) ln
+  from public.members where merged_into is null and coalesce(membership_status,'') not in ('merged','declined','archived')
+),
+raw as (
+  select 'payments' src, p.member_id mid, lower(trim(p.payer_email)) em, null::text fn, null::text ln, coalesce(p.created_at, now()) at
+  from public.payments p
+  where p.event_id in ('d0ed40e0-f242-4532-88e1-89ff5bf1d3ea','c64d25bb-90cb-4350-a141-b4f8ade1e9d1')
+    and coalesce(p.status,'') ~* '^(paid|succeeded|completed|success|approved)$'
+  union all
+  select 'signup_paid', s.member_id, null, null, null, s.created_at
+  from public.event_signups s
+  where s.event_id in ('d0ed40e0-f242-4532-88e1-89ff5bf1d3ea','c64d25bb-90cb-4350-a141-b4f8ade1e9d1')
+    and s.payment_status in ('paid','already_purchased')
+  union all
+  select 'legacy_minigolf', null, lower(trim(l.email)), lower(trim(l.first_name)), lower(trim(l.last_name)), l.paid_at
+  from public.legacy_payments l
+  where l.origin_details ilike 'KREWE OF SHAMROCK MINI GOLF%' and coalesce(l.refunded_cents,0) < coalesce(l.amount_cents,1)
+  union all
+  select 'tb_order', null, lower(trim(o.primary_email)), null, null, coalesce(o.submitted_at, o.created_at)
+  from public.tartan_ball_orders o
+  union all
+  select 'tb_guest', null, null, lower(trim(g.first_name)), lower(trim(g.last_name)), o.submitted_at
+  from public.tartan_ball_guests g join public.tartan_ball_orders o on o.id = g.order_id
+),
+matched as (
+  select r.*, coalesce(r.mid,
+    (select m.id from mem m where r.em is not null and m.em = r.em limit 1),
+    (select min(m.id::text)::uuid from mem m where r.fn is not null and m.fn = r.fn and m.ln = r.ln
+       having count(*) = 1)) member_id
+  from raw r
+)
+insert into public.member_badges (member_id, badge_id, earned_at)
+select member_id, 'first_attend', min(at)
+from matched
+where member_id is not null
+group by member_id
+on conflict (member_id, badge_id) do nothing;
