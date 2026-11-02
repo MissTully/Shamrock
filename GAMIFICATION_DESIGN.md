@@ -55,7 +55,7 @@ Every value below maps to a row or column you already have. The numbers are a
 | **Refer** a new member who joins | **40** | new `members.referred_by` field (see §7) |
 | Complete the **new-member quest line** (first 60 days) | **50** | derived (see §6) |
 | Attend a **members' meeting** | **15** | `events.event_type = 'meeting'`, attended |
-| Attend **another IKC krewe's event** (support the krewe family) | **25** | member claim, `clover_requests.activity_code = 'attend_ikc_event'`, officer-approved |
+| Attend **another IKC krewe's event** (RSVP +5, then submit a claim after you go) | **20** | member claim, `clover_requests.activity_code = 'attend_ikc_event'`, officer-approved |
 | Approved **worked** volunteer hours (each confirmed log) | **+30** | `volunteer_hours.status = 'approved'`, and the log is not in-kind |
 | In-kind donation logged as hours | **0** | `volunteer_hours.source = 'in_kind'` (donated goods at $12 = 1 hour) |
 

@@ -3648,7 +3648,7 @@
   var CLAIM_ACTIVITIES = [
     { code: "attend_event", label: "Attend an event (verified)", clovers: 20 },
     { code: "attend_meeting", label: "Attend a members' meeting", clovers: 15 },
-    { code: "attend_ikc_event", label: "Attend another IKC krewe's event", clovers: 25 },
+    { code: "attend_ikc_event", label: "Attend another IKC krewe's event", clovers: 20 },
     { code: "volunteer_event", label: "Volunteer at an event", clovers: 30 },
     { code: "volunteer_priority", label: "Priority shift bonus (officers flag hard-to-fill spots like security or float duty)", clovers: 60 },
     { code: "organize_event", label: "Organize an event", clovers: 50 },
@@ -3703,7 +3703,7 @@
       listHtml = '<p class="empty" style="margin-top:14px;">No claims yet. RSVPs still earn +5 automatically.</p>';
     }
     body.innerHTML =
-      '<p style="margin:0 0 8px;font-size:16px;color:var(--muted);">Pick an activity. Officers review and credit Clovers to your Craic Cup. RSVP to an event is already automatic, so it is not listed here. Went to another IKC krewe’s event? That one is worth <b>+25 🍀</b> - supporting the krewe family counts.</p>' +
+      '<p style="margin:0 0 8px;font-size:16px;color:var(--muted);">Pick an activity. Officers review and credit Clovers to your Craic Cup. RSVP to an event is already automatic, so it is not listed here. Went to another IKC krewe’s event? RSVP earns +5 🍀, then claim <b>+20 🍀</b> here after you attend.</p>' +
       '<form id="hubClaimForm">' +
       '<label for="hubClaimActivity">Activity</label>' +
       '<select id="hubClaimActivity" required><option value="">Choose one…</option>' + claimOptionsHtml() + "</select>" +

@@ -588,6 +588,7 @@
   .cup-event .ce-btns a{ text-decoration:none; border-radius:999px; padding:8px 16px; font-family:var(--display); font-size:15px; display:inline-block; }
   .ce-rsvp{ background:var(--cup-green); color:var(--cup-cream); border:1px solid var(--cup-green-deep); box-shadow:0 2px 6px rgba(15,61,42,.3); }
   .ce-rsvp:hover{ background:var(--cup-teal); }
+  .cup-event .ce-btns a.ce-rsvp, .cup-event .ce-btns a.ce-rsvp:link, .cup-event .ce-btns a.ce-rsvp:visited, .cup-event .ce-btns a.ce-rsvp:hover, .cup-event .ce-btns a.ce-rsvp:focus{ color:#fffaf0 !important; text-shadow:0 1px 1px rgba(0,0,0,.25); }
   .ce-reg{ background:linear-gradient(180deg,var(--cup-gold-light),var(--cup-gold)); color:var(--cup-ink); border:1px solid var(--cup-gold); }
   .ce-reg:hover{ filter:brightness(1.05); }
   /* Game footer: step back / step forward through the screens, and a big
@@ -1898,7 +1899,7 @@
         </div>
         <div class="app-body dash-body">
           <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
-             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and earn <b>+25 🍀</b> for cheering on another IKC krewe. Season restarts every July 1 - good-natured competition only.</p>
+             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and claim <b>+20 🍀</b> for attending another IKC krewe's event. Season restarts every July 1 - good-natured competition only.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>📅 Upcoming events</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
             <span>🤝 Volunteer bonuses</span><span>🔎 Find My Clovers</span>
@@ -3359,7 +3360,7 @@
       ["RSVP to an event","5"],
       ["Attend an event (verified)","20"],
       ["Attend a members' meeting","15"],
-      ["Attend another IKC krewe's event (support the krewe family)","25"],
+      ["Attend another IKC krewe's event (submit a claim after you go)","20"],
       ["Volunteer at an event","+30"],
       ["Priority shift bonus (officers flag hard-to-fill spots like security or float duty)","+60"],
       ["Organize an event","+50"],
@@ -3576,13 +3577,13 @@
             '<div style="flex:1;min-width:200px;">'+
             '<div class="ce-nm">'+E(ev.name||"Krewe event")+(ev.members_only?' <span class="cup-st">members only</span>':'')+'</div>'+
             '<div class="ce-meta">'+E(cupWhen(ev))+(where?(" · "+E(where)):"")+'</div>'+
-            '<div class="ce-hint">+5 🍀 to RSVP · +20 🍀 when you attend</div>'+
+            '<div class="ce-hint">'+(String(ev.source||"").toLowerCase()==="ikc"?"+5 🍀 to RSVP · +20 🍀 when you claim attendance":"+5 🍀 to RSVP · +20 🍀 when you attend")+'</div>'+
             '<details><summary>View details</summary>'+detailBits.join("")+'</details>'+
             '<div class="ce-btns">'+btns+'</div>'+
             '</div></div></div>';
         }).join("");
       }
-      html+='<div class="cup-remind" style="margin-top:14px;">🤝 <div><b>Cheering on the krewe family?</b> Attending another IKC krewe’s event earns <b>+25 🍀</b>. Close this window and use <b>Claim Clovers</b> on the Craic Cup tab afterward - an officer will credit you.</div></div>';
+      html+='<div class="cup-remind" style="margin-top:14px;">🤝 <div><b>Cheering on the krewe family?</b> RSVP for +5 🍀, then attend another IKC krewe’s event and claim <b>+20 🍀</b>. Close this window and use <b>Claim Clovers</b> on the Craic Cup tab afterward - an officer will credit you.</div></div>';
       box.innerHTML=html;
     }
 
@@ -4467,7 +4468,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261030feature1"></script>
-<script src="assets/members-desk.js?v=20261102rsvp1" defer></script>
+<script src="assets/members-desk.js?v=20261102ikc1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261030feature1" defer></script>

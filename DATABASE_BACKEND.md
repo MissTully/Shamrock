@@ -325,7 +325,7 @@ project — every number a member sees in the game is a live database read:
   only the current July-start season.
 - **Functions the Hub calls (RPC):**
   - `submit_clover_request(activity, …)` — member claims, including
-    `attend_ikc_event` (+25 for attending another IKC krewe's event).
+    `attend_ikc_event` (+20 claim for attending another IKC krewe's event; RSVP still +5).
   - `approve_clover_request` / `deny_clover_request` — officer decisions;
     approval inserts the ledger row.
   - `get_member_game_card(email)` — the signed-in member's own snapshot on
