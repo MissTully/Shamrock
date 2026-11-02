@@ -762,6 +762,62 @@
     return bits.join("");
   }
 
+  // Full detail block under each Hub event row: flyer, description, times,
+  // place, ticket and event links, members-only notes, RSVP status.
+  function hubEventDetailHtml(ev, going) {
+    var out = [];
+    var flyer = ev.flyer_url ? String(ev.flyer_url) : "";
+    if (flyer) {
+      if (/\.pdf(?:$|[?#])/i.test(flyer)) {
+        out.push('<p class="hub-ev-flyer-pdf"><a class="hub-ev-btn" href="' + esc(flyer) + '" target="_blank" rel="noopener">📄 Open the event flyer (PDF)</a></p>');
+      } else {
+        out.push('<a class="hub-ev-flyer" href="' + esc(flyer) + '" target="_blank" rel="noopener" title="Open full size">' +
+          '<img src="' + esc(flyer) + '" alt="Flyer for ' + esc(ev.name || "event") + '" loading="lazy" decoding="async" onerror="this.parentNode.style.display=\'none\'" />' +
+          '<span class="hub-ev-zoom">Tap to enlarge</span></a>');
+      }
+    }
+    var facts = [];
+    if (ev.start_time) {
+      var s0 = new Date(ev.start_time);
+      if (!isNaN(s0.getTime())) {
+        var w = s0.toLocaleString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+        if (ev.end_time) {
+          var e0 = new Date(ev.end_time);
+          if (!isNaN(e0.getTime())) {
+            w += (e0.toDateString() === s0.toDateString())
+              ? " to " + e0.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+              : " to " + e0.toLocaleString([], { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+          }
+        }
+        facts.push("<b>When:</b> " + esc(w));
+      }
+    }
+    var addr = ev.member_address ? String(ev.member_address).trim() : "";
+    var loc = ev.location ? String(ev.location).trim() : "";
+    if (addr) facts.push("<b>Address:</b> " + esc(addr) + (loc && loc !== addr && addr.indexOf(loc) < 0 ? " (" + esc(loc) + ")" : ""));
+    else if (loc) facts.push("<b>Where:</b> " + esc(loc));
+    else if (ev.is_online) facts.push("<b>Where:</b> Online");
+    var price = ev.ticket_price_cents ? "$" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
+    var tix = [ev.ticket_label, price].filter(Boolean).join(" · ");
+    if (tix) facts.push("<b>Tickets:</b> " + esc(tix));
+    if (ev.registration_closes_at) {
+      var rc = new Date(ev.registration_closes_at);
+      if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(rc.toLocaleDateString([], { month: "long", day: "numeric" })));
+    }
+    facts.push("<b>Your RSVP:</b> " + (going ? "You're going ✅" : "Not yet. Tap RSVP above."));
+    out.push('<div class="hub-ev-facts">' + facts.join("<br>") + "</div>");
+    if (ev.description) out.push('<div class="hub-ev-desc">' + esc(String(ev.description)).replace(/\n/g, "<br>") + "</div>");
+    if (ev.member_notes) out.push('<div class="hub-ev-private"><b>🔒 Members only:</b> ' + esc(String(ev.member_notes)).replace(/\n/g, "<br>") + "</div>");
+    var links = [];
+    var pay = ev.ticket_payment_url || (/zeffy\.com/i.test(ev.external_url || "") ? ev.external_url : "");
+    if (pay) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener">🎟️ Buy tickets / pay ↗</a>');
+    if (ev.meeting_url) links.push('<a class="hub-ev-btn" href="' + esc(ev.meeting_url) + '" target="_blank" rel="noopener">💻 Join online ↗</a>');
+    if (ev.external_url && ev.external_url !== pay) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">🔗 Event website ↗</a>');
+    links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="event-signup.html?event=' + encodeURIComponent(ev.id || "") + '">📅 Event page</a>');
+    out.push('<div class="hub-ev-links">' + links.join("") + "</div>");
+    return '<div class="hub-ev-detail">' + out.join("") + "</div>";
+  }
+
   function renderHubMemberEvents(list) {
     var target = document.getElementById("hubMemberEventList");
     if (!target) return;
@@ -793,14 +849,13 @@
       var calBtn = ev.start_time
         ? '<button type="button" class="app-cal-mini" data-app-cal="' + esc(ev.id || "") + '" aria-label="Add ' + esc(ev.name || "event") + ' to my calendar">📅 Calendar</button>'
         : "";
-      return '<div role="button" tabindex="0" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
+      return '<article class="hub-ev-card"><div role="button" tabindex="0" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
         dateBlock +
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
-        where +
-        (teaser && addr ? '<span class="muted" style="display:block;margin-top:2px;">Public note: ' + esc(teaser) + '</span>' : "") +
         '</span><span class="app-event-acts"><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
-        (going ? "Already RSVP'd" : "RSVP") + "</span>" + calBtn + "</span></div>";
+        (going ? "Already RSVP'd" : "RSVP") + "</span>" + calBtn + "</span></div>" +
+        hubEventDetailHtml(ev, going) + "</article>";
     }).join("");
     target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
@@ -1388,7 +1443,7 @@
 
     var events = document.getElementById("hubEvents");
     events.innerHTML =
-      '<section class="app-card"><div class="app-head"><span class="ic">📅</span><div><h2>Events and RSVPs</h2><small>Member addresses show here after you sign in</small></div></div>' +
+      '<section class="app-card"><div class="app-head"><span class="ic">📅</span><div><h2>Events and RSVPs</h2><small>Flyers, full details, addresses, and your RSVPs</small></div></div>' +
       '<div class="app-body"><p>RSVP to krewe events, track attendance, and keep your calendar current.</p>' +
       '<div id="hubMemberEventList"><p class="empty">Loading events…</p></div>' +
       '<p><a class="btn btn-primary" href="event-signup.html">Open event signup</a></p>' +
@@ -3255,7 +3310,7 @@
       state.birthdaysReady = true;
     }
     try {
-      var evSelect = "id,name,start_time,end_time,location,member_address,members_only,status,source,event_type,linked_meeting_id,description";
+      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,external_url,is_online,meeting_url,registration_closes_at";
       var evs = await client.from("events")
         .select(evSelect)
         .eq("source", "krewe")

@@ -1138,6 +1138,20 @@
     border-radius:22px; padding:16px 16px 20px;
   }
   .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
+  .hub-ev-card{ margin:10px 0 16px; border-radius:18px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); overflow:hidden; }
+  .hub-ev-card > .app-event-hit{ margin:0; border:0; border-radius:0; }
+  .hub-ev-detail{ padding:4px 14px 14px; font-size:15px; line-height:1.45; }
+  .hub-ev-flyer{ position:relative; display:block; margin:8px 0 10px; border-radius:12px; overflow:hidden; background:#0d1f14; }
+  .hub-ev-flyer img{ display:block; width:100%; height:auto; max-height:380px; object-fit:contain; }
+  .hub-ev-zoom{ position:absolute; right:8px; bottom:8px; background:rgba(20,83,45,.9); color:#fffaf0; font-size:12px; padding:3px 10px; border-radius:999px; font-family:var(--display); }
+  .hub-ev-facts{ margin:6px 0; }
+  .hub-ev-desc{ margin:8px 0; white-space:normal; }
+  .hub-ev-private{ margin:8px 0; padding:8px 10px; border-radius:10px; background:rgba(226,193,90,.16); border:1px dashed rgba(226,193,90,.7); }
+  .hub-ev-links{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .hub-ev-links a.hub-ev-btn, .hub-ev-flyer-pdf a.hub-ev-btn, a.hub-ev-btn:visited{ display:inline-block; text-decoration:none; padding:8px 14px; border-radius:999px; background:#14532d; color:#fffaf0 !important; border:1px solid #0f3d22; font-family:var(--display); font-weight:700; font-size:14px; }
+  .hub-ev-links a.hub-ev-btn-alt, .hub-ev-links a.hub-ev-btn-alt:visited{ background:#e2c15a; color:#14532d !important; border-color:#a8801c; }
+  body.hub-desk .hub-ev-card{ background:#fffdf6; border-color:rgba(168,128,28,.4); color:#14532d; }
+  body.hub-desk .hub-ev-private{ background:#fbf3d7; }
   .app-event-acts{ display:flex; flex-direction:column; align-items:stretch; gap:6px; }
   .app-cal-mini{
     min-height:36px; padding:6px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
@@ -4468,7 +4482,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261030feature1"></script>
-<script src="assets/members-desk.js?v=20261102ikc1" defer></script>
+<script src="assets/members-desk.js?v=20261102evdetail1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261030feature1" defer></script>
