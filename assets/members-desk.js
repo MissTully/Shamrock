@@ -4979,6 +4979,78 @@
     b.textContent = String(n);
   }
 
+  // Missed Clovers: one reconciliation claim per card, one row per line item.
+  function missedCloversApprovalsHtml(claims) {
+    var html = '<h3 class="hub-appr-h">Missed Clovers</h3>';
+    claims.forEach(function (c) {
+      var lines = (c.lines || []).filter(function (l) { return l.status === "pending"; });
+      var total = 0;
+      lines.forEach(function (l) { total += Number(l.clovers || 0); });
+      var when = c.created_at ? String(c.created_at).slice(0, 10) : "";
+      html += '<div class="hub-appr hub-missed" data-missed-claim="' + esc(c.id) + '" style="display:block;">' +
+        '<div><b>' + esc(c.member_name || c.member_email || "Member") + '</b> <span class="muted">' + esc(c.member_email || "") + (when ? " · sent " + esc(when) : "") + '</span></div>' +
+        '<div class="muted" style="margin:2px 0 6px;"><span class="hub-missed-tag">Missed Clovers</span> ' + lines.length + (lines.length === 1 ? " line" : " lines") + " · " + total + ' 🍀 total</div>' +
+        (c.notes ? '<div class="muted">Note: ' + esc(c.notes) + '</div>' : "") +
+        (c.proof_url ? '<div class="muted"><a href="' + esc(c.proof_url) + '" target="_blank" rel="noopener">Open proof link</a></div>' : "") +
+        '<table class="hub-missed-lines" style="width:100%;border-collapse:collapse;margin:8px 0;font-size:14px;"><thead><tr><th style="text-align:left;">OK</th><th style="text-align:left;">Event</th><th style="text-align:left;">Activity</th><th style="text-align:right;">🍀</th></tr></thead><tbody>' +
+        lines.map(function (l) {
+          var ev = (l.event_name || "(no event)") + (l.event_date ? " · " + String(l.event_date) : "") + (l.wa_event_id ? " (old site)" : "");
+          var act = (l.activity_label || l.activity_code) + (l.guest_count ? " · " + l.guest_count + " guests" : "") + (l.note ? " · " + l.note : "");
+          return '<tr><td><input type="checkbox" checked data-missed-line="' + esc(l.id) + '" aria-label="Approve this line" /></td><td>' + esc(ev) + '</td><td>' + esc(act) + '</td><td style="text-align:right;">+' + Number(l.clovers || 0) + '</td></tr>';
+        }).join("") +
+        '</tbody></table>' +
+        '<div class="hub-appr-btns">' +
+        '<button class="btn btn-primary" data-missed-all="' + esc(c.id) + '">Approve all (' + total + ' 🍀)</button>' +
+        '<button class="btn" data-missed-checked="' + esc(c.id) + '">Approve checked, deny unchecked</button>' +
+        '<button class="btn" data-missed-deny="' + esc(c.id) + '">Deny all</button>' +
+        '</div></div>';
+    });
+    return html;
+  }
+
+  function wireMissedCloversApprovals(client, body) {
+    function go(claimId, args, btn) {
+      if (btn) btn.disabled = true;
+      client.rpc("decide_missed_clovers", Object.assign({ p_claim_id: claimId }, args)).then(function (res) {
+        if (res.error) throw res.error;
+        var d = res.data || {};
+        if (d.ok === false) alert(d.message || "Couldn't complete that.");
+        else if (d.skipped) alert(d.approved + " approved, " + d.skipped + " skipped (already in the ledger), " + d.denied + " denied.");
+      }).catch(function (e) {
+        alert("Couldn't complete that: " + ((e && e.message) || e));
+      }).then(function () { loadApprovals(client); });
+    }
+    function lineIds(claimId, checked) {
+      var card = body.querySelector('[data-missed-claim="' + claimId + '"]');
+      var out = [];
+      if (!card) return out;
+      card.querySelectorAll("[data-missed-line]").forEach(function (cb) {
+        if (cb.checked === checked) out.push(cb.getAttribute("data-missed-line"));
+      });
+      return out;
+    }
+    body.querySelectorAll("[data-missed-all]").forEach(function (b) {
+      b.addEventListener("click", function () { go(b.getAttribute("data-missed-all"), { p_approve_all: true }, b); });
+    });
+    body.querySelectorAll("[data-missed-checked]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-missed-checked");
+        var deny = lineIds(id, false);
+        var note = null;
+        if (deny.length) { note = prompt("Optional note for the denied lines"); if (note === null) return; }
+        go(id, { p_approve: lineIds(id, true), p_deny: deny, p_note: note || null }, b);
+      });
+    });
+    body.querySelectorAll("[data-missed-deny]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-missed-deny");
+        var note = prompt("Optional note for the record (why deny?)");
+        if (note === null) return;
+        go(id, { p_deny: lineIds(id, true).concat(lineIds(id, false)), p_note: note || null }, b);
+      });
+    });
+  }
+
   async function decideApproval(client, fn, args, btn) {
     if (btn) btn.disabled = true;
     try {
@@ -5175,6 +5247,7 @@
     var body = card.querySelector("#hubApprovalsBody");
     var data = null;
     var clovers = [];
+    var missed = [];
     var media = [];
     var mediaLog = [];
     try {
@@ -5185,6 +5258,10 @@
       var cr = await client.rpc("list_pending_clover_requests");
       if (cr.data && Array.isArray(cr.data)) clovers = cr.data;
     } catch (e2) {}
+    try {
+      var mc = await client.rpc("list_pending_missed_clovers");
+      if (mc.data && Array.isArray(mc.data)) missed = mc.data;
+    } catch (e2b) {}
     try {
       var mr = await client.rpc("list_pending_media_approvals");
       if (mr.data && Array.isArray(mr.data)) media = mr.data;
@@ -5210,6 +5287,7 @@
     if (!state.officer) {
       data = { role_requests: [], duplicates: [] };
       clovers = [];
+      missed = [];
       media = [];
       mediaLog = [];
     } else if (!data) {
@@ -5221,8 +5299,8 @@
     }
     var reqs = data.role_requests || [];
     var dups = data.duplicates || [];
-    setOfficerBadge(reqs.length + dups.length + clovers.length + media.length + hours.length);
-    if (!reqs.length && !dups.length && !clovers.length && !media.length && !hours.length) {
+    setOfficerBadge(reqs.length + dups.length + clovers.length + missed.length + media.length + hours.length);
+    if (!reqs.length && !dups.length && !clovers.length && !missed.length && !media.length && !hours.length) {
       var emptyHtml = "";
       if (state.hourDecisionFlash) emptyHtml += '<p class="hub-app-flash" id="hubHoursFlash">' + esc(state.hourDecisionFlash) + "</p>";
       emptyHtml += '<p class="empty">Nothing waiting · all caught up. ☘</p>';
@@ -5258,6 +5336,7 @@
           '</div></div>';
       });
     }
+    if (missed.length) html += missedCloversApprovalsHtml(missed);
     if (clovers.length) {
       html += '<h3 class="hub-appr-h">Clover claims</h3>';
       clovers.forEach(function (q) {
@@ -5336,6 +5415,7 @@
         decideApproval(client, "deny_content_item", { p_id: b.getAttribute("data-media-deny"), p_note: note || null }, b);
       });
     });
+    wireMissedCloversApprovals(client, body);
     body.querySelectorAll("[data-clover-approve]").forEach(function (b) {
       b.addEventListener("click", function () {
         decideApproval(client, "approve_clover_request", { p_id: b.getAttribute("data-clover-approve") }, b);

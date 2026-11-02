@@ -532,6 +532,31 @@
   .game-conn::before{ content:''; width:8px; height:8px; border-radius:50%; background:#9aa; box-shadow:0 0 6px rgba(255,255,255,.35); }
   .game-conn.ok::before{ background:#54d98a; box-shadow:0 0 8px rgba(84,217,138,.9); }
   .game-conn.err::before{ background:#ff7a5c; box-shadow:0 0 8px rgba(255,122,92,.9); }
+  .missed-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:16px; }
+  @media (max-width:720px){ .missed-grid{ grid-template-columns:1fr; } }
+  .missed-pick input[type=search], .missed-lines-wrap input, .missed-lines-wrap textarea, .missed-lines-wrap select, .missed-extra input{ width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--cup-gold); border-radius:10px; font:inherit; font-size:15px; background:#fff; color:var(--cup-ink); margin-top:6px; }
+  .missed-list{ max-height:340px; overflow:auto; margin-top:8px; border:1px solid rgba(201,162,39,.5); border-radius:12px; background:#fffdf4; padding:4px; }
+  .missed-opt{ display:flex; gap:10px; align-items:flex-start; padding:7px 8px; border-radius:8px; cursor:pointer; font-size:15px; color:var(--cup-ink); }
+  .missed-opt:hover{ background:var(--cup-gold-light); }
+  .missed-opt input{ margin-top:4px; width:18px; height:18px; accent-color:var(--cup-green); }
+  .missed-opt small{ color:var(--muted); }
+  .missed-extra{ margin-top:8px; font-size:15px; } .missed-extra summary{ cursor:pointer; color:var(--cup-green); font-family:var(--display); }
+  .missed-extra-row{ display:grid; grid-template-columns:1fr auto auto; gap:6px; align-items:end; }
+  .missed-line{ border:1px solid rgba(201,162,39,.6); border-radius:12px; padding:8px 10px; margin-top:8px; background:#fffdf4; color:var(--cup-ink); }
+  .missed-line .ml-top{ display:flex; gap:6px; align-items:baseline; } .missed-line .ml-top small{ color:var(--muted); }
+  .missed-line .ml-row{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; } .missed-line .ml-row select{ flex:1; min-width:180px; }
+  .ml-x{ margin-left:auto; background:none; border:0; cursor:pointer; color:var(--cup-crimson); font-size:16px; }
+  .ml-pts{ font-family:var(--display); color:var(--cup-green); white-space:nowrap; }
+  .ml-dup{ background:#fff; border:1px solid var(--cup-gold); color:var(--cup-green); border-radius:999px; padding:4px 10px; cursor:pointer; font-size:13px; }
+  .missed-warn{ color:var(--cup-crimson); font-weight:700; font-size:14px; margin-top:4px; } .missed-ok{ color:var(--cup-green); font-size:14px; margin-top:4px; }
+  .missed-total{ margin:10px 0 6px; font-size:16px; color:var(--cup-ink); }
+  .missed-btn, button.missed-btn{ background:var(--cup-green); color:#fffaf0 !important; border:1px solid var(--cup-green-deep); border-radius:999px; padding:8px 16px; font-family:var(--display); font-size:15px; cursor:pointer; }
+  .missed-btn:hover{ background:var(--cup-teal); } .missed-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .missed-submit{ width:100%; padding:11px 16px; font-size:16px; }
+  .missed-claim{ border:1px solid rgba(201,162,39,.5); border-radius:12px; padding:8px 12px; margin-top:8px; background:#fffdf4; font-size:15px; color:var(--cup-ink); }
+  .missed-claim ul{ margin:6px 0 0; padding-left:18px; }
+  .hub-missed-tag{ display:inline-block; background:#14532d; color:#fffaf0; border-radius:999px; padding:1px 10px; font-size:12px; font-family:var(--display); }
+  .hub-missed-lines th, .hub-missed-lines td{ padding:4px 6px; border-bottom:1px solid rgba(168,128,28,.25); vertical-align:top; }
   .game-tabs{ display:flex; flex-wrap:wrap; gap:8px; border:0; margin-bottom:16px; }
   .game-tabs button{ border:1px solid var(--cup-gold); background:#fff; color:var(--cup-green); padding:9px 16px; font-family:var(--display); cursor:pointer; border-radius:999px; font-size:15px; box-shadow:0 1px 3px rgba(42,33,24,.12); transition:transform .12s ease, background .12s ease; }
   .game-tabs button:hover{ background:var(--cup-gold-light); transform:translateY(-1px); }
@@ -2132,6 +2157,7 @@
           <button id="gt-events" type="button" onclick="gameTab('events')">📅 Events</button>
           <button id="gt-howto" type="button" onclick="gameTab('howto')">📖 How to Play</button>
           <button id="gt-find" type="button" onclick="gameTab('find')">🔎 Find My Clovers</button>
+          <button id="gt-missed" type="button" onclick="gameTab('missed')">🧾 Missed Clovers</button>
         </div>
         <div id="gameBody"></div>
         <div class="game-nav" aria-label="Game navigation">
@@ -3380,12 +3406,13 @@
        history entry - so the phone's Back button (or the Exit button) leaves
        the game and lands right back on the hub tab the member came from. */
     let gameLoaded=false;
-    const GAME_TABS=["standings","events","howto","find"];
+    const GAME_TABS=["standings","events","howto","find","missed"];
     const GAME_META={
       standings:{icon:"🏆",label:"Standings"},
       events:{icon:"📅",label:"Events"},
       howto:{icon:"📖",label:"How to Play"},
-      find:{icon:"🔎",label:"Find My Clovers"}
+      find:{icon:"🔎",label:"Find My Clovers"},
+      missed:{icon:"🧾",label:"Missed Clovers"}
     };
     let currentGameTab="standings";
     function gameIsOpen(){ return document.getElementById("gameModal").classList.contains("open"); }
@@ -3426,6 +3453,7 @@
       if(t==="standings") renderStandings();
       else if(t==="events") renderCupEvents();
       else if(t==="howto") renderHowto();
+      else if(t==="missed") renderMissed();
       else renderFind();
     };
     function gameNavSync(){
@@ -3597,6 +3625,7 @@
       html+='<div class="rpt-tablewrap"><table class="rpt-table pt-table"><tbody>'+
         POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
       html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers; an officer confirms who attended after each event.</p>`;
+      html+=`<p class="rpt-note">🧾 Missed some Clovers? Use the <a href="#craic-missed" onclick="gameTab('missed');return false;"><b>Missed Clovers</b></a> form and an officer will review it.</p>`;
       html+=`<h3 class="rpt-cat">🙌 Volunteer and earn Clovers</h3>`;
       html+=`<p style="margin:0 0 8px;color:#3a3a2e;">Lending a hand is one of the best ways to climb the board. Here's how it works:</p><ol style="margin:0 0 8px 20px;color:#3a3a2e;"><li>Submit your volunteer hours in the <b>Member Hub</b>.</li><li>An officer reviews and approves them.</li><li>You earn <b>30 Clovers 🍀</b> for each event you worked.</li></ol>`;
       html+=`<p class="rpt-note">Officers may offer a bonus for high-priority shifts like security or float duty. In-kind donations are deeply appreciated, but they don't earn Clovers. Clovers are for the hours you put in.</p>`;
@@ -3606,6 +3635,186 @@
       html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><p class="rpt-note">Badges show up on your card on their own: your first RSVP, your first event, your first approved volunteer shift, and the day you're Parade Ready. Officers hand out the Host badge to members who host an event.</p><div class="badge-gallery">`+
         (badges||[]).map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div><div class="ds">${E(b.description||"")}</div></div>`).join("")+'</div>';
       box.innerHTML=html;
+    }
+
+    /* ---- Missed Clovers: one reconciliation claim with many events.
+           Pick events (site + old site), set an activity per event, check
+           for duplicates, submit once. Officers review it in Approvals. ---- */
+    const MISSED_ACTS=[
+      ["rsvp","RSVP to an event",5],["attend_event","Attend an event",20],["attend_meeting","Attend a members' meeting",15],
+      ["attend_ikc_event","Attend another IKC krewe's event",20],["volunteer_event","Volunteer at an event",30],
+      ["volunteer_priority","Priority shift bonus",60],["organize_event","Organize an event",50],
+      ["bring_guest","Bring a guest (up to 3)",5],["dues_on_time","Pay your dues on time",25],
+      ["dues_early","Pay your dues early",15],["refer_member","Refer a member who joins",40],["other","Other (officer review)",0]
+    ];
+    const missed={events:[],lines:[],seq:0,checkTimer:null,checks:[]};
+    function missedLineKey(ev){ return ev.kind==="site" ? ("s:"+ev.id) : ("w:"+ev.wa_event_id); }
+    function missedDefaultAct(name){ return /meeting/i.test(name||"") ? "attend_meeting" : "attend_event"; }
+    function missedLinePts(l){
+      if(l.activity_code==="bring_guest") return 5*Math.max(1,Math.min(3,Number(l.guest_count||1)));
+      if(l.activity_code==="other") return Number(l.clovers||0);
+      const a=MISSED_ACTS.find(x=>x[0]===l.activity_code); return a?a[2]:0;
+    }
+    function missedPayload(){
+      return missed.lines.map(l=>{
+        const o={activity_code:l.activity_code};
+        if(l.event_id) o.event_id=l.event_id;
+        if(l.wa_event_id) o.wa_event_id=l.wa_event_id;
+        if(!l.event_id && !l.wa_event_id){ if(l.event_name) o.event_name=l.event_name; if(l.event_date) o.event_date=l.event_date; }
+        if(l.activity_code==="bring_guest") o.guest_count=Number(l.guest_count||1);
+        if(l.activity_code==="other") o.clovers=Number(l.clovers||0);
+        if(l.note) o.note=l.note;
+        return o;
+      });
+    }
+    async function renderMissed(){
+      const box=document.getElementById("gameBody");
+      const me=window.kosProfile||{};
+      const { data:sess } = await sb.auth.getSession();
+      if(!sess || !sess.session){
+        box.innerHTML='<p class="msg">Sign in to the Member Hub to claim Missed Clovers.</p>';
+        return;
+      }
+      box.innerHTML='<p class="empty">Loading past events…</p>';
+      const [{data:evs,error:e1},{data:mine}] = await Promise.all([
+        sb.rpc("list_missed_clover_events"), sb.rpc("list_my_missed_clovers")
+      ]);
+      setConn(!e1);
+      missed.events=Array.isArray(evs)?evs:[];
+      box.innerHTML=`<p style="margin:0 0 12px;color:#3a3a2e;">Did the site miss some of your Clovers? Pick <b>every event</b> you want to fix, choose what you did at each one, and send it all as <b>one claim</b>. An officer reviews it and the Clovers land in your Craic Cup. Going forward, this form is how we capture anything the site missed.</p>
+        <div class="missed-grid">
+          <div class="missed-pick">
+            <label for="missedSearch"><b>1. Pick your events</b></label>
+            <input id="missedSearch" type="search" placeholder="Search events, e.g. Tartan, General Meeting" autocomplete="off" />
+            <div id="missedList" class="missed-list" role="group" aria-label="Past events"></div>
+            <details class="missed-extra"><summary>Event not listed? Add it</summary>
+              <div class="missed-extra-row"><input id="missedFreeName" type="text" maxlength="120" placeholder="Event name (or what it was for)" />
+              <input id="missedFreeDate" type="date" /><button type="button" class="missed-btn" id="missedFreeAdd">Add</button></div>
+            </details>
+          </div>
+          <div class="missed-lines-wrap">
+            <b>2. What did you do at each one?</b>
+            <div id="missedLines"></div>
+            <label for="missedNotes" style="margin-top:10px;display:block;">Note for the officer (optional)</label>
+            <textarea id="missedNotes" rows="2" maxlength="600" placeholder="Anything that helps, e.g. who saw you there"></textarea>
+            <label for="missedProof" style="margin-top:8px;display:block;">Photo or proof link (optional)</label>
+            <input id="missedProof" type="url" placeholder="https://..." />
+            <div class="missed-total" id="missedTotal"></div>
+            <button type="button" class="missed-btn missed-submit" id="missedSubmit" disabled>🍀 Send my Missed Clovers claim</button>
+            <div class="msg" id="missedMsg"></div>
+          </div>
+        </div>
+        <h3 class="rpt-cat" style="margin-top:18px;">🧾 My Missed Clovers claims</h3>
+        <div id="missedMine"></div>`;
+      document.getElementById("missedSearch").addEventListener("input",missedRenderList);
+      document.getElementById("missedFreeAdd").addEventListener("click",()=>{
+        const n=document.getElementById("missedFreeName").value.trim();
+        const d=document.getElementById("missedFreeDate").value;
+        if(!n||!d){ missedMsg("Add the event name and date.",true); return; }
+        missed.lines.push({uid:++missed.seq,key:"f:"+missed.seq,event_name:n,event_date:d,label:n,date:d,activity_code:missedDefaultAct(n)});
+        document.getElementById("missedFreeName").value=""; document.getElementById("missedFreeDate").value="";
+        missedRenderLines(); missedScheduleCheck();
+      });
+      document.getElementById("missedSubmit").addEventListener("click",missedSubmit);
+      missedRenderList(); missedRenderLines(); missedRenderMine(Array.isArray(mine)?mine:[]);
+    }
+    function missedMsg(t,err){ const m=document.getElementById("missedMsg"); if(m){ m.textContent=t||""; m.className="msg"+(err?" error":""); } }
+    function missedRenderList(){
+      const q=(document.getElementById("missedSearch").value||"").toLowerCase().trim();
+      const chosen=new Set(missed.lines.map(l=>l.key));
+      const rows=missed.events.filter(ev=>!q || String(ev.name||"").toLowerCase().indexOf(q)!==-1).slice(0,80);
+      const list=document.getElementById("missedList");
+      list.innerHTML = rows.length ? rows.map(ev=>{
+        const k=missedLineKey(ev);
+        return `<label class="missed-opt"><input type="checkbox" data-mk="${E(k)}" ${chosen.has(k)?"checked":""} /> <span><b>${E(ev.name||"Event")}</b><br><small>${E(cupHistDate(ev.start_time))}${ev.kind==="old_site"?" · old site":""}${ev.source==="ikc"?" · IKC":""}</small></span></label>`;
+      }).join("") : '<p class="empty">No past events match. Use "Event not listed?" below.</p>';
+      list.querySelectorAll("input[data-mk]").forEach(cb=>cb.addEventListener("change",()=>{
+        const k=cb.getAttribute("data-mk");
+        if(cb.checked){
+          const ev=missed.events.find(x=>missedLineKey(x)===k); if(!ev) return;
+          missed.lines.push({uid:++missed.seq,key:k,event_id:ev.kind==="site"?ev.id:null,wa_event_id:ev.kind==="old_site"?ev.wa_event_id:null,
+            label:ev.name,date:ev.start_time,activity_code:ev.source==="ikc"?"attend_ikc_event":missedDefaultAct(ev.name)});
+        }else{
+          missed.lines=missed.lines.filter(l=>l.key!==k);
+        }
+        missedRenderLines(); missedScheduleCheck();
+      }));
+    }
+    function missedRenderLines(){
+      const wrap=document.getElementById("missedLines"); if(!wrap) return;
+      if(!missed.lines.length){ wrap.innerHTML='<p class="empty">Tick events on the left. Each one becomes a line here. You can add the same event twice for two activities (for example RSVP and Volunteer).</p>'; }
+      else wrap.innerHTML=missed.lines.map((l,i)=>{
+        const chk=missed.checks[i];
+        const warn = chk && chk.ok===false ? `<div class="missed-warn">⚠️ ${E(chk.message||"Needs a fix")}</div>` : (chk&&chk.ok?'<div class="missed-ok">✓ Looks new</div>':'');
+        return `<div class="missed-line" data-uid="${l.uid}">
+          <div class="ml-top"><b>${E(l.label||"Event")}</b> <small>${E(l.date?cupHistDate(l.date):"")}</small>
+          <button type="button" class="ml-x" data-x="${l.uid}" aria-label="Remove line">✕</button></div>
+          <div class="ml-row"><select data-f="activity_code" aria-label="Activity">${MISSED_ACTS.map(a=>`<option value="${a[0]}" ${a[0]===l.activity_code?"selected":""}>${E(a[1])}${a[2]?" (+"+a[2]+")":""}</option>`).join("")}</select>
+          ${l.activity_code==="bring_guest"?`<input data-f="guest_count" type="number" min="1" max="3" value="${E(l.guest_count||1)}" aria-label="Guests" style="width:70px;" />`:""}
+          ${l.activity_code==="other"?`<input data-f="clovers" type="number" min="1" max="60" value="${E(l.clovers||"")}" placeholder="🍀" aria-label="Suggested Clovers" style="width:80px;" />`:""}
+          <span class="ml-pts">+${missedLinePts(l)} 🍀</span>
+          <button type="button" class="ml-dup" data-dup="${l.uid}" title="Add another activity for this event">+ activity</button></div>
+          <input data-f="note" type="text" maxlength="200" value="${E(l.note||"")}" placeholder="Line note (optional)" />
+          ${warn}</div>`;
+      }).join("");
+      wrap.querySelectorAll(".missed-line").forEach(row=>{
+        const l=missed.lines.find(x=>String(x.uid)===row.getAttribute("data-uid"));
+        row.querySelectorAll("[data-f]").forEach(inp=>inp.addEventListener("change",()=>{
+          l[inp.getAttribute("data-f")]=inp.value; missedRenderLines(); missedScheduleCheck();
+        }));
+      });
+      wrap.querySelectorAll("[data-x]").forEach(b=>b.addEventListener("click",()=>{
+        missed.lines=missed.lines.filter(x=>String(x.uid)!==b.getAttribute("data-x"));
+        missedRenderList(); missedRenderLines(); missedScheduleCheck();
+      }));
+      wrap.querySelectorAll("[data-dup]").forEach(b=>b.addEventListener("click",()=>{
+        const l=missed.lines.find(x=>String(x.uid)===b.getAttribute("data-dup"));
+        missed.lines.push(Object.assign({},l,{uid:++missed.seq,activity_code:"volunteer_event",note:""}));
+        missedRenderLines(); missedScheduleCheck();
+      }));
+      const total=missed.lines.reduce((s,l)=>s+missedLinePts(l),0);
+      const bad=missed.checks.some(c=>c&&c.ok===false);
+      document.getElementById("missedTotal").innerHTML = missed.lines.length ? `<b>${missed.lines.length}</b> ${missed.lines.length===1?"line":"lines"} · <b>${total} 🍀</b> total` : "";
+      document.getElementById("missedSubmit").disabled = !missed.lines.length || bad;
+    }
+    function missedScheduleCheck(){
+      missed.checks=[];
+      clearTimeout(missed.checkTimer);
+      if(!missed.lines.length) return;
+      missed.checkTimer=setTimeout(async ()=>{
+        const { data, error } = await sb.rpc("check_missed_clovers",{ p_lines: missedPayload() });
+        if(error || !data || !data.ok){ missedMsg((data&&data.message)||"Could not check your lines just now.",true); return; }
+        missed.checks=data.lines||[]; missedMsg("");
+        missedRenderLines();
+        if(missed.checks.some(c=>c&&c.ok===false)) missedMsg("Some lines are already credited or need a fix. Remove or change them to send.",true);
+      },400);
+    }
+    async function missedSubmit(){
+      const btn=document.getElementById("missedSubmit"); btn.disabled=true;
+      missedMsg("Sending…");
+      const { data, error } = await sb.rpc("submit_missed_clovers",{
+        p_lines: missedPayload(),
+        p_notes: document.getElementById("missedNotes").value || null,
+        p_proof_url: document.getElementById("missedProof").value || null
+      });
+      if(error || !data){ missedMsg("Something went wrong. Please try again.",true); btn.disabled=false; return; }
+      if(!data.ok){
+        if(Array.isArray(data.lines)){ missed.checks=data.lines; missedRenderLines(); }
+        missedMsg(data.message||"Could not send.",true); btn.disabled=false; return;
+      }
+      missed.lines=[]; missed.checks=[];
+      missedRenderList(); missedRenderLines();
+      document.getElementById("missedNotes").value=""; document.getElementById("missedProof").value="";
+      missedMsg(`Sent! ${data.lines} ${data.lines===1?"line":"lines"}, ${data.total} 🍀 waiting for an officer.`);
+      const { data:mine } = await sb.rpc("list_my_missed_clovers");
+      missedRenderMine(Array.isArray(mine)?mine:[]);
+    }
+    function missedRenderMine(rows){
+      const el=document.getElementById("missedMine"); if(!el) return;
+      const ST={pending:"⏳ Pending",approved:"✅ Approved",denied:"❌ Denied",skipped:"↩️ Already credited"};
+      el.innerHTML = rows.length ? rows.map(c=>`<div class="missed-claim"><div><b>Sent ${E(cupHistDate(c.created_at))}</b> · ${E(c.status==="pending"?"Waiting for an officer":"Reviewed")} · ${c.approved_total||0} of ${c.total||0} 🍀 approved</div>
+        <ul>${(c.lines||[]).map(l=>`<li><span class="cup-st ${E(l.status)}">${E(ST[l.status]||l.status)}</span> ${E(l.event_name||"(no event)")} · ${E(l.activity_label||l.activity_code)} · +${Number(l.clovers||0)} 🍀${l.decision_note?` <small>(${E(l.decision_note)})</small>`:""}</li>`).join("")}</ul></div>`).join("")
+        : '<p class="empty">No Missed Clovers claims yet.</p>';
     }
 
     /* ---- Find My Clovers: the signed-in member's own card opens
@@ -4468,7 +4677,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261030feature1"></script>
-<script src="assets/members-desk.js?v=20261102ikc1" defer></script>
+<script src="assets/members-desk.js?v=20261102missed1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261030feature1" defer></script>
