@@ -2244,7 +2244,7 @@
     }
     window.kosUnlock = unlock;
 
-    const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'"',"'":"&#39;"}[c]));
+    const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&amp;quot;',"'":"&#39;"}[c]));
     const show=(el,t,k)=>{ const m=document.getElementById(el); m.textContent=t; m.className="msg "+(k||""); };
 
     // Identity comes from the signed-in profile, not free text, so coordination
@@ -3345,7 +3345,7 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const sb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
-    const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'"',"'":"&#39;"}[c]));
+    const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&amp;quot;',"'":"&#39;"}[c]));
     const medal = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
 
     const RANKS = [
@@ -3822,7 +3822,7 @@
           setIf("pfFact", pf.fun_fact);
           if(pf.photo_url){
             var av=document.getElementById("pfAvatarPreview");
-            if(av) av.innerHTML = '<img src="'+String(pf.photo_url).replace(/"/g,'"')+'" alt="" style="width:100%;height:100%;object-fit:cover;" />';
+            if(av) av.innerHTML = '<img src="'+String(pf.photo_url).replace(/"/g,'&amp;quot;')+'" alt="" style="width:100%;height:100%;object-fit:cover;" />';
           }
           if(pf.roster_matched || pf.member_id){
             var hr=document.getElementById("pfHasRole");
@@ -4128,7 +4128,7 @@
     window.kosCloseTour=()=>{ localStorage.setItem("kosTourDone","1"); const o=document.getElementById("tourOverlay"); if(o) o.classList.remove("open"); document.body.style.overflow=""; };
     
     function escLep(s){
-      return String(s||"").replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":""","'":"&#39;"}[c]));
+      return String(s||"").replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&amp;quot;","'":"&#39;"}[c]));
     }
     function openMyKreweProfile(){
       window.kosCloseLepWelcome();
@@ -4208,7 +4208,7 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const rb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
-    const RE=(s)=>(s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'"',"'":"&#39;"}[c]));
+    const RE=(s)=>(s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&amp;quot;',"'":"&#39;"}[c]));
     window.openRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; renderRaffles(); };
     window.closeRaffles=()=>{ const m=document.getElementById("raffleModal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
     async function renderRaffles(){
