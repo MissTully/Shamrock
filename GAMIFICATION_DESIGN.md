@@ -56,6 +56,32 @@ Every value below maps to a row or column you already have. The numbers are a
 | Complete the **new-member quest line** (first 60 days) | **50** | derived (see §6) |
 | Attend a **members' meeting** | **15** | `events.event_type = 'meeting'`, attended |
 | Attend **another IKC krewe's event** (support the krewe family) | **25** | member claim, `clover_requests.activity_code = 'attend_ikc_event'`, officer-approved |
+| Approved **worked** volunteer hours (each confirmed log) | **+30** | `volunteer_hours.status = 'approved'`, and the log is not in-kind |
+| In-kind donation logged as hours | **0** | `volunteer_hours.source = 'in_kind'` (donated goods at $12 = 1 hour) |
+
+### Approved worked hours
+
+A confirmed log of hours **worked** pays a flat **30 Clovers**, once per log. The
+number of hours does not change the award. An 8 hour shift and a 2 hour shift
+each pay 30.
+
+In-kind donations pay **no Clovers**. Those logs are marked `source = 'in_kind'`
+on the Member Desk form (the "In-kind donation" choice). That covers goods
+counted at $12 = 1 hour, such as donated bourbon, cigars, gift cards, liquor,
+booze, and wine. They still count toward the 12 hour volunteer requirement.
+They do not count on the Craic Cup. A donation saved without that source is
+still treated as in-kind when the description matches, and then tagged
+`source = 'in_kind'`.
+
+The ledger row uses reason `volunteer_bonus`. Its season is the Craic Cup
+season of the date worked, from `craic_season_year()`, not the volunteer-hours
+label. Volunteer hours call this season **2027** (June through May, labeled by
+the year it ends). The Cup calls this season **2026** (July through June,
+labeled by the year it started).
+
+If an officer sets that log back to pending or rejected, the ledger row comes
+off. Approving it again pays once, because `clover_ledger.source_hours_id` is
+unique.
 
 **Worked example.** Bridget RSVPs to the St. Patrick's parade (5), shows up and is
 marked attended (20), volunteers (30), and takes the teardown shift — a priority role,
@@ -138,7 +164,11 @@ feel judged and disengage. Mitigations are built in.
 - **Seasonal Top Contributors** (Season Clovers) — resets yearly so it's always
   winnable. This is the *primary* public board.
 - **Top Volunteers** — a separate board so service is celebrated on its own terms,
-  not buried under people who simply attend a lot.
+  not buried under people who simply attend a lot. It already totals
+  `volunteer_bonus` and `volunteer_priority_bonus` for the current Cup season
+  (`craic_season_year()`). Approved worked-hour awards use `volunteer_bonus`
+  and that same year, so they show up on this board and in the season
+  standings. In-kind donations do not.
 - **Clan standings (recommended)** — split the krewe into a few named teams ("septs"
   or "clans") and rank **teams**, not individuals, on total participation. Team boards
   create positive peer pull and protect lower-activity members from feeling singled
@@ -185,6 +215,10 @@ Nothing here breaks your schema. The complete list of new pieces:
   `'volunteer_bonus'`, `'dues_on_time'`), `clovers` (int), `season_year` (int),
   `created_at`. Append-only means it's auditable and easy to reason about — you can
   always see *why* someone has the total they have, and you never overwrite history.
+  The live table is `clover_ledger`. Approved worked hours add
+  `source_hours_id` (uuid, unique, foreign key to `volunteer_hours`). One hours
+  log, one `volunteer_bonus` of 30. Taking the log back to pending or rejected
+  deletes that ledger row.
 - **`member_badges`** — `member_id`, `badge_key`, `awarded_at`, `granted_by`
   (nullable, for manual awards).
 
@@ -217,6 +251,9 @@ A points system invites point-farming. Guardrails:
 - **Referral Clovers pay only when the referred member is actually approved** (status
   `prospect → active`), not at application — and only once per referred person.
 - **Dues Clovers award once per membership year**, on the `paid` flip, not per edit.
+- **Worked-hour Clovers pay once per confirmed log**, not per hour, and not for
+  in-kind donations. `source_hours_id` blocks a second award for the same log.
+  Setting the log back to pending or rejected removes it.
 - **Ledger is append-only and officer-auditable.** Because every award is a logged row
   with a reason, a captain can scan for anything that looks off.
 - **Manual grants are attributed** (`granted_by`) so honorary awards are accountable.

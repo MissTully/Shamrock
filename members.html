@@ -2689,8 +2689,14 @@
       if(rpc.error || (rpc.data && rpc.data.ok === false)){
         const rpcMsg = (rpc.data && rpc.data.message) || (rpc.error && rpc.error.message) || "";
         if(rpc.error && /could not find the function|schema cache|404/i.test(rpcMsg)){
-          const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours };
+          const row = { member_id:_prMe.member_id, season_year:VH_SEASON, activity, hours, source:"manual" };
           if(d) row.worked_on = d;
+          if(kind === "in_kind"){
+            row.source = "in_kind";
+            row.notes = "In-kind donation. $12 counts as 1 hour.";
+          } else if(kind === "season_file"){
+            row.notes = "One-time season balance entered in the Hub.";
+          }
           const { error } = await supabase.from("volunteer_hours").insert(row);
           if(error){ show("vhMsg","Could not log hours. "+(error.message||""),"error"); return; }
         } else {
