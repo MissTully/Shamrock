@@ -3530,7 +3530,7 @@
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Fetching the season calendar…</p>';
       let evs = await sb.from("events")
-        .select("id,name,description,event_type,start_time,end_time,location,member_address,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
+        .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
         .gte("start_time", new Date().toISOString())
         .order("start_time",{ascending:true})
         .limit(24);
@@ -3556,6 +3556,7 @@
           const where = ev.member_address || ev.location || (ev.is_online ? "Online" : "");
           const detailBits=[];
           if(ev.description) detailBits.push('<div class="ce-detail">'+E(ev.description)+'</div>');
+          if(ev.member_notes) detailBits.push('<div class="ce-detail ce-private"><b>🔒 Members only:</b> '+E(ev.member_notes).replace(/\n/g,"<br>")+'</div>');
           const facts=[];
           facts.push("<b>When:</b> "+E(cupWhen(ev)));
           if(where) facts.push("<b>Where:</b> "+E(where));

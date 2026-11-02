@@ -115,6 +115,8 @@
       '<p class="hub-opt-hint" style="margin-top:6px;">Safe for the public site. For a house party, keep this vague. Do not put a street address here.</p></div>' +
       '<div class="wide"><label for="hubEventMemberAddress">Private / member address</label><input id="hubEventMemberAddress" placeholder="Full street address" autocomplete="off" />' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Full address for signed-in members in the Member Hub and the RSVP confirmation email. Never shown on public pages.</p></div>' +
+      '<div class="wide"><label for="hubEventMemberNotes">Members-only notes (gate code, lockbox, parking)</label><textarea id="hubEventMemberNotes" placeholder="Gate code, lockbox, where to park" autocomplete="off"></textarea>' +
+      '<p class="hub-opt-hint" style="margin-top:6px;">Shown only to signed-in members in the Member Hub. Never put a gate code in the Description: the Description is public.</p></div>' +
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
@@ -800,6 +802,7 @@
     document.getElementById("hubEventPublic").checked = true;
     var moOnly = document.getElementById("hubEventMembersOnly"); if (moOnly) moOnly.checked = false;
     var ma = document.getElementById("hubEventMemberAddress"); if (ma) ma.value = "";
+    var mn = document.getElementById("hubEventMemberNotes"); if (mn) mn.value = "";
     document.getElementById("hubEventMandatory").checked = false;
     setFeatureToggle(false);
     var cg = document.getElementById("hubEventCollectGuests"); if (cg) cg.checked = true;
@@ -841,6 +844,16 @@
     var rc = get("hubEventRegCloses"); if (rc) rc.value = eventLocalInput(event.registration_closes_at);
     get("hubEventLocation").value = event.location || "";
     var maFill = get("hubEventMemberAddress"); if (maFill) maFill.value = event.member_address || "";
+    var mnFill = get("hubEventMemberNotes");
+    if (mnFill) {
+      mnFill.value = event.member_notes || "";
+      var nClient = studioClient || window.__kosSb;
+      if (event.id && nClient && nClient.from) {
+        nClient.from("events").select("member_notes").eq("id", event.id).maybeSingle().then(function (r) {
+          if (r && r.data && get("hubEventMemberNotes") === mnFill && (get("hubEventId") || {}).value === event.id) mnFill.value = r.data.member_notes || "";
+        });
+      }
+    }
     get("hubEventCapacity").value = event.capacity == null ? "" : event.capacity;
     get("hubEventDescription").value = event.description || "";
     get("hubEventPublic").checked = event.is_public !== false;
@@ -1197,6 +1210,11 @@
       var res = await client.rpc("officer_upsert_event", { p: payload });
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not save event.");
+      var savedId = (res.data && res.data.event_id) || payload.id;
+      if (savedId) {
+        var nRes = await client.rpc("officer_set_event_member_notes", { p_event_id: savedId, p_notes: value("hubEventMemberNotes") || null });
+        if (nRes.error) throw new Error("Event saved, but members-only notes did not save: " + nRes.error.message);
+      }
       var cleared = res.data && res.data.ticket_url_cleared
         ? " The ticket payment link was cleared because another event already uses it. Paste this event's own Zeffy link."
         : "";
