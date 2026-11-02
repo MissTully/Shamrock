@@ -464,7 +464,7 @@
     ".desk-group-head .dg-sub{display:block;margin-top:2px;font-size:15px;color:var(--muted);font-family:var(--fancy);font-style:italic;line-height:1.35;}",
     ".desk-group-rule{height:3px;background:linear-gradient(90deg,#a9801c,#d4af37,#ecd07e,#d4af37,rgba(169,128,28,0));border-radius:2px;margin:0 0 14px;}",
     ".desk-group > .member-grid{display:grid;gap:18px;}",
-    "#deskSeason,#deskShare,#deskTravel,#deskLearn,#shareCard,#orientationCard{scroll-margin-top:88px;}",
+    "#deskSeason,#deskShare,#deskTravel,#deskLearn,#deskFaq,#shareCard,#orientationCard{scroll-margin-top:88px;}",
 
     /* Officer desk variant of the same masthead: gold-washed parchment for
        the officer identity, and the illuminated group headers replace the
@@ -506,10 +506,13 @@
        or a #faq link opens it, so the rest of the desk keeps its height.
        Section pills swap answers in place: no scroll-into-view, no snap. */
     "#deskFaq{display:none;}",
-    "[data-hub-panel='parade'].desk-faq-on #deskFaq{display:block;}",
-    "[data-hub-panel='parade'].desk-faq-on #hubParade>.desk-group:not(#deskFaq){display:none !important;}",
-    "[data-hub-panel='parade'].desk-faq-on .desk-hero>p:not(.desk-kicker){display:none;}",
-    "[data-hub-panel='parade'].desk-faq-on #deskFaq>.desk-group-head,[data-hub-panel='parade'].desk-faq-on #deskFaq>.desk-group-rule{display:none;}",
+    "[data-hub-panel='hub'].desk-faq-on #deskFaq{display:block;}",
+    "[data-hub-panel='hub'].desk-faq-on #hubHomeDesk>.desk-group:not(#deskFaq),[data-hub-panel='hub'].desk-faq-on #hubHomeTop,[data-hub-panel='hub'].desk-faq-on #hubHomeGrid{display:none !important;}",
+    "[data-hub-panel='hub'].desk-faq-on .desk-hero>p:not(.desk-kicker){display:none;}",
+    "[data-hub-panel='hub'].desk-faq-on #deskFaq>.desk-group-head,[data-hub-panel='hub'].desk-faq-on #deskFaq>.desk-group-rule{display:none;}",
+    "#hubHomeDesk{margin-top:18px;}",
+    "body.hub-app #hubHomeDesk .desk-group-head h3,body.hub-app #hubParade .desk-group-head h3{color:#f6efdc;}",
+    "body.hub-app #hubHomeDesk .desk-group-head .dg-sub,body.hub-app #hubParade .desk-group-head .dg-sub{color:#ecd07e;}",
     ".desk-nav button.on{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     "#hubFaq .app-body{color:#23291f;}",
     ".faq-kicker{margin:0 0 4px;font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9801c;}",
@@ -1509,7 +1512,7 @@
   }
 
   function clearFaqMode() {
-    var panel = document.querySelector('[data-hub-panel="parade"]');
+    var panel = document.querySelector('[data-hub-panel="hub"]');
     if (panel) panel.classList.remove("desk-faq-on");
     document.querySelectorAll('.desk-nav [data-desk-goto="deskFaq"]').forEach(function (btn) {
       btn.classList.remove("on");
@@ -1519,7 +1522,7 @@
 
   function applyFaqView(section) {
     var sec = section && FAQ_SECTIONS.indexOf(section) !== -1 ? section : "events";
-    var panel = document.querySelector('[data-hub-panel="parade"]');
+    var panel = document.querySelector('[data-hub-panel="hub"]');
     if (panel) panel.classList.add("desk-faq-on");
     document.querySelectorAll("#hubFaq [data-faq-section]").forEach(function (el) {
       if (el.getAttribute("data-faq-section") === sec) el.removeAttribute("hidden");
@@ -1543,10 +1546,10 @@
     var sec = section || "";
     if (sec && FAQ_SECTIONS.indexOf(sec) === -1) sec = "";
     if (appNavApi.ready && typeof appNavApi.openFocus === "function") {
-      appNavApi.openFocus("parade", "hubFaq", "FAQ", sec);
+      appNavApi.openFocus("hub", "hubFaq", "FAQ", sec);
       return;
     }
-    showTab("parade", { skipScroll: true });
+    showTab("hub", { skipScroll: true });
     applyFaqView(sec);
   }
 
@@ -1562,24 +1565,24 @@
     });
   }
 
-  /* ---- Member desk layout: one desk, labeled counters ----
-     A member who taps Member desk should understand at a glance what lives
-     here, so every everyday tool files under a labeled group with jump chips
-     in an Irish-styled masthead. The flow reads top to bottom: get season
-     ready, share your media for the public site, sort rides and gear, then
-     learn and look things up, including the member FAQ. Cards keep their ids
-     and internal wiring - only their position changes - and a card no group
-     claims files in last, so future desk cards never vanish. */
+  /* ---- Member desk layout: two desks, labeled counters ----
+     The Parade tab keeps the parade tools: get season ready, then rides and
+     gear. Share your media, Learn & documents, and the member FAQ live on
+     the Home tab under their own masthead. Cards keep their ids and
+     internal wiring - only their position changes - and a card no group
+     claims files in last on Parade, so future desk cards never vanish. */
   var DESK_GROUPS = [
     { id: "deskSeason", icon: "🎗️", chip: "Season checklist", title: "Get Season Ready",
       sub: "Dues, waiver, parade RSVP, meeting check-in, photo release, and your volunteer hours.",
       cards: ["prCard", "hubParadeSeasonCard", "hubHoursCard"] },
-    { id: "deskShare", icon: "📸", chip: "Share your media", title: "Share Your Media & Creativity",
-      sub: "Photos and videos for the public site - an officer approves each one - plus artwork, poems, stories, and recipes.",
-      cards: ["shareCard"] },
     { id: "deskTravel", icon: "🚐", chip: "Rides & locker", title: "Getting There & Your Gear",
       sub: "Carpools, seats on the krewe vans, and locker rentals.",
-      cards: ["carpoolCard", "vanCard", "lockerCard"] },
+      cards: ["carpoolCard", "vanCard", "lockerCard"] }
+  ];
+  var HOME_DESK_GROUPS = [
+    { id: "deskShare", icon: "📸", chip: "Share your media", title: "Share Your Media & Creativity",
+      sub: "Photos and videos for the public site (an officer approves each one), plus artwork, poems, stories, and recipes.",
+      cards: ["shareCard"] },
     { id: "deskLearn", icon: "📜", chip: "Learn & documents", title: "Learn & Look Up",
       sub: "The new member orientation video and the governing documents.",
       cards: ["orientationCard", "docs"] },
@@ -1587,6 +1590,68 @@
       sub: "Events, beads, volunteer hours, parades, and krewe gear.",
       cards: ["hubFaq"] }
   ];
+
+  function deskGroupsHtml(groups, label) {
+    return '<nav class="desk-nav" aria-label="' + label + '">' +
+      groups.map(function (g) {
+        return '<button type="button" data-desk-goto="' + g.id + '">' + g.icon + " " + g.chip + "</button>";
+      }).join("") +
+      "</nav>";
+  }
+
+  function fileDeskGroups(groups, source, target) {
+    groups.forEach(function (g) {
+      var cards = g.cards.map(function (id) { return document.getElementById(id); })
+        .filter(function (el) { return el && el.parentElement === source; });
+      if (!cards.length) return;
+      var wrap = document.createElement("section");
+      wrap.className = "desk-group";
+      wrap.id = g.id;
+      wrap.innerHTML =
+        '<header class="desk-group-head"><span class="dg-ic" aria-hidden="true">' + g.icon + "</span>" +
+        "<div><h3>" + g.title + '</h3><span class="dg-sub">' + g.sub + "</span></div></header>" +
+        '<div class="desk-group-rule"></div>';
+      var inner = document.createElement("div");
+      inner.className = "member-grid";
+      cards.forEach(function (el) { inner.appendChild(el); });
+      wrap.appendChild(inner);
+      target.appendChild(wrap);
+    });
+  }
+
+  function layoutHomeDesk(paradeGrid) {
+    var home = document.getElementById("hubHome");
+    if (!home || document.getElementById("hubHomeDesk")) return;
+    var desk = document.createElement("div");
+    desk.id = "hubHomeDesk";
+    var hero = document.createElement("div");
+    hero.className = "desk-hero";
+    hero.id = "homeDeskHero";
+    hero.innerHTML =
+      '<p class="desk-kicker">Learn, share, and look it up</p>' +
+      "<h2>☘ Member Resources</h2>" +
+      "<p>Share your photos and videos for the public site (an officer approves each one before it goes live), " +
+      "watch the new member orientation, look up the governing documents, and read the member FAQ.</p>" +
+      deskGroupsHtml(HOME_DESK_GROUPS, "Member resources");
+    desk.appendChild(hero);
+    fileDeskGroups(HOME_DESK_GROUPS, paradeGrid, desk);
+    home.appendChild(desk);
+    hero.querySelectorAll("[data-desk-goto]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-desk-goto");
+        if (id === "deskFaq") {
+          openMemberFaq("");
+          return;
+        }
+        var homePanel = document.querySelector('[data-hub-panel="hub"]');
+        if (homePanel && homePanel.classList.contains("desk-faq-on") && typeof appNavApi.showHomeRoot === "function") {
+          appNavApi.showHomeRoot();
+        }
+        focusHubTarget(document.getElementById(id));
+      });
+    });
+    bindFaqPills();
+  }
 
   function layoutMemberDesk() {
     var grid = document.getElementById("hubParade");
@@ -1600,33 +1665,13 @@
     hero.innerHTML =
       '<p class="desk-kicker">Fáilte, a chara - welcome, friend</p>' +
       "<h2>☘ Your Member Desk</h2>" +
-      "<p>Everything a member needs, on one desk: get Parade Ready and log your volunteer hours, " +
-      "share your photos and videos for the public site (an officer approves each one before it goes live), " +
-      "find a ride or a locker, look up documents, and read the member FAQ.</p>" +
-      '<nav class="desk-nav" aria-label="Member desk sections">' +
-      DESK_GROUPS.map(function (g) {
-        return '<button type="button" data-desk-goto="' + g.id + '">' + g.icon + " " + g.chip + "</button>";
-      }).join("") +
-      "</nav>";
+      "<p>Everything you need for parade season: get Parade Ready, log your volunteer hours, " +
+      "and find a ride, a van seat, or a locker. Share your media, documents, and the FAQ are on the Home tab.</p>" +
+      deskGroupsHtml(DESK_GROUPS, "Member desk sections");
     panel.insertBefore(hero, grid);
 
-    DESK_GROUPS.forEach(function (g) {
-      var cards = g.cards.map(function (id) { return document.getElementById(id); })
-        .filter(function (el) { return el && el.parentElement === grid; });
-      if (!cards.length) return;
-      var wrap = document.createElement("section");
-      wrap.className = "desk-group";
-      wrap.id = g.id;
-      wrap.innerHTML =
-        '<header class="desk-group-head"><span class="dg-ic" aria-hidden="true">' + g.icon + "</span>" +
-        "<div><h3>" + g.title + '</h3><span class="dg-sub">' + g.sub + "</span></div></header>" +
-        '<div class="desk-group-rule"></div>';
-      var inner = document.createElement("div");
-      inner.className = "member-grid";
-      cards.forEach(function (el) { inner.appendChild(el); });
-      wrap.appendChild(inner);
-      grid.appendChild(wrap);
-    });
+    layoutHomeDesk(grid);
+    fileDeskGroups(DESK_GROUPS, grid, grid);
 
     // Cards no group claimed keep working - they just file in after the groups.
     Array.prototype.slice.call(grid.children).forEach(function (el) {
@@ -1636,19 +1681,9 @@
 
     hero.querySelectorAll("[data-desk-goto]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var id = btn.getAttribute("data-desk-goto");
-        if (id === "deskFaq") {
-          openMemberFaq("");
-          return;
-        }
-        var paradePanel = document.querySelector('[data-hub-panel="parade"]');
-        if (paradePanel && paradePanel.classList.contains("desk-faq-on") && typeof appNavApi.showParadeRoot === "function") {
-          appNavApi.showParadeRoot();
-        }
-        focusHubTarget(document.getElementById(id));
+        focusHubTarget(document.getElementById(btn.getAttribute("data-desk-goto")));
       });
     });
-    bindFaqPills();
   }
 
   function profileDuesExempt(profile) {
@@ -3016,11 +3051,11 @@
   }
 
   function revealShareGroup() {
-    appNavApi.openFocus("parade", "shareCard", "Share your media");
+    appNavApi.openFocus("hub", "shareCard", "Share your media");
   }
 
   function revealDocsCard() {
-    appNavApi.openFocus("parade", "docs", "Documents");
+    appNavApi.openFocus("hub", "docs", "Documents");
   }
 
   function openDirectoryFromHome() {
@@ -3407,9 +3442,9 @@
       else if (hash === "applications") { saved = "officer"; wantApplications = true; }
       else if (hash === "volunteer-inquiries") { saved = "officer"; wantVolunteerInquiries = true; }
       else if (hash === "krewe" || hash === "directory") saved = "krewe";
-      else if (hash === "docs") { saved = "parade"; wantDocs = true; }
-      else if (hash === "share") { saved = "parade"; wantShare = true; }
-      else if (faqHashSection(hash) !== null) saved = "parade";
+      else if (hash === "docs") { saved = TAB_HOME; wantDocs = true; }
+      else if (hash === "share") { saved = TAB_HOME; wantShare = true; }
+      else if (faqHashSection(hash) !== null) saved = TAB_HOME;
       else if (hash === "events") saved = "events";
       else if (hash === "fun") saved = "fun";
       else if (hash === "home") saved = TAB_HOME;
@@ -7177,13 +7212,13 @@
       if (evMatch) return { tab: "events", frames: [{ kind: "root" }, { kind: "event", id: evMatch[1], title: "Event" }] };
       if (lower === "events") return { tab: "events", frames: [{ kind: "root" }] };
       if (lower === "parade" || lower === "desk") return { tab: "parade", frames: [{ kind: "root" }] };
-      if (lower === "docs") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
+      if (lower === "docs") return { tab: "hub", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
       if (lower === "hours" || lower === "volunteer") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
-      if (lower === "share") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
+      if (lower === "share") return { tab: "hub", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
       if (faqHashSection(lower) !== null) {
         var faqFrame = { kind: "focus", id: "hubFaq", title: "FAQ" };
         if (faqHashSection(lower)) faqFrame.section = faqHashSection(lower);
-        return { tab: "parade", frames: [{ kind: "root" }, faqFrame] };
+        return { tab: "hub", frames: [{ kind: "root" }, faqFrame] };
       }
       if (lower === "parade/carpool" || lower === "carpool") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "carpoolCard", title: "Carpool" }] };
       if (lower === "directory") return { tab: "krewe", frames: [{ kind: "root" }, { kind: "focus", id: "hubMemberDirectory", title: "Directory" }] };
@@ -7411,10 +7446,10 @@
           /* Keep the desk masthead and topic pills. Swap the answer in place
              and do not scroll the page or the panel when a pill changes. */
           showBack(top.title || "FAQ");
-          var paradePanel = document.querySelector('[data-hub-panel="parade"]');
-          var alreadyFaq = !!(paradePanel && paradePanel.classList.contains("desk-faq-on"));
+          var homePanel = document.querySelector('[data-hub-panel="hub"]');
+          var alreadyFaq = !!(homePanel && homePanel.classList.contains("desk-faq-on"));
           applyFaqView(top.section || "");
-          if (paradePanel && !alreadyFaq) paradePanel.scrollTop = 0;
+          if (homePanel && !alreadyFaq) homePanel.scrollTop = 0;
         } else {
           /* Carpool and volunteer hours are single tools. Documents, share, and
              the directory stay on the desk so the rest of that desk remains visible. */
@@ -7901,6 +7936,13 @@
       appNav.userMoved = true;
       appNav.booted = true;
       applyRoute("parade", [{ kind: "root" }], "");
+      writeHistory("replaceState");
+    };
+    appNavApi.showHomeRoot = function () {
+      ensure();
+      appNav.userMoved = true;
+      appNav.booted = true;
+      applyRoute("hub", [{ kind: "root" }], "");
       writeHistory("replaceState");
     };
     appNavApi.openCard = openCard;
