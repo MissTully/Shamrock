@@ -536,6 +536,9 @@
   @media (max-width:720px){ .missed-grid{ grid-template-columns:1fr; } }
   .missed-pick input[type=search], .missed-lines-wrap input, .missed-lines-wrap textarea, .missed-lines-wrap select, .missed-extra input{ width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--cup-gold); border-radius:10px; font:inherit; font-size:15px; background:#fff; color:var(--cup-ink); margin-top:6px; }
   .missed-list{ max-height:340px; overflow:auto; margin-top:8px; border:1px solid rgba(201,162,39,.5); border-radius:12px; background:#fffdf4; padding:4px; }
+  .missed-scope{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .missed-scope button{ font:inherit; font-size:13px; font-weight:700; padding:6px 12px; border-radius:999px; border:1px solid #1f5c3a; background:#fffdf4; color:#1f5c3a; cursor:pointer; }
+  .missed-scope button[aria-pressed="true"]{ background:#1f5c3a; color:#fff8e1; }
   .missed-opt{ display:flex; gap:10px; align-items:flex-start; padding:7px 8px; border-radius:8px; cursor:pointer; font-size:15px; color:var(--cup-ink); }
   .missed-opt:hover{ background:var(--cup-gold-light); }
   .missed-opt input{ margin-top:4px; width:18px; height:18px; accent-color:var(--cup-green); }
@@ -3692,8 +3695,10 @@
       ["bring_guest","Bring a guest (up to 3)",5],["dues_on_time","Pay your dues on time",25],
       ["dues_early","Pay your dues early",15],["refer_member","Refer a member who joins",40],["other","Other (officer review)",0]
     ];
-    const missed={events:[],lines:[],seq:0,checkTimer:null,checks:[]};
-    function missedLineKey(ev){ return ev.kind==="site" ? ("s:"+ev.id) : ("w:"+ev.wa_event_id); }
+    const missed={events:[],lines:[],seq:0,checkTimer:null,checks:[],scope:"krewe"};
+    function missedLineKey(ev){ return ev.kind==="site" ? ("s:"+ev.id) : ev.kind==="history" ? ("h:"+ev.name+"|"+ev.event_date) : ("w:"+ev.wa_event_id); }
+    function missedIsIkc(ev){ return String(ev.source||"").toLowerCase()==="ikc"; }
+    function missedTypeLabel(ev){ return missedIsIkc(ev) ? "IKC" : (ev.kind==="old_site" ? "Krewe · old site" : "Krewe"); }
     function missedDefaultAct(name){ return /meeting/i.test(name||"") ? "attend_meeting" : "attend_event"; }
     function missedLinePts(l){
       if(l.activity_code==="bring_guest") return 5*Math.max(1,Math.min(3,Number(l.guest_count||1)));
@@ -3731,6 +3736,9 @@
           <div class="missed-pick">
             <label for="missedSearch"><b>1. Pick your events</b></label>
             <input id="missedSearch" type="search" placeholder="Search events, e.g. Tartan, General Meeting" autocomplete="off" />
+            <div class="missed-scope" role="group" aria-label="Which events">
+              <button type="button" data-scope="krewe" aria-pressed="true">Krewe events</button><button type="button" data-scope="ikc" aria-pressed="false">IKC events</button><button type="button" data-scope="all" aria-pressed="false">All</button>
+            </div>
             <div id="missedList" class="missed-list" role="group" aria-label="Past events"></div>
             <details class="missed-extra"><summary>Event not listed? Add it</summary>
               <div class="missed-extra-row"><input id="missedFreeName" type="text" maxlength="120" placeholder="Event name (or what it was for)" />
@@ -3752,6 +3760,11 @@
         <h3 class="rpt-cat" style="margin-top:18px;">🧾 My Missed Clovers claims</h3>
         <div id="missedMine"></div>`;
       document.getElementById("missedSearch").addEventListener("input",missedRenderList);
+      box.querySelectorAll(".missed-scope [data-scope]").forEach(b=>b.addEventListener("click",()=>{
+        missed.scope=b.getAttribute("data-scope");
+        box.querySelectorAll(".missed-scope [data-scope]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+        missedRenderList();
+      }));
       document.getElementById("missedFreeAdd").addEventListener("click",()=>{
         const n=document.getElementById("missedFreeName").value.trim();
         const d=document.getElementById("missedFreeDate").value;
@@ -3767,18 +3780,19 @@
     function missedRenderList(){
       const q=(document.getElementById("missedSearch").value||"").toLowerCase().trim();
       const chosen=new Set(missed.lines.map(l=>l.key));
-      const rows=missed.events.filter(ev=>!q || String(ev.name||"").toLowerCase().indexOf(q)!==-1).slice(0,80);
+      const rows=missed.events.filter(ev=>(missed.scope==="all" || (missed.scope==="ikc")===missedIsIkc(ev)) && (!q || String(ev.name||"").toLowerCase().indexOf(q)!==-1)).slice(0,120);
       const list=document.getElementById("missedList");
       list.innerHTML = rows.length ? rows.map(ev=>{
         const k=missedLineKey(ev);
-        return `<label class="missed-opt"><input type="checkbox" data-mk="${E(k)}" ${chosen.has(k)?"checked":""} /> <span><b>${E(ev.name||"Event")}</b><br><small>${E(cupHistDate(ev.start_time))}${ev.kind==="old_site"?" · old site":""}${ev.source==="ikc"?" · IKC":""}</small></span></label>`;
+        return `<label class="missed-opt"><input type="checkbox" data-mk="${E(k)}" ${chosen.has(k)?"checked":""} /> <span><b>${E(ev.name||"Event")}</b><br><small>${E(cupHistDate(ev.start_time))} · ${E(missedTypeLabel(ev))}</small></span></label>`;
       }).join("") : '<p class="empty">No past events match. Use "Event not listed?" below.</p>';
       list.querySelectorAll("input[data-mk]").forEach(cb=>cb.addEventListener("change",()=>{
         const k=cb.getAttribute("data-mk");
         if(cb.checked){
           const ev=missed.events.find(x=>missedLineKey(x)===k); if(!ev) return;
           missed.lines.push({uid:++missed.seq,key:k,event_id:ev.kind==="site"?ev.id:null,wa_event_id:ev.kind==="old_site"?ev.wa_event_id:null,
-            label:ev.name,date:ev.start_time,activity_code:ev.source==="ikc"?"attend_ikc_event":missedDefaultAct(ev.name)});
+            event_name:ev.kind==="history"?ev.name:null,event_date:ev.kind==="history"?ev.event_date:null,
+            label:ev.name,date:ev.start_time,activity_code:missedIsIkc(ev)?"attend_ikc_event":missedDefaultAct(ev.name)});
         }else{
           missed.lines=missed.lines.filter(l=>l.key!==k);
         }
