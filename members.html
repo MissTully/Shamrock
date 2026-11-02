@@ -3598,7 +3598,7 @@
       html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Clovers</th></tr></thead><tbody>'+
         RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" - "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
-      html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><div class="badge-gallery">`+
+      html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><p class="rpt-note">Badges show up on your card on their own: your first RSVP, your first event, your first approved volunteer shift, and the day you're Parade Ready. Officers hand out the Host badge to members who host an event.</p><div class="badge-gallery">`+
         (badges||[]).map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div><div class="ds">${E(b.description||"")}</div></div>`).join("")+'</div>';
       box.innerHTML=html;
     }
