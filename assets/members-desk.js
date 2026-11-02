@@ -2772,7 +2772,7 @@
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", on ? "#0c3b21" : "#14532d");
     if (on) paintAppHeader(currentHubTab());
-    if (signedIn && document.getElementById("hubHome") && !document.getElementById("hubWelcomeCard")) {
+    if (signedIn && document.getElementById("hubHome") && !document.querySelector("#hubHomeTop .hub-find")) {
       try { renderHome(); } catch (e) {}
     }
   }
@@ -2987,8 +2987,8 @@
     // Phone: the app home (countdown and tiles) stays above that same desk.
     // Order by importance to a member: Krewe Tidings, birthdays, Quick links, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
-    // Parade Ready and dues, then officer tools, the app card,
-    // and deadlines. Member Resources follow below this stack.
+    // then officer tools, the app card, and deadlines. Parade Ready and dues
+    // live on the Parade tab. Member Resources follow below this stack.
     var phoneHome = document.body.classList.contains("hub-app");
     var hoursCard = document.getElementById("hubHoursCard");
     if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
@@ -2998,7 +2998,6 @@
       findCards +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
-      welcomeDeskHtml() +
       appsBanner + volunteerBanner + officerCard +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline"));
