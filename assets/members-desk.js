@@ -2985,22 +2985,22 @@
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
     // Computer: birthday, welcome, the mobile-app card, tidings, officer tools, the Cup, then links.
     // Phone: the app home (countdown and tiles) stays above that same desk.
-    // Order by importance to a member: Krewe Tidings, Quick links, upcoming
+    // Order by importance to a member: Krewe Tidings, birthdays, Quick links, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
     // Parade Ready and dues, then officer tools, the app card,
-    // birthdays, and deadlines. Member Resources follow below this stack.
+    // and deadlines. Member Resources follow below this stack.
     var phoneHome = document.body.classList.contains("hub-app");
     var hoursCard = document.getElementById("hubHoursCard");
     if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
     top.innerHTML =
       boardAnnouncementsHtml() +
+      birthdayCardHtml() +
       findCards +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
       welcomeDeskHtml() +
       appsBanner + volunteerBanner + officerCard +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
-      birthdayCardHtml() +
       (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline"));
     placeHomeHours(hoursCard);
 
