@@ -241,6 +241,10 @@ raw as (
   from public.legacy_payments l
   where l.origin_details ilike 'KREWE OF SHAMROCK MINI GOLF%' and coalesce(l.refunded_cents,0) < coalesce(l.amount_cents,1)
   union all
+  select 'legacy_reg_minigolf', null, lower(trim(r.email)), lower(trim(r.first_name)), lower(trim(r.last_name)), coalesce(r.registered_at, r.event_start)
+  from public.legacy_event_registrations r
+  where r.wa_event_id = 6797040  -- KREWE OF SHAMROCK MINI GOLF & LUNCH! (Wild Apricot, 2026-09-19)
+  union all
   select 'tb_order', null, lower(trim(o.primary_email)), null, null, coalesce(o.submitted_at, o.created_at)
   from public.tartan_ball_orders o
   union all
