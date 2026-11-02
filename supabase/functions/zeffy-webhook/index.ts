@@ -116,6 +116,14 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     return "other";
   }
 
+  // Shop Studio products are Zeffy ticketing campaigns whose slug ends in
+  // "-shop" (e.g. /ticketing/krewe-of-shamrock-mug-shop). Classify them as
+  // store before the ticketing check below files them as events.
+  // kos_shop_order_emails.sql also reclassifies in the database as a backstop.
+  if (/\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) || /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())) {
+    return "store";
+  }
+
   const campaignType = text(
     payment.campaign_type,
     payment.campaignType,
