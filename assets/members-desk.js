@@ -3630,7 +3630,7 @@
     { code: "attend_meeting", label: "Attend a members' meeting", clovers: 15 },
     { code: "attend_ikc_event", label: "Attend another IKC krewe's event", clovers: 25 },
     { code: "volunteer_event", label: "Volunteer at an event", clovers: 30 },
-    { code: "volunteer_priority", label: "Volunteer for a priority shift (setup / teardown / parade day)", clovers: 60 },
+    { code: "volunteer_priority", label: "Priority shift bonus (officers flag hard-to-fill spots like security or float duty)", clovers: 60 },
     { code: "organize_event", label: "Organize an event", clovers: 50 },
     { code: "bring_guest", label: "Bring a guest (up to 3)", clovers: 5, perGuest: true },
     { code: "dues_on_time", label: "Pay your dues on time", clovers: 25 },
@@ -5038,6 +5038,102 @@
     loadApprovals(window.__kosSb || { rpc: function () { return Promise.resolve({ data: null, error: null }); } });
   };
 
+  // ---- Grant a badge: officers award Host with the Most (or any badge) ----
+  function renderBadgeGrant(client, panel, afterEl) {
+    var card = document.getElementById("hubBadgeGrant");
+    if (!card) {
+      card = document.createElement("section");
+      card.className = "app-card";
+      card.id = "hubBadgeGrant";
+      card.style.marginTop = "18px";
+      if (afterEl && afterEl.parentNode === panel) panel.insertBefore(card, afterEl.nextSibling);
+      else panel.appendChild(card);
+    }
+    if (card.getAttribute("data-ready") === "1") return;
+    card.setAttribute("data-ready", "1");
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">🥂</span><div><h2>Grant a badge</h2><small>Thank a member who hosted, or award any Craic Cup badge by hand</small></div></div>' +
+      '<div class="app-body">' +
+        '<form id="hubBadgeForm" class="krewe-form" style="max-width:520px;">' +
+          '<label for="hubBadgeWho">Member name</label>' +
+          '<input id="hubBadgeWho" type="text" maxlength="80" placeholder="e.g. Melissa, or Tully" autocomplete="off" />' +
+          '<button class="btn" type="button" id="hubBadgeFind" style="margin-top:8px;">Find member</button>' +
+          '<div id="hubBadgeMatches" class="find-matches" style="margin-top:8px;"></div>' +
+          '<label for="hubBadgePick" style="margin-top:12px;">Badge</label>' +
+          '<select id="hubBadgePick"><option value="host">🥂 Host with the Most</option></select>' +
+          '<button class="btn btn-primary" type="submit" style="margin-top:12px;">🥂 Grant badge</button>' +
+          '<div class="msg" id="hubBadgeMsg" role="status"></div>' +
+        '</form>' +
+      '</div>';
+    var chosen = null;
+    var msg = card.querySelector("#hubBadgeMsg");
+    var pick = card.querySelector("#hubBadgePick");
+    var matches = card.querySelector("#hubBadgeMatches");
+    function say(text, isErr) { msg.textContent = text; msg.className = "msg" + (isErr ? " error" : ""); }
+    (async function () {
+      try {
+        var b = await client.from("badge_defs").select("id,name,icon,sort").order("sort", { ascending: true });
+        if (b && Array.isArray(b.data) && b.data.length) {
+          pick.innerHTML = b.data.map(function (d) {
+            return '<option value="' + esc(d.id) + '"' + (d.id === "host" ? " selected" : "") + ">" + esc((d.icon || "") + " " + d.name) + "</option>";
+          }).join("");
+        }
+      } catch (e) {}
+    })();
+    async function find() {
+      var q = card.querySelector("#hubBadgeWho").value.trim();
+      chosen = null;
+      matches.innerHTML = "";
+      if (q.length < 2) { say("Type at least two letters of a name.", true); return; }
+      say("Searching the roster…");
+      var rows = [];
+      try {
+        var r = await client.rpc("search_craic_members", { p_name: q });
+        rows = (r && r.data && r.data.matches) || [];
+      } catch (e) {}
+      if (!rows.length) { say("No member by that name on the roster.", true); return; }
+      say(rows.length === 1 ? "Found one match. Tap it to choose." : "Tap the member you mean.");
+      matches.innerHTML = rows.map(function (m) {
+        return '<button type="button" class="find-match" data-badge-mid="' + esc(m.member_id) + '" data-badge-name="' + esc((m.first_name || "") + " " + (m.last_name || "")) + '">' +
+          '<span class="fm-ic">' + (m.rank_icon || "🌱") + '</span>' +
+          '<span><span class="fm-nm">' + esc(m.first_name) + " " + esc(m.last_name) + "</span></span></button>";
+      }).join("");
+      matches.querySelectorAll("[data-badge-mid]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          matches.querySelectorAll("[data-badge-mid]").forEach(function (o) { o.setAttribute("aria-pressed", "false"); o.style.outline = ""; });
+          btn.setAttribute("aria-pressed", "true");
+          btn.style.outline = "3px solid var(--gold, #c9a227)";
+          chosen = { id: btn.getAttribute("data-badge-mid"), name: btn.getAttribute("data-badge-name") };
+          say("Selected " + chosen.name + ".");
+        });
+      });
+    }
+    card.querySelector("#hubBadgeFind").addEventListener("click", find);
+    card.querySelector("#hubBadgeWho").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); find(); }
+    });
+    card.querySelector("#hubBadgeForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!chosen) { say("Find and choose a member first.", true); return; }
+      var label = pick.options[pick.selectedIndex] ? pick.options[pick.selectedIndex].text : pick.value;
+      if (!confirm("Grant " + label + " to " + chosen.name + "?")) return;
+      say("Granting…");
+      try {
+        var res = await client.rpc("officer_grant_badge", { p_member: chosen.id, p_badge: pick.value });
+        var d = res && res.data;
+        if (res && res.error) { say("Could not grant the badge. Please try again.", true); return; }
+        if (!d || !d.ok) { say((d && d.message) || "Could not grant the badge.", true); return; }
+        say(d["new"] ? (chosen.name + " now has " + label + ". 🍀") : (chosen.name + " already has " + label + "."));
+      } catch (err) {
+        say("Could not grant the badge. Please try again.", true);
+      }
+    });
+  }
+  window.__kosHubRenderBadgeGrant = function (client) {
+    var panel = document.getElementById("hubOfficer");
+    if (panel) renderBadgeGrant(client || window.__kosSb, panel, document.getElementById("hubApprovals"));
+  };
+
   async function loadApprovals(client) {
     if (!state.officer && !state.canReviewHours) return;
     var panel = document.getElementById("hubOfficer");
@@ -5049,6 +5145,7 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
+    if (state.officer) renderBadgeGrant(client, panel, card);
     var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
       '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
