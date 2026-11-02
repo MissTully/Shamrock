@@ -3361,7 +3361,7 @@
       ["Attend a members' meeting","15"],
       ["Attend another IKC krewe's event (support the krewe family)","25"],
       ["Volunteer at an event","+30"],
-      ["Volunteer for a priority shift (setup / teardown / parade day)","+60"],
+      ["Priority shift bonus (officers flag hard-to-fill spots like security or float duty)","+60"],
       ["Organize an event","+50"],
       ["Bring a guest (up to 3)","5 each"],
       ["Pay your dues on time","25"],
@@ -3597,7 +3597,7 @@
       html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers; an officer confirms who attended after each event.</p>`;
       html+=`<h3 class="rpt-cat">🙌 Volunteer and earn Clovers</h3>`;
       html+=`<p style="margin:0 0 8px;color:#3a3a2e;">Lending a hand is one of the best ways to climb the board. Here's how it works:</p><ol style="margin:0 0 8px 20px;color:#3a3a2e;"><li>Submit your volunteer hours in the <b>Member Hub</b>.</li><li>An officer reviews and approves them.</li><li>You earn <b>30 Clovers 🍀</b> for each event you worked.</li></ol>`;
-      html+=`<p class="rpt-note">In-kind donations are deeply appreciated, but they don't earn Clovers. Clovers are for the hours you put in.</p>`;
+      html+=`<p class="rpt-note">Officers may offer a bonus for high-priority shifts like security or float duty. In-kind donations are deeply appreciated, but they don't earn Clovers. Clovers are for the hours you put in.</p>`;
       html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Clovers</th></tr></thead><tbody>'+
         RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" - "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
