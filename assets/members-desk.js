@@ -1397,8 +1397,20 @@
       body.innerHTML = "";
       body.appendChild(frag);
     } else {
-      body.innerHTML = '<p style="font-size:16px;color:var(--muted);">Volunteer hours appear after your Parade Ready data loads. You can also log hours from the Parade Day tab.</p>';
+      body.innerHTML = '<p style="font-size:16px;color:var(--muted);">Volunteer hours appear after your Parade Ready data loads. Refresh the page if this stays empty.</p>';
     }
+  }
+
+  /* Volunteer hours lives on the Home tab, between upcoming events and the
+     Craic Cup. The card keeps its ids (hubHoursCard, vhForm, prHours) and is
+     moved, never rebuilt, so the form wiring keeps working. */
+  function placeHomeHours(held) {
+    var card = held || document.getElementById("hubHoursCard");
+    if (!card) return;
+    var slot = document.getElementById("hubHomeHoursSlot");
+    if (slot) { slot.parentNode.replaceChild(card, slot); return; }
+    var top = document.getElementById("hubHomeTop");
+    if (top && !top.contains(card)) top.appendChild(card);
   }
 
   function moveIntoPanels() {
@@ -1488,6 +1500,7 @@
     oldGrid.remove();
     relocateHours();
     layoutMemberDesk();
+    placeHomeHours();
     if (!document.getElementById("appMeLinks")) {
       var kreweLinks = document.getElementById("hubKrewe");
       if (kreweLinks) kreweLinks.insertAdjacentHTML("beforeend", meLinksHtml());
@@ -1573,8 +1586,8 @@
      claims files in last on Parade, so future desk cards never vanish. */
   var DESK_GROUPS = [
     { id: "deskSeason", icon: "🎗️", chip: "Season checklist", title: "Get Season Ready",
-      sub: "Dues, waiver, parade RSVP, meeting check-in, photo release, and your volunteer hours.",
-      cards: ["prCard", "hubParadeSeasonCard", "hubHoursCard"] },
+      sub: "Dues, waiver, parade RSVP, meeting check-in, and photo release. Volunteer hours are on the Home tab.",
+      cards: ["prCard", "hubParadeSeasonCard"] },
     { id: "deskTravel", icon: "🚐", chip: "Rides & locker", title: "Getting There & Your Gear",
       sub: "Carpools, seats on the krewe vans, and locker rentals.",
       cards: ["carpoolCard", "vanCard", "lockerCard"] }
@@ -1665,8 +1678,8 @@
     hero.innerHTML =
       '<p class="desk-kicker">Fáilte, a chara - welcome, friend</p>' +
       "<h2>☘ Your Member Desk</h2>" +
-      "<p>Everything you need for parade season: get Parade Ready, log your volunteer hours, " +
-      "and find a ride, a van seat, or a locker. Share your media, documents, and the FAQ are on the Home tab.</p>" +
+      "<p>Everything you need for parade season: get Parade Ready " +
+      "and find a ride, a van seat, or a locker. Volunteer hours, share your media, documents, and the FAQ are on the Home tab.</p>" +
       deskGroupsHtml(DESK_GROUPS, "Member desk sections");
     panel.insertBefore(hero, grid);
 
@@ -2662,7 +2675,7 @@
       return;
     }
     if (go === "carpool") { appNavApi.openFocus("parade", "carpoolCard", "Carpool"); return; }
-    if (go === "volunteer") { appNavApi.openFocus("parade", "hubHoursCard", "Volunteer hours"); return; }
+    if (go === "volunteer") { appNavApi.openFocus("hub", "hubHoursCard", "Volunteer hours"); return; }
     if (go === "shop") { location.href = "store.html"; return; }
     if (go === "photos") { location.href = "gallery.html"; return; }
     if (go === "get-app") {
@@ -2952,7 +2965,7 @@
       '<div class="hub-find-grid">' +
       quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
-      quickTile("desk", "shield", "Member desk", "Parade Ready, volunteer hours, rides, your locker, and media sharing.") +
+      quickTile("desk", "shield", "Member desk", "Parade Ready, rides, and your locker.") +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
       quickTile("share", "triskele", "Share your media", "Upload photos & videos for the public site - an officer approves them - plus artwork, poems & recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
@@ -2972,16 +2985,25 @@
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
     // Computer: birthday, welcome, the mobile-app card, tidings, officer tools, the Cup, then links.
     // Phone: the app home (countdown and tiles) stays above that same desk.
+    // Order by importance to a member: Krewe Tidings, Quick links, upcoming
+    // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
+    // the Craic Cup, Parade Ready and dues, then officer tools, the app card,
+    // birthdays, and deadlines. Member Resources follow below this stack.
     var phoneHome = document.body.classList.contains("hub-app");
+    var hoursCard = document.getElementById("hubHoursCard");
+    if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
     top.innerHTML =
-      (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline")) +
-      birthdayCardHtml() +
+      boardAnnouncementsHtml() +
+      findCards +
       (phoneHome ? appDashHtml() : "") +
-      (phoneHome ? boardAnnouncementsHtml() : "") +
+      '<div id="hubHomeHoursSlot"></div>' +
+      craicHeroHtml() +
       welcomeDeskHtml() +
+      appsBanner + volunteerBanner + officerCard +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
-      (phoneHome ? "" : boardAnnouncementsHtml()) +
-      appsBanner + volunteerBanner + officerCard + craicHeroHtml() + findCards;
+      birthdayCardHtml() +
+      (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline"));
+    placeHomeHours(hoursCard);
 
     renderProfileCard();
 
@@ -3436,7 +3458,7 @@
       var hash = (location.hash || "").replace(/^#/, "").toLowerCase();
       if (wantHours) {
         hoursDeepLink = true;
-        saved = "parade";
+        saved = TAB_HOME;
       } else if (hash === "parade" || hash === "desk") saved = "parade";
       else if (hash === "officer") saved = "officer";
       else if (hash === "applications") { saved = "officer"; wantApplications = true; }
@@ -3453,7 +3475,7 @@
         saved = TAB_HOME;
       }
     } catch (e) {
-      if (wantHours) saved = "parade";
+      if (wantHours) saved = TAB_HOME;
     }
     if (saved === "officer" && !canOpenOfficerDesk()) saved = TAB_HOME;
     try {
@@ -3500,7 +3522,7 @@
     function go() {
       if (!hubVisible()) return false;
       hoursDeepLink = true;
-      showTab("parade", { skipScroll: true });
+      showTab("hub", { skipScroll: true });
       var form = document.getElementById("vhForm");
       if (!form) return false;
       var card = document.getElementById("hubHoursCard") || form || document.getElementById("prHours");
@@ -7213,7 +7235,7 @@
       if (lower === "events") return { tab: "events", frames: [{ kind: "root" }] };
       if (lower === "parade" || lower === "desk") return { tab: "parade", frames: [{ kind: "root" }] };
       if (lower === "docs") return { tab: "hub", frames: [{ kind: "root" }, { kind: "focus", id: "docs", title: "Documents" }] };
-      if (lower === "hours" || lower === "volunteer") return { tab: "parade", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
+      if (lower === "hours" || lower === "volunteer") return { tab: "hub", frames: [{ kind: "root" }, { kind: "focus", id: "hubHoursCard", title: "Volunteer hours" }] };
       if (lower === "share") return { tab: "hub", frames: [{ kind: "root" }, { kind: "focus", id: "shareCard", title: "Share your media" }] };
       if (faqHashSection(lower) !== null) {
         var faqFrame = { kind: "focus", id: "hubFaq", title: "FAQ" };
@@ -7591,7 +7613,7 @@
       if (roleFixture && ("socialOnly" in roleFixture)) state.socialOnly = !!roleFixture.socialOnly;
       if (!tab) tab = "hub";
       if (tab === "officer" && !canOpenOfficerDesk()) tab = "hub";
-      if (tab !== "parade") clearHoursIntent();
+      if (tab !== "parade" && tab !== "hub") clearHoursIntent();
       if (tab === appNav.tab) {
         var cur = framesOf(tab);
         if (cur.length > 1) {
