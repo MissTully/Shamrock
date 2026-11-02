@@ -2987,7 +2987,7 @@
     // Phone: the app home (countdown and tiles) stays above that same desk.
     // Order by importance to a member: Krewe Tidings, Quick links, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
-    // the Craic Cup, Parade Ready and dues, then officer tools, the app card,
+    // Parade Ready and dues, then officer tools, the app card,
     // birthdays, and deadlines. Member Resources follow below this stack.
     var phoneHome = document.body.classList.contains("hub-app");
     var hoursCard = document.getElementById("hubHoursCard");
@@ -2997,7 +2997,6 @@
       findCards +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
-      craicHeroHtml() +
       welcomeDeskHtml() +
       appsBanner + volunteerBanner + officerCard +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
