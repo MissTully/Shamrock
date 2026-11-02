@@ -5059,21 +5059,20 @@
   };
 
   // ---- Grant a badge: officers award Host with the Most (or any badge) ----
-  function renderBadgeGrant(client, panel, afterEl) {
-    var card = document.getElementById("hubBadgeGrant");
-    if (!card) {
-      card = document.createElement("section");
-      card.className = "app-card";
-      card.id = "hubBadgeGrant";
-      card.style.marginTop = "18px";
-      if (afterEl && afterEl.parentNode === panel) panel.insertBefore(card, afterEl.nextSibling);
-      else panel.appendChild(card);
-    }
-    if (card.getAttribute("data-ready") === "1") return;
-    card.setAttribute("data-ready", "1");
+  // Lives inside the Approvals card (after the pending list), not as its own Desk tool.
+  function renderBadgeGrant(client, approvalsCard) {
+    if (!approvalsCard) return;
+    var card = approvalsCard.querySelector("#hubBadgeGrant");
+    if (card) return;
+    card = document.createElement("div");
+    card.id = "hubBadgeGrant";
+    card.className = "app-body hub-badge-grant";
+    card.style.borderTop = "1px solid rgba(168,128,28,.28)";
+    approvalsCard.appendChild(card);
     card.innerHTML =
-      '<div class="app-head"><span class="ic">🥂</span><div><h2>Grant a badge</h2><small>Thank a member who hosted, or award any Craic Cup badge by hand</small></div></div>' +
-      '<div class="app-body">' +
+      '<div>' +
+        '<h3 class="hub-appr-h">🥂 Grant a badge</h3>' +
+        '<p class="muted" style="margin:0 0 10px;">Thank a member who hosted, or award any Craic Cup badge by hand.</p>' +
         '<form id="hubBadgeForm" class="krewe-form" style="max-width:520px;">' +
           '<label for="hubBadgeWho">Member name</label>' +
           '<input id="hubBadgeWho" type="text" maxlength="80" placeholder="e.g. Melissa, or Tully" autocomplete="off" />' +
@@ -5150,8 +5149,7 @@
     });
   }
   window.__kosHubRenderBadgeGrant = function (client) {
-    var panel = document.getElementById("hubOfficer");
-    if (panel) renderBadgeGrant(client || window.__kosSb, panel, document.getElementById("hubApprovals"));
+    renderBadgeGrant(client || window.__kosSb, document.getElementById("hubApprovals"));
   };
 
   async function loadApprovals(client) {
@@ -5165,7 +5163,6 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
-    if (state.officer) renderBadgeGrant(client, panel, card);
     var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
       '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
@@ -5174,6 +5171,7 @@
         : "Role requests, clover claims, media, volunteer hours, and record merges") +
       "</small></div></div>" +
       '<div class="app-body" id="hubApprovalsBody"><p class="empty">Loading approvals…</p></div>';
+    if (state.officer) renderBadgeGrant(client, card);
     var body = card.querySelector("#hubApprovalsBody");
     var data = null;
     var clovers = [];
