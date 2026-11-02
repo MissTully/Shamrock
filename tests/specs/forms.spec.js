@@ -84,30 +84,59 @@ test("join interest submit posts name, email, phone, and address only", async ({
 
 test("full application is token gated and checks driver's license above SSN", async ({ page }) => {
   const report = watchPage(page);
-  const exact = "The board uses SSN and driver's license for the background check. Your information is held confidentially.";
+  const exact = "The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially.";
   await page.goto("/membership-full-application.html");
   await expect(page.locator("#fullForm")).toBeHidden();
   await expect(page.locator("#linkGate")).toContainText("Membership Chair");
   await expect(page.locator("#idConfidentiality")).toHaveText(exact);
   await expect(page.locator("#dlState, #licenseState, [name='dl_state']")).toHaveCount(0);
 
+  await page.goto("/membership-full-application.html?preview=single");
+  await expect(page.locator("#applicant2")).toBeHidden();
+  await expect(page.locator("#dob1")).toHaveAttribute("required", /.*/);
+  await expect(page.locator("#dob1")).toHaveAttribute("type", "date");
+  await expect(page.locator("#dob2")).not.toHaveAttribute("required", /.*/);
+
   await page.goto("/membership-full-application.html?preview=couple");
   await expect(page.locator("#fullForm")).toBeVisible();
   await expect(page.locator("#applicant2")).toBeVisible();
   await expect(page.locator("#feeLine")).toContainText("$75");
   await expect(page.locator("#idConfidentiality")).toHaveText(exact);
+  await expect(page.locator("#dob1")).toHaveAttribute("required", /.*/);
+  await expect(page.locator("#dob2")).toHaveAttribute("required", /.*/);
+  await expect(page.locator("label[for='dob1']")).toHaveText("Date of birth");
+  await expect(page.locator("label[for='dob2']")).toHaveText("Date of birth");
   const order = await page.evaluate(() => {
     function follows(a, b) {
       const left = document.getElementById(a);
       const right = document.getElementById(b);
       return !!(left && right && (left.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_FOLLOWING));
     }
-    return follows("dl1", "ssn1") && follows("dl2", "ssn2") && follows("ssn1", "dl2");
+    const dobBesideIds = (dobId, dlId, ssnId) => {
+      const dob = document.getElementById(dobId);
+      const dl = document.getElementById(dlId);
+      const ssn = document.getElementById(ssnId);
+      const pair = dob && dob.closest(".id-pair");
+      return !!(pair && pair.contains(dl) && pair.contains(ssn));
+    };
+    return follows("dl1", "ssn1") && follows("dl2", "ssn2") && follows("ssn1", "dl2")
+      && dobBesideIds("dob1", "dl1", "ssn1") && dobBesideIds("dob2", "dl2", "ssn2");
   });
   expect(order).toBe(true);
+  expect(await page.locator("#fullForm").evaluate((f) => f.checkValidity())).toBe(false);
+
+  await page.locator("#dob1").fill("1988-03-14");
+  await page.locator("#dob2").fill("1991-07-22");
+  await page.locator("#dl1").fill("F123456789012");
+  await page.locator("#ssn1").fill("123456789");
+  await page.locator("#dl2").fill("G987654321098");
+  await page.locator("#ssn2").fill("987654321");
+  await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+  await page.locator(".form-card").screenshot({
+    path: "/opt/cursor/artifacts/full_application_dob_fields.png"
+  });
 
   await page.locator("#dl1").fill("A1");
-  await page.locator("#ssn1").fill("123456789");
   await page.locator("#fullForm button[type=submit]").click();
   await expect(page.locator("#message")).toContainText("letters and numbers");
 
@@ -121,12 +150,79 @@ test("full application is token gated and checks driver's license above SSN", as
   await page.locator("#ssn1").fill("123456789");
   await expect(page.locator("#ssn1")).toHaveValue("•••-••-6789");
   await expect(page.locator("#ssn1")).toHaveAttribute("data-digits", "123456789");
+  await page.locator("#dob1").fill("");
+  expect(await page.locator("#fullForm").evaluate((f) => f.checkValidity())).toBe(false);
+  await page.locator("#dob1").evaluate((el) => { el.required = false; });
+  await page.locator("#fullForm button[type=submit]").click();
+  await expect(page.locator("#message")).toContainText("Enter a date of birth.");
+
+  await page.locator("#dob1").fill("1988-03-14");
+  await page.locator("#dob1").evaluate((el) => { el.required = true; });
   await page.locator("#dl2").fill("B0000000");
+  await page.locator("#ssn2").fill("");
+  await page.locator("#dob2").fill("1991-07-22");
   await page.locator("#fullForm button[type=submit]").click();
   await expect(page.locator("#message")).toContainText("Applicant 2");
+  await expect(page.locator("#message")).toContainText("date of birth");
+  await page.locator("#dob2").fill("");
+  expect(await page.locator("#fullForm").evaluate((f) => f.checkValidity())).toBe(false);
   await expect(page.locator("#fullForm")).toBeVisible();
+  const html = await page.locator("#fullForm").innerHTML();
+  expect(html).not.toContain("—");
 
   assertHealthy(expect, report, "full application");
+});
+
+test("full application sends both dates of birth with the background check ids", async ({ page }) => {
+  const report = watchPage(page);
+  let body = null;
+  await page.route("**/rest/v1/rpc/lookup_membership_full_application", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        already_submitted: false,
+        fee_type: "dual",
+        applicant_first: "Nia",
+        partner_first: "Maeve"
+      })
+    });
+  });
+  await page.route("**/rest/v1/rpc/submit_membership_full_application", async (route) => {
+    body = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        message: "We received your date of birth, driver's license number, and Social Security number. The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially."
+      })
+    });
+  });
+  const token = "ab".repeat(32);
+  await page.goto("/membership-full-application.html?token=" + token);
+  await expect(page.locator("#fullForm")).toBeVisible();
+  await expect(page.locator("#applicant2Legend")).toContainText("Maeve");
+  await page.locator("#dl1").fill("F123456789012");
+  await page.locator("#ssn1").fill("123456789");
+  await page.locator("#dob1").fill("1988-03-14");
+  await page.locator("#dl2").fill("G987654321098");
+  await page.locator("#ssn2").fill("987654321");
+  await page.locator("#dob2").fill("1991-07-22");
+  await page.locator("#fullForm button[type=submit]").click();
+  await expect.poll(() => body).not.toBeNull();
+  expect(body.p_dl).toBe("F123456789012");
+  expect(body.p_ssn).toBe("123456789");
+  expect(body.p_birthday).toBe("1988-03-14");
+  expect(body.p_partner_dl).toBe("G987654321098");
+  expect(body.p_partner_ssn).toBe("987654321");
+  expect(body.p_partner_birthday).toBe("1991-07-22");
+  expect(JSON.stringify(body)).not.toContain("—");
+  await expect(page.locator("#message")).toContainText("date of birth");
+  await expect(page.locator("#dob1")).toHaveValue("");
+  await expect(page.locator("#dob2")).toHaveValue("");
+  assertHealthy(expect, report, "full application dates");
 });
 
 test("event sign-up: form renders with event picker and required fields", async ({ page }) => {
