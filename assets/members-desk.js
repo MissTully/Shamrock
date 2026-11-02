@@ -644,7 +644,7 @@
 
   function esc(s) {
     return (s == null ? "" : String(s)).replace(/[&<>"']/g, function (c) {
-      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+      return ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' })[c];
     });
   }
 
@@ -1110,12 +1110,32 @@
       markRsvpd(eventId, (res.data && res.data.status) || "registered");
       renderHubParadeSeason(state.paradeSeason);
       paintRsvpChips();
-      if (msg) msg.textContent = (res.data && res.data.message) || "You're signed up.";
+      if (msg) msg.textContent = rsvpMessage(res.data, "You're signed up.");
       await loadParadeSeason(client);
+      refreshGameCard(client);
     } catch (e) {
       if (msg) msg.textContent = (e && e.message) || "Could not RSVP. Try again.";
       if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
     }
+  }
+
+  /* After an RSVP the server already writes +5 Clovers to clover_ledger
+     (rsvp_to_event). The Hub caches the game card from page load, so
+     re-fetch it and repaint Home so the Craic Cup total updates now. */
+  async function refreshGameCard(client) {
+    try {
+      var email = (window.kosProfile || {}).email || null;
+      if (!client || !email) return;
+      var gc = await client.rpc("get_member_game_card", { p_email: email });
+      if (gc && gc.data) state.game = gc.data;
+      renderHome();
+    } catch (e) { /* keep the old card */ }
+  }
+
+  function rsvpMessage(data, fallback) {
+    var m = (data && data.message) || fallback;
+    var n = Number((data && data.clovers_awarded) || 0);
+    return n > 0 ? m + " +" + n + " Clovers 🍀" : m;
   }
 
   async function hubCancelRsvp(eventId, btn) {
@@ -2841,10 +2861,10 @@
       desktopGetAppQuickHtml() +
       '<div class="hub-find-grid">' +
       quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
-      quickTile("events", "harp", "Events &amp; RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
+      quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, volunteer hours, rides, your locker, and media sharing.") +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
-      quickTile("share", "triskele", "Share your media", "Upload photos &amp; videos for the public site - an officer approves them - plus artwork, poems &amp; recipes.") +
+      quickTile("share", "triskele", "Share your media", "Upload photos & videos for the public site - an officer approves them - plus artwork, poems & recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
       '<div class="hub-action" id="docsHome" style="cursor:default">' +
       qkIcon("cross") +
@@ -2856,7 +2876,7 @@
       '<p style="margin:10px 0 0;"><button type="button" class="btn" data-hub-goto="docs">Open Documents card</button></p>' +
       "</div></div>" +
       ((state.officer || state.canManageEvents)
-        ? quickTile("event-studio", "quill", "Add or edit events &amp; calendar", "Open Event Studio to change dates (Basket Social and more) without a developer.")
+        ? quickTile("event-studio", "quill", "Add or edit events & calendar", "Open Event Studio to change dates (Basket Social and more) without a developer.")
         : '') +
       '</div></div>';
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
@@ -5378,7 +5398,7 @@
       } catch (e) {}
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Treasurer &amp; board - online payments recorded automatically</small></div></div>' +
+      '<div class="app-head"><span class="ic">💵</span><div><h2>Payments</h2><small>Treasurer & board - online payments recorded automatically</small></div></div>' +
       '<div class="app-body" id="hubPaymentsBody"><p class="empty">Loading payments…</p></div>';
     var body = card.querySelector("#hubPaymentsBody");
     var data = null;
@@ -7146,8 +7166,9 @@
         renderHubParadeSeason(state.paradeSeason);
         paintRsvpChips();
         paintEvent(ev.id);
-        showToast((res.data && res.data.message) || "You're signed up.");
+        showToast(rsvpMessage(res.data, "You're signed up."));
         loadParadeSeason(client);
+        refreshGameCard(client);
       } catch (err) {
         if (btn) { btn.disabled = false; btn.textContent = "RSVP"; }
         showToast((err && err.message) || "Could not RSVP. Try again.");
