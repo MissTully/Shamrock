@@ -675,7 +675,7 @@
   var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
 
   function tabButton(id, label, icon, extra) {
-    return '<button type="button" data-hub-tab="' + id + '">' +
+    return '<button type="button" role="tab" data-hub-tab="' + id + '" aria-selected="false">' +
       '<span class="app-tab-ic" aria-hidden="true">' + icon + "</span>" +
       '<span class="app-tab-tx">' + label + "</span>" +
       (extra || "") + "</button>";
@@ -1334,7 +1334,7 @@
     root.id = "hubRoot";
     root.className = "hub-wrap";
 
-    var tabHtml = '<nav class="hub-tabs" id="hubTabs" aria-label="Member hub sections">' +
+    var tabHtml = '<nav class="hub-tabs" id="hubTabs" role="tablist" aria-label="Member hub sections">' +
       tabButton("hub", "Home", APP_ICO.home) +
       tabButton("events", "Events", APP_ICO.events) +
       tabButton("parade", "Parade", APP_ICO.parade) +
@@ -2911,7 +2911,7 @@
     });
     var claimBtn = document.getElementById("hubClaimClovers");
     if (claimBtn) claimBtn.addEventListener("click", function () {
-      showTab("fun");
+      appNavApi.openTab("fun");
       setTimeout(function () {
         var el = document.getElementById("hubClaimCard");
         if (el) el.scrollIntoView({ behavior: "auto", block: "nearest" });
@@ -3049,8 +3049,10 @@
     });
     document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
       var id = btn.getAttribute("data-hub-tab");
-      btn.classList.toggle("on", id === tab);
-      if (id === tab) btn.setAttribute("aria-current", "page");
+      var on = id === tab;
+      btn.classList.toggle("on", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+      if (on) btn.setAttribute("aria-current", "page");
       else btn.removeAttribute("aria-current");
       if (id === "officer") btn.style.display = canOpenOfficerDesk() ? "" : "none";
     });
@@ -6951,18 +6953,6 @@
       });
     }
 
-    function markOriginTab() {
-      if (appNav.tab !== "fun") return;
-      var origin = appNav.funFrom || "hub";
-      document.querySelectorAll("[data-hub-tab]").forEach(function (btn) {
-        var id = btn.getAttribute("data-hub-tab");
-        var on = id === origin;
-        btn.classList.toggle("on", on);
-        if (on) btn.setAttribute("aria-current", "page");
-        else btn.removeAttribute("aria-current");
-      });
-    }
-
     function addEventCalendar(ev) {
       if (!ev || !ev.start_time) {
         showToast("This event does not have a date yet.");
@@ -7104,8 +7094,7 @@
         if (drill) drill.hidden = true;
         if (appNav.tab === "fun") showBack("Craic Cup");
         else showRootBar();
-        markOriginTab();
-        paintAppHeader(appNav.tab === "fun" ? (appNav.funFrom || "hub") : appNav.tab);
+        paintAppHeader(appNav.tab);
         restoreScroll(false);
       } else if (top.kind === "focus") {
         if (drill) drill.hidden = true;
