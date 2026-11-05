@@ -216,7 +216,7 @@
   }
 
   /* ---- Committee members report (board request, Nov 2026) ---- */
-  var COMMITTEE_ORDER = ["Membership", "Bylaws and Rules", "Float", "Parade", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology", "Security"];
+  var COMMITTEE_ORDER = ["Membership", "Bylaws and Rules", "Float", "Parade", "Parade: Security", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
   var committeeRows = [];
   var committeeFixture = null;
 
@@ -257,12 +257,13 @@
 
   async function runCommitteeReport(client) {
     var msg = document.getElementById("hubReportCmMsg");
-    if (committeeFixture) { committeeRows = committeeFixture; renderCommitteeReport(); return; }
+    if (committeeFixture) { committeeRows = committeeFixture; window.__kosCommitteeRows = committeeRows; renderCommitteeReport(); return; }
     if (msg) msg.textContent = "Loading committees...";
     try {
       var res = await client.rpc("officer_committee_members_report");
       if (res.error) throw res.error;
       committeeRows = res.data || [];
+      window.__kosCommitteeRows = committeeRows;
       if (msg) msg.textContent = "";
       renderCommitteeReport();
     } catch (e) {
@@ -293,8 +294,20 @@
     w.document.close();
   }
 
-  function downloadCommitteeCsv() {
-    var lines = [["Committee", "Role", "Name", "Email", "Phone"]].concat(committeeRows.map(function (r) {
+  async function downloadCommitteeCsv(client) {
+    // Use the rows on screen. If this copy of the report has none (another boot pass painted the
+    // tables, or Run was not clicked yet), reuse the shared copy or fetch them now.
+    var rows = committeeRows.length ? committeeRows : (window.__kosCommitteeRows || []);
+    if (!rows.length && client && !committeeFixture) {
+      try {
+        var res = await client.rpc("officer_committee_members_report");
+        if (!res.error) rows = res.data || [];
+      } catch (e) { rows = []; }
+    }
+    if (rows.length && !committeeRows.length) { committeeRows = rows; renderCommitteeReport(); }
+    var msg = document.getElementById("hubReportCmMsg");
+    if (!rows.length) { if (msg) msg.textContent = "No rows to download yet. Tap Run report first."; return; }
+    var lines = [["Committee", "Role", "Name", "Email", "Phone"]].concat(rows.map(function (r) {
       return [r.committee, r.report_role, cmName(r), r.email, r.phone];
     })).map(function (row) {
       return row.map(function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",");
@@ -321,8 +334,11 @@
 
   function wireCommitteeSection(client) {
     document.getElementById("hubReportCmRun").addEventListener("click", function () { runCommitteeReport(client); });
-    document.getElementById("hubReportCmPrint").addEventListener("click", printCommitteeReport);
-    document.getElementById("hubReportCmCsv").addEventListener("click", downloadCommitteeCsv);
+    document.getElementById("hubReportCmPrint").addEventListener("click", function () {
+      if (!committeeRows.length && window.__kosCommitteeRows) committeeRows = window.__kosCommitteeRows;
+      printCommitteeReport();
+    });
+    document.getElementById("hubReportCmCsv").addEventListener("click", function () { downloadCommitteeCsv(client); });
   }
 
   async function loadReports(client, committeeOnly) {

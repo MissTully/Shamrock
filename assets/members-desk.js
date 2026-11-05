@@ -3569,7 +3569,7 @@
   }
 
   /* Committee interests: the nine bylaws committees plus Technology. */
-  var KOS_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
+  var KOS_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Parade: Security", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
   var committeeFetch = false;
   function cAttr(v) { return esc(v == null ? "" : String(v)); }
 
@@ -3579,6 +3579,7 @@
     var t = String(raw || "").trim();
     if (!t) return "";
     if (/by-?laws|rules/i.test(t)) return "Bylaws and Rules";
+    if (/security/i.test(t)) return "Parade: Security";
     if (/charit|fundrais/i.test(t)) return "Charity/Fundraising";
     if (/social|party/i.test(t)) return "Social";
     if (/merch/i.test(t)) return "Merchandise";
@@ -3602,6 +3603,16 @@
     return KOS_COMMITTEES.filter(function (c) { return out.indexOf(c) !== -1; });
   }
   window.kosCommitteesFor = committeesFor;
+  /* Interests that are not official committees (Movies, Travel, Security...). Never deleted; shown as Interests. */
+  function otherInterestsFor(p) {
+    var out = [];
+    String((p || {}).interests || "").split(/\s*[,;]\s*/).forEach(function (x) {
+      x = String(x || "").trim();
+      if (x && !normalizeCommittee(x) && out.indexOf(x) === -1) out.push(x);
+    });
+    return out;
+  }
+  window.kosOtherInterestsFor = otherInterestsFor;
   function committeeChipsHtml(list) {
     return list.map(function (c) {
       return '<span class="hub-committee-chip" style="display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border-radius:999px;background:#e8f0e8;border:1px solid rgba(20,80,40,.25);color:var(--green-800);font-size:15px;">' + esc(c) + "</span>";
@@ -3616,8 +3627,9 @@
       '<legend style="padding:0 6px;font-weight:600;">Committees</legend>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;">' +
       KOS_COMMITTEES.map(function (c, i) {
-        return '<label class="hub-committee-opt" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
-          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + esc(c) + "</label>";
+        var sub = c.indexOf(": ") !== -1;
+        return '<label class="hub-committee-opt' + (sub ? " hub-committee-sub" : "") + '" style="' + (sub ? "margin-left:28px;" : "") + 'display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
+          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + (sub ? "↳ " + esc(c.split(": ")[1]) + ' <small style="color:var(--muted);">(Parade subcommittee)</small>' : esc(c)) + "</label>";
       }).join("") + "</div>" +
       '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Pick one or as many as you like. Chairs use this to find helpers.' +
       (fromLegacy ? " We filled these in from your old website profile. Save to keep them." : "") + "</p></fieldset>";
@@ -3663,7 +3675,8 @@
     var longs = "";
     if (p.bio) longs += '<p class="hub-prof-line"><b>About me:</b> ' + esc(p.bio) + "</p>";
     if (p.hobbies) longs += '<p class="hub-prof-line"><b>Hobbies:</b> ' + esc(p.hobbies) + "</p>";
-    if (p.interests) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(p.interests) + "</p>";
+    var otherInterests = otherInterestsFor(p);
+    if (otherInterests.length) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(otherInterests.join(", ")) + "</p>";
     ensureMyCommitteeInterests();
     var myCommittees = committeesFor(p);
     longs += '<p class="hub-prof-line"><b>Committees:</b> ' + (myCommittees.length ? committeeChipsHtml(myCommittees) : '<span style="color:var(--muted);">None picked yet. Tap Edit profile to choose.</span>') + "</p>";
