@@ -3308,6 +3308,7 @@
       }
     } catch (e) {}
     try {
+      // can_view_payments: finance roles plus the Membership chair (Lisa keeps dues/payments access for applicant follow-up).
       var pay = await client.rpc("can_view_payments");
       state.canViewPayments = !!pay.data;
     } catch (e) { state.canViewPayments = false; }
