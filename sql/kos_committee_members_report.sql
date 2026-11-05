@@ -2,7 +2,8 @@
 -- Reads committee data that already exists on member profiles:
 --   * members.interests (comma list imported from Wild Apricot, e.g. "Charities, Float")
 --   * members.committee_interests (new My Krewe picker)
---   * member_roles (role = 'committee') and members.officer_title "... Chair" for chairs
+--   * member_roles (role = 'committee') as committee members
+--   * members.officer_title "Chair of ..." for chairs
 -- Old labels are mapped onto the Hub committee names and deduped.
 -- NOT APPLIED. Apply only after Melissa approves.
 
@@ -39,7 +40,7 @@ begin
      where m.merged_into is null and coalesce(m.member_role,'') <> 'prospect'
        and m.membership_status in ('active','pending')
   ),
-  picks as (
+  picks0 as (
     select l.id, public.kos_normalize_committee(x) c
       from live l, unnest(coalesce(l.committee_interests, '{}'::text[])) x
     union
@@ -47,12 +48,17 @@ begin
       from live l, regexp_split_to_table(coalesce(l.interests,''), '\s*[,;]\s*') x
   ),
   chairs as (
-    select p.member_id id, public.kos_normalize_committee(r.committee) c
+    -- Chair = officer_title says "Chair of X" / "X Chair". member_roles committee rows
+    -- (which grant desk access) count as committee members, not chairs.
+    select l.id, public.kos_normalize_committee(regexp_replace(l.officer_title, 'chair( of)?', '', 'gi')) c
+      from live l where coalesce(l.officer_title,'') ~* 'chair'
+  ),
+  picks as (
+    select * from picks0
+    union
+    select p.member_id, public.kos_normalize_committee(r.committee)
       from public.member_roles r join public.profiles p on p.id = r.user_id
      where r.role = 'committee' and coalesce(r.committee,'') <> ''
-    union
-    select l.id, public.kos_normalize_committee(regexp_replace(l.officer_title, 'chair( of)?', '', 'gi'))
-      from live l where coalesce(l.officer_title,'') ~* 'chair'
   ),
   rows as (
     select c, 'Chair'::text rr, id from chairs where c is not null
