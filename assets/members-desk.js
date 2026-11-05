@@ -2614,6 +2614,7 @@
       appTile("desk", "Member Desk", APP_ICO.shield) +
       appTile("faq", "FAQ", APP_ICO.faq) +
       appTile("docs", "Docs", APP_ICO.doc) +
+      appTile("email", "Email", APP_ICO.chat) +
       ((state.officer || state.canManageEvents) ? appTile("event-studio", "Event Studio", APP_ICO.quill) : "") +
       "</div>" +
       '<section class="app-next" id="appNextUp" aria-label="Next up">' +
@@ -2701,6 +2702,11 @@
     if (go === "directory") { openDirectoryFromHome(); return; }
     if (go === "card") { appNavApi.openCard(); return; }
     if (go === "dues") { openPayDues(); return; }
+    if (go === "email") {
+      if (typeof window.kosOpenEmailMembers === "function") window.kosOpenEmailMembers();
+      else showToast("Email members is still loading. Please try again in a moment.");
+      return;
+    }
     if (go === "chat") {
       if (typeof window.kosOpenChat === "function") window.kosOpenChat();
       else showToast("Krewe Chat is still loading. Please try again in a moment.");

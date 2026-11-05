@@ -1,7 +1,8 @@
-/* Officer desk: Email members + level-based Send invoices.
-   Any krewe officer (is_krewe_officer).
+/* Email members (all signed-in active members) + Send invoices (officers only).
+   Email: My Krewe for everyone; also Officer desk for officers.
    Invoices: kos_dues_catalog, kos_set_membership_level, kos_create_level_invoices.
-   Email notices: officer_send_member_email → outbound_emails / Resend. */
+   Email notices: officer_send_member_email → outbound_emails / Resend.
+   SQL gate: sql/kos_member_email_access.sql (NOT applied until approved). */
 (function () {
   var CSS =
     ".hub-ei label{display:block;font-size:13px;color:var(--muted);margin:0 0 4px;}" +
@@ -115,6 +116,18 @@
   }
 
   window.__kosLoadEmailCard = function (client) { return loadEmailCard(client); };
+  window.kosOpenEmailMembers = function () {
+    var card = document.getElementById("hubEmailMembers");
+    if (!card) return;
+    if (typeof window.kosShowHub === "function") {
+      var onOfficer = !!(window.kosIsOfficer && window.kosIsOfficer() && document.getElementById("hubOfficer") && card.closest("#hubOfficer"));
+      window.kosShowHub(onOfficer ? "officer" : "krewe", { skipScroll: true });
+    }
+    setTimeout(function () {
+      if (typeof window.focusHubTarget === "function") window.focusHubTarget(card);
+      else card.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 80);
+  };
   window.__kosEmailFixture = function (fx) { emailFixture = fx; refreshCommitteeCounts(null); refreshCommitteeRecipients(null); };
   var LEVELS = [
     { id: "full", label: "Full" },
@@ -179,15 +192,17 @@
   }
 
   function ensureCard(id, title, desc, icon) {
-    var panel = document.getElementById("hubOfficer");
-    if (!panel) return null;
     var card = document.getElementById(id);
-    if (!card) {
-      card = document.createElement("section");
-      card.className = "app-card";
-      card.id = id;
-      panel.appendChild(card);
+    if (card) return card;
+    var panel = document.getElementById("hubOfficer");
+    if (!panel || !window.kosIsOfficer || !window.kosIsOfficer()) {
+      panel = document.getElementById("hubKrewe") || document.getElementById("hubHomeGrid");
     }
+    if (!panel) return null;
+    card = document.createElement("section");
+    card.className = "app-card";
+    card.id = id;
+    panel.appendChild(card);
     return card;
   }
 
@@ -401,7 +416,7 @@
       '<div class="app-head"><span class="ic">✉️</span><div><h2>Email members</h2>' +
       "<small>Write once, choose who gets it, preview, then send</small></div></div>" +
       '<div class="app-body hub-ei">' +
-      '<p class="hub-ei-note">Uses the same branded Shamrock template and outbound queue as Krewe Tidings. Available to any officer on Officer desk.</p>' +
+      '<p class="hub-ei-note">Uses the same branded Shamrock template and outbound queue as Krewe Tidings. Available to every signed-in member.</p>' +
       '<div class="hub-ei-grid">' +
       "<div><label>Audience</label>" +
       '<div class="hub-ei-pills" role="group" aria-label="Email audience">' +
@@ -465,6 +480,12 @@
           searchRoster(client).catch(function () {});
         }, 220);
       });
+    }
+    if (!(typeof window.kosIsOfficer === "function" && window.kosIsOfficer())) {
+      var prosp = document.getElementById("hubEmAud_prospects");
+      if (prosp) prosp.hidden = true;
+      var leg = document.getElementById("hubEmLegacyWrap");
+      if (leg) leg.hidden = true;
     }
     document.getElementById("hubEmSend").addEventListener("click", function () { sendEmail(client); });
     ["hubEmSubject", "hubEmBody"].forEach(function (id) {
@@ -1057,18 +1078,25 @@
       await new Promise(function (r) { setTimeout(r, 150); });
       client = window.__kosSb || null;
     }
-    if (!client) return;
-    var isOfficer = false;
-    try {
-      var res = await client.rpc("is_krewe_officer");
-      isOfficer = !!res.data;
-    } catch (e) {
-      isOfficer = false;
+    // Preview fixture: __kosLoadEmailCard works with no client.
+    var isOfficer = typeof window.kosIsOfficer === "function" && !!window.kosIsOfficer();
+    if (!isOfficer && client) {
+      try {
+        var res = await client.rpc("is_krewe_officer");
+        isOfficer = !!res.data;
+      } catch (e) { isOfficer = false; }
     }
-    if (!isOfficer) return;
-    await loadEmailCard(client);
-    await loadInvoiceCard(client);
-    if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
+    if (typeof window.kosIsOfficer !== "function") {
+      window.kosIsOfficer = function () { return isOfficer; };
+    }
+    // Email members: any unlocked hub session (active member). Invoices: officers only.
+    if (client || window.__kosEmailFixture) {
+      await loadEmailCard(client || { rpc: function () { return Promise.resolve({ data: { ok: true, items: [] }, error: null }); } });
+    }
+    if (isOfficer && client) {
+      await loadInvoiceCard(client);
+      if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
+    }
   }
 
   var _unlock = window.kosUnlock;
