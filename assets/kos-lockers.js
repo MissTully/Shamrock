@@ -470,6 +470,13 @@
       '<input id="hubLockerLargeUrl" type="url" /></div></div>' +
       '<p class="hub-ei-note" id="hubLockerCampaigns"></p>' +
       '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubLockerSaveUrls">Save pay links</button></div>' +
+      '<h3>Locker report</h3>' +
+      '<p class="hub-ei-note">Every locker by number, who has it, size, status, and whether it is paid. Print it for the float barn or download a spreadsheet.</p>' +
+      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubLockerPrint">Print report</button> ' +
+      '<button class="btn" type="button" id="hubLockerCsv">Download CSV</button></div>' +
+      '<div class="rpt-tablewrap"><table class="rpt-table" id="hubLockerReport"><thead><tr>' +
+      '<th>Locker</th><th>Member</th><th>Size</th><th>Status</th><th>Paid</th>' +
+      '</tr></thead><tbody id="hubLockerReportBody"></tbody></table></div>' +
       '<h3>Reservation list</h3>' +
       '<p class="hub-ei-note">First come, first served. Place is by the time they joined, within each size.</p>' +
       '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>' +
@@ -498,6 +505,10 @@
     card.innerHTML = officerHtml();
     var save = document.getElementById("hubLockerSaveUrls");
     if (save) save.addEventListener("click", saveUrls);
+    var printBtn = document.getElementById("hubLockerPrint");
+    if (printBtn) printBtn.addEventListener("click", printLockerReport);
+    var csvBtn = document.getElementById("hubLockerCsv");
+    if (csvBtn) csvBtn.addEventListener("click", downloadLockerCsv);
     card.addEventListener("click", onOfficerClick);
     return card;
   }
@@ -710,7 +721,69 @@
     }
   }
 
-  window.kosPaintLockerOfficer = paintOfficer;
+  /* ---- Printable locker report (board request, Nov 2026) ---- */
+  var reportRows = [];
+
+  function buildReportRows(model) {
+    var membersById = indexRows(model.members, "id");
+    var resByLocker = {};
+    (model.reservations || []).forEach(function (r) { if (r.locker_id) resByLocker[r.locker_id] = r; });
+    return (model.inventory || []).slice().sort(compareLockers).map(function (l) {
+      var m = l.member_id ? membersById[l.member_id] : null;
+      var r = resByLocker[l.id];
+      var name = notEmailName(l.holder_name) || (m ? joinedPersonName(m.first_name, m.last_name) : "") ||
+        (r ? notEmailName(r.requester_name) : "") || l.holder_email || "";
+      if (!name && l.status === "available") name = "Open";
+      var paid = l.status === "paid" || !!(r && r.paid_at);
+      return { locker: l.locker_number || "", member: name, size: l.size || "", status: l.status || "", paid: l.status === "available" ? "" : (paid ? "Yes" : "No") };
+    });
+  }
+
+  function paintReport(model) {
+    reportRows = buildReportRows(model);
+    var body = document.getElementById("hubLockerReportBody");
+    if (!body) return;
+    if (!reportRows.length) { body.innerHTML = '<tr><td colspan="5">No lockers yet.</td></tr>'; return; }
+    body.innerHTML = reportRows.map(function (r) {
+      return "<tr><td>" + esc(r.locker) + "</td><td>" + esc(r.member) + "</td><td>" + esc(r.size) +
+        "</td><td>" + esc(r.status) + "</td><td>" + esc(r.paid) + "</td></tr>";
+    }).join("");
+  }
+
+  function reportStamp() {
+    try { return new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" }); } catch (e) { return new Date().toDateString(); }
+  }
+
+  function printLockerReport() {
+    var w = window.open("", "_blank");
+    if (!w) { setOfficerMsg("Your browser blocked the print window. Allow pop-ups for this site, then try again.", "err"); return; }
+    var taken = reportRows.filter(function (r) { return r.status !== "available"; }).length;
+    var rows = reportRows.map(function (r) {
+      return "<tr><td>" + esc(r.locker) + "</td><td>" + esc(r.member) + "</td><td>" + esc(r.size) + "</td><td>" + esc(r.status) + "</td><td>" + esc(r.paid) + "</td></tr>";
+    }).join("");
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Krewe of Shamrock Locker Report</title>' +
+      "<style>body{font-family:Georgia,serif;margin:28px;color:#14281d}h1{font-size:22px;margin:0 0 4px}p{margin:0 0 14px;color:#555}" +
+      "table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #999;padding:6px 8px;text-align:left}th{background:#e8f0e8}" +
+      "tr:nth-child(even) td{background:#f7f7f2}@media print{body{margin:10mm}}</style></head><body>" +
+      "<h1>Krewe of Shamrock Locker Report</h1><p>" + esc(reportStamp()) + " · " + reportRows.length + " lockers · " + taken + " taken</p>" +
+      "<table><thead><tr><th>Locker</th><th>Member</th><th>Size</th><th>Status</th><th>Paid</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+      "<script>window.onload=function(){window.print();}<\/script></body></html>");
+    w.document.close();
+  }
+
+  function downloadLockerCsv() {
+    var lines = [["Locker", "Member", "Size", "Status", "Paid"]].concat(reportRows.map(function (r) {
+      return [r.locker, r.member, r.size, r.status, r.paid];
+    })).map(function (row) {
+      return row.map(function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",");
+    });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+    a.download = "kos-locker-report.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  window.kosPaintLockerOfficer = function (model) { paintOfficer(model); paintReport(model || {}); };
 
   async function loadOfficer() {
     var seq = ++officerSeq;
@@ -745,6 +818,7 @@
       } catch (ignoreProfiles) {}
       if (seq !== officerSeq) return;
       paintOfficer({ urls: urls, inventory: inventory, reservations: reservations, members: members, profiles: profiles });
+      paintReport({ inventory: inventory, reservations: reservations, members: members });
     } catch (e) {
       if (seq !== officerSeq) return;
       paintOfficer({ urls: urls, inventory: [], reservations: [] });
