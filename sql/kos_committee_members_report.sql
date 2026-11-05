@@ -50,8 +50,11 @@ begin
   chairs as (
     -- Chair = officer_title says "Chair of X" / "X Chair". member_roles committee rows
     -- (which grant desk access) count as committee members, not chairs.
-    select l.id, public.kos_normalize_committee(regexp_replace(l.officer_title, 'chair( of)?', '', 'gi')) c
-      from live l where coalesce(l.officer_title,'') ~* 'chair'
+    -- officer_title can hold several titles split by a middle dot, e.g.
+    -- 'Board Member · Committee Chair of Charity · Committee Chair of Social'.
+    select l.id, public.kos_normalize_committee(regexp_replace(t, '(committee\s+)?(co-?)?chair(\s+of)?', '', 'gi')) c
+      from live l, regexp_split_to_table(coalesce(l.officer_title,''), '\s*[·|;]\s*') t
+     where t ~* 'chair'
   ),
   picks as (
     select * from picks0
