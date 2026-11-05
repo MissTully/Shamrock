@@ -1,6 +1,6 @@
 -- Krewe of Shamrock: committee interests on member profiles, an Officer Desk
 -- member directory for chairs, and finance access limited to the Secretary,
--- Treasurer, President, and the Technology chair / webmaster.
+-- Treasurer, President, Membership chair, and the Technology chair / webmaster.
 -- Nov 2026 board meeting requests 2 and 3. Apply only after Melissa approves.
 
 begin;
@@ -77,15 +77,16 @@ revoke all on function public.officer_member_directory(text, text) from public, 
 grant execute on function public.officer_member_directory(text, text) to authenticated;
 
 -- 5) Finance stays with Secretary, Treasurer, President (not Vice President),
---    and the Technology chair / webmaster. Board members and other chairs no
---    longer see Dues & Payments. (Was: any board member.)
+--    the Technology chair / webmaster, and the Membership chair (Lisa needs dues
+--    status to move applicants along). Other board members and chairs no longer
+--    see Dues & Payments. (Was: any board member.)
 create or replace function public.can_view_payments()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.member_roles r
      where r.user_id = auth.uid()
        and (r.role in ('treasurer','secretary')
-            or (r.role = 'committee' and coalesce(r.committee,'') ~* '^(technology|finance)$'))
+            or (r.role = 'committee' and coalesce(r.committee,'') ~* '^(technology|finance|membership)$'))
   ) or exists (
     select 1 from public.profiles p join public.members m on m.id = p.member_id
      where p.id = auth.uid() and m.membership_status = 'active' and m.merged_into is null
