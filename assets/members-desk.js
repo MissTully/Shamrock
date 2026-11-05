@@ -97,6 +97,13 @@
     ".hub-find h3 .qk-ic{width:32px;height:32px;}",
     ".hub-find h3 .qk-ic svg{width:20px;height:20px;}",
     ".hub-find-sub{margin:-4px 0 12px;font-size:15px;color:var(--muted);}",
+    /* Quick links on phones: one column, nothing wider than the card, even heights. */
+    ".hub-find,.hub-find-grid,.hub-find .hub-action{box-sizing:border-box;max-width:100%;}",
+    ".hub-find-grid>*{min-width:0;}",
+    ".hub-find .qk-copy{flex:1 1 auto;min-width:0;overflow-wrap:break-word;}",
+    ".hub-find .qk-copy b{display:block;line-height:1.25;}",
+    ".hub-find .qk-copy span{display:block;line-height:1.35;}",
+    "@media (max-width:719px){.hub-find-grid{grid-template-columns:minmax(0,1fr) !important;gap:8px;}.hub-find .hub-action{align-items:center;min-height:64px;padding:12px 14px;}.hub-find{padding:14px 12px;}}",
     ".qk-ic{flex:none;width:42px;height:42px;border-radius:50%;background:#f4ecd6;border:1px solid rgba(168,128,28,.45);color:var(--green-800);display:inline-flex;align-items:center;justify-content:center;}",
     ".qk-ic svg{width:24px;height:24px;display:block;}",
     ".hub-find button.hub-action:hover .qk-ic{background:var(--green-800);border-color:var(--green-800);color:#f0d78c;}",
@@ -669,6 +676,12 @@
     chat: svgIcon('<path d="M6 16.5 4 19.2V7.2A2.2 2.2 0 0 1 6.2 5h11.6A2.2 2.2 0 0 1 20 7.2v6.2a2.2 2.2 0 0 1-2.2 2.2H8.2Z"/>'),
     car: svgIcon('<path d="M4 15.2 5.8 9.6A2 2 0 0 1 7.7 8.2h8.6a2 2 0 0 1 1.9 1.4L20 15.2"/><path d="M3.8 15.2h16.4V18a1 1 0 0 1-1 1H5a1 1 0 0 1-1.2-1Z"/><circle cx="7.5" cy="15.2" r="1.1"/><circle cx="16.5" cy="15.2" r="1.1"/>'),
     cup: svgIcon('<path d="M8 4h8v5a4 4 0 0 1-8 0Z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.4M16 6h2.5a2.5 2.5 0 0 1-2.6 3.4"/><path d="M12 13v3.5M8.5 20h7M9.5 20l.6-3.5h3.8l.6 3.5"/>'),
+    people: svgIcon('<circle cx="9" cy="8.5" r="2.8"/><circle cx="16.5" cy="9.5" r="2.2"/><path d="M3.8 19c.9-3 2.8-4.5 5.2-4.5s4.3 1.5 5.2 4.5M14.6 14.8c2.4-.3 4.4.9 5.6 3.7"/>'),
+    shield: svgIcon('<path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6Z"/><path d="m9 12 2.2 2.2L15.5 10"/>'),
+    faq: svgIcon('<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6"/><path d="M12 17.2h.01"/>'),
+    doc: svgIcon('<path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20Z"/><path d="M14 3.5V8h4M9.5 12.5h5M9.5 15.5h5"/>'),
+    upload: svgIcon('<path d="M12 15.5V5M8 9l4-4 4 4"/><path d="M5 15v3.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V15"/>'),
+    quill: svgIcon('<path d="M19.5 4.5c-6 .5-10.5 5-12 12l-2 3"/><path d="M8.5 14.5c3-.3 5.5-1.8 7.2-4.5"/>'),
     heart: svgIcon('<path d="M12 19.4s-6.4-3.9-6.4-8.1A3.5 3.5 0 0 1 12 8.8a3.5 3.5 0 0 1 6.4 2.5c0 4.2-6.4 8.1-6.4 8.1Z"/>'),
     bag: svgIcon('<path d="M6.5 8.5h11l-.8 11H7.3Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>'),
     camera: svgIcon('<path d="M8.2 7.4 9.4 5.4h5.2l1.2 2"/><rect x="4" y="7.4" width="16" height="11.2" rx="2"/><circle cx="12" cy="13" r="2.5"/>'),
@@ -2586,6 +2599,12 @@
       appTile("fun", "Craic Cup", APP_ICO.cup) +
       appTile("shop", "Shop", APP_ICO.bag) +
       appTile("photos", "Photos", APP_ICO.camera) +
+      appTile("share", "Share", APP_ICO.upload) +
+      appTile("directory", "Directory", APP_ICO.people) +
+      appTile("desk", "Member Desk", APP_ICO.shield) +
+      appTile("faq", "FAQ", APP_ICO.faq) +
+      appTile("docs", "Docs", APP_ICO.doc) +
+      ((state.officer || state.canManageEvents) ? appTile("event-studio", "Event Studio", APP_ICO.quill) : "") +
       "</div>" +
       '<section class="app-next" id="appNextUp" aria-label="Next up">' +
       '<div class="app-next-head"><h2>Next up</h2>' +
@@ -2680,6 +2699,8 @@
     if (go === "volunteer") { appNavApi.openFocus("hub", "hubHoursCard", "Volunteer hours"); return; }
     if (go === "shop") { location.href = "store.html"; return; }
     if (go === "photos") { location.href = "gallery.html"; return; }
+    if (go === "share") { revealShareGroup(); return; }
+    if (go === "event-studio") { openEventStudioFromHome(); return; }
     if (go === "get-app") {
       if (appNavApi.openGetApp) appNavApi.openGetApp();
       return;
@@ -2965,11 +2986,11 @@
       '<p class="hub-find-sub">Tap a tile to jump straight there.</p>' +
       desktopGetAppQuickHtml() +
       '<div class="hub-find-grid">' +
-      quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
+      quickTile("directory", "trinity", "My Krewe", "Your member directory: faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, rides, and your locker.") +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
-      quickTile("share", "triskele", "Share your media", "Upload photos & videos for the public site - an officer approves them - plus artwork, poems & recipes.") +
+      quickTile("share", "triskele", "Share your media", "Upload photos and videos for the public site (an officer approves them), plus artwork, poems, and recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
       '<div class="hub-action" id="docsHome" style="cursor:default">' +
       qkIcon("cross") +
@@ -2987,7 +3008,7 @@
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
     // Computer: birthday, welcome, the mobile-app card, tidings, officer tools, the Cup, then links.
     // Phone: the app home (countdown and tiles) stays above that same desk.
-    // Order by importance to a member: Krewe Tidings, birthdays, Quick links, upcoming
+    // Order by importance to a member: Krewe Tidings, Quick links, birthdays, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
     // then the app card and deadlines. Parade Ready and dues live on the
     // Parade tab, and officer tools live only on the Officer tab. Member Resources follow below this stack.
@@ -2996,8 +3017,9 @@
     if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
     top.innerHTML =
       boardAnnouncementsHtml() +
+      // Phones: Quick links now live in the Home tile grid (appDash), so the section is dropped there.
+      (phoneHome ? "" : findCards) +
       birthdayCardHtml() +
-      findCards +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
