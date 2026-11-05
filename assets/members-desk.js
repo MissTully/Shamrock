@@ -3602,6 +3602,16 @@
     return KOS_COMMITTEES.filter(function (c) { return out.indexOf(c) !== -1; });
   }
   window.kosCommitteesFor = committeesFor;
+  /* Interests that are not official committees (Movies, Travel, Security...). Never deleted; shown as Interests. */
+  function otherInterestsFor(p) {
+    var out = [];
+    String((p || {}).interests || "").split(/\s*[,;]\s*/).forEach(function (x) {
+      x = String(x || "").trim();
+      if (x && !normalizeCommittee(x) && out.indexOf(x) === -1) out.push(x);
+    });
+    return out;
+  }
+  window.kosOtherInterestsFor = otherInterestsFor;
   function committeeChipsHtml(list) {
     return list.map(function (c) {
       return '<span class="hub-committee-chip" style="display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border-radius:999px;background:#e8f0e8;border:1px solid rgba(20,80,40,.25);color:var(--green-800);font-size:15px;">' + esc(c) + "</span>";
@@ -3663,7 +3673,8 @@
     var longs = "";
     if (p.bio) longs += '<p class="hub-prof-line"><b>About me:</b> ' + esc(p.bio) + "</p>";
     if (p.hobbies) longs += '<p class="hub-prof-line"><b>Hobbies:</b> ' + esc(p.hobbies) + "</p>";
-    if (p.interests) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(p.interests) + "</p>";
+    var otherInterests = otherInterestsFor(p);
+    if (otherInterests.length) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(otherInterests.join(", ")) + "</p>";
     ensureMyCommitteeInterests();
     var myCommittees = committeesFor(p);
     longs += '<p class="hub-prof-line"><b>Committees:</b> ' + (myCommittees.length ? committeeChipsHtml(myCommittees) : '<span style="color:var(--muted);">None picked yet. Tap Edit profile to choose.</span>') + "</p>";

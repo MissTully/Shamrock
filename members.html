@@ -2515,7 +2515,8 @@
       let longs = "";
       if(m.bio) longs += `<p class="mp-line"><b>About me:</b> ${esc(m.bio)}</p>`;
       if(m.hobbies) longs += `<p class="mp-line"><b>Hobbies:</b> ${esc(m.hobbies)}</p>`;
-      if(m.interests) longs += `<p class="mp-line"><b>Interests:</b> ${esc(m.interests)}</p>`;
+      const oi = typeof window.kosOtherInterestsFor === "function" ? window.kosOtherInterestsFor(m) : (m.interests ? [m.interests] : []);
+      if(oi.length) longs += `<p class="mp-line"><b>Interests:</b> ${esc(oi.join(", "))}</p>`;
       const mc = typeof window.kosCommitteesFor === "function" ? window.kosCommitteesFor(m) : (m.committee_interests || []);
       if(mc.length) longs += `<p class="mp-line"><b>Committees:</b> ${typeof window.kosCommitteeChipsHtml === "function" ? window.kosCommitteeChipsHtml(mc) : esc(mc.join(", "))}</p>`;
       if(m.favorite_memory) longs += `<p class="mp-line"><b>Favorite krewe memory:</b> ${esc(m.favorite_memory)}</p>`;
@@ -4747,7 +4748,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261030feature1"></script>
-<script src="assets/members-desk.js?v=20261104committees2" defer></script>
+<script src="assets/members-desk.js?v=20261104whitelist1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261030feature1" defer></script>

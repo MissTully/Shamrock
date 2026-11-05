@@ -4,7 +4,8 @@
 --
 -- Fix: whitelist. Only names in public.kos_committee_list() (the My Krewe picker list) are returned.
 -- Known old-site synonyms are mapped; everything else returns null and is dropped from the report.
--- The raw members.interests text is NOT changed, so hobbies still show as "Interests" on profiles.
+-- The raw members.interests text is NOT changed or deleted. Non-committee tokens (Movies, Music, Travel,
+-- Security, ...) show as a separate "Interests" list on My Krewe and member popups (members-desk.js).
 --
 -- Security: a real old-site (Wild Apricot) checkbox, picked by 13 members. It is the Sargent at Arms
 -- security team in the bylaws, not one of the Hub committees, so it is dropped by default.
