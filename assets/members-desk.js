@@ -577,7 +577,7 @@
   var hourApprovalsFixture = false;
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
+    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
   }
 
   function newApplicationLabel(n) {
@@ -3148,6 +3148,7 @@
     if ("canReviewHours" in flags) state.canReviewHours = !!flags.canReviewHours;
     if ("shopOnly" in flags) state.shopOnly = !!flags.shopOnly;
     if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
+    if ("isChair" in flags) state.isChair = !!flags.isChair;
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
     syncOfficerChip();
@@ -3311,6 +3312,8 @@
       state.canViewPayments = !!pay.data;
     } catch (e) { state.canViewPayments = false; }
     if (roleFixture && ("canViewPayments" in roleFixture)) state.canViewPayments = !!roleFixture.canViewPayments;
+    try { var chair = await client.rpc("is_committee_chair"); state.isChair = !!(chair && chair.data); } catch (eChair) { state.isChair = false; }
+    if (roleFixture && ("isChair" in roleFixture)) state.isChair = !!roleFixture.isChair;
     try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
     if (roleFixture) {
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
@@ -3564,6 +3567,42 @@
     return '<div class="hub-avatar hub-avatar-blank" id="hubProfAvatar">' + esc(initials || "☘") + "</div>";
   }
 
+  /* Committee interests: the nine bylaws committees plus Technology. */
+  var KOS_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
+  var committeeFetch = false;
+  function cAttr(v) { return esc(v == null ? "" : String(v)); }
+
+  function committeePickerHtml(selected) {
+    var on = {};
+    (selected || []).forEach(function (c) { on[c] = true; });
+    return '<fieldset class="hub-committee-pick" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:10px 14px;margin:12px 0;">' +
+      '<legend style="padding:0 6px;font-weight:600;">Committees I would like to help with</legend>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;">' +
+      KOS_COMMITTEES.map(function (c, i) {
+        return '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;">' +
+          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;"' + (on[c] ? " checked" : "") + " /> " + esc(c) + "</label>";
+      }).join("") + "</div>" +
+      '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Chairs use this to find helpers. Pick as many as you like.</p></fieldset>';
+  }
+
+  function readCommitteePicker() {
+    return Array.prototype.map.call(document.querySelectorAll(".hub-committee-box:checked"), function (b) { return b.value; });
+  }
+
+  function ensureMyCommitteeInterests() {
+    var p = window.kosProfile || {};
+    if (committeeFetch || Array.isArray(p.committee_interests)) return;
+    var client = window.__kosSb || null;
+    if (!client) return;
+    committeeFetch = true;
+    client.rpc("get_my_committee_interests").then(function (res) {
+      if (res && !res.error && Array.isArray(res.data)) {
+        window.kosProfile = Object.assign({}, window.kosProfile || {}, { committee_interests: res.data });
+        renderProfileCard();
+      }
+    }, function () {});
+  }
+
   function renderProfileCard() {
     var pc = document.getElementById("hubProfileCard");
     if (!pc) return;
@@ -3586,6 +3625,8 @@
     if (p.bio) longs += '<p class="hub-prof-line"><b>About me:</b> ' + esc(p.bio) + "</p>";
     if (p.hobbies) longs += '<p class="hub-prof-line"><b>Hobbies:</b> ' + esc(p.hobbies) + "</p>";
     if (p.interests) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(p.interests) + "</p>";
+    ensureMyCommitteeInterests();
+    if (p.committee_interests && p.committee_interests.length) longs += '<p class="hub-prof-line"><b>Committees I would help with:</b> ' + esc(p.committee_interests.join(", ")) + "</p>";
     if (p.favorite_memory) longs += '<p class="hub-prof-line"><b>Favorite krewe memory:</b> ' + esc(p.favorite_memory) + "</p>";
     if (p.fun_fact) longs += '<p class="hub-prof-line"><b>Fun fact:</b> ' + esc(p.fun_fact) + "</p>";
     pc.innerHTML =
@@ -3630,6 +3671,7 @@
       '<label for="hubPfBio">About me</label><textarea id="hubPfBio">' + esc(p.bio || "") + "</textarea>" +
       '<label for="hubPfHobbies">Hobbies (what do you love doing?)</label><input id="hubPfHobbies" value="' + attr(p.hobbies) + '" placeholder="e.g. Gardening, bagpipes, beach days" />' +
       '<label for="hubPfInterests">Interests (what would you chat about all night?)</label><input id="hubPfInterests" value="' + attr(p.interests) + '" placeholder="e.g. Irish history, cooking, live music" />' +
+      committeePickerHtml(p.committee_interests || []) +
       '<label for="hubPfMemory">Favorite krewe or parade memory</label><textarea id="hubPfMemory">' + esc(p.favorite_memory || "") + "</textarea>" +
       '<label for="hubPfFact">A fun fact about you</label><input id="hubPfFact" value="' + attr(p.fun_fact) + '" placeholder="e.g. I once caught 47 strands of beads in one parade" />' +
       '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer;">' +
@@ -3732,6 +3774,14 @@
       });
       if (res.error) throw res.error;
       if (res.data) window.kosProfile = res.data;
+      try {
+        var picked = readCommitteePicker();
+        var ci = await client.rpc("set_my_committee_interests", { p_committees: picked });
+        if (ci.error) throw ci.error;
+        window.kosProfile = Object.assign({}, window.kosProfile || {}, { committee_interests: ci.data || picked });
+      } catch (ciErr) {
+        if (msg) { msg.textContent = "Profile saved, but committee interests could not be saved yet: " + ((ciErr && ciErr.message) || ciErr); }
+      }
       profileEditing = false;
       renderProfileCard();
       renderHome();
@@ -8312,6 +8362,101 @@
   var outreachFixture = null;
   var outreachState = { key: "", gen: 0, rows: [], total: 0 };
 
+  /* ---- Officer Desk member directory: contacts + committee interests ---- */
+  var directoryFixture = null;
+  var directoryRows = [];
+  var directoryGen = 0;
+
+  function paintMemberDirectoryShell() {
+    var card = document.getElementById("hubOfficerDirectory");
+    if (!card || card.getAttribute("data-kos-ready") === "1") return;
+    card.setAttribute("data-kos-ready", "1");
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">📇</span><div><h2>Member contacts</h2>' +
+      "<small>Contact info and committee interests for active and pending members</small></div></div>" +
+      '<div class="app-body">' +
+      '<p class="hub-outreach-lead">Pick a committee to see who wants to help with it. Members choose their committees on My Krewe. Please use this list for Krewe business only.</p>' +
+      '<div class="hub-outreach-controls">' +
+      '<div><label for="hubDirCommittee">Committee</label><select id="hubDirCommittee"><option value="">All members</option>' +
+      KOS_COMMITTEES.map(function (c) { return '<option value="' + cAttr(c) + '">' + esc(c) + "</option>"; }).join("") +
+      "</select></div>" +
+      '<div><label for="hubDirSearch">Search name or email</label><input id="hubDirSearch" type="search" placeholder="e.g. Sugrue" /></div>' +
+      '<div style="align-self:end;"><button class="btn" type="button" id="hubDirCsv">Download CSV</button></div>' +
+      "</div>" +
+      '<div class="msg" id="hubDirMsg"></div>' +
+      '<div id="hubDirOut"><p class="empty">Loading members...</p></div>' +
+      "</div>";
+    var t = null;
+    document.getElementById("hubDirCommittee").addEventListener("change", function () { loadMemberDirectory(); });
+    document.getElementById("hubDirSearch").addEventListener("input", function () { clearTimeout(t); t = setTimeout(loadMemberDirectory, 250); });
+    document.getElementById("hubDirCsv").addEventListener("click", downloadMemberDirectoryCsv);
+  }
+
+  async function loadMemberDirectory() {
+    paintMemberDirectoryShell();
+    var out = document.getElementById("hubDirOut");
+    var msg = document.getElementById("hubDirMsg");
+    if (!out) return;
+    var committee = (document.getElementById("hubDirCommittee") || {}).value || "";
+    var q = ((document.getElementById("hubDirSearch") || {}).value || "").trim();
+    var gen = ++directoryGen;
+    var rows = [];
+    if (directoryFixture) {
+      rows = directoryFixture.filter(function (r) {
+        var okC = !committee || (r.committee_interests || []).indexOf(committee) !== -1;
+        var hay = ((r.first_name || "") + " " + (r.last_name || "") + " " + (r.email || "")).toLowerCase();
+        return okC && (!q || hay.indexOf(q.toLowerCase()) !== -1);
+      });
+    } else {
+      var client = window.__kosSb || null;
+      if (!client) { if (msg) msg.textContent = "Still connecting. Try again in a moment."; return; }
+      var res = await client.rpc("officer_member_directory", { p_committee: committee || null, p_q: q || null });
+      if (gen !== directoryGen) return;
+      if (res.error) {
+        out.innerHTML = "";
+        if (msg) msg.textContent = /function|does not exist|schema cache/i.test(res.error.message || "") ? "The member directory needs its database update applied in Supabase first." : ("Couldn't load the directory: " + res.error.message);
+        return;
+      }
+      rows = res.data || [];
+    }
+    directoryRows = rows;
+    if (msg) msg.textContent = "";
+    if (!rows.length) { out.innerHTML = '<p class="empty">No members match that filter yet.</p>'; return; }
+    out.innerHTML = '<p style="color:var(--muted);margin:0 0 8px;">' + rows.length + (rows.length === 1 ? " member" : " members") + (committee ? " interested in " + esc(committee) : "") + "</p>" +
+      '<div class="hub-outreach-tablewrap"><table class="hub-outreach-table" id="hubDirTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Committees</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var nm = [r.first_name, r.last_name].filter(Boolean).join(" ");
+        return "<tr><td>" + esc(nm) + (r.officer_title ? '<div style="font-size:14px;color:var(--muted);">' + esc(r.officer_title) + "</div>" : "") + "</td>" +
+          "<td>" + (r.email ? '<a href="mailto:' + cAttr(r.email) + '">' + esc(r.email) + "</a>" : "-") + "</td>" +
+          "<td>" + (r.phone ? '<a href="tel:' + cAttr(String(r.phone).replace(/[^0-9+]/g, "")) + '">' + esc(r.phone) + "</a>" : "-") + "</td>" +
+          "<td>" + esc((r.committee_interests || []).join(", ") || "-") + "</td>" +
+          "<td>" + esc(r.membership_status || "") + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
+  function downloadMemberDirectoryCsv() {
+    var head = ["First name", "Last name", "Email", "Phone", "Committees", "Status", "Title"];
+    var lines = [head].concat(directoryRows.map(function (r) {
+      return [r.first_name, r.last_name, r.email, r.phone, (r.committee_interests || []).join("; "), r.membership_status, r.officer_title];
+    })).map(function (row) {
+      return row.map(function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",");
+    });
+    var committee = (document.getElementById("hubDirCommittee") || {}).value || "all";
+    var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kos-member-directory-" + committee.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  window.__kosHubSetOfficerDirectory = function (rows) {
+    directoryFixture = Array.isArray(rows) ? rows : [];
+    var card = document.getElementById("hubOfficerDirectory");
+    if (card) card.removeAttribute("data-kos-ready");
+    paintMemberDirectoryShell();
+    loadMemberDirectory();
+  };
+
   function canSeeEventOutreach() {
     if (state.shopOnly && !state.socialOnly) return false;
     return !!(state.canManageEvents || state.canReviewApplications || state.socialOnly);
@@ -8667,6 +8812,7 @@
 
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
+    "hubOfficerDirectory",
     "hubVolunteerInbox",
     "hubApprovals",
     "hubPayments",
@@ -8685,6 +8831,7 @@
 
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
+    hubOfficerDirectory: { title: "Member contacts", desc: "Contact info and committee interests. Filter by committee.", icon: "📇", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
@@ -8782,6 +8929,10 @@
     }
   }
 
+  function canSeeMemberDirectory() {
+    return !!(state.officer || state.isChair);
+  }
+
   function currentOfficerToolOrder() {
     var toolOrder = OFFICER_TOOL_ORDER.slice();
     if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
@@ -8807,7 +8958,13 @@
       toolOrder.push("hubVolunteerInbox");
     }
     if (!state.canViewPayments) {
-      toolOrder = toolOrder.filter(function (id) { return id !== "hubPayments"; });
+      // Finance and invoicing stay with the Secretary, Treasurer, President, and webmaster.
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubPayments" && id !== "hubSendInvoices" && id !== "hubDuesWaivers"; });
+    }
+    if (canSeeMemberDirectory()) {
+      if (toolOrder.indexOf("hubOfficerDirectory") === -1) toolOrder.push("hubOfficerDirectory");
+    } else {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubOfficerDirectory"; });
     }
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
@@ -8952,6 +9109,9 @@
       if (id === "hubEventOutreach") {
         try { loadEventOutreach(false); } catch (eOut) {}
       }
+      if (id === "hubOfficerDirectory") {
+        try { loadMemberDirectory(); } catch (eDir) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -9037,6 +9197,7 @@
     var toolOrder = currentOfficerToolOrder();
     toolOrder.forEach(ensureOfficerToolCard);
     if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
+    if (toolOrder.indexOf("hubOfficerDirectory") !== -1) paintMemberDirectoryShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
