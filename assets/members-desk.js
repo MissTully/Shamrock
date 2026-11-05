@@ -8900,7 +8900,7 @@
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
     hubDocStudio: { title: "Document Studio", desc: "Upload, publish, and hide library documents", icon: "📜", section: "Documents" },
     hubReports: { title: "Reports", desc: "Attendance, fundraising, and live event numbers", icon: "📊", section: "Reports" },
-    hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
+    hubAllKrewe: { title: "Krewe Tidings", desc: "Post news to Krewe Tidings and email the full membership", icon: "📜", section: "Reports" },
     hubEmailMembers: { title: "Email members", desc: "Choose audience, including event prospects, then write, preview, and send", icon: "✉️", section: "Email & invoices" },
     hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
     hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
@@ -9026,6 +9026,12 @@
     }
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
+    }
+    if (state.isChair) {
+      // Every committee chair (Merchandise included) gets Event Studio, Email members, and Krewe Tidings.
+      ["hubEventStudio", "hubEmailMembers", "hubAllKrewe"].forEach(function (id) {
+        if (toolOrder.indexOf(id) === -1) toolOrder.push(id);
+      });
     }
     if (!canSeeEventOutreach()) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubEventOutreach"; });

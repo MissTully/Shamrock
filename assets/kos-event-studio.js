@@ -1316,6 +1316,10 @@
       var res = await client.rpc("can_manage_events");
       can = !!res.data;
     } catch (e) { can = false; }
+    if (!can) {
+      // Committee chairs (Merchandise too). Server writes re-check can_manage_events().
+      try { var ch = await client.rpc("is_committee_chair"); can = !!(ch && ch.data); } catch (e2) { can = false; }
+    }
     if (!can) return;
     showOfficerTab();
     await loadEventStudio(client);
