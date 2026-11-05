@@ -668,6 +668,7 @@
     dues: svgIcon('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 14.2h3.2"/>'),
     chat: svgIcon('<path d="M6 16.5 4 19.2V7.2A2.2 2.2 0 0 1 6.2 5h11.6A2.2 2.2 0 0 1 20 7.2v6.2a2.2 2.2 0 0 1-2.2 2.2H8.2Z"/>'),
     car: svgIcon('<path d="M4 15.2 5.8 9.6A2 2 0 0 1 7.7 8.2h8.6a2 2 0 0 1 1.9 1.4L20 15.2"/><path d="M3.8 15.2h16.4V18a1 1 0 0 1-1 1H5a1 1 0 0 1-1.2-1Z"/><circle cx="7.5" cy="15.2" r="1.1"/><circle cx="16.5" cy="15.2" r="1.1"/>'),
+    cup: svgIcon('<path d="M8 4h8v5a4 4 0 0 1-8 0Z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.4M16 6h2.5a2.5 2.5 0 0 1-2.6 3.4"/><path d="M12 13v3.5M8.5 20h7M9.5 20l.6-3.5h3.8l.6 3.5"/>'),
     heart: svgIcon('<path d="M12 19.4s-6.4-3.9-6.4-8.1A3.5 3.5 0 0 1 12 8.8a3.5 3.5 0 0 1 6.4 2.5c0 4.2-6.4 8.1-6.4 8.1Z"/>'),
     bag: svgIcon('<path d="M6.5 8.5h11l-.8 11H7.3Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>'),
     camera: svgIcon('<path d="M8.2 7.4 9.4 5.4h5.2l1.2 2"/><rect x="4" y="7.4" width="16" height="11.2" rx="2"/><circle cx="12" cy="13" r="2.5"/>'),
@@ -2582,6 +2583,7 @@
       appTile("chat", "Chat", APP_ICO.chat, true) +
       appTile("carpool", "Carpool", APP_ICO.car) +
       appTile("volunteer", "Volunteer", APP_ICO.heart) +
+      appTile("fun", "Craic Cup", APP_ICO.cup) +
       appTile("shop", "Shop", APP_ICO.bag) +
       appTile("photos", "Photos", APP_ICO.camera) +
       "</div>" +
