@@ -403,9 +403,8 @@
       '<h3 id="hubEmConfirmTitle">Confirm send</h3>' +
       "<p><b>Audience:</b> " + esc(meta.who) + "</p>" +
       "<p><b>Recipients:</b> " + esc(String(n)) + "</p>" +
-      "<p>Please make sure this message is relevant to everyone in that audience.</p>" +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmRelevantCheck" />' +
-      "<span>I'm sure this message is relevant to all " + esc(String(n)) + " recipients</span></label>" +
+      "<span>I confirm this is for ALL KOS</span></label>" +
       '<p class="hub-ei-msg err" id="hubEmConfirmErr" aria-live="polite"></p>' +
       '<div class="hub-ei-row">' +
       '<button class="btn btn-primary" type="button" id="hubEmConfirmSend">Confirm and send</button>' +
@@ -419,7 +418,7 @@
     });
     document.getElementById("hubEmConfirmSend").addEventListener("click", function () {
       if (!check || !check.checked) {
-        if (err) err.textContent = "Check the box to confirm this message is relevant to all recipients.";
+        if (err) err.textContent = "Check the box to confirm this is for ALL KOS.";
         return;
       }
       closeMemberConfirmPanel();
