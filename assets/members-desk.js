@@ -2373,12 +2373,22 @@
     var dot = document.getElementById("appBellDot");
     if (dot) dot.hidden = true;
     var list = state.announcements || [];
-    panel.innerHTML = list.length
+    var chatN = Number(window.kosChatUnread) || 0;
+    panel.innerHTML = (chatN
+      ? '<p class="app-bell-kicker">Krewe Chat</p><button type="button" data-app-chat="1">' +
+        (chatN > 99 ? "99+" : chatN) + " new message" + (chatN === 1 ? "" : "s") + " in Krewe Chat</button>"
+      : "") + (list.length
       ? '<p class="app-bell-kicker">From the officers</p>' + list.map(function (m, i) {
         return '<button type="button" data-app-note="' + i + '">' + esc(m.subject || "Announcement") + "</button>";
       }).join("")
-      : '<p class="app-bell-empty">No new notes from the officers.</p>';
+      : '<p class="app-bell-empty">No new notes from the officers.</p>');
     panel.hidden = false;
+    panel.querySelectorAll("[data-app-chat]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeBell();
+        if (typeof window.kosOpenChat === "function") window.kosOpenChat();
+      });
+    });
     panel.querySelectorAll("[data-app-note]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         closeBell();
@@ -2593,7 +2603,7 @@
       appTile("card", "Member Card", APP_ICO.card) +
       appTile("events", "RSVP", APP_ICO.cal) +
       (profileDuesExempt() ? "" : appTile("dues", "Pay Dues", APP_ICO.dues)) +
-      appTile("chat", "Chat", APP_ICO.chat, true) +
+      appTile("chat", "Chat", APP_ICO.chat) +
       appTile("carpool", "Carpool", APP_ICO.car) +
       appTile("volunteer", "Volunteer", APP_ICO.heart) +
       appTile("fun", "Craic Cup", APP_ICO.cup) +
@@ -2692,7 +2702,8 @@
     if (go === "card") { appNavApi.openCard(); return; }
     if (go === "dues") { openPayDues(); return; }
     if (go === "chat") {
-      showToast("Chat is coming soon. Members still gather in the krewe Facebook group.");
+      if (typeof window.kosOpenChat === "function") window.kosOpenChat();
+      else showToast("Krewe Chat is still loading. Please try again in a moment.");
       return;
     }
     if (go === "carpool") { appNavApi.openFocus("parade", "carpoolCard", "Carpool"); return; }
@@ -2915,6 +2926,7 @@
   function renderHome() {
     var home = document.getElementById("hubHome");
     if (!home) return;
+    setTimeout(function () { if (typeof window.kosChatPaint === "function") window.kosChatPaint(); }, 0);
     var top = document.getElementById("hubHomeTop");
     if (!top) {
       top = document.createElement("div");
@@ -3240,6 +3252,7 @@
   }
 
   window.kosShowHub = showTab;
+  window.kosIsOfficer = function () { return !!state.officer; };
 
   function syncOfficerChip() {
     var chip = document.getElementById("hubOfficerChip");
