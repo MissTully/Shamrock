@@ -215,7 +215,7 @@
       else panel.appendChild(card);
     }
     card.innerHTML =
-      '<div class="app-head"><span class="ic">📣</span><div><h2>All Krewe Messages</h2>' +
+      '<div class="app-head"><span class="ic">📣</span><div><h2>Krewe Tidings</h2>' +
       "<small>Email the entire current membership; every send also lives in the Members Hub</small></div></div>" +
       '<div class="app-body">' +
       '<div class="hub-akm-form" id="hubAkmFormWrap">' +
@@ -265,6 +265,14 @@
       isOfficer = !!res.data;
     } catch (e) {
       isOfficer = false;
+    }
+    if (!isOfficer) {
+      // Committee chairs (Merchandise too) can use this tool. Server re-checks can_use_chair_tools().
+      try {
+        var chair = await client.rpc("can_use_chair_tools");
+        if (chair && chair.error) chair = await client.rpc("is_committee_chair");
+        isOfficer = !!(chair && chair.data);
+      } catch (e2) { isOfficer = false; }
     }
     if (!isOfficer) return;
     await loadCard(client);

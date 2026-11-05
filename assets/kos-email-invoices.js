@@ -974,6 +974,14 @@
     } catch (e) {
       isOfficer = false;
     }
+    if (!isOfficer) {
+      // Committee chairs (Merchandise too) can use this tool. Server re-checks can_use_chair_tools().
+      try {
+        var chair = await client.rpc("can_use_chair_tools");
+        if (chair && chair.error) chair = await client.rpc("is_committee_chair");
+        isOfficer = !!(chair && chair.data);
+      } catch (e2) { isOfficer = false; }
+    }
     if (!isOfficer) return;
     await loadEmailCard(client);
     await loadInvoiceCard(client);
