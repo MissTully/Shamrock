@@ -97,6 +97,13 @@
     ".hub-find h3 .qk-ic{width:32px;height:32px;}",
     ".hub-find h3 .qk-ic svg{width:20px;height:20px;}",
     ".hub-find-sub{margin:-4px 0 12px;font-size:15px;color:var(--muted);}",
+    /* Quick links on phones: one column, nothing wider than the card, even heights. */
+    ".hub-find,.hub-find-grid,.hub-find .hub-action{box-sizing:border-box;max-width:100%;}",
+    ".hub-find-grid>*{min-width:0;}",
+    ".hub-find .qk-copy{flex:1 1 auto;min-width:0;overflow-wrap:break-word;}",
+    ".hub-find .qk-copy b{display:block;line-height:1.25;}",
+    ".hub-find .qk-copy span{display:block;line-height:1.35;}",
+    "@media (max-width:719px){.hub-find-grid{grid-template-columns:minmax(0,1fr) !important;gap:8px;}.hub-find .hub-action{align-items:center;min-height:64px;padding:12px 14px;}.hub-find{padding:14px 12px;}}",
     ".qk-ic{flex:none;width:42px;height:42px;border-radius:50%;background:#f4ecd6;border:1px solid rgba(168,128,28,.45);color:var(--green-800);display:inline-flex;align-items:center;justify-content:center;}",
     ".qk-ic svg{width:24px;height:24px;display:block;}",
     ".hub-find button.hub-action:hover .qk-ic{background:var(--green-800);border-color:var(--green-800);color:#f0d78c;}",
@@ -2965,11 +2972,11 @@
       '<p class="hub-find-sub">Tap a tile to jump straight there.</p>' +
       desktopGetAppQuickHtml() +
       '<div class="hub-find-grid">' +
-      quickTile("directory", "trinity", "My Krewe", "Your member directory - faces and profiles of the whole krewe.") +
+      quickTile("directory", "trinity", "My Krewe", "Your member directory: faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, rides, and your locker.") +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
-      quickTile("share", "triskele", "Share your media", "Upload photos & videos for the public site - an officer approves them - plus artwork, poems & recipes.") +
+      quickTile("share", "triskele", "Share your media", "Upload photos and videos for the public site (an officer approves them), plus artwork, poems, and recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
       '<div class="hub-action" id="docsHome" style="cursor:default">' +
       qkIcon("cross") +
@@ -2987,7 +2994,7 @@
     // Only refresh the welcome strip - never wipe the beautiful card grid below.
     // Computer: birthday, welcome, the mobile-app card, tidings, officer tools, the Cup, then links.
     // Phone: the app home (countdown and tiles) stays above that same desk.
-    // Order by importance to a member: Krewe Tidings, birthdays, Quick links, upcoming
+    // Order by importance to a member: Krewe Tidings, Quick links, birthdays, upcoming
     // events (phone countdown, shortcuts, and Next up RSVP), Volunteer hours,
     // then the app card and deadlines. Parade Ready and dues live on the
     // Parade tab, and officer tools live only on the Officer tab. Member Resources follow below this stack.
@@ -2996,8 +3003,8 @@
     if (hoursCard && top.contains(hoursCard)) hoursCard.parentNode.removeChild(hoursCard);
     top.innerHTML =
       boardAnnouncementsHtml() +
-      birthdayCardHtml() +
       findCards +
+      birthdayCardHtml() +
       (phoneHome ? appDashHtml() : "") +
       '<div id="hubHomeHoursSlot"></div>' +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
