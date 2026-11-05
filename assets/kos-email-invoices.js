@@ -49,7 +49,73 @@
 
   var LOGO = "https://www.kreweofshamrock.com/assets/img/emblem-shamrock.png";
 
-  var emailState = { audience: "active", includeLegacy: false, selected: {}, counts: {} };
+  var emailState = { audience: "active", includeLegacy: false, selected: {}, counts: {}, committees: {}, includeChairs: true, committeeCounts: {}, committeeIds: [], committeeGen: 0 };
+  var EMAIL_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Parade: Security", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
+  var emailFixture = null;
+
+  function pickedCommittees() {
+    return EMAIL_COMMITTEES.filter(function (c) { return !!emailState.committees[c]; });
+  }
+
+  function paintCommitteeChips() {
+    var wrap = document.getElementById("hubEmCommitteeChips");
+    if (!wrap) return;
+    wrap.innerHTML = EMAIL_COMMITTEES.map(function (c, i) {
+      var sub = c.indexOf(": ") !== -1;
+      var n = emailState.committeeCounts[c];
+      return '<button type="button" class="hub-ei-pill' + (emailState.committees[c] ? " on" : "") + '" data-em-committee="' + i + '"' +
+        (sub ? ' style="margin-left:18px;"' : "") + ">" + (sub ? "↳ Security" : esc(c)) + (n != null ? " <span>(" + n + ")</span>" : "") + "</button>";
+    }).join("");
+    wrap.querySelectorAll("[data-em-committee]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var c = EMAIL_COMMITTEES[Number(b.getAttribute("data-em-committee"))];
+        emailState.committees[c] = !emailState.committees[c];
+        paintCommitteeChips();
+        refreshCommitteeRecipients(window.__kosSb || null);
+      });
+    });
+  }
+
+  async function refreshCommitteeCounts(client) {
+    try {
+      var data = emailFixture ? emailFixture.counts(emailState.includeChairs) : null;
+      if (!data && client) {
+        var res = await client.rpc("officer_committee_audience_counts", { p_include_chairs: emailState.includeChairs });
+        if (res.error) throw res.error;
+        data = res.data || {};
+      }
+      emailState.committeeCounts = (data && data.committees) || {};
+    } catch (e) {
+      emailState.committeeCounts = {};
+      setMsg("hubEmCommitteeSum", /function|does not exist|schema cache/i.test((e && e.message) || "") ? "Committee email needs its database update applied in Supabase first." : "");
+    }
+    paintCommitteeChips();
+  }
+
+  async function refreshCommitteeRecipients(client) {
+    var picked = pickedCommittees();
+    var sum = document.getElementById("hubEmCommitteeSum");
+    var gen = ++emailState.committeeGen;
+    if (!picked.length) { emailState.committeeIds = []; if (sum) sum.textContent = "Pick one or more committees."; return; }
+    try {
+      var rows = emailFixture ? emailFixture.recipients(picked, emailState.includeChairs) : null;
+      if (!rows) {
+        var res = await client.rpc("officer_committee_recipients", { p_committees: picked, p_include_chairs: emailState.includeChairs });
+        if (res.error) throw res.error;
+        rows = res.data || [];
+      }
+      if (gen !== emailState.committeeGen) return;
+      emailState.committeeIds = rows.map(function (r) { return r.member_id; });
+      if (sum) sum.textContent = rows.length + (rows.length === 1 ? " recipient" : " recipients") + " in " + picked.join(", ") +
+        (emailState.includeChairs ? ", chairs included" : "") + ". Anyone in more than one committee gets it once.";
+    } catch (e) {
+      emailState.committeeIds = [];
+      if (sum) sum.textContent = "Couldn't count recipients: " + ((e && e.message) || e);
+    }
+  }
+
+  window.__kosLoadEmailCard = function (client) { return loadEmailCard(client); };
+  window.__kosEmailFixture = function (fx) { emailFixture = fx; refreshCommitteeCounts(null); refreshCommitteeRecipients(null); };
   var LEVELS = [
     { id: "full", label: "Full" },
     { id: "associate", label: "Associate" },
@@ -235,10 +301,13 @@
 
   function setAudience(aud) {
     emailState.audience = aud;
-    ["active", "officers", "chairs", "selected", "prospects"].forEach(function (a) {
+    ["active", "officers", "chairs", "committees", "selected", "prospects"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.classList.toggle("on", a === aud);
     });
+    var cw = document.getElementById("hubEmCommitteeWrap");
+    if (cw) cw.style.display = aud === "committees" ? "" : "none";
+    if (aud === "committees") { refreshCommitteeCounts(window.__kosSb || null); refreshCommitteeRecipients(window.__kosSb || null); }
     var pick = document.getElementById("hubEmPickWrap");
     if (pick) pick.style.display = aud === "selected" ? "" : "none";
     var legacy = document.getElementById("hubEmLegacyWrap");
@@ -246,7 +315,7 @@
     var subject = document.getElementById("hubEmSubject");
     if (subject) {
       subject.placeholder = aud === "prospects"
-        ? "e.g. Tartan Ball — save your seat"
+        ? "e.g. Tartan Ball: save your seat"
         : "e.g. Meeting reminder";
     }
     paintProspectCount();
@@ -277,13 +346,20 @@
       setMsg("hubEmMsg", "Pick at least one member from the roster.", "err");
       return;
     }
-    var audienceKey = emailState.audience;
+    if (emailState.audience === "committees") {
+      await refreshCommitteeRecipients(client);
+      if (!emailState.committeeIds.length) { setMsg("hubEmMsg", "Pick at least one committee with members.", "err"); return; }
+      ids = emailState.committeeIds.slice();
+    }
+    var committeeLabel = pickedCommittees().join(", ");
+    var audienceKey = emailState.audience === "committees" ? "selected" : emailState.audience;
     if (audienceKey === "prospects" && emailState.includeLegacy) audienceKey = "prospects_legacy";
     var who =
       audienceKey === "active" ? "ALL active members" :
       audienceKey === "officers" ? "officers and board" :
       audienceKey === "chairs" ? "chairs / officers / board" :
-      audienceKey === "prospects" ? "event prospects (website RSVP and unmatched Zeffy emails — not the active roster)" :
+      emailState.audience === "committees" ? ids.length + " member(s) in " + committeeLabel :
+      audienceKey === "prospects" ? "event prospects (website RSVP and unmatched Zeffy emails, not the active roster)" :
       audienceKey === "prospects_legacy" ? "event prospects plus legacy Wild Apricot emails (not the active roster)" :
       ids.length + " selected member(s)";
     if (!window.confirm("Queue this email for " + who + "?")) return;
@@ -325,13 +401,14 @@
       '<div class="app-head"><span class="ic">✉️</span><div><h2>Email members</h2>' +
       "<small>Write once, choose who gets it, preview, then send</small></div></div>" +
       '<div class="app-body hub-ei">' +
-      '<p class="hub-ei-note">Uses the same branded Shamrock template and outbound queue as All Krewe Messages. Available to any officer on Officer desk.</p>' +
+      '<p class="hub-ei-note">Uses the same branded Shamrock template and outbound queue as Krewe Tidings. Available to any officer on Officer desk.</p>' +
       '<div class="hub-ei-grid">' +
       "<div><label>Audience</label>" +
       '<div class="hub-ei-pills" role="group" aria-label="Email audience">' +
       '<button type="button" class="hub-ei-pill on" id="hubEmAud_active">All active <span id="hubEmCountActive"></span></button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_officers">Officers &amp; board <span id="hubEmCountOfficers"></span></button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_chairs">Chairs / officers <span id="hubEmCountChairs"></span></button>' +
+      '<button type="button" class="hub-ei-pill" id="hubEmAud_committees">By committee</button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_selected">Pick from roster</button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_prospects">Event prospects <span id="hubEmCountProspects"></span></button>' +
       "</div></div>" +
@@ -339,6 +416,12 @@
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmLegacy" />' +
       "<span>Include legacy Wild Apricot emails</span></label>" +
       '<p class="hub-ei-note" id="hubEmProspectNote"></p></div>' +
+      '<div id="hubEmCommitteeWrap" style="display:none;">' +
+      "<label>Committees</label>" +
+      '<div class="hub-ei-pills" id="hubEmCommitteeChips" role="group" aria-label="Committees"></div>' +
+      '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmIncludeChairs" checked />' +
+      "<span>Include chairs of these committees</span></label>" +
+      '<p class="hub-ei-note" id="hubEmCommitteeSum" aria-live="polite">Pick one or more committees.</p></div>' +
       '<div id="hubEmPickWrap" style="display:none;">' +
       '<label for="hubEmSearch">Search roster</label>' +
       '<input id="hubEmSearch" type="search" placeholder="Name or email" autocomplete="off" />' +
@@ -354,10 +437,18 @@
       '<div class="hub-ei-history"><h3>Recent emails</h3><div id="hubEmHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
 
-    ["active", "officers", "chairs", "selected", "prospects"].forEach(function (a) {
+    ["active", "officers", "chairs", "committees", "selected", "prospects"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.addEventListener("click", function () { setAudience(a); });
     });
+    var chairBox = document.getElementById("hubEmIncludeChairs");
+    if (chairBox) {
+      chairBox.addEventListener("change", function () {
+        emailState.includeChairs = !!chairBox.checked;
+        refreshCommitteeCounts(client);
+        refreshCommitteeRecipients(client);
+      });
+    }
     var legacyBox = document.getElementById("hubEmLegacy");
     if (legacyBox) {
       legacyBox.addEventListener("change", function () {
@@ -512,7 +603,7 @@
       var q = quoteFor(lv.id);
       var link = !q.from_catalog ? "No catalog row" : (q.zeffy_url ? "Zeffy link ready" : "No Zeffy link yet");
       if (q.from_catalog && !q.zeffy_url && (lv.id === "associate" || lv.id === "auxiliary")) missing.push(lv.label);
-      return "<div>" + esc(lv.label) + " · " + (q.from_catalog ? esc(money(q.amount)) : "—") + " · " + esc(link) + "</div>";
+      return "<div>" + esc(lv.label) + " · " + (q.from_catalog ? esc(money(q.amount)) : "-") + " · " + esc(link) + "</div>";
     }).join("");
     if (warn) {
       warn.textContent = missing.length
@@ -579,7 +670,7 @@
         (m.officer_title ? " · " + esc(m.officer_title) : "") +
         " · " + esc(duesBit) + "</div>" +
         '<label>Membership level <select class="hub-ei-levelsel" data-level-for="' + esc(m.id) + '">' + options + "</select></label>" +
-        '<div class="meta">Quote: ' + esc(levelLabel(q.level)) + " · " + (q.from_catalog ? esc(money(q.amount)) : "—") + " · " + link + "</div>" +
+        '<div class="meta">Quote: ' + esc(levelLabel(q.level)) + " · " + (q.from_catalog ? esc(money(q.amount)) : "-") + " · " + link + "</div>" +
         '<div class="meta">' + esc(resultLabel(c.result)) + "</div></div></div>";
     }).join("");
     target.scrollTop = scroll;
