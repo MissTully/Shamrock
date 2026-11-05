@@ -3569,7 +3569,7 @@
   }
 
   /* Committee interests: the nine bylaws committees plus Technology. */
-  var KOS_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
+  var KOS_COMMITTEES = ["Membership", "Bylaws and Rules", "Float", "Parade", "Parade: Security", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
   var committeeFetch = false;
   function cAttr(v) { return esc(v == null ? "" : String(v)); }
 
@@ -3579,6 +3579,7 @@
     var t = String(raw || "").trim();
     if (!t) return "";
     if (/by-?laws|rules/i.test(t)) return "Bylaws and Rules";
+    if (/security/i.test(t)) return "Parade: Security";
     if (/charit|fundrais/i.test(t)) return "Charity/Fundraising";
     if (/social|party/i.test(t)) return "Social";
     if (/merch/i.test(t)) return "Merchandise";
@@ -3626,8 +3627,9 @@
       '<legend style="padding:0 6px;font-weight:600;">Committees</legend>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;">' +
       KOS_COMMITTEES.map(function (c, i) {
-        return '<label class="hub-committee-opt" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
-          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + esc(c) + "</label>";
+        var sub = c.indexOf(": ") !== -1;
+        return '<label class="hub-committee-opt' + (sub ? " hub-committee-sub" : "") + '" style="' + (sub ? "margin-left:28px;" : "") + 'display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
+          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + (sub ? "↳ " + esc(c.split(": ")[1]) + ' <small style="color:var(--muted);">(Parade subcommittee)</small>' : esc(c)) + "</label>";
       }).join("") + "</div>" +
       '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Pick one or as many as you like. Chairs use this to find helpers.' +
       (fromLegacy ? " We filled these in from your old website profile. Save to keep them." : "") + "</p></fieldset>";

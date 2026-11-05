@@ -216,7 +216,7 @@
   }
 
   /* ---- Committee members report (board request, Nov 2026) ---- */
-  var COMMITTEE_ORDER = ["Membership", "Bylaws and Rules", "Float", "Parade", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
+  var COMMITTEE_ORDER = ["Membership", "Bylaws and Rules", "Float", "Parade", "Parade: Security", "Social", "Charity/Fundraising", "Merchandise", "Finance", "Communication", "Technology"];
   var committeeRows = [];
   var committeeFixture = null;
 

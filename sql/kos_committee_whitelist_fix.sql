@@ -7,19 +7,33 @@
 -- The raw members.interests text is NOT changed or deleted. Non-committee tokens (Movies, Music, Travel,
 -- Security, ...) show as a separate "Interests" list on My Krewe and member popups (members-desk.js).
 --
--- Security: a real old-site (Wild Apricot) checkbox, picked by 13 members. It is the Sargent at Arms
--- security team in the bylaws, not one of the Hub committees, so it is dropped by default.
--- To keep it as a committee instead, add 'Security' to kos_committee_list() and to KOS_COMMITTEES
--- in assets/members-desk.js (and the members_committee_interests_check constraint).
+-- Security: a real old-site (Wild Apricot) checkbox, picked by 13 members. Melissa: Security is a
+-- subcommittee of the Parade committee, so it becomes the official entry 'Parade: Security'
+-- (listed right under Parade in the picker and the report). It no longer shows under Interests.
 --
 -- NOT APPLIED. Apply only after Melissa approves.
 
+-- 1) Official list: add the Parade: Security subcommittee right after Parade.
+create or replace function public.kos_committee_list()
+returns text[] language sql immutable as $$
+  select array['Membership','Bylaws and Rules','Float','Parade','Parade: Security','Social',
+               'Charity/Fundraising','Merchandise','Finance','Communication','Technology']::text[];
+$$;
+grant execute on function public.kos_committee_list() to anon, authenticated;
+
+-- 2) Re-check the committee_interests validation rule against the new list.
+alter table public.members drop constraint if exists members_committee_interests_check;
+alter table public.members add constraint members_committee_interests_check
+  check (committee_interests <@ public.kos_committee_list());
+
+-- 3) Whitelisted normalizer.
 create or replace function public.kos_normalize_committee(p text)
 returns text language sql immutable set search_path = public as $$
   select c from (
     select case
       when p is null or btrim(p) = '' then null
       when p ~* 'by-?laws|rules' then 'Bylaws and Rules'
+      when p ~* 'security' then 'Parade: Security'
       when p ~* 'charit|fundrais' then 'Charity/Fundraising'
       when p ~* '^\s*social|party planning' then 'Social'
       when p ~* 'merch' then 'Merchandise'
