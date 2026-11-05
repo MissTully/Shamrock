@@ -3308,6 +3308,7 @@
       }
     } catch (e) {}
     try {
+      // can_view_payments: finance roles plus the Membership chair (Lisa keeps dues/payments access for applicant follow-up).
       var pay = await client.rpc("can_view_payments");
       state.canViewPayments = !!pay.data;
     } catch (e) { state.canViewPayments = false; }
@@ -3613,6 +3614,7 @@
     if (p.officer_title) facts.push("🎖 " + esc(p.officer_title));
     else if (p.member_role) facts.push("Role: " + esc(p.member_role));
     if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(p.membership_status || state.membershipStatus));
+    if (p.phone) facts.push('📞 <a href="tel:' + esc(String(p.phone).replace(/[^0-9+]/g, "")) + '" style="color:inherit;">' + esc(p.phone) + "</a>");
     if (p.hometown) facts.push("🏠 " + esc(p.hometown));
     if (p.street_address || p.city) {
       var addr = [p.street_address, [p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" · ");
@@ -3642,10 +3644,19 @@
       '</div>' +
       '<button class="btn btn-primary" id="hubProfEditBtn" type="button" style="margin-top:10px;">✏️ Edit my profile</button>' +
       (p.profile_visible === false ? '<p style="color:var(--muted);font-size:15px;">Your profile is hidden from the member directory.</p>' : "") +
-      '<p style="color:var(--muted);font-size:14px;margin:8px 0 0;">Fellow members see your birthday and anniversary as month and day only - never the year.</p>';
+      '<p style="color:var(--muted);font-size:14px;margin:8px 0 0;">Fellow members see your birthday and anniversary as month and day only, never the year. Signed-in members can see your phone number.</p>';
     var btn = document.getElementById("hubProfEditBtn");
     if (btn) btn.addEventListener("click", function () { profileEditing = true; renderProfileCard(); });
   }
+
+  /* US phone: keep 10 digits (drop a leading 1) and show as 813-555-0123. */
+  function formatUsPhone(raw) {
+    var d = String(raw || "").replace(/\D/g, "");
+    if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
+    if (d.length !== 10) return null;
+    return d.slice(0, 3) + "-" + d.slice(3, 6) + "-" + d.slice(6);
+  }
+  window.__kosFormatUsPhone = formatUsPhone;
 
   function renderProfileEdit(pc, p) {
     function attr(v) { return esc(v == null ? "" : String(v)); }
@@ -3658,7 +3669,7 @@
       '<div class="hub-prof-grid">' +
       '<div><label for="hubPfFirst">First name</label><input id="hubPfFirst" value="' + attr(p.first_name) + '" required /></div>' +
       '<div><label for="hubPfLast">Last name</label><input id="hubPfLast" value="' + attr(p.last_name) + '" required /></div>' +
-      '<div><label for="hubPfPhone">Phone</label><input id="hubPfPhone" type="tel" value="' + attr(p.phone) + '" /></div>' +
+      '<div><label for="hubPfPhone">Phone</label><input id="hubPfPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="813-555-0123" value="' + attr(p.phone) + '" /><small style="display:block;color:var(--muted);font-size:14px;">Signed-in members can see this on your profile.</small></div>' +
       '<div><label for="hubPfHometown">Hometown</label><input id="hubPfHometown" value="' + attr(p.hometown) + '" /></div>' +
       '<div style="grid-column:1/-1;"><label for="hubPfStreet">Mailing address</label><input id="hubPfStreet" value="' + attr(p.street_address) + '" autocomplete="street-address" /></div>' +
       '<div><label for="hubPfCity">City</label><input id="hubPfCity" value="' + attr(p.city) + '" autocomplete="address-level2" /></div>' +
@@ -3751,11 +3762,20 @@
         photoUrl = await uploadAvatar(client, f);
         if (msg) msg.textContent = "Saving…";
       }
+      var phoneIn = val("hubPfPhone"), phoneOut = null;
+      if (phoneIn) {
+        phoneOut = formatUsPhone(phoneIn);
+        if (!phoneOut) {
+          if (msg) { msg.style.color = "#b91c1c"; msg.textContent = "Please enter a 10 digit phone number, like 813-555-0123."; }
+          var pe = document.getElementById("hubPfPhone"); if (pe) pe.focus();
+          return;
+        }
+      }
       var since = parseInt(val("hubPfSince"), 10);
       var res = await client.rpc("update_my_member_profile", {
         p_first: val("hubPfFirst"),
         p_last: val("hubPfLast"),
-        p_phone: val("hubPfPhone") || null,
+        p_phone: phoneOut,
         p_bio: val("hubPfBio") || null,
         p_hometown: val("hubPfHometown") || null,
         p_street_address: val("hubPfStreet") || null,
