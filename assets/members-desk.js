@@ -3573,17 +3573,54 @@
   var committeeFetch = false;
   function cAttr(v) { return esc(v == null ? "" : String(v)); }
 
-  function committeePickerHtml(selected) {
+  /* Old-site interests ("Charities, Social/Party Planning") mapped onto Hub committee names.
+     Mirrors public.kos_normalize_committee in sql/kos_committee_members_report.sql. */
+  function normalizeCommittee(raw) {
+    var t = String(raw || "").trim();
+    if (!t) return "";
+    if (/by-?laws|rules/i.test(t)) return "Bylaws and Rules";
+    if (/charit|fundrais/i.test(t)) return "Charity/Fundraising";
+    if (/social|party/i.test(t)) return "Social";
+    if (/merch/i.test(t)) return "Merchandise";
+    if (/membership/i.test(t)) return "Membership";
+    if (/float/i.test(t)) return "Float";
+    if (/parade/i.test(t)) return "Parade";
+    if (/financ|treasur/i.test(t)) return "Finance";
+    if (/communicat/i.test(t)) return "Communication";
+    if (/technolog|webmaster/i.test(t)) return "Technology";
+    return "";
+  }
+  /* A member's committees: their My Krewe picks, or (until they save picks) the old-site list. */
+  function committeesFor(p) {
+    p = p || {};
+    if (Array.isArray(p.committee_interests) && p.committee_interests.length) return p.committee_interests.slice();
+    var out = [];
+    String(p.interests || "").split(/\s*[,;]\s*/).forEach(function (x) {
+      var c = normalizeCommittee(x);
+      if (c && out.indexOf(c) === -1) out.push(c);
+    });
+    return KOS_COMMITTEES.filter(function (c) { return out.indexOf(c) !== -1; });
+  }
+  window.kosCommitteesFor = committeesFor;
+  function committeeChipsHtml(list) {
+    return list.map(function (c) {
+      return '<span class="hub-committee-chip" style="display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border-radius:999px;background:#e8f0e8;border:1px solid rgba(20,80,40,.25);color:var(--green-800);font-size:15px;">' + esc(c) + "</span>";
+    }).join("");
+  }
+  window.kosCommitteeChipsHtml = committeeChipsHtml;
+
+  function committeePickerHtml(selected, fromLegacy) {
     var on = {};
     (selected || []).forEach(function (c) { on[c] = true; });
     return '<fieldset class="hub-committee-pick" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:10px 14px;margin:12px 0;">' +
-      '<legend style="padding:0 6px;font-weight:600;">Committees I would like to help with</legend>' +
+      '<legend style="padding:0 6px;font-weight:600;">Committees</legend>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;">' +
       KOS_COMMITTEES.map(function (c, i) {
-        return '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;">' +
-          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;"' + (on[c] ? " checked" : "") + " /> " + esc(c) + "</label>";
+        return '<label class="hub-committee-opt" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
+          '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + esc(c) + "</label>";
       }).join("") + "</div>" +
-      '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Chairs use this to find helpers. Pick as many as you like.</p></fieldset>';
+      '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Pick one or as many as you like. Chairs use this to find helpers.' +
+      (fromLegacy ? " We filled these in from your old website profile. Save to keep them." : "") + "</p></fieldset>";
   }
 
   function readCommitteePicker() {
@@ -3628,7 +3665,8 @@
     if (p.hobbies) longs += '<p class="hub-prof-line"><b>Hobbies:</b> ' + esc(p.hobbies) + "</p>";
     if (p.interests) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(p.interests) + "</p>";
     ensureMyCommitteeInterests();
-    if (p.committee_interests && p.committee_interests.length) longs += '<p class="hub-prof-line"><b>Committees I would help with:</b> ' + esc(p.committee_interests.join(", ")) + "</p>";
+    var myCommittees = committeesFor(p);
+    longs += '<p class="hub-prof-line"><b>Committees:</b> ' + (myCommittees.length ? committeeChipsHtml(myCommittees) : '<span style="color:var(--muted);">None picked yet. Tap Edit profile to choose.</span>') + "</p>";
     if (p.favorite_memory) longs += '<p class="hub-prof-line"><b>Favorite krewe memory:</b> ' + esc(p.favorite_memory) + "</p>";
     if (p.fun_fact) longs += '<p class="hub-prof-line"><b>Fun fact:</b> ' + esc(p.fun_fact) + "</p>";
     pc.innerHTML =
@@ -3682,7 +3720,7 @@
       '<label for="hubPfBio">About me</label><textarea id="hubPfBio">' + esc(p.bio || "") + "</textarea>" +
       '<label for="hubPfHobbies">Hobbies (what do you love doing?)</label><input id="hubPfHobbies" value="' + attr(p.hobbies) + '" placeholder="e.g. Gardening, bagpipes, beach days" />' +
       '<label for="hubPfInterests">Interests (what would you chat about all night?)</label><input id="hubPfInterests" value="' + attr(p.interests) + '" placeholder="e.g. Irish history, cooking, live music" />' +
-      committeePickerHtml(p.committee_interests || []) +
+      committeePickerHtml(committeesFor(p), !(Array.isArray(p.committee_interests) && p.committee_interests.length) && committeesFor(p).length > 0) +
       '<label for="hubPfMemory">Favorite krewe or parade memory</label><textarea id="hubPfMemory">' + esc(p.favorite_memory || "") + "</textarea>" +
       '<label for="hubPfFact">A fun fact about you</label><input id="hubPfFact" value="' + attr(p.fun_fact) + '" placeholder="e.g. I once caught 47 strands of beads in one parade" />' +
       '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer;">' +
