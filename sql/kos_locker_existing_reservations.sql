@@ -31,9 +31,8 @@ update public.lockers
  where id = '80b3b63a-355d-4762-b779-f993934fe382' and member_id is null;
 
 -- Doug's Sep 13 reservation is for a SMALL locker and is still queued. RL7 is
--- large, so it is left alone until Melissa confirms whether Doug wants a second
--- (small) locker or the reservation should be cancelled:
--- update public.locker_reservations set status = 'cancelled', updated_at = now()
---  where id = '3031ec37-455b-4413-a860-aa02919f63cf' and status = 'queued';
+-- large and is his locker, so Melissa approved cancelling the small request (Nov 4, 2026).
+update public.locker_reservations set status = 'cancelled', updated_at = now()
+ where id = '3031ec37-455b-4413-a860-aa02919f63cf' and status = 'queued';
 
 commit;
