@@ -11,7 +11,7 @@
 -- What this changes:
 --   * Active members (not prospects) may queue member email, same as officers.
 --   * Event prospects audiences stay officers only (website / Zeffy / legacy lists).
---   * Non-officers: at most 3 email sends per calendar day (America/New_York).
+--   * Non-officers: at most 10 email sends per calendar day (America/New_York).
 --   * Opt-out skip, confirm checkbox, and branded template stay as they are.
 -- Never public: anon still cannot call these RPCs.
 
@@ -36,7 +36,7 @@ $$;
 revoke all on function public.kos_can_send_member_email() from public, anon;
 grant execute on function public.kos_can_send_member_email() to authenticated;
 
--- Non-officer daily cap (3). Officers unlimited. Counts rows they queued today.
+-- Non-officer daily cap (10). Officers unlimited. Counts rows they queued today.
 create or replace function public.kos_member_email_under_daily_cap()
 returns boolean language sql stable security definer set search_path to 'public' as $$
   select public.is_krewe_officer()
@@ -46,7 +46,7 @@ returns boolean language sql stable security definer set search_path to 'public'
         and kind = 'email'
         and created_at >= date_trunc('day', now() at time zone 'America/New_York')
           at time zone 'America/New_York'
-    ) < 3;
+    ) < 10;
 $$;
 revoke all on function public.kos_member_email_under_daily_cap() from public, anon;
 grant execute on function public.kos_member_email_under_daily_cap() to authenticated;
@@ -209,7 +209,7 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Signed-in members only.');
   end if;
   if not public.kos_member_email_under_daily_cap() then
-    return jsonb_build_object('ok', false, 'message', 'Daily send limit reached (3 per day for members). Try again tomorrow, or ask an officer.');
+    return jsonb_build_object('ok', false, 'message', 'Daily send limit reached (10 per day for members). Try again tomorrow, or ask an officer.');
   end if;
   if v_subject is null then
     return jsonb_build_object('ok', false, 'message', 'Subject is required.');

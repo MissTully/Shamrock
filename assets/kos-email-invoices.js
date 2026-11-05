@@ -46,7 +46,16 @@
     ".hub-ei .hub-ei-hrow{padding:10px 0;border-top:1px solid rgba(168,128,28,.2);font-size:14px;}" +
     ".hub-ei .hub-ei-hrow:first-of-type{border-top:0;}" +
     ".hub-ei .hub-ei-confirm{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:14px;line-height:1.4;}" +
-    ".hub-ei .hub-ei-confirm input{margin-top:3px;width:20px;height:20px;}";
+    ".hub-ei .hub-ei-confirm input{margin-top:3px;width:20px;height:20px;}" +
+    ".hub-ei-confirm-backdrop{position:fixed;inset:0;z-index:100000;background:rgba(20,40,29,.55);" +
+    "display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}" +
+    ".hub-ei-confirm-panel{background:#fffdf6;border:2px solid #c9a23a;border-radius:16px;max-width:440px;width:100%;" +
+    "padding:18px 18px 16px;box-shadow:0 12px 40px rgba(0,0,0,.28);color:#14281d;}" +
+    ".hub-ei-confirm-panel h3{margin:0 0 10px;font-family:var(--display);font-size:20px;color:#14532d;}" +
+    ".hub-ei-confirm-panel p{margin:0 0 8px;font-size:15px;line-height:1.45;}" +
+    ".hub-ei-confirm-panel .hub-ei-confirm{margin:14px 0 12px;}" +
+    ".hub-ei-confirm-panel .hub-ei-row{margin-top:4px;}" +
+    ".hub-ei-confirm-panel .btn-ghost{background:#fff;border:1px solid rgba(168,128,28,.45);color:#14532d;}";
 
   var LOGO = "https://www.kreweofshamrock.com/assets/img/emblem-shamrock.png";
 
@@ -345,30 +354,14 @@
     renderPickList("hubEmPickList", members, emailState.selected);
   }
 
-  async function sendEmail(client) {
-    var subject = val("hubEmSubject");
-    var bodyRaw = val("hubEmBody");
-    var confirm = document.getElementById("hubEmConfirm");
-    var btn = document.getElementById("hubEmSend");
-    if (!subject) { setMsg("hubEmMsg", "Subject is required.", "err"); return; }
-    if (!bodyRaw) { setMsg("hubEmMsg", "Message body is required.", "err"); return; }
-    if (!confirm || !confirm.checked) {
-      setMsg("hubEmMsg", "Please confirm you are ready to queue this email.", "err");
-      return;
-    }
-    var ids = selectedIds(emailState.selected);
-    if (emailState.audience === "selected" && !ids.length) {
-      setMsg("hubEmMsg", "Pick at least one member from the roster.", "err");
-      return;
-    }
-    if (emailState.audience === "committees") {
-      await refreshCommitteeRecipients(client);
-      if (!emailState.committeeIds.length) { setMsg("hubEmMsg", "Pick at least one committee with members.", "err"); return; }
-      ids = emailState.committeeIds.slice();
-    }
-    var committeeLabel = pickedCommittees().join(", ");
+  function isEmailOfficer() {
+    return typeof window.kosIsOfficer === "function" && !!window.kosIsOfficer();
+  }
+
+  function audienceWhoAndCount(ids) {
     var audienceKey = emailState.audience === "committees" ? "selected" : emailState.audience;
     if (audienceKey === "prospects" && emailState.includeLegacy) audienceKey = "prospects_legacy";
+    var committeeLabel = pickedCommittees().join(", ");
     var who =
       audienceKey === "active" ? "ALL active members" :
       audienceKey === "officers" ? "officers and board" :
@@ -377,7 +370,64 @@
       audienceKey === "prospects" ? "event prospects (website RSVP and unmatched Zeffy emails, not the active roster)" :
       audienceKey === "prospects_legacy" ? "event prospects plus legacy Wild Apricot emails (not the active roster)" :
       ids.length + " selected member(s)";
-    if (!window.confirm("Queue this email for " + who + "?")) return;
+    var n = null;
+    if (emailState.audience === "active" && emailState.counts.active != null) n = Number(emailState.counts.active);
+    else if (emailState.audience === "officers" && emailState.counts.officers != null) n = Number(emailState.counts.officers);
+    else if (emailState.audience === "chairs" && emailState.counts.chairs != null) n = Number(emailState.counts.chairs);
+    else if (emailState.audience === "committees" || emailState.audience === "selected") n = ids.length;
+    else if (emailState.audience === "prospects") {
+      var el = document.getElementById("hubEmCountProspects");
+      var raw = el ? String(el.textContent || "").replace(/[^\d]/g, "") : "";
+      if (raw) n = Number(raw);
+    }
+    if (n == null || !isFinite(n)) n = ids && ids.length ? ids.length : null;
+    return { who: who, count: n, audienceKey: audienceKey };
+  }
+
+  function closeMemberConfirmPanel() {
+    var bd = document.getElementById("hubEmConfirmBackdrop");
+    if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+  }
+
+  function openMemberConfirmPanel(meta, onConfirm) {
+    closeMemberConfirmPanel();
+    var n = meta.count != null ? meta.count : "?";
+    var bd = document.createElement("div");
+    bd.id = "hubEmConfirmBackdrop";
+    bd.className = "hub-ei-confirm-backdrop";
+    bd.setAttribute("role", "dialog");
+    bd.setAttribute("aria-modal", "true");
+    bd.setAttribute("aria-labelledby", "hubEmConfirmTitle");
+    bd.innerHTML =
+      '<div class="hub-ei-confirm-panel hub-ei">' +
+      '<h3 id="hubEmConfirmTitle">Confirm send</h3>' +
+      "<p><b>Audience:</b> " + esc(meta.who) + "</p>" +
+      "<p><b>Recipients:</b> " + esc(String(n)) + "</p>" +
+      "<p>Please make sure this message is relevant to everyone in that audience.</p>" +
+      '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmRelevantCheck" />' +
+      "<span>I'm sure this message is relevant to all " + esc(String(n)) + " recipients</span></label>" +
+      '<p class="hub-ei-msg err" id="hubEmConfirmErr" aria-live="polite"></p>' +
+      '<div class="hub-ei-row">' +
+      '<button class="btn btn-primary" type="button" id="hubEmConfirmSend">Confirm and send</button>' +
+      '<button class="btn btn-ghost" type="button" id="hubEmConfirmBack">Go back</button>' +
+      "</div></div>";
+    document.body.appendChild(bd);
+    var check = document.getElementById("hubEmRelevantCheck");
+    var err = document.getElementById("hubEmConfirmErr");
+    document.getElementById("hubEmConfirmBack").addEventListener("click", function () {
+      closeMemberConfirmPanel();
+    });
+    document.getElementById("hubEmConfirmSend").addEventListener("click", function () {
+      if (!check || !check.checked) {
+        if (err) err.textContent = "Check the box to confirm this message is relevant to all recipients.";
+        return;
+      }
+      closeMemberConfirmPanel();
+      onConfirm();
+    });
+  }
+
+  async function queueMemberEmail(client, subject, bodyRaw, audienceKey, ids, btn) {
     if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
     setMsg("hubEmMsg", "");
     try {
@@ -399,7 +449,8 @@
       );
       document.getElementById("hubEmSubject").value = "";
       document.getElementById("hubEmBody").value = "";
-      confirm.checked = false;
+      var confirmEl = document.getElementById("hubEmConfirm");
+      if (confirmEl) confirmEl.checked = false;
       emailState.selected = {};
       updateEmailPreview();
       await loadEmailHistory(client);
@@ -407,6 +458,38 @@
       setMsg("hubEmMsg", "Could not send: " + ((e && e.message) || e), "err");
     }
     if (btn) { btn.disabled = false; btn.textContent = "Send email"; }
+  }
+
+  async function sendEmail(client) {
+    var subject = val("hubEmSubject");
+    var bodyRaw = val("hubEmBody");
+    var confirm = document.getElementById("hubEmConfirm");
+    var btn = document.getElementById("hubEmSend");
+    if (!subject) { setMsg("hubEmMsg", "Subject is required.", "err"); return; }
+    if (!bodyRaw) { setMsg("hubEmMsg", "Message body is required.", "err"); return; }
+    if (!confirm || !confirm.checked) {
+      setMsg("hubEmMsg", "Please confirm you are ready to queue this email.", "err");
+      return;
+    }
+    var ids = selectedIds(emailState.selected);
+    if (emailState.audience === "selected" && !ids.length) {
+      setMsg("hubEmMsg", "Pick at least one member from the roster.", "err");
+      return;
+    }
+    if (emailState.audience === "committees") {
+      await refreshCommitteeRecipients(client);
+      if (!emailState.committeeIds.length) { setMsg("hubEmMsg", "Pick at least one committee with members.", "err"); return; }
+      ids = emailState.committeeIds.slice();
+    }
+    var meta = audienceWhoAndCount(ids);
+    if (isEmailOfficer()) {
+      if (!window.confirm("Queue this email for " + meta.who + "?")) return;
+      await queueMemberEmail(client, subject, bodyRaw, meta.audienceKey, ids, btn);
+      return;
+    }
+    openMemberConfirmPanel(meta, function () {
+      queueMemberEmail(client, subject, bodyRaw, meta.audienceKey, ids, btn);
+    });
   }
 
   async function loadEmailCard(client) {
@@ -417,6 +500,7 @@
       "<small>Write once, choose who gets it, preview, then send</small></div></div>" +
       '<div class="app-body hub-ei">' +
       '<p class="hub-ei-note">Uses the same branded Shamrock template and outbound queue as Krewe Tidings. Available to every signed-in member.</p>' +
+      '<p class="hub-ei-note" id="hubEmLimitNote">Members can send up to 10 emails per day (America/New_York). Officers have no daily limit.</p>' +
       '<div class="hub-ei-grid">' +
       "<div><label>Audience</label>" +
       '<div class="hub-ei-pills" role="group" aria-label="Email audience">' +
@@ -481,11 +565,15 @@
         }, 220);
       });
     }
-    if (!(typeof window.kosIsOfficer === "function" && window.kosIsOfficer())) {
+    var limitNote = document.getElementById("hubEmLimitNote");
+    if (typeof window.kosIsOfficer === "function" && window.kosIsOfficer()) {
+      if (limitNote) limitNote.hidden = true;
+    } else {
       var prosp = document.getElementById("hubEmAud_prospects");
       if (prosp) prosp.hidden = true;
       var leg = document.getElementById("hubEmLegacyWrap");
       if (leg) leg.hidden = true;
+      if (limitNote) limitNote.hidden = false;
     }
     document.getElementById("hubEmSend").addEventListener("click", function () { sendEmail(client); });
     ["hubEmSubject", "hubEmBody"].forEach(function (id) {
