@@ -2440,9 +2440,10 @@
     async function loadDir(){
       const grid=document.getElementById("dirGrid");
       let rows=null, error=null;
-      const rich = await supabase.from("v_member_profiles")
-        .select("member_id,first_name,last_name,member_role,officer_title,bio,hometown,parade_since,interests,hobbies,favorite_memory,fun_fact,photo_url,join_date,birthday_md,anniversary_md")
-        .order("last_name",{ascending:true});
+      const dirCols = "member_id,first_name,last_name,member_role,officer_title,bio,hometown,parade_since,interests,hobbies,favorite_memory,fun_fact,photo_url,join_date,birthday_md,anniversary_md";
+      let rich = await supabase.from("v_member_profiles").select(dirCols + ",phone").order("last_name",{ascending:true});
+      // Before sql/kos_member_profile_phone.sql is applied the view has no phone column.
+      if(rich.error) rich = await supabase.from("v_member_profiles").select(dirCols).order("last_name",{ascending:true});
       if(!rich.error && rich.data){ rows = rich.data; }
       else {
         const plain = await supabase.from("member_directory").select("first_name,last_name,member_role").order("last_name",{ascending:true});
@@ -2485,6 +2486,8 @@
         btn.addEventListener("click", ()=> openMemberProfile(btn.getAttribute("data-mid")));
       });
     };
+    // Test fixture: offline Playwright suite injects directory rows.
+    window.__kosSetDirRows = function(rows){ dirData = rows || []; };
     window.openMemberProfile = function(memberId){
       const m = dirData.find(r => String(r.member_id) === String(memberId));
       const modal = document.getElementById("memberProfileModal");
@@ -2499,6 +2502,10 @@
         : `<div class="mp-av" aria-hidden="true">${esc(dirInitials(m))}</div>`;
       const facts = [];
       facts.push(`👤 ${esc(dirRole(m))}`);
+      if(m.phone){
+        const telHref = String(m.phone).replace(/[^0-9+]/g,"");
+        facts.push(`📞 <a href="tel:${esc(telHref)}" style="color:inherit;font-weight:600;">${esc(m.phone)}</a>`);
+      }
       if(m.hometown) facts.push(`🏠 ${esc(m.hometown)}`);
       if(m.parade_since) facts.push(`🥁 Marching since ${esc(m.parade_since)}`);
       if(m.birthday_md) facts.push(`🎂 ${esc(m.birthday_md)}`);
@@ -2519,7 +2526,7 @@
         </div></div>
         <div class="mp-facts">${facts.map(f=>`<span>${f}</span>`).join("")}</div>
         ${longs}
-        <p class="mp-muted" style="margin-top:12px;">Birthday and anniversary show as month and day only - never the year. Contact stays private.</p>
+        <p class="mp-muted" style="margin-top:12px;">Birthday and anniversary show as month and day only, never the year. Phone numbers are shared only with signed-in members.</p>
       </div>`;
       modal.classList.add("open");
       modal.setAttribute("aria-hidden","false");
@@ -4736,7 +4743,7 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261030feature1"></script>
-<script src="assets/members-desk.js?v=20261104committees1" defer></script>
+<script src="assets/members-desk.js?v=20261104phone1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261030feature1" defer></script>
