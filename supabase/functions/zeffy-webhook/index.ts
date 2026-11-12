@@ -168,6 +168,18 @@ const pickContact = (payment: JsonObject): JsonObject => {
   return {};
 };
 
+
+const extractGuestToken = (...values: unknown[]): string | undefined => {
+  const blob = values.map((value) => {
+    if (typeof value === "string") return value;
+    if (value == null) return "";
+    try { return JSON.stringify(value); } catch { return String(value); }
+  }).join(" ");
+  const tagged = blob.match(/kos_guest=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/i);
+  if (tagged) return tagged[1];
+  return undefined;
+};
+
 const slugFromText = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
   const slug = value
@@ -342,5 +354,56 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Unable to record payment" }, 502);
   }
   const recorded = await recordResponse.json().catch(() => ({}));
-  return json({ received: true, recorded });
+  const recordedObj = asObject(recorded);
+  const recordedInner = asObject(recordedObj.recorded ?? recordedObj);
+  const paymentRowId = text(
+    recordedObj.id,
+    recordedObj.payment_id,
+    recordedInner.id,
+    recordedInner.payment_id,
+  );
+  const guestToken = extractGuestToken(
+    metadata.kos_guest,
+    metadata.token,
+    payment.kos_guest,
+    payload.campaign_url,
+    payload.description,
+    envelope,
+  );
+  let guestMatch: JsonObject | null = null;
+  try {
+    const matchResponse = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/kos_apply_parade_guest_payment`,
+      {
+        method: "POST",
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          p: {
+            payment_id: paymentRowId,
+            amount_cents: amountCents,
+            payer_email: payerEmail,
+            payer_emails: emails,
+            kos_guest: guestToken,
+            campaign_url: payload.campaign_url,
+            description,
+            metadata,
+            raw: envelope,
+          },
+        }),
+      },
+    );
+    if (matchResponse.ok) {
+      guestMatch = asObject(await matchResponse.json().catch(() => ({})));
+    } else {
+      const detail = await matchResponse.text().catch(() => "");
+      console.error("kos_apply_parade_guest_payment failed", matchResponse.status, detail);
+    }
+  } catch (err) {
+    console.error("kos_apply_parade_guest_payment error", err);
+  }
+  return json({ received: true, recorded, guest_match: guestMatch });
 });
