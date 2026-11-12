@@ -3,12 +3,18 @@
 -- Safe to re-run.
 --
 -- What this changes:
---   * kos_runtime_flags.kos_shop_zeffy_url holds the public Online Store URL
---     (placeholder until Melissa pastes the live link).
+--   * kos_runtime_flags.kos_shop_zeffy_url holds the public KOS Shop URL
+--     (https://www.zeffy.com/en-US/ticketing/kos-shop).
 --   * list_public_shop_checkout() lets the public shop page read that URL.
 --   * Payments from the KOS Shop campaign are classified as store.
 --   * Line items in the Zeffy items array are matched to shop_products by name
 --     so buyer and merch-chair emails list every item.
+--   * After a paid store order, kos_queue_shop_order_emails sends a receipt to
+--     the buyer and a purchase order to the current Merchandise Chair(s). If
+--     no chair is listed, it falls back to the Treasurer and
+--     secretary@kreweofshamrock.com. The chair email includes buyer contact
+--     (mailto / tel) and a delivery line; the buyer email says the chair will
+--     reach out to arrange delivery.
 --   * New priced products no longer auto-mark awaiting_zeffy (no per-item
 --     ticketing campaign). They can go live on the shared shop list.
 -- Legacy per-product zeffy_url values are kept and still match if present.
@@ -179,7 +185,7 @@ declare
   v_name text;
 begin
   -- Prefer matching each Zeffy line item to a catalog product by name.
-  v_obj := coalesce(p_raw->'data'->'object', p_raw->'data', p_raw->'payment', p_raw, '{}'::jsonb);
+  v_obj := public.kos_zeffy_payment_obj(p_raw);
   v_items := case when jsonb_typeof(v_obj->'items') = 'array' then v_obj->'items' else '[]'::jsonb end;
   for v_it in select * from jsonb_array_elements(v_items) loop
     v_name := coalesce(
@@ -236,6 +242,171 @@ create trigger kos_payments_classify_shop
   before insert on public.payments
   for each row execute function public.kos_payments_classify_shop();
 
+
+-- Live Zeffy webhooks store the payment under raw.data. raw.data.object is the
+-- string 'payment', not an object, so do not coalesce that key first.
+create or replace function public.kos_zeffy_payment_obj(p_raw jsonb)
+returns jsonb
+language sql
+immutable
+set search_path to 'public'
+as $$
+  select case
+    when jsonb_typeof(p_raw->'data') = 'object'
+         and (
+           jsonb_typeof(p_raw->'data'->'items') = 'array'
+           or jsonb_typeof(p_raw->'data'->'buyer') = 'object'
+           or (p_raw->'data' ? 'amount')
+         )
+      then p_raw->'data'
+    when jsonb_typeof(p_raw->'data'->'payment') = 'object' then p_raw->'data'->'payment'
+    when jsonb_typeof(p_raw->'data'->'object') = 'object' then p_raw->'data'->'object'
+    when jsonb_typeof(p_raw->'payment') = 'object' then p_raw->'payment'
+    when jsonb_typeof(p_raw) = 'object' then p_raw
+    else '{}'::jsonb
+  end;
+$$;
+
+revoke all on function public.kos_zeffy_payment_obj(jsonb) from public, anon;
+
+-- Zeffy item.amount is already cents when it is a whole number (same rule as
+-- the zeffy-webhook). Only multiply by 100 when the value looks like dollars.
+create or replace function public.kos_zeffy_item_cents(p_item jsonb)
+returns integer
+language plpgsql
+immutable
+set search_path to 'public'
+as $$
+declare
+  v numeric;
+  v_qty integer;
+begin
+  v := nullif(p_item->>'amount_cents', '')::numeric;
+  if v is not null then return round(v)::integer; end if;
+  v := nullif(p_item->>'amount_in_cents', '')::numeric;
+  if v is not null then return round(v)::integer; end if;
+  v := coalesce(nullif(p_item->>'amount', '')::numeric, nullif(p_item->>'total', '')::numeric);
+  if v is not null then
+    if v <> trunc(v) then return round(v * 100)::integer; end if;
+    return round(v)::integer;
+  end if;
+  v := coalesce(nullif(p_item->>'unit_amount', '')::numeric, nullif(p_item->>'price', '')::numeric);
+  if v is not null then
+    v_qty := coalesce(nullif(p_item->>'quantity', '')::integer, 1);
+    if v <> trunc(v) then v := v * 100; end if;
+    return round(v * v_qty)::integer;
+  end if;
+  return null;
+end;
+$$;
+
+revoke all on function public.kos_zeffy_item_cents(jsonb) from public, anon;
+
+-- Phone from the payment, buyer object, or a phone/mobile question answer.
+create or replace function public.kos_shop_buyer_phone(p_raw jsonb)
+returns text
+language plpgsql
+stable
+set search_path to 'public'
+as $$
+declare
+  v_obj jsonb;
+  v_phone text;
+  v_q jsonb;
+  v_it jsonb;
+  v_label text;
+  v_ans text;
+  v_type text;
+begin
+  v_obj := public.kos_zeffy_payment_obj(p_raw);
+  v_phone := nullif(btrim(coalesce(
+    v_obj->>'phone',
+    v_obj->>'phone_number',
+    v_obj->>'phoneNumber',
+    v_obj->>'mobile',
+    v_obj->>'mobile_phone',
+    v_obj->'buyer'->>'phone',
+    v_obj->'buyer'->>'phone_number',
+    v_obj->'buyer'->>'phoneNumber',
+    v_obj->'buyer'->>'mobile',
+    case when jsonb_typeof(v_obj->'contact') = 'object' then coalesce(
+      v_obj->'contact'->>'phone',
+      v_obj->'contact'->>'phone_number',
+      v_obj->'contact'->>'phoneNumber'
+    ) else null end,
+    ''
+  )), '');
+  if v_phone is not null then
+    return v_phone;
+  end if;
+  for v_q in
+    select q
+    from jsonb_array_elements(
+      case when jsonb_typeof(v_obj->'buyer_questions') = 'array' then v_obj->'buyer_questions' else '[]'::jsonb end
+    ) q
+  loop
+    v_type := lower(coalesce(v_q->>'type', ''));
+    v_label := lower(coalesce(v_q->>'question', v_q->>'label', v_q->>'name', ''));
+    v_ans := nullif(btrim(coalesce(v_q->>'answer', v_q->>'value', v_q->>'response', '')), '');
+    if v_ans is not null and (v_type ~ 'phone|mobile|tel' or v_label ~ 'phone|mobile|cell') then
+      return v_ans;
+    end if;
+  end loop;
+  for v_q in
+    select q
+    from jsonb_array_elements(
+      case when jsonb_typeof(v_obj->'questions') = 'array' then v_obj->'questions' else '[]'::jsonb end
+    ) q
+  loop
+    v_type := lower(coalesce(v_q->>'type', ''));
+    v_label := lower(coalesce(v_q->>'question', v_q->>'label', v_q->>'name', ''));
+    v_ans := nullif(btrim(coalesce(v_q->>'answer', v_q->>'value', v_q->>'response', '')), '');
+    if v_ans is not null and (v_type ~ 'phone|mobile|tel' or v_label ~ 'phone|mobile|cell') then
+      return v_ans;
+    end if;
+  end loop;
+  for v_it in
+    select it
+    from jsonb_array_elements(
+      case when jsonb_typeof(v_obj->'items') = 'array' then v_obj->'items' else '[]'::jsonb end
+    ) it
+  loop
+    for v_q in
+      select q
+      from jsonb_array_elements(
+        case when jsonb_typeof(v_it->'questions') = 'array' then v_it->'questions' else '[]'::jsonb end
+      ) q
+    loop
+      v_type := lower(coalesce(v_q->>'type', ''));
+      v_label := lower(coalesce(v_q->>'question', v_q->>'label', v_q->>'name', ''));
+      v_ans := nullif(btrim(coalesce(v_q->>'answer', v_q->>'value', v_q->>'response', '')), '');
+      if v_ans is not null and (v_type ~ 'phone|mobile|tel' or v_label ~ 'phone|mobile|cell') then
+        return v_ans;
+      end if;
+    end loop;
+  end loop;
+  return null;
+end;
+$$;
+
+revoke all on function public.kos_shop_buyer_phone(jsonb) from public, anon;
+
+create or replace function public.kos_tel_href(p_phone text)
+returns text
+language sql
+immutable
+set search_path to 'public'
+as $$
+  select case
+    when nullif(btrim(coalesce(p_phone, '')), '') is null then null
+    when left(regexp_replace(p_phone, '[^0-9+]', '', 'g'), 1) = '+'
+      then 'tel:' || regexp_replace(p_phone, '[^0-9+]', '', 'g')
+    else 'tel:' || regexp_replace(p_phone, '[^0-9]', '', 'g')
+  end;
+$$;
+
+revoke all on function public.kos_tel_href(text) from public, anon;
+
 create or replace function public.kos_shop_order_lines(
   p_raw jsonb, p_fallback_name text, p_amount_cents int
 ) returns text
@@ -249,16 +420,12 @@ declare
   v_qty int;
   v_cents int;
 begin
-  v_obj := coalesce(p_raw->'data'->'object', p_raw->'data', p_raw->'payment', p_raw, '{}'::jsonb);
+  v_obj := public.kos_zeffy_payment_obj(p_raw);
   v_items := case when jsonb_typeof(v_obj->'items') = 'array' then v_obj->'items' else '[]'::jsonb end;
   for v_it in select * from jsonb_array_elements(v_items) loop
     v_name := public.kos_shop_line_label(v_it, p_fallback_name);
     v_qty := coalesce(nullif(v_it->>'quantity', '')::int, 1);
-    v_cents := coalesce(
-      nullif(v_it->>'amount_cents', '')::int,
-      (nullif(v_it->>'amount', '')::numeric * 100)::int,
-      (nullif(v_it->>'total', '')::numeric * 100)::int
-    );
+    v_cents := public.kos_zeffy_item_cents(v_it);
     v_html := v_html || '<tr><td style="padding:6px 0">' || public.kos_html_esc(v_name)
       || '</td><td style="padding:6px 0;text-align:center">' || v_qty
       || '</td><td style="padding:6px 0;text-align:right">'
@@ -288,7 +455,7 @@ declare
   v_names text[] := '{}';
   v_label text;
 begin
-  v_obj := coalesce(p_raw->'data'->'object', p_raw->'data', p_raw->'payment', p_raw, '{}'::jsonb);
+  v_obj := public.kos_zeffy_payment_obj(p_raw);
   v_items := case when jsonb_typeof(v_obj->'items') = 'array' then v_obj->'items' else '[]'::jsonb end;
   for v_it in select * from jsonb_array_elements(v_items) loop
     v_label := public.kos_shop_line_label(v_it, p_fallback);
@@ -311,6 +478,7 @@ create or replace function public.kos_queue_shop_order_emails(p_payment_id uuid)
 returns jsonb language plpgsql security definer set search_path to '' as $$
 declare
   pay public.payments%rowtype;
+  v_obj jsonb;
   v_product text;
   v_lines text;
   v_total text;
@@ -318,6 +486,7 @@ declare
   v_order text;
   v_buyer text;
   v_first text;
+  v_email text;
   v_member text;
   v_table text;
   v_body text;
@@ -326,6 +495,7 @@ declare
   v_sent text[] := '{}';
   v_queued int := 0;
   v_phone text;
+  v_tel text;
 begin
   select * into pay from public.payments where id = p_payment_id;
   if not found or pay.product_kind <> 'store' then
@@ -335,23 +505,38 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'not_paid');
   end if;
 
+  v_obj := public.kos_zeffy_payment_obj(pay.raw);
   v_product := public.kos_shop_order_title(pay.raw, coalesce(pay.description, 'Krewe item'));
   v_lines := public.kos_shop_order_lines(pay.raw, v_product, pay.amount_cents);
   v_total := '$' || to_char(coalesce(pay.amount_cents, 0) / 100.0, 'FM999990.00');
   v_date := to_char(pay.created_at at time zone 'America/New_York', 'FMMonth FMDD, YYYY');
   v_order := coalesce(pay.provider_payment_id, pay.id::text);
-  v_buyer := coalesce(pay.payer_name, pay.payer_email, 'Shop customer');
-  v_first := split_part(coalesce(pay.payer_name, ''), ' ', 1);
-  v_phone := coalesce(pay.raw#>>'{data,object,phone}', pay.raw#>>'{data,phone}', pay.raw#>>'{data,buyer,phone}');
+  v_email := nullif(btrim(coalesce(
+    pay.payer_email,
+    v_obj->'buyer'->>'email',
+    v_obj->'buyer'->>'emailAddress',
+    v_obj->>'email',
+    ''
+  )), '');
+  v_buyer := coalesce(
+    nullif(btrim(coalesce(pay.payer_name, '')), ''),
+    nullif(btrim(coalesce(v_obj->'buyer'->>'first_name', v_obj->'buyer'->>'firstName', '') || ' '
+      || coalesce(v_obj->'buyer'->>'last_name', v_obj->'buyer'->>'lastName', '')), ''),
+    v_email,
+    'Shop customer'
+  );
+  v_first := split_part(coalesce(v_buyer, ''), ' ', 1);
+  v_phone := public.kos_shop_buyer_phone(pay.raw);
+  v_tel := public.kos_tel_href(v_phone);
   select m.first_name || ' ' || m.last_name into v_member from public.members m where m.id = pay.member_id;
 
   v_table := '<table style="width:100%;border-collapse:collapse;font-size:15px"><tr style="border-bottom:1px solid #d9e6dc">'
-    || '<th style="text-align:left;padding:6px 0">Item</th><th style="padding:6px 0">Qty</th><th style="text-align:right;padding:6px 0">Price</th></tr>'
+    || '<th style="text-align:left;padding:6px 0">Item</th><th style="padding:6px 0">Qty</th><th style="text-align:right;padding:6px 0">Line total</th></tr>'
     || v_lines
-    || '<tr style="border-top:1px solid #d9e6dc"><td style="padding:8px 0;font-weight:700">Total paid</td><td></td><td style="padding:8px 0;text-align:right;font-weight:700">'
+    || '<tr style="border-top:1px solid #d9e6dc"><td style="padding:8px 0;font-weight:700">Order total</td><td></td><td style="padding:8px 0;text-align:right;font-weight:700">'
     || v_total || '</td></tr></table>';
 
-  if pay.payer_email is not null
+  if v_email is not null
      and not exists (select 1 from public.outbound_emails where purpose = 'shop_receipt:' || pay.id)
   then
     v_body := '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1f2d24">'
@@ -359,12 +544,12 @@ begin
       || '<div style="border:1px solid #d9e6dc;border-top:0;padding:22px;border-radius:0 0 10px 10px">'
       || '<p>Hi' || case when v_first <> '' then ' ' || public.kos_html_esc(v_first) else '' end || ',</p>'
       || '<p>Thank you for supporting the Krewe of Shamrock! Here is your receipt.</p>'
-      || '<p style="font-size:14px;color:#4a5a50">Order number: <b>' || public.kos_html_esc(v_order) || '</b><br>Date: ' || v_date || '</p>'
+      || '<p style="font-size:14px;color:#4a5a50">Zeffy payment id: <b>' || public.kos_html_esc(v_order) || '</b><br>Payment date: ' || v_date || '</p>'
       || v_table
-      || '<p style="background:#eef6f0;padding:12px 14px;border-radius:8px"><b>Getting your items:</b> a Merchandise Chair will contact you to arrange getting your items.</p>'
+      || '<p style="background:#eef6f0;padding:12px 14px;border-radius:8px">The Merchandise Chair will reach out to arrange delivery at a Krewe meeting or event, or pick up/drop off.</p>'
       || '<p>Questions? Reply to this email or write to <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</p>'
       || '<p>Slainte,<br>Krewe of Shamrock</p></div></div>';
-    perform public.enqueue_email(pay.payer_email, pay.payer_name,
+    perform public.enqueue_email(v_email, v_buyer,
       'Your Krewe of Shamrock order receipt', v_body, 'shop_receipt:' || pay.id, pay.member_id);
     v_queued := v_queued + 1;
   end if;
@@ -374,27 +559,46 @@ begin
      where m.officer_title ilike '%Merchandise%' and position('@' in coalesce(m.email, '')) > 0;
 
     v_body := '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1f2d24">'
-      || '<div style="background:#0b5d33;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0"><div style="font-size:20px;font-weight:700">New shop order</div><div style="font-size:14px;opacity:.9">Purchase order ' || public.kos_html_esc(v_order) || '</div></div>'
+      || '<div style="background:#0b5d33;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0"><div style="font-size:20px;font-weight:700">New shop order</div><div style="font-size:14px;opacity:.9">Zeffy payment id ' || public.kos_html_esc(v_order) || '</div></div>'
       || '<div style="border:1px solid #d9e6dc;border-top:0;padding:22px;border-radius:0 0 10px 10px">'
-      || '<p>Hi,</p><p>A new order came in through the website shop. Please contact the buyer to arrange getting their items to them.</p>'
+      || '<p>Hi,</p>'
+      || '<p>A new order came in through the KOS Shop.</p>'
+      || '<p>Please contact the buyer to arrange delivery at a Krewe meeting or event, or pick up/drop off.</p>'
       || '<table style="font-size:15px;margin-bottom:14px">'
       || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Buyer</td><td><b>' || public.kos_html_esc(v_buyer) || '</b></td></tr>'
-      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Email</td><td>' || case when pay.payer_email is null then 'Not provided' else '<a href="mailto:' || public.kos_html_esc(pay.payer_email) || '">' || public.kos_html_esc(pay.payer_email) || '</a>' end || '</td></tr>'
-      || case when v_phone is not null then '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Phone</td><td>' || public.kos_html_esc(v_phone) || '</td></tr>' else '' end
+      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Email</td><td>'
+      || case when v_email is null then 'Not provided' else '<a href="mailto:' || public.kos_html_esc(v_email) || '">' || public.kos_html_esc(v_email) || '</a>' end
+      || '</td></tr>'
+      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Phone</td><td>'
+      || case
+           when v_phone is null then 'Not provided'
+           when v_tel is not null then '<a href="' || public.kos_html_esc(v_tel) || '">' || public.kos_html_esc(v_phone) || '</a>'
+           else public.kos_html_esc(v_phone)
+         end
+      || '</td></tr>'
       || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Member</td><td>' || case when v_member is null then 'Not matched to a member' else 'Yes, ' || public.kos_html_esc(v_member) end || '</td></tr>'
-      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Date</td><td>' || v_date || '</td></tr>'
-      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Order number</td><td>' || public.kos_html_esc(v_order) || '</td></tr></table>'
+      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Payment date</td><td>' || v_date || '</td></tr>'
+      || '<tr><td style="padding:3px 12px 3px 0;color:#4a5a50">Zeffy payment id</td><td>' || public.kos_html_esc(v_order) || '</td></tr></table>'
       || v_table
       || case when v_chairs = 0 then '<p style="color:#9a3b00"><b>Note:</b> no Merchandise Chair is listed in the roster, so this went to the Treasurer and Secretary.</p>' else '' end
       || '<p><a href="https://www.kreweofshamrock.com/members.html" style="color:#0b5d33;font-weight:700">Open Shop Studio in the Member Hub</a></p></div></div>';
 
+    -- Current Merchandise Chair(s) only. Treasurer and Secretary are the
+    -- fallback when no chair with an email is listed on the roster.
     for v_r in
       select m.email, m.first_name || ' ' || m.last_name as nm, m.id
         from public.members m
        where position('@' in coalesce(m.email, '')) > 0
-         and (m.officer_title ilike '%Merchandise%' or m.officer_title ilike '%Treasurer%')
+         and m.officer_title ilike '%Merchandise%'
       union all
-      select 'secretary@kreweofshamrock.com', 'Krewe Secretary', null::uuid where v_chairs = 0
+      select m.email, m.first_name || ' ' || m.last_name as nm, m.id
+        from public.members m
+       where v_chairs = 0
+         and position('@' in coalesce(m.email, '')) > 0
+         and m.officer_title ilike '%Treasurer%'
+      union all
+      select 'secretary@kreweofshamrock.com', 'Krewe Secretary', null::uuid
+       where v_chairs = 0
     loop
       if not (lower(v_r.email) = any (v_sent)) then
         v_sent := array_append(v_sent, lower(v_r.email));
@@ -410,6 +614,23 @@ end;
 $$;
 
 revoke all on function public.kos_queue_shop_order_emails(uuid) from public, anon, authenticated;
+
+create or replace function public.kos_payments_shop_order_emails()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.product_kind = 'store' then
+    perform public.kos_queue_shop_order_emails(new.id);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists kos_payments_shop_order_emails on public.payments;
+create trigger kos_payments_shop_order_emails
+  after insert on public.payments
+  for each row execute function public.kos_payments_shop_order_emails();
+
+
 
 -- Shared shop: a priced product without a per-item Zeffy URL can go live.
 -- Officers should still add the same item to the KOS Shop campaign in Zeffy.
