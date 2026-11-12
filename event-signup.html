@@ -338,7 +338,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20261030feature1"></script>
+  <script src="assets/kos-calendar.js?v=20261112dates1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -955,35 +955,61 @@
       return '<span style="display:block;font-size:13px;color:#f1ead4;opacity:.92;margin-top:2px;">' + esc(text) + "</span>";
     }
 
+    function stillOnDatesList(ev, now) {
+      if (window.kosCalendar && typeof window.kosCalendar.eventVisibleOnDatesList === "function") {
+        return window.kosCalendar.eventVisibleOnDatesList(ev, now);
+      }
+      const start = ev && ev.date;
+      if (!start || isNaN(start.getTime())) return true;
+      const today = nyFields(now);
+      const startP = nyFields(start);
+      const todayN = today.y * 10000 + (today.m + 1) * 100 + today.day;
+      const startN = startP.y * 10000 + (startP.m + 1) * 100 + startP.day;
+      if (startN >= todayN) return true;
+      if (!ev.end || isNaN(ev.end.getTime())) return false;
+      const endP = nyFields(ev.end);
+      const endN = endP.y * 10000 + (endP.m + 1) * 100 + endP.day;
+      if (endN > todayN) return true;
+      if (endN === todayN) return ev.end.getTime() >= now.getTime();
+      return false;
+    }
+
     function buildCalendar(events) {
       const gridsEl = document.getElementById("kcal-grids");
       const listEl = document.getElementById("kcal-list");
       const yearEl = document.getElementById("kcal-year");
-      const dated = (events || [])
+      const now = new Date();
+      const allDated = (events || [])
         .filter((e)=> e.start_time && String(e.status || "published").toLowerCase() !== "cancelled")
-        .map((e)=> ({ date: new Date(e.start_time), end: e.end_time ? new Date(e.end_time) : null, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }))
+        .map((e)=> ({ date: new Date(e.start_time), end: e.end_time ? new Date(e.end_time) : null, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only, start_time: e.start_time, end_time: e.end_time }))
         .filter((e)=> !isNaN(e.date))
         .sort((a, b)=> a.date - b.date);
+      // Rolling feed: hide events after they have ended, soonest first.
+      const dated = allDated.filter((e)=> stillOnDatesList(e, now));
       const undated = (events || [])
         .filter((e)=> !e.start_time && String(e.status || "published").toLowerCase() === "published")
         .map((e)=> ({ name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }));
-      // Month grids are Krewe of Shamrock only. The list below keeps both.
-      const kosDated = dated.filter((e)=> !e.ikc);
-      if (!dated.length && !undated.length) {
-        if (gridsEl) gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No dated events on the calendar yet. Check back soon!</p>';
-        if (listEl) listEl.innerHTML = '';
-        return;
+      // Month grids are Krewe of Shamrock only, starting at the current month.
+      const nowP = nyFields(now);
+      const kosDated = allDated.filter((e)=> !e.ikc).filter((e)=> {
+        const p = nyFields(e.date);
+        return p.y > nowP.y || (p.y === nowP.y && p.m >= nowP.m);
+      });
+      if (yearEl) {
+        const yearSource = kosDated.length ? kosDated : dated;
+        const years = [...new Set([nowP.y].concat(yearSource.map((e)=> nyFields(e.date).y)))].sort();
+        yearEl.textContent = years.length === 1 ? years[0] : years[0] + "–" + years[years.length - 1];
       }
-      const yearSource = kosDated.length ? kosDated : dated;
-      const years = [...new Set(yearSource.map((e)=> nyFields(e.date).y))].sort();
-      if (yearEl) yearEl.textContent = years.length === 1 ? years[0] : years[0] + "–" + years[years.length - 1];
       if (gridsEl) {
-        if (!kosDated.length) {
-          gridsEl.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;">No Krewe of Shamrock dates on the month calendar yet.</p>';
-        } else {
-          const grouped = groupByMonth(kosDated);
-          gridsEl.innerHTML = grouped.keys.map((k)=> buildMonth(grouped.byYM[k].y, grouped.byYM[k].m, grouped.byYM[k].days)).join("");
-        }
+        const grouped = groupByMonth(kosDated);
+        const curKey = nowP.y + "-" + nowP.m;
+        if (!grouped.byYM[curKey]) grouped.byYM[curKey] = { y: nowP.y, m: nowP.m, days: {} };
+        const keys = Object.keys(grouped.byYM).filter((k)=> {
+          const [y, m] = k.split("-").map(Number);
+          return y > nowP.y || (y === nowP.y && m >= nowP.m);
+        }).sort((a, b)=>{ const [ay, am] = a.split("-").map(Number), [by, bm] = b.split("-").map(Number); return (ay - by) || (am - bm); });
+        grouped.keys = keys;
+        gridsEl.innerHTML = grouped.keys.map((k)=> buildMonth(grouped.byYM[k].y, grouped.byYM[k].m, grouped.byYM[k].days)).join("");
       }
       if (listEl) {
         const row = (ev, when) => {
@@ -998,8 +1024,12 @@
                  '<span style="flex:1 1 220px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
                  '<span style="flex:1;">' + chip + name + loc + listDetail(ev) + '</span></li>';
         };
-        listEl.innerHTML = dated.map((ev)=> row(ev, formatWhen(ev))).join("") +
-          undated.map((ev)=> row(ev, undatedWhen(ev))).join("");
+        if (!dated.length && !undated.length) {
+          listEl.innerHTML = '<li style="padding:18px 14px;text-align:center;color:#f1ead4;">More dates coming soon.</li>';
+        } else {
+          listEl.innerHTML = dated.map((ev)=> row(ev, formatWhen(ev))).join("") +
+            undated.map((ev)=> row(ev, undatedWhen(ev))).join("");
+        }
       }
     }
 
