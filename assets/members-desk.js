@@ -127,7 +127,18 @@
     ".hub-docs a{display:inline-block;background:#f0e8d2;border:1px solid rgba(168,128,28,.3);color:var(--green-800);border-radius:999px;padding:6px 13px;font-size:16px;font-family:var(--display);text-decoration:none;}",
     ".hub-docs a:hover{background:#e8ddc0;}",
     "#docs,#hubMemberDirectory,#hubEventStudio{scroll-margin-top:88px;}",
+    "#hubEventGuestMarchFields,#hubEventParadeBox{scroll-margin-top:120px;}",
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
+    ".hub-parade-guest-card{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
+    ".hub-parade-guest-card h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
+    ".hub-parade-guest-row{border-top:1px solid rgba(168,128,28,.25);padding:12px 0;}",
+    ".hub-parade-guest-row:first-of-type{border-top:0;}",
+    ".hub-parade-guest-row .hub-appr-btns{display:flex;flex-wrap:wrap;gap:8px;}",
+    ".hub-parade-guest-parade table{width:100%;border-collapse:collapse;font-size:15px;}",
+    ".hub-parade-guest-parade th,.hub-parade-guest-parade td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(168,128,28,.2);vertical-align:top;}",
+    "@media (max-width:640px){.hub-parade-guest-parade table,.hub-parade-guest-parade thead,.hub-parade-guest-parade tbody,.hub-parade-guest-parade tr,.hub-parade-guest-parade th,.hub-parade-guest-parade td{display:block;width:100%;box-sizing:border-box;}.hub-parade-guest-parade thead{position:absolute;left:-9999px;}.hub-parade-guest-parade tr{border-bottom:1px solid rgba(168,128,28,.25);padding:8px 0;}.hub-parade-guest-parade td{border:0;padding:2px 0;}}",
+
+
     ".hub-profile h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
     ".hub-fb-members{margin-top:12px;padding:12px 14px;background:#fbf7ec;border:1px solid rgba(168,128,28,.35);border-radius:12px;}",
     ".hub-fb-members a{color:var(--green-800);font-weight:700;text-decoration:none;}",
@@ -509,6 +520,7 @@
     "body.hub-app #hubOfficer .desk-group-head h3{color:#f6efdc;}",
     "body.hub-app #hubOfficer .desk-group-head .dg-sub{color:#ecd07e;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
+    "#hubEventGuestMarchFields,#hubEventParadeBox{scroll-margin-top:120px;}",
     /* Member FAQ tab. The group stays out of the desk until the FAQ chip
        or a #faq link opens it, so the rest of the desk keeps its height.
        Section pills swap answers in place: no scroll-into-view, no snap. */
@@ -1467,8 +1479,10 @@
     krewe.innerHTML =
       '<section class="app-card"><div class="app-head"><span class="ic">☘</span><div><h2>My Krewe</h2><small>Profile and member directory</small></div></div>' +
       '<div class="app-body">' +
+      '<div id="hubMyParadeGuests"></div>' +
       '<div class="hub-profile" id="hubProfileCard"><h3>Your profile</h3><p class="empty">Loading…</p></div>' +
       "</div></div></section>";
+    ensureMyParadeGuests();
 
     var events = document.getElementById("hubEvents");
     events.innerHTML =
@@ -3045,6 +3059,7 @@
     placeHomeHours(hoursCard);
 
     renderProfileCard();
+    ensureMyParadeGuests();
 
     top.querySelectorAll("[data-hub-action]").forEach(function (btn) {
       btn.addEventListener("click", function () { appNavApi.openTab(btn.getAttribute("data-hub-action")); });
@@ -3194,6 +3209,14 @@
     if ("canAssignChairs" in flags) state.canAssignChairs = !!flags.canAssignChairs;
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
+    if (Array.isArray(flags.paradeGuests)) {
+      window.__kosParadeGuestHubRows = flags.paradeGuests;
+      myParadeGuests = flags.paradeGuests;
+    }
+    if (Array.isArray(flags.officerParadeGuests)) {
+      window.__kosOfficerParadeGuests = flags.officerParadeGuests;
+      officerParadeGuests = flags.officerParadeGuests;
+    }
     syncOfficerChip();
     renderHome();
     if (canOpenOfficerDesk()) {
@@ -3210,6 +3233,10 @@
         rpc: function () { return Promise.resolve({ data: { ok: true, events: [] }, error: null }); }
       };
       try { loadEventStudio(studioClient); } catch (e3) {}
+    }
+    if (Array.isArray(flags.paradeGuests)) renderMyParadeGuests();
+    if (Array.isArray(flags.officerParadeGuests) && typeof paintParadeGuestsShell === "function") {
+      try { paintParadeGuestsShell(); } catch (ePg) {}
     }
   };
 
@@ -3231,6 +3258,7 @@
     });
     syncOfficerChip();
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
+    if (tab === "krewe") ensureMyParadeGuests();
     if (tab === "officer") {
       try { sessionStorage.setItem("kosOfficerDeskSeen", "1"); } catch (e2) {}
       var pulseCards = document.querySelectorAll(".hub-officer-card.hub-officer-pulse");
@@ -5970,6 +5998,16 @@
       '<div class="wide hub-event-optional" id="hubEventParadeBox" hidden>' +
       '<h4>Parade season</h4>' +
       '<p class="hub-opt-hint">A Parade is the krewe march. Keep it Public so it appears as a recruiting card on parades.html, and Members only so there is no public march RSVP. Public teaser location only — put staging streets in Private staging address. Description is the recruiting blurb on the Parades page.</p>' +
+      '<div id="hubEventGuestMarchFields">' +
+      '<h4>Guest march registration</h4>' +
+      '<p class="hub-opt-hint">Separate from Capacity (member RSVP) and volunteer caps. Leave Guest march spots blank or 0 if this parade does not take guests. It then stays off the public guest form. Hosted bylaws (Article 7, not yet confirmed against a current copy): SantaFest and Children\'s Gasparilla $10 Immediate Family or under 12, $25 others. Other parades: set the guest fee here. Paste the guest Zeffy link; guests receive it only after the inviting member approves.</p>' +
+      '<div class="hub-event-grid">' +
+      '<div><label for="hubEventGuestCapacity">Guest march spots</label><input id="hubEventGuestCapacity" type="number" min="0" step="1" placeholder="Leave blank for no guests" /></div>' +
+      '<div><label for="hubEventGuestFee">Guest fee (dollars)</label><input id="hubEventGuestFee" type="number" min="0" step="0.01" placeholder="Standard / others" /></div>' +
+      '<div><label for="hubEventGuestFeeFamily">Family / under 12 fee (dollars)</label><input id="hubEventGuestFeeFamily" type="number" min="0" step="0.01" placeholder="Optional. $10 for SantaFest and Children\'s" /></div>' +
+      '<div class="wide" style="grid-column:1/-1;"><label for="hubEventGuestPaymentUrl">Guest payment (Zeffy) URL</label><input id="hubEventGuestPaymentUrl" type="url" placeholder="https://www.zeffy.com/en-US/ticketing/..." /></div></div>' +
+      '<div class="hub-event-checks" style="margin:8px 0 10px;"><label><input type="checkbox" id="hubEventGuestRequires21" checked /> Guests must be 21 or older</label></div>' +
+      '</div>' +
       '<label for="hubEventRoleNotes">Role notes</label>' +
       '<textarea id="hubEventRoleNotes" placeholder="March, float, hospitality, etc."></textarea>' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Shown to signed-in members on the Hub parade card. Not shown on the public Parades page.</p>' +
@@ -6254,6 +6292,29 @@
     }
   }
 
+  function paradeNameSuggestsFamilyFees(name) {
+    var n = String(name || "").toLowerCase();
+    return /santa\s*fest/.test(n) || /child(ren)?(['']s)?\s*gasparilla/.test(n);
+  }
+  function maybePrefillParadeGuestFees() {
+    var typeEl = document.getElementById("hubEventType");
+    if (!typeEl || typeEl.value !== "parade") return;
+    var idEl = document.getElementById("hubEventId");
+    if (idEl && idEl.value) return;
+    var nameEl = document.getElementById("hubEventName");
+    var fee = document.getElementById("hubEventGuestFee");
+    var family = document.getElementById("hubEventGuestFeeFamily");
+    var req = document.getElementById("hubEventGuestRequires21");
+    var familyParade = paradeNameSuggestsFamilyFees(nameEl && nameEl.value);
+    if (familyParade) {
+      if (fee && !fee.value) fee.value = "25.00";
+      if (family && !family.value) family.value = "10.00";
+      if (req) req.checked = false;
+    } else if (req && !(idEl && idEl.value)) {
+      if (req.dataset.touched !== "1") req.checked = true;
+    }
+  }
+
   function syncOptionalEventFields() {
     var typeEl = document.getElementById("hubEventType");
     var onlineBox = document.getElementById("hubEventOnline");
@@ -6276,6 +6337,7 @@
     var membersOnly = !!(document.getElementById("hubEventMembersOnly") && document.getElementById("hubEventMembersOnly").checked);
     var paradeOn = !!(typeEl && typeEl.value === "parade");
     showEl("hubEventParadeBox", paradeOn);
+    maybePrefillParadeGuestFees();
     var createMeet = !!(document.getElementById("hubEventCreateMeeting") && document.getElementById("hubEventCreateMeeting").checked);
     showEl("hubEventCreateMeetingFields", paradeOn && createMeet);
     if (paradeOn) {
@@ -6805,6 +6867,11 @@
     var cms = document.getElementById("hubEventCreateMeetingStart"); if (cms) cms.value = "";
     var cmm = document.getElementById("hubEventCreateMeetingMandatory"); if (cmm) cmm.checked = true;
     var rn = document.getElementById("hubEventRoleNotes"); if (rn) rn.value = "";
+    var gc = document.getElementById("hubEventGuestCapacity"); if (gc) gc.value = "";
+    var gf = document.getElementById("hubEventGuestFee"); if (gf) gf.value = "";
+    var gff = document.getElementById("hubEventGuestFeeFamily"); if (gff) gff.value = "";
+    var gpu = document.getElementById("hubEventGuestPaymentUrl"); if (gpu) gpu.value = "";
+    var g21 = document.getElementById("hubEventGuestRequires21"); if (g21) { g21.checked = true; delete g21.dataset.touched; }
     var rcClear = document.getElementById("hubEventRegCloses"); if (rcClear) rcClear.value = "";
     resetEventEmailFields();
     document.getElementById("hubEventStatus").value = "draft";
@@ -6865,6 +6932,13 @@
     var mu = get("hubEventMeetingUrl"); if (mu) mu.value = event.meeting_url || "";
     fillLinkedMeetingSelect(event.linked_meeting_id || "");
     var rnFill = get("hubEventRoleNotes"); if (rnFill) rnFill.value = event.notes || "";
+    var gcFill = get("hubEventGuestCapacity"); if (gcFill) gcFill.value = event.guest_capacity == null ? "" : event.guest_capacity;
+    var gfFill = get("hubEventGuestFee");
+    if (gfFill) gfFill.value = event.guest_fee_cents == null ? "" : (Number(event.guest_fee_cents) / 100).toFixed(2);
+    var gffFill = get("hubEventGuestFeeFamily");
+    if (gffFill) gffFill.value = event.guest_fee_family_cents == null ? "" : (Number(event.guest_fee_family_cents) / 100).toFixed(2);
+    var gpuFill = get("hubEventGuestPaymentUrl"); if (gpuFill) gpuFill.value = event.guest_payment_url || "";
+    var g21Fill = get("hubEventGuestRequires21"); if (g21Fill) { g21Fill.checked = event.guest_requires_21 !== false; delete g21Fill.dataset.touched; }
     var cmMeetFill = get("hubEventCreateMeeting"); if (cmMeetFill) cmMeetFill.checked = false;
     var cmnFill = get("hubEventCreateMeetingName"); if (cmnFill) cmnFill.value = "";
     var cmsFill = get("hubEventCreateMeetingStart"); if (cmsFill) cmsFill.value = "";
@@ -7148,6 +7222,17 @@
     if (capacityValue !== "" && (isNaN(capacity) || capacity < 0)) { if (msg) msg.textContent = "Capacity must be a whole number."; return; }
     if (volunteerCapValue !== "" && (isNaN(volunteerCap) || volunteerCap < 0)) { if (msg) msg.textContent = "Volunteer slots must be a whole number, or blank for no cap."; return; }
     if (ticketValue !== "" && (isNaN(dollars) || dollars < 0)) { if (msg) msg.textContent = "Ticket price must be zero or more."; return; }
+    var guestCapValue = value("hubEventGuestCapacity");
+    var guestCap = guestCapValue === "" ? null : parseInt(guestCapValue, 10);
+    if (guestCapValue !== "" && (isNaN(guestCap) || guestCap < 0)) { if (msg) msg.textContent = "Guest march spots must be a whole number."; return; }
+    var guestFeeValue = value("hubEventGuestFee");
+    var guestFeeDollars = guestFeeValue === "" ? null : Number(guestFeeValue);
+    if (guestFeeValue !== "" && (isNaN(guestFeeDollars) || guestFeeDollars < 0)) { if (msg) msg.textContent = "The guest fee must be zero or more."; return; }
+    var guestFamilyValue = value("hubEventGuestFeeFamily");
+    var guestFamilyDollars = guestFamilyValue === "" ? null : Number(guestFamilyValue);
+    if (guestFamilyValue !== "" && (isNaN(guestFamilyDollars) || guestFamilyDollars < 0)) { if (msg) msg.textContent = "The family guest fee must be zero or more."; return; }
+    var guestPayUrl = value("hubEventGuestPaymentUrl");
+    if (guestPayUrl && !/^https?:\/\//i.test(guestPayUrl)) { if (msg) msg.textContent = "The guest payment link must start with http:// or https://."; return; }
     var rafflePriceValue = value("hubEventRafflePrice");
     var raffleDollars = rafflePriceValue === "" ? null : Number(rafflePriceValue);
     if (rafflePriceValue !== "" && (isNaN(raffleDollars) || raffleDollars < 0)) {
@@ -7256,6 +7341,25 @@
       await loadEventRaffles(client);
       var savedEventId = (res.data && res.data.event && res.data.event.id) || payload.id;
       var capNote = "";
+      if (savedEventId && payload.event_type === "parade") {
+        try {
+          var gRes = await client.rpc("officer_set_parade_guest_settings", {
+            p: {
+              id: savedEventId,
+              guest_capacity: guestCap,
+              guest_fee_cents: guestFeeValue === "" ? null : Math.round(guestFeeDollars * 100),
+              guest_fee_family_cents: guestFamilyValue === "" ? null : Math.round(guestFamilyDollars * 100),
+              guest_payment_url: guestPayUrl || null,
+              guest_requires_21: !!(document.getElementById("hubEventGuestRequires21") && document.getElementById("hubEventGuestRequires21").checked)
+            }
+          });
+          if (gRes.error || (gRes.data && gRes.data.ok === false)) {
+            capNote += " Guest march settings were not saved: " + ((gRes.error && gRes.error.message) || (gRes.data && gRes.data.message) || "please try again") + ".";
+          }
+        } catch (gErr) {
+          capNote += " Guest march settings were not saved. Apply sql/kos_parade_guest_registration.sql, then save again.";
+        }
+      }
       if (savedEventId) {
         try {
           var capRes = await client.rpc("officer_set_volunteer_cap", {
@@ -7331,6 +7435,10 @@
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", syncOptionalEventFields);
     });
+    var nameEl = document.getElementById("hubEventName");
+    if (nameEl) nameEl.addEventListener("input", maybePrefillParadeGuestFees);
+    var req21 = document.getElementById("hubEventGuestRequires21");
+    if (req21) req21.addEventListener("change", function () { req21.dataset.touched = "1"; });
     var vcapEl = document.getElementById("hubEventVolunteerCap");
     if (vcapEl) vcapEl.addEventListener("input", syncVolunteerCapHint);
     var moTouch = document.getElementById("hubEventMembersOnly");
@@ -9181,6 +9289,300 @@
     }
   }
 
+
+  var myParadeGuests = null;
+  var myParadeGuestsMsg = "";
+  var officerParadeGuests = null;
+  var officerParadeGuestsMsg = "";
+
+  function paradeGuestStatusLabel(status) {
+    return ({
+      pending_sponsor: "Pending",
+      payment_sent: "Payment sent",
+      paid: "Paid",
+      declined: "Declined",
+      cancelled: "Cancelled"
+    })[status] || status || "";
+  }
+
+  function ensureMyParadeGuests() {
+    if (Array.isArray(window.__kosParadeGuestHubRows)) {
+      myParadeGuests = window.__kosParadeGuestHubRows;
+      renderMyParadeGuests();
+      return;
+    }
+    var client = window.__kosSb || null;
+    if (!client || typeof client.rpc !== "function") {
+      renderMyParadeGuests();
+      return;
+    }
+    client.rpc("list_my_parade_guests").then(function (res) {
+      if (res && !res.error && res.data && res.data.ok !== false) {
+        myParadeGuests = res.data.guests || [];
+      } else if (res && res.data && res.data.ok === false && res.data.message === "Please sign in.") {
+        myParadeGuests = [];
+      } else if (res && res.error) {
+        myParadeGuests = myParadeGuests || [];
+      }
+      renderMyParadeGuests();
+    }, function () { renderMyParadeGuests(); });
+  }
+
+  function renderMyParadeGuests() {
+    var host = document.getElementById("hubMyParadeGuests");
+    if (!host) return;
+    var rows = myParadeGuests || (Array.isArray(window.__kosParadeGuestHubRows) ? window.__kosParadeGuestHubRows : null);
+    if (!rows || !rows.length) {
+      host.innerHTML = "";
+      return;
+    }
+    var html = '<div class="hub-parade-guest-card" id="hubParadeGuestApprove">' +
+      "<h3>Guest march approvals</h3>" +
+      "<p class=\"empty\" style=\"margin:0 0 10px;\">Guests who named you as the inviting member. Your approval sends them the payment link. You are responsible for your guests.</p>";
+    if (myParadeGuestsMsg) html += '<p class="hub-report-msg" id="hubMyParadeGuestsMsg">' + esc(myParadeGuestsMsg) + "</p>";
+    rows.forEach(function (g) {
+      var st = paradeGuestStatusLabel(g.status);
+      var unpaid = g.status === "payment_sent";
+      html += '<div class="hub-parade-guest-row" data-guest-id="' + esc(g.id) + '">' +
+        "<p style=\"margin:0 0 4px;\"><b>" + esc((g.first_name || "") + " " + (g.last_name || "")) + "</b> · " + esc(g.parade_name || "Parade") + "</p>" +
+        "<p style=\"margin:0 0 6px;font-size:15px;color:var(--muted);\">" + esc(g.email || "") +
+        (g.fee_label ? " · " + esc(g.fee_label) : "") +
+        (g.fee_tier ? " · " + esc(g.fee_tier === "family_or_under_12" ? "Immediate family or under 12" : "Other") : "") +
+        " · " + esc(st) + "</p>" +
+        (unpaid ? '<p style="margin:0 0 8px;font-size:15px;">This guest has not paid yet.</p>' : "") +
+        '<div class="hub-appr-btns">';
+      if (g.status === "pending_sponsor") {
+        html += '<button type="button" class="btn btn-primary" data-pg-act="approve" data-id="' + esc(g.id) + '">Approve</button>' +
+          '<button type="button" class="btn" data-pg-act="decline" data-id="' + esc(g.id) + '">Decline</button>';
+      }
+      if (g.status === "payment_sent") {
+        html += '<button type="button" class="btn btn-primary" data-pg-act="resend" data-id="' + esc(g.id) + '">Resend payment link</button>' +
+          '<button type="button" class="btn" data-pg-act="cancel" data-id="' + esc(g.id) + '">Cancel spot</button>';
+      }
+      if (g.status === "paid") {
+        html += '<button type="button" class="btn" data-pg-act="cancel" data-id="' + esc(g.id) + '">Cancel spot</button>';
+      }
+      html += "</div></div>";
+    });
+    html += "</div>";
+    host.innerHTML = html;
+    host.querySelectorAll("[data-pg-act]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        runMyParadeGuestAction(btn.getAttribute("data-pg-act"), btn.getAttribute("data-id"), btn);
+      });
+    });
+  }
+
+  async function runMyParadeGuestAction(act, id, btn) {
+    var fn = ({ approve: "approve_parade_guest", decline: "decline_parade_guest", cancel: "cancel_parade_guest", resend: "resend_parade_guest_payment" })[act];
+    if (!fn) return;
+    var client = window.__kosSb;
+    var fixture = Array.isArray(window.__kosParadeGuestHubRows);
+    if (btn) btn.disabled = true;
+    myParadeGuestsMsg = "";
+    try {
+      var data;
+      if (fixture && typeof window.__kosParadeGuestHubAction === "function") {
+        data = await window.__kosParadeGuestHubAction(act, id);
+      } else if (fixture) {
+        window.__kosParadeGuestHubRows = window.__kosParadeGuestHubRows.map(function (row) {
+          if (String(row.id) !== String(id)) return row;
+          var next = Object.assign({}, row);
+          if (act === "approve") { next.status = "payment_sent"; next.paid = false; }
+          if (act === "decline") next.status = "declined";
+          if (act === "cancel") next.status = "cancelled";
+          if (act === "resend") next.last_payment_email_at = new Date().toISOString();
+          return next;
+        });
+        myParadeGuests = window.__kosParadeGuestHubRows;
+        data = { ok: true, message: act === "approve" ? "Approved. We emailed this guest the payment link." : act === "resend" ? "We resent the payment link to this guest." : act === "decline" ? "Declined. We emailed the guest." : "Cancelled. We emailed the guest. This does not issue a refund." };
+        if (act === "approve" && window.__kosParadeGuestApproveFull) {
+          data = { ok: false, code: "full", message: "All guest spots for this parade are filled. You cannot approve this guest." };
+        }
+      } else {
+        if (!client || typeof client.rpc !== "function") throw new Error("Still connecting. Try again in a moment.");
+        var res = await client.rpc(fn, act === "decline" || act === "cancel" ? { p_id: id, p_note: null } : { p_id: id });
+        if (res.error) throw res.error;
+        data = res.data || {};
+      }
+      if (data && data.ok === false) {
+        myParadeGuestsMsg = data.message || "That did not work.";
+      } else {
+        myParadeGuestsMsg = (data && data.message) || "Saved.";
+        if (!fixture) myParadeGuests = null;
+      }
+    } catch (e) {
+      myParadeGuestsMsg = "Couldn't update that guest: " + ((e && e.message) || e);
+    }
+    if (!fixture) ensureMyParadeGuests();
+    else renderMyParadeGuests();
+    if (btn) btn.disabled = false;
+  }
+
+  window.__kosHubSetParadeGuests = function (rows) {
+    window.__kosParadeGuestHubRows = Array.isArray(rows) ? rows : [];
+    myParadeGuests = window.__kosParadeGuestHubRows;
+    renderMyParadeGuests();
+  };
+
+  function csvEscape(v) {
+    var t = v == null ? "" : String(v);
+    if (/[",\n]/.test(t)) return '"' + t.replace(/"/g, '""') + '"';
+    return t;
+  }
+
+  function paradeGuestsToCsv(parades) {
+    var lines = ["Parade,Spots taken,Guest spots,Guest name,Email,Inviting member,Inviting email,Fee,Fee tier,Status,Paid,Registered"];
+    (parades || []).forEach(function (p) {
+      (p.guests || []).forEach(function (g) {
+        lines.push([
+          p.name, p.spots_taken, p.guest_capacity,
+          ((g.first_name || "") + " " + (g.last_name || "")).trim(),
+          g.email, g.sponsor_name, g.sponsor_email, g.fee_label, g.fee_tier,
+          paradeGuestStatusLabel(g.status), g.paid ? "yes" : "no", g.created_at
+        ].map(csvEscape).join(","));
+      });
+    });
+    return lines.join("\n");
+  }
+
+  function paintParadeGuestsShell() {
+    var card = document.getElementById("hubParadeGuests");
+    if (!card) {
+      if (typeof ensureOfficerToolCard === "function") card = ensureOfficerToolCard("hubParadeGuests");
+    }
+    if (!card) return;
+    var head = card.querySelector(".app-head");
+    if (head) {
+      head.innerHTML = '<span class="ic">🥁</span><div><h2>Parade guests</h2><small>Guest march registrations per parade. Read-only, plus cancel a spot. Counts are approved guests (payment sent or paid).</small></div>';
+    }
+    var body = card.querySelector(".app-body");
+    if (body && !document.getElementById("hubParadeGuestsBody")) {
+      body.innerHTML = '<div id="hubParadeGuestsBody"><p class="empty">Loading guest registrations…</p></div>';
+    }
+    loadOfficerParadeGuests();
+  }
+
+  async function loadOfficerParadeGuests() {
+    var body = document.getElementById("hubParadeGuestsBody");
+    if (!body) return;
+    if (Array.isArray(window.__kosOfficerParadeGuests)) {
+      officerParadeGuests = window.__kosOfficerParadeGuests;
+      renderOfficerParadeGuests();
+      return;
+    }
+    var client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      body.innerHTML = '<p class="empty">Sign in to load parade guests.</p>';
+      return;
+    }
+    try {
+      var res = await client.rpc("list_officer_parade_guests");
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) {
+        body.innerHTML = '<p class="empty">' + esc(res.data.message || "Not authorized.") + "</p>";
+        return;
+      }
+      officerParadeGuests = (res.data && res.data.parades) || [];
+      renderOfficerParadeGuests();
+    } catch (e) {
+      body.innerHTML = '<p class="empty">Couldn\'t load parade guests: ' + esc((e && e.message) || e) + "</p>";
+    }
+  }
+
+  function renderOfficerParadeGuests() {
+    var body = document.getElementById("hubParadeGuestsBody");
+    if (!body) return;
+    var parades = officerParadeGuests || [];
+    if (!parades.length) {
+      body.innerHTML = '<p class="empty">No guest-march parades yet. Set Guest march spots on a parade in Event Studio.</p>';
+      return;
+    }
+    var html = "";
+    if (officerParadeGuestsMsg) html += '<p class="hub-report-msg">' + esc(officerParadeGuestsMsg) + "</p>";
+    html += '<p style="margin:0 0 12px;"><button type="button" class="btn" id="hubParadeGuestsCsv">Download CSV</button></p>';
+    parades.forEach(function (p) {
+      html += '<div class="hub-parade-guest-parade">' +
+        "<h3 style=\"margin:16px 0 6px;\">" + esc(p.name || "Parade") +
+        ' <span style="font-weight:500;color:var(--muted);font-size:16px;">' +
+        esc(String(p.spots_taken || 0) + " of " + String(p.guest_capacity || 0)) + "</span></h3>";
+      if (!(p.guests || []).length) {
+        html += '<p class="empty">No guest registrations yet.</p>';
+      } else {
+        html += '<div style="overflow:auto;"><table class="hub-report-table"><thead><tr>' +
+          "<th>Guest</th><th>Inviting member</th><th>Fee</th><th>Status</th><th></th></tr></thead><tbody>";
+        p.guests.forEach(function (g) {
+          html += "<tr><td>" + esc(((g.first_name || "") + " " + (g.last_name || "")).trim()) +
+            "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.email || "") + "</span></td>" +
+            "<td>" + esc(g.sponsor_name || "") +
+            "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.sponsor_email || "") + "</span></td>" +
+            "<td>" + esc(g.fee_label || "") +
+            (g.fee_tier ? "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.fee_tier === "family_or_under_12" ? "Family / under 12" : "Other") + "</span>" : "") +
+            "</td><td>" + esc(paradeGuestStatusLabel(g.status)) + (g.paid ? " · Paid" : "") + "</td><td>";
+          if (g.status !== "cancelled" && g.status !== "declined") {
+            html += '<button type="button" class="btn" data-pg-off-cancel="' + esc(g.id) + '">Cancel</button>';
+          }
+          html += "</td></tr>";
+        });
+        html += "</tbody></table></div>";
+      }
+      html += "</div>";
+    });
+    body.innerHTML = html;
+    var csvBtn = document.getElementById("hubParadeGuestsCsv");
+    if (csvBtn) csvBtn.addEventListener("click", function () {
+      var blob = new Blob([paradeGuestsToCsv(parades)], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "parade-guests.csv";
+      a.click();
+    });
+    body.querySelectorAll("[data-pg-off-cancel]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        officerCancelParadeGuest(btn.getAttribute("data-pg-off-cancel"), btn);
+      });
+    });
+  }
+
+  async function officerCancelParadeGuest(id, btn) {
+    if (btn) btn.disabled = true;
+    officerParadeGuestsMsg = "";
+    try {
+      if (Array.isArray(window.__kosOfficerParadeGuests)) {
+        window.__kosOfficerParadeGuests = window.__kosOfficerParadeGuests.map(function (p) {
+          var copy = Object.assign({}, p, { guests: (p.guests || []).map(function (g) {
+            if (String(g.id) !== String(id)) return g;
+            return Object.assign({}, g, { status: "cancelled", paid: false });
+          }) });
+          copy.spots_taken = (copy.guests || []).filter(function (g) { return g.status === "payment_sent" || g.status === "paid"; }).length;
+          return copy;
+        });
+        officerParadeGuests = window.__kosOfficerParadeGuests;
+        officerParadeGuestsMsg = "Cancelled. We emailed the guest. This does not issue a refund.";
+        renderOfficerParadeGuests();
+        return;
+      }
+      var client = window.__kosSb;
+      if (!client || typeof client.rpc !== "function") throw new Error("Still connecting. Try again in a moment.");
+      var res = await client.rpc("cancel_parade_guest", { p_id: id, p_note: null });
+      if (res.error) throw res.error;
+      if (res.data && res.data.ok === false) officerParadeGuestsMsg = res.data.message || "Could not cancel.";
+      else officerParadeGuestsMsg = (res.data && res.data.message) || "Cancelled.";
+      await loadOfficerParadeGuests();
+    } catch (e) {
+      officerParadeGuestsMsg = "Couldn't cancel: " + ((e && e.message) || e);
+      renderOfficerParadeGuests();
+    }
+    if (btn) btn.disabled = false;
+  }
+
+  window.__kosHubSetOfficerParadeGuests = function (parades) {
+    window.__kosOfficerParadeGuests = Array.isArray(parades) ? parades : [];
+    officerParadeGuests = window.__kosOfficerParadeGuests;
+    paintParadeGuestsShell();
+    renderOfficerParadeGuests();
+  };
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubOfficerDirectory",
@@ -9190,6 +9592,7 @@
     "hubPayments",
     "hubLockers",
     "hubEventStudio",
+    "hubParadeGuests",
     "hubEventOutreach",
     "hubShopStudio",
     "hubQrStudio",
@@ -9210,6 +9613,7 @@
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
+    hubParadeGuests: { title: "Parade guests", desc: "Guest march list per parade, with counts, status, and CSV.", icon: "🥁", section: "Events" },
     hubEventOutreach: { title: "Event outreach", desc: "Website RSVP prospects, unmatched Zeffy buyers, and legacy emails", icon: "📬", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
@@ -9350,6 +9754,13 @@
     }
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
+    }
+    if (!(state.officer || state.canManageEvents)) {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubParadeGuests"; });
+    } else if (toolOrder.indexOf("hubParadeGuests") === -1) {
+      var afterParadeStudio = toolOrder.indexOf("hubEventStudio");
+      if (afterParadeStudio !== -1) toolOrder.splice(afterParadeStudio + 1, 0, "hubParadeGuests");
+      else toolOrder.push("hubParadeGuests");
     }
     if (!canSeeEventOutreach()) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubEventOutreach"; });
@@ -9581,6 +9992,7 @@
     if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
     if (toolOrder.indexOf("hubOfficerDirectory") !== -1) paintMemberDirectoryShell();
     if (toolOrder.indexOf("hubChairDesk") !== -1) paintChairDeskShell();
+    if (toolOrder.indexOf("hubParadeGuests") !== -1) paintParadeGuestsShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -9606,7 +10018,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubParadeGuests")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
