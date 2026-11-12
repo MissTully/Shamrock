@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261112paradeguest1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261112paradeguest3" />
 <style>
   .parade-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
   .parade-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden; }
@@ -76,7 +76,9 @@
   .pg-msg{ min-height:1.4em; margin:12px 0 0; font-weight:600; color:var(--green-800); }
   .pg-check{ display:flex; gap:10px; align-items:flex-start; font-weight:500; }
   .pg-check input{ width:auto; margin-top:3px; }
-  @media (max-width:640px){ .pg-grid{ grid-template-columns:1fr; } }
+  .pg-kid-row{ display:grid; grid-template-columns:1fr 1fr auto; gap:10px 12px; align-items:end; margin:0 0 10px; padding:10px 0; border-top:1px solid rgba(168,128,28,.2); }
+  .pg-kid-row button{ min-height:44px; }
+  @media (max-width:640px){ .pg-grid{ grid-template-columns:1fr; } .pg-kid-row{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -280,15 +282,17 @@
     <div class="banner-flourish" aria-hidden="true"></div>
     <p style="text-align:center;font-size:17px;margin-bottom:20px;">
       Personal guests march with the Krewe of Shamrock at selected parades.
-      Registration is open, and you will name the member who invited you.
-      That member approves your registration in the Member Hub, and only then
-      will you receive the payment link for the guest parade fee.
-      Guest spots are limited and are set by the parade. There is no waitlist
-      once a parade is full.
+      Each adult registers themselves, with their own email and waiver, and
+      names the member who invited them. That member approves the whole
+      registration in the Member Hub, and only then will you receive the
+      payment link. You may add your children under 12 (immediate family)
+      to your own registration. Other adults must submit their own form.
+      Every person uses one guest spot. Guest spots are limited and are set
+      by the parade. There is no waitlist once a parade is full.
     </p>
     <p id="pgEmpty" class="pg-note" hidden style="text-align:center;"></p>
     <form class="pg-form" id="pgForm" hidden>
-      <p class="pg-note">Payment is not due on this form. After the inviting member approves you, we email the payment link.</p>
+      <p class="pg-note">Payment is not due on this form. After the inviting member approves this registration, we email the payment link for you and any children you add.</p>
       <div class="pg-grid">
         <div class="wide">
           <label for="pgParade">Parade</label>
@@ -310,20 +314,22 @@
           <div class="wide"><label for="pgSponsorEmail">Inviting member email</label><input id="pgSponsorEmail" type="email" required />
             <p class="pg-note" style="margin-top:6px;">Must match an active Krewe member. They will be asked to approve you.</p></div>
         </div>
-        <div id="pgTierWrap" hidden style="margin:12px 0;">
-          <p style="font-weight:600;margin:0 0 6px;">Fee category</p>
-          <label class="pg-check"><input type="radio" name="pgTier" value="immediate_family" /> Immediate family or under 12</label>
-          <label class="pg-check"><input type="checkbox" id="pgUnder12" /> This guest is under 12</label>
-          <label class="pg-check"><input type="radio" name="pgTier" value="other" checked /> Other guest</label>
-        </div>
         <div id="pgAge21Wrap" hidden style="margin:12px 0;">
+          <p class="pg-note" id="pgAge21Note" style="margin:0 0 8px;">This parade is for guests 21 or older. Children cannot be added.</p>
           <label class="pg-check"><input type="checkbox" id="pgAge21" /> I confirm I am 21 or older</label>
         </div>
+        <div id="pgKidsWrap" hidden style="margin:16px 0 8px;">
+          <p style="font-weight:600;margin:0 0 6px;">Children under 12 (immediate family)</p>
+          <p class="pg-note">You may add your children to this registration. Other adults must register themselves, with their own email and waiver. Each person uses one guest spot. On Zeffy you will buy one ticket named Parade guest for yourself, plus one ticket named Parade guest, immediate family or under 12 for each child.</p>
+          <div id="pgKidsList"></div>
+          <button type="button" class="btn" id="pgAddKid" style="margin-top:8px;">Add a child</button>
+        </div>
+        <p id="pgPartySummary" class="pg-note" hidden></p>
         <div style="margin:14px 0 8px;">
           <label class="pg-check"><input type="checkbox" id="pgWaiver" /> I have read the
             <a href="assets/docs/liability-waiver.html" target="_blank" rel="noopener">liability waiver</a>
             and I release and hold harmless the Krewe of Shamrock, its officers, and event organizers
-            from liability arising from my voluntary participation in krewe parades and events, and I agree to follow all parade safety rules.</label>
+            from liability arising from voluntary participation in krewe parades and events, and I agree to follow all parade safety rules. I sign this waiver for myself and for any minor children named on this registration.</label>
         </div>
         <div>
           <label for="pgWaiverName">Type your name to sign the waiver</label>
@@ -526,8 +532,8 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js?v=20261112paradeguest1" defer></script>
-  <script src="assets/kos-parade-guests.js?v=20261112paradeguest1" defer></script>
+  <script src="assets/krewe.js?v=20261112paradeguest3" defer></script>
+  <script src="assets/kos-parade-guests.js?v=20261112paradeguest3" defer></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
