@@ -111,6 +111,10 @@ test("bylaws.html publishes the official bylaws, not a placeholder", async ({ pa
   await expect(page.locator("body")).not.toContainText("Email digital@ to upload");
   await expect(page.locator("#art-1")).toContainText("Article I: Official Name");
   await expect(page.locator("#art-8")).toContainText("05 June 2025");
+  await expect(page.locator("#art-3")).toContainText("Annual Dues:");
+  await expect(page.locator("#art-3")).toContainText("$325");
+  await expect(page.locator("#dues-current-note")).toContainText("Annual dues are currently $375, as updated by the board.");
+  await expect(page.locator("#art-3")).toContainText("An updated copy of the bylaws is coming.");
 
   const pdfLink = page.getByRole("link", { name: /Open \/ download official PDF/i }).first();
   await expect(pdfLink).toBeVisible();
