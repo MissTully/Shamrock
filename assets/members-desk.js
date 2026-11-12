@@ -3191,6 +3191,7 @@
     if ("shopOnly" in flags) state.shopOnly = !!flags.shopOnly;
     if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
     if ("isChair" in flags) state.isChair = !!flags.isChair;
+    if ("canAssignChairs" in flags) state.canAssignChairs = !!flags.canAssignChairs;
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
     syncOfficerChip();
@@ -3359,16 +3360,19 @@
     try { var chair = await client.rpc("is_committee_chair"); state.isChair = !!(chair && chair.data); } catch (eChair) { state.isChair = false; }
     if (roleFixture && ("isChair" in roleFixture)) state.isChair = !!roleFixture.isChair;
     try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
+    try { var assignChairs = await client.rpc("kos_can_assign_chairs"); state.canAssignChairs = !!assignChairs.data; } catch (eAssign) { state.canAssignChairs = false; }
     if (roleFixture) {
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
       if ("canReviewHours" in roleFixture) state.canReviewHours = !!roleFixture.canReviewHours;
       if ("shopOnly" in roleFixture) state.shopOnly = !!roleFixture.shopOnly;
       if ("socialOnly" in roleFixture) state.socialOnly = !!roleFixture.socialOnly;
+      if ("canAssignChairs" in roleFixture) state.canAssignChairs = !!roleFixture.canAssignChairs;
     }
     await refreshApplicationAccess(client);
     await refreshVolunteerInquiryAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
+    if (state.canAssignChairs) loadChairDesk(client);
     if (state.canViewPayments) loadPaymentsCard(client);
     if (state.canManageEvents) loadEventStudio(client);
     loadClaimClovers(client);
@@ -3663,18 +3667,87 @@
   }
   window.kosCommitteeChipsHtml = committeeChipsHtml;
 
+  var myChairRequests = null;
+  function ensureMyChairRequests() {
+    if (myChairRequests) return;
+    if (window.__kosChairRequestFixture) {
+      myChairRequests = window.__kosChairRequestFixture;
+      return;
+    }
+    var client = window.__kosSb || null;
+    if (!client || typeof client.rpc !== "function") return;
+    myChairRequests = [];
+    client.rpc("list_my_chair_requests").then(function (res) {
+      if (res && !res.error && Array.isArray(res.data)) {
+        myChairRequests = res.data;
+        if (!profileEditing) renderProfileCard();
+      }
+    }, function () {});
+  }
+  function pendingChairRequestFor(committee) {
+    return (myChairRequests || []).some(function (r) {
+      return r && r.status === "pending" && r.committee === committee;
+    });
+  }
+  function memberChairsCommittee(p, committee) {
+    var L = window.KOS_LEADERSHIP;
+    var titles = (p && p.officer_title && L && typeof L.splitTitles === "function")
+      ? L.splitTitles(p.officer_title)
+      : String((p && p.officer_title) || "").split(/\s*[·|,;]\s*/);
+    return titles.some(function (t) {
+      var name = (L && typeof L.committeeFromChairTitle === "function") ? L.committeeFromChairTitle(t) : "";
+      if (!name) return false;
+      var official = (typeof normalizeCommittee === "function") ? (normalizeCommittee(name) || name) : name;
+      return official === committee || name === committee;
+    });
+  }
+  function myCommitteeListHtml(p, list) {
+    return '<ul class="hub-my-committees" style="list-style:none;margin:8px 0 0;padding:0;">' + list.map(function (c) {
+      var isChair = memberChairsCommittee(p, c);
+      var pending = pendingChairRequestFor(c);
+      var action = "";
+      if (isChair) {
+        action = '<span style="font-size:14px;color:var(--muted);">You chair this committee</span>';
+      } else if (pending) {
+        action = '<span style="font-size:14px;color:var(--muted);">Chair request pending</span>';
+      } else {
+        action = '<button type="button" class="btn" data-request-chair="' + cAttr(c) + '" style="padding:4px 10px;font-size:14px;">Request to chair</button>';
+      }
+      return '<li style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 8px;">' +
+        committeeChipsHtml([c]) + action + "</li>";
+    }).join("") + "</ul>";
+  }
+  async function requestToChair(committee) {
+    var client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      alert("Still connecting. Try again in a moment.");
+      return;
+    }
+    try {
+      var res = await client.rpc("request_committee_chair", { p_committee: committee });
+      if (res.error) throw res.error;
+      myChairRequests = (myChairRequests || []).concat([{ committee: committee, status: "pending" }]);
+      if (window.__kosChairRequestFixture) {
+        window.__kosChairRequestFixture = myChairRequests;
+      }
+      renderProfileCard();
+    } catch (e) {
+      alert("Couldn't send that request: " + ((e && e.message) || e));
+    }
+  }
+
   function committeePickerHtml(selected, fromLegacy) {
     var on = {};
     (selected || []).forEach(function (c) { on[c] = true; });
-    return '<fieldset class="hub-committee-pick" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:10px 14px;margin:12px 0;">' +
-      '<legend style="padding:0 6px;font-weight:600;">Committees</legend>' +
+    return '<fieldset class="hub-committee-pick" id="hubPfCommittees" style="border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:10px 14px;margin:12px 0;">' +
+      '<legend style="padding:0 6px;font-weight:600;">My committees</legend>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;">' +
       KOS_COMMITTEES.map(function (c, i) {
         var sub = c.indexOf(": ") !== -1;
         return '<label class="hub-committee-opt' + (sub ? " hub-committee-sub" : "") + '" style="' + (sub ? "margin-left:28px;" : "") + 'display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:400;border:1px solid rgba(168,128,28,.4);border-radius:999px;padding:6px 12px;background:' + (on[c] ? "#e8f0e8" : "#fff") + ';">' +
           '<input type="checkbox" class="hub-committee-box" id="hubPfCommittee' + i + '" value="' + cAttr(c) + '" style="width:auto;" onchange="this.parentNode.style.background=this.checked?\'#e8f0e8\':\'#fff\'"' + (on[c] ? " checked" : "") + " /> " + (sub ? "↳ " + esc(c.split(": ")[1]) + ' <small style="color:var(--muted);">(Parade subcommittee)</small>' : esc(c)) + "</label>";
       }).join("") + "</div>" +
-      '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Pick one or as many as you like. Chairs use this to find helpers.' +
+      '<p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Pick the committees you\'d like to be part of. Chairs will see you on their committee list.' +
       (fromLegacy ? " We filled these in from your old website profile. Save to keep them." : "") + "</p></fieldset>";
   }
 
@@ -3721,8 +3794,9 @@
     var otherInterests = otherInterestsFor(p);
     if (otherInterests.length) longs += '<p class="hub-prof-line"><b>Interests:</b> ' + esc(otherInterests.join(", ")) + "</p>";
     ensureMyCommitteeInterests();
+    ensureMyChairRequests();
     var myCommittees = committeesFor(p);
-    longs += '<p class="hub-prof-line"><b>Committees:</b> ' + (myCommittees.length ? committeeChipsHtml(myCommittees) : '<span style="color:var(--muted);">None picked yet. Tap Edit profile to choose.</span>') + "</p>";
+    longs += '<div class="hub-prof-line" id="hubProfCommittees"><b>My committees:</b> ' + (myCommittees.length ? myCommitteeListHtml(p, myCommittees) : '<span style="color:var(--muted);">None picked yet. Tap Edit profile to choose.</span>') + "</div>";
     if (p.favorite_memory) longs += '<p class="hub-prof-line"><b>Favorite krewe memory:</b> ' + esc(p.favorite_memory) + "</p>";
     if (p.fun_fact) longs += '<p class="hub-prof-line"><b>Fun fact:</b> ' + esc(p.fun_fact) + "</p>";
     pc.innerHTML =
@@ -3741,6 +3815,9 @@
       '<p style="color:var(--muted);font-size:14px;margin:8px 0 0;">Fellow members see your birthday and anniversary as month and day only, never the year. Signed-in members can see your phone number.</p>';
     var btn = document.getElementById("hubProfEditBtn");
     if (btn) btn.addEventListener("click", function () { profileEditing = true; renderProfileCard(); });
+    Array.prototype.forEach.call(pc.querySelectorAll("[data-request-chair]"), function (b) {
+      b.addEventListener("click", function () { requestToChair(b.getAttribute("data-request-chair")); });
+    });
   }
 
   /* US phone: keep 10 digits (drop a leading 1) and show as 813-555-0123. */
@@ -3773,10 +3850,11 @@
       '<div><label for="hubPfAnniversary">Anniversary (month + day shown)</label><input id="hubPfAnniversary" type="date" value="' + attr(p.anniversary) + '" /></div>' +
       '<div><label for="hubPfSince">Marching with the krewe since (year)</label><input id="hubPfSince" type="number" min="1998" max="2100" value="' + attr(p.parade_since) + '" /></div>' +
       "</div>" +
+      (p.officer_title ? '<p style="font-size:15px;color:var(--muted);margin:4px 0 8px;">Your title (' + esc(p.officer_title) + ') is set by the board and cannot be changed here.</p>' : "") +
+      committeePickerHtml(committeesFor(p), !(Array.isArray(p.committee_interests) && p.committee_interests.length) && committeesFor(p).length > 0) +
       '<label for="hubPfBio">About me</label><textarea id="hubPfBio">' + esc(p.bio || "") + "</textarea>" +
       '<label for="hubPfHobbies">Hobbies (what do you love doing?)</label><input id="hubPfHobbies" value="' + attr(p.hobbies) + '" placeholder="e.g. Gardening, bagpipes, beach days" />' +
       '<label for="hubPfInterests">Interests (what would you chat about all night?)</label><input id="hubPfInterests" value="' + attr(p.interests) + '" placeholder="e.g. Irish history, cooking, live music" />' +
-      committeePickerHtml(committeesFor(p), !(Array.isArray(p.committee_interests) && p.committee_interests.length) && committeesFor(p).length > 0) +
       '<label for="hubPfMemory">Favorite krewe or parade memory</label><textarea id="hubPfMemory">' + esc(p.favorite_memory || "") + "</textarea>" +
       '<label for="hubPfFact">A fun fact about you</label><input id="hubPfFact" value="' + attr(p.fun_fact) + '" placeholder="e.g. I once caught 47 strands of beads in one parade" />' +
       '<label style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer;">' +
@@ -3893,6 +3971,7 @@
         var ci = await client.rpc("set_my_committee_interests", { p_committees: picked });
         if (ci.error) throw ci.error;
         window.kosProfile = Object.assign({}, window.kosProfile || {}, { committee_interests: ci.data || picked });
+        myChairRequests = null;
       } catch (ciErr) {
         if (msg) { msg.textContent = "Profile saved, but committee interests could not be saved yet: " + ((ciErr && ciErr.message) || ciErr); }
       }
@@ -8924,9 +9003,188 @@
     if (document.getElementById("hubOutreachOut")) loadEventOutreach(true);
   };
 
+
+  // ---- Committee chairs: assign and review "Request to chair" (restricted) ----
+  var chairDeskData = null;
+  var chairDeskFixture = null;
+
+  window.__kosSetChairDesk = function (payload) {
+    chairDeskFixture = payload || null;
+    chairDeskData = chairDeskFixture;
+    if (typeof state !== "undefined") state.canAssignChairs = true;
+    paintChairDeskShell();
+    renderChairDesk();
+  };
+
+  function paintChairDeskShell() {
+    var card = document.getElementById("hubChairDesk");
+    if (!card) {
+      if (typeof ensureOfficerToolCard === "function") card = ensureOfficerToolCard("hubChairDesk");
+    }
+    if (!card) return;
+    if (card.getAttribute("data-kos-ready") === "1") return;
+    card.setAttribute("data-kos-ready", "1");
+    card.innerHTML =
+      '<div class="app-head"><span class="ic">🎖</span><div><h2>Committee chairs</h2>' +
+      "<small>Assign chairs, and review members who asked to chair. Only the President, the Membership Chair, and site admins can use this tool.</small></div></div>" +
+      '<div class="app-body" id="hubChairDeskBody"><p class="empty">Loading…</p></div>';
+  }
+
+  function chairPersonName(r) {
+    return [r.first_name, r.last_name].filter(Boolean).join(" ") || r.email || "Member";
+  }
+
+  function renderChairDesk() {
+    paintChairDeskShell();
+    var body = document.getElementById("hubChairDeskBody");
+    if (!body) return;
+    var data = chairDeskData || { committees: [], requests: [], members: [] };
+    var requests = data.requests || [];
+    var committees = data.committees || [];
+    var members = data.members || [];
+    var html = "";
+    if (requests.length) {
+      html += '<h3 class="hub-appr-h">Chair requests</h3>';
+      requests.forEach(function (q) {
+        html += '<div class="hub-appr">' +
+          "<div><b>" + esc(chairPersonName(q)) + "</b> <span class=\"muted\">" + esc(q.email || "") + "</span>" +
+          '<div class="muted">Asked to chair <b>' + esc(q.committee) + "</b></div>" +
+          (q.note ? '<div class="muted">' + esc(q.note) + "</div>" : "") +
+          "</div><div class=\"hub-appr-btns\">" +
+          '<button class="btn btn-primary" type="button" data-chair-approve="' + esc(q.id) + '">Approve</button>' +
+          '<button class="btn" type="button" data-chair-decline="' + esc(q.id) + '">Decline</button>' +
+          "</div></div>";
+      });
+    } else {
+      html += '<p class="sub">No pending chair requests.</p>';
+    }
+    html += '<h3 class="hub-appr-h">Assign a chair</h3>';
+    html += '<p class="sub">Pick a committee and a member, then assign. Approving a request also sets the chair. Members cannot make themselves chair.</p>';
+    html += '<div class="hub-chair-assign" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:0 0 16px;">';
+    html += '<label style="flex:1;min-width:160px;">Committee<br><select id="hubChairAssignCommittee">';
+    html += '<option value="">Choose…</option>' + committees.map(function (c) {
+      return '<option value="' + cAttr(c.name) + '">' + esc(c.name) + "</option>";
+    }).join("");
+    html += "</select></label>";
+    html += '<label style="flex:2;min-width:200px;">Member<br><input id="hubChairAssignSearch" list="hubChairAssignNames" placeholder="Type a name" autocomplete="off" />';
+    html += '<datalist id="hubChairAssignNames">' + members.map(function (m) {
+      return '<option value="' + cAttr(chairPersonName(m)) + '" data-id="' + cAttr(m.id) + '"></option>';
+    }).join("") + "</datalist></label>";
+    html += '<button class="btn btn-primary" type="button" id="hubChairAssignBtn">Assign chair</button>';
+    html += "</div>";
+    html += '<p class="hub-report-msg" id="hubChairDeskMsg" aria-live="polite"></p>';
+    committees.forEach(function (c) {
+      var chairs = c.chairs || [];
+      html += '<h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 4px;">' + esc(c.name) + "</h4>";
+      if (!chairs.length) {
+        html += '<p class="sub">No chair assigned yet.</p>';
+      } else {
+        html += chairs.map(function (ch) {
+          return '<div class="hub-appr"><div><b>' + esc(chairPersonName(ch)) + "</b> <span class=\"muted\">" + esc(ch.email || "") + "</span>" +
+            (ch.officer_title ? '<div class="muted">' + esc(ch.officer_title) + "</div>" : "") +
+            '</div><div class="hub-appr-btns"><button class="btn" type="button" data-chair-unassign="' + cAttr(ch.id) + '" data-committee="' + cAttr(c.name) + '">Remove as chair</button></div></div>';
+        }).join("");
+      }
+    });
+    body.innerHTML = html;
+    function memberIdFromSearch() {
+      var q = ((document.getElementById("hubChairAssignSearch") || {}).value || "").trim().toLowerCase();
+      if (!q) return null;
+      var hits = members.filter(function (m) { return chairPersonName(m).toLowerCase() === q; });
+      if (hits.length === 1) return hits[0].id;
+      hits = members.filter(function (m) { return chairPersonName(m).toLowerCase().indexOf(q) !== -1; });
+      return hits.length === 1 ? hits[0].id : null;
+    }
+    var assignBtn = document.getElementById("hubChairAssignBtn");
+    if (assignBtn) assignBtn.addEventListener("click", function () {
+      var committee = (document.getElementById("hubChairAssignCommittee") || {}).value;
+      var mid = memberIdFromSearch();
+      if (!committee || !mid) {
+        var msg = document.getElementById("hubChairDeskMsg");
+        if (msg) msg.textContent = "Choose a committee and type a member's full name.";
+        return;
+      }
+      runChairDeskAction("assign_committee_chair", { p_member_id: mid, p_committee: committee }, assignBtn);
+    });
+    body.querySelectorAll("[data-chair-approve]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        runChairDeskAction("approve_chair_request", { p_id: b.getAttribute("data-chair-approve") }, b);
+      });
+    });
+    body.querySelectorAll("[data-chair-decline]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var note = prompt("Optional note for the record (why decline?)");
+        if (note === null) return;
+        runChairDeskAction("decline_chair_request", { p_id: b.getAttribute("data-chair-decline"), p_note: note || null }, b);
+      });
+    });
+    body.querySelectorAll("[data-chair-unassign]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (!confirm("Remove this person as chair? They stay on the committee as a member.")) return;
+        runChairDeskAction("unassign_committee_chair", { p_member_id: b.getAttribute("data-chair-unassign"), p_committee: b.getAttribute("data-committee") }, b);
+      });
+    });
+  }
+
+  async function runChairDeskAction(fn, args, btn) {
+    var client = window.__kosSb;
+    if (btn) btn.disabled = true;
+    if (chairDeskFixture) {
+      if (fn === "approve_chair_request") {
+        var id = args.p_id;
+        var req = (chairDeskData.requests || []).filter(function (r) { return r.id === id; })[0];
+        chairDeskData.requests = (chairDeskData.requests || []).filter(function (r) { return r.id !== id; });
+        if (req) {
+          (chairDeskData.committees || []).forEach(function (c) {
+            if (c.name === req.committee) {
+              c.chairs = (c.chairs || []).concat([{ id: req.member_id, first_name: req.first_name, last_name: req.last_name, email: req.email, officer_title: "Committee Chair of " + req.committee }]);
+            }
+          });
+        }
+      }
+      renderChairDesk();
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Still connecting. Try again in a moment.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc(fn, args);
+      if (res.error) throw res.error;
+    } catch (e) {
+      alert("Couldn't complete that: " + ((e && e.message) || e));
+    }
+    await loadChairDesk(client);
+  }
+
+  async function loadChairDesk(client) {
+    paintChairDeskShell();
+    if (chairDeskFixture) {
+      chairDeskData = chairDeskFixture;
+      renderChairDesk();
+      return;
+    }
+    var body = document.getElementById("hubChairDeskBody");
+    if (!client || typeof client.rpc !== "function") {
+      if (body) body.innerHTML = '<p class="empty">Still connecting…</p>';
+      return;
+    }
+    try {
+      var res = await client.rpc("list_chair_desk");
+      if (res.error) throw res.error;
+      chairDeskData = res.data || { committees: [], requests: [], members: [] };
+      renderChairDesk();
+    } catch (e) {
+      if (body) body.innerHTML = '<p class="empty">Couldn\'t load the chair desk: ' + esc((e && e.message) || e) + "</p>";
+    }
+  }
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubOfficerDirectory",
+    "hubChairDesk",
     "hubVolunteerInbox",
     "hubApprovals",
     "hubPayments",
@@ -8946,6 +9204,7 @@
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
     hubOfficerDirectory: { title: "Member contacts", desc: "Contact info and committee interests. Filter by committee.", icon: "📇", section: "Membership" },
+    hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
@@ -9079,6 +9338,15 @@
       if (toolOrder.indexOf("hubOfficerDirectory") === -1) toolOrder.push("hubOfficerDirectory");
     } else {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubOfficerDirectory"; });
+    }
+    if (state.canAssignChairs) {
+      if (toolOrder.indexOf("hubChairDesk") === -1) {
+        var afterDir = toolOrder.indexOf("hubOfficerDirectory");
+        if (afterDir !== -1) toolOrder.splice(afterDir + 1, 0, "hubChairDesk");
+        else toolOrder.push("hubChairDesk");
+      }
+    } else {
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubChairDesk"; });
     }
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
@@ -9312,6 +9580,7 @@
     toolOrder.forEach(ensureOfficerToolCard);
     if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
     if (toolOrder.indexOf("hubOfficerDirectory") !== -1) paintMemberDirectoryShell();
+    if (toolOrder.indexOf("hubChairDesk") !== -1) paintChairDeskShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -9337,7 +9606,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
