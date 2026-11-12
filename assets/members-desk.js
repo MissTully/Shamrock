@@ -9305,6 +9305,37 @@
     })[status] || status || "";
   }
 
+  function paradeGuestPartySize(g) {
+    if (!g) return 1;
+    if (g.party_size) return Number(g.party_size) || 1;
+    return 1 + (Array.isArray(g.minors) ? g.minors.length : 0);
+  }
+
+  function paradeGuestPeople(g) {
+    var people = [{
+      name: ((g.first_name || "") + " " + (g.last_name || "")).trim(),
+      role: "Adult guest",
+      email: g.email || ""
+    }];
+    (g.minors || []).forEach(function (m) {
+      people.push({
+        name: ((m.first_name || "") + " " + (m.last_name || "")).trim(),
+        role: "Child",
+        email: g.email || ""
+      });
+    });
+    return people;
+  }
+
+  function paradeGuestFeeBlurb(g) {
+    var bits = [];
+    if (g.fee_label) bits.push(g.fee_label + " total");
+    var kids = Array.isArray(g.minors) ? g.minors.length : (g.child_count || 0);
+    if (kids) bits.push("1 x Parade guest, " + kids + " x family / under 12");
+    else bits.push("1 x Parade guest");
+    return bits.join(" · ");
+  }
+
   function ensureMyParadeGuests() {
     if (Array.isArray(window.__kosParadeGuestHubRows)) {
       myParadeGuests = window.__kosParadeGuestHubRows;
@@ -9338,18 +9369,21 @@
     }
     var html = '<div class="hub-parade-guest-card" id="hubParadeGuestApprove">' +
       "<h3>Guest march approvals</h3>" +
-      "<p class=\"empty\" style=\"margin:0 0 10px;\">Guests who named you as the inviting member. Your approval sends them the payment link. You are responsible for your guests.</p>";
+      "<p class=\"empty\" style=\"margin:0 0 10px;\">Guests who named you as the inviting member. Your approval sends the payment link for the whole registration, including any children listed. You are responsible for your guests.</p>";
     if (myParadeGuestsMsg) html += '<p class="hub-report-msg" id="hubMyParadeGuestsMsg">' + esc(myParadeGuestsMsg) + "</p>";
     rows.forEach(function (g) {
       var st = paradeGuestStatusLabel(g.status);
       var unpaid = g.status === "payment_sent";
       html += '<div class="hub-parade-guest-row" data-guest-id="' + esc(g.id) + '">' +
-        "<p style=\"margin:0 0 4px;\"><b>" + esc((g.first_name || "") + " " + (g.last_name || "")) + "</b> · " + esc(g.parade_name || "Parade") + "</p>" +
+        "<p style=\"margin:0 0 4px;\"><b>" + esc((g.first_name || "") + " " + (g.last_name || "")) + "</b> · " + esc(g.parade_name || "Parade") +
+        (paradeGuestPartySize(g) > 1 ? " · " + esc(String(paradeGuestPartySize(g)) + " people") : "") + "</p>" +
+        (paradeGuestPartySize(g) > 1
+          ? "<p style=\"margin:0 0 6px;font-size:15px;\">Children: " + esc((g.minors || []).map(function (m) { return ((m.first_name || "") + " " + (m.last_name || "")).trim(); }).filter(Boolean).join(", ")) + "</p>"
+          : "") +
         "<p style=\"margin:0 0 6px;font-size:15px;color:var(--muted);\">" + esc(g.email || "") +
-        (g.fee_label ? " · " + esc(g.fee_label) : "") +
-        (g.fee_tier ? " · " + esc(g.fee_tier === "family_or_under_12" ? "Immediate family or under 12" : "Other") : "") +
+        " · " + esc(paradeGuestFeeBlurb(g)) +
         " · " + esc(st) + "</p>" +
-        (unpaid ? '<p style="margin:0 0 8px;font-size:15px;">This guest has not paid yet.</p>' : "") +
+        (unpaid ? '<p style="margin:0 0 8px;font-size:15px;">This registration has not been paid yet.</p>' : "") +
         '<div class="hub-appr-btns">';
       if (g.status === "pending_sponsor") {
         html += '<button type="button" class="btn btn-primary" data-pg-act="approve" data-id="' + esc(g.id) + '">Approve</button>' +
@@ -9432,15 +9466,17 @@
   }
 
   function paradeGuestsToCsv(parades) {
-    var lines = ["Parade,Spots taken,Guest spots,Guest name,Email,Inviting member,Inviting email,Fee,Fee tier,Status,Paid,Registered"];
+    var lines = ["Parade,Spots taken,Guest spots,Person name,Role,Registration email,Inviting member,Inviting email,Registration total,Status,Paid,Registered"];
     (parades || []).forEach(function (p) {
       (p.guests || []).forEach(function (g) {
-        lines.push([
-          p.name, p.spots_taken, p.guest_capacity,
-          ((g.first_name || "") + " " + (g.last_name || "")).trim(),
-          g.email, g.sponsor_name, g.sponsor_email, g.fee_label, g.fee_tier,
-          paradeGuestStatusLabel(g.status), g.paid ? "yes" : "no", g.created_at
-        ].map(csvEscape).join(","));
+        paradeGuestPeople(g).forEach(function (person) {
+          lines.push([
+            p.name, p.spots_taken, p.guest_capacity,
+            person.name, person.role, g.email,
+            g.sponsor_name, g.sponsor_email, g.fee_label,
+            paradeGuestStatusLabel(g.status), g.paid ? "yes" : "no", g.created_at
+          ].map(csvEscape).join(","));
+        });
       });
     });
     return lines.join("\n");
@@ -9454,7 +9490,7 @@
     if (!card) return;
     var head = card.querySelector(".app-head");
     if (head) {
-      head.innerHTML = '<span class="ic">🥁</span><div><h2>Parade guests</h2><small>Guest march registrations per parade. Read-only, plus cancel a spot. Counts are approved guests (payment sent or paid).</small></div>';
+      head.innerHTML = '<span class="ic">🥁</span><div><h2>Parade guests</h2><small>Guest march registrations per parade. Read-only, plus cancel a registration. Counts are people in approved registrations (payment sent or paid), including children.</small></div>';
     }
     var body = card.querySelector(".app-body");
     if (body && !document.getElementById("hubParadeGuestsBody")) {
@@ -9512,15 +9548,17 @@
         html += '<div style="overflow:auto;"><table class="hub-report-table"><thead><tr>' +
           "<th>Guest</th><th>Inviting member</th><th>Fee</th><th>Status</th><th></th></tr></thead><tbody>";
         p.guests.forEach(function (g) {
-          html += "<tr><td>" + esc(((g.first_name || "") + " " + (g.last_name || "")).trim()) +
+          var peopleLines = paradeGuestPeople(g).map(function (person) {
+            return esc(person.name) + " <span style=\"color:var(--muted);font-size:14px;\">(" + esc(person.role) + ")</span>";
+          }).join("<br>");
+          html += "<tr><td>" + peopleLines +
             "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.email || "") + "</span></td>" +
             "<td>" + esc(g.sponsor_name || "") +
             "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.sponsor_email || "") + "</span></td>" +
-            "<td>" + esc(g.fee_label || "") +
-            (g.fee_tier ? "<br><span style=\"color:var(--muted);font-size:14px;\">" + esc(g.fee_tier === "family_or_under_12" ? "Family / under 12" : "Other") + "</span>" : "") +
+            "<td>" + esc(paradeGuestFeeBlurb(g)) +
             "</td><td>" + esc(paradeGuestStatusLabel(g.status)) + (g.paid ? " · Paid" : "") + "</td><td>";
           if (g.status !== "cancelled" && g.status !== "declined") {
-            html += '<button type="button" class="btn" data-pg-off-cancel="' + esc(g.id) + '">Cancel</button>';
+            html += '<button type="button" class="btn" data-pg-off-cancel="' + esc(g.id) + '">Cancel registration</button>';
           }
           html += "</td></tr>";
         });
@@ -9554,7 +9592,9 @@
             if (String(g.id) !== String(id)) return g;
             return Object.assign({}, g, { status: "cancelled", paid: false });
           }) });
-          copy.spots_taken = (copy.guests || []).filter(function (g) { return g.status === "payment_sent" || g.status === "paid"; }).length;
+          copy.spots_taken = (copy.guests || []).reduce(function (sum, g) {
+            return sum + ((g.status === "payment_sent" || g.status === "paid") ? paradeGuestPartySize(g) : 0);
+          }, 0);
           return copy;
         });
         officerParadeGuests = window.__kosOfficerParadeGuests;

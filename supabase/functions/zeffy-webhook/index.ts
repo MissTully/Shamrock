@@ -175,7 +175,7 @@ const extractGuestToken = (...values: unknown[]): string | undefined => {
     if (value == null) return "";
     try { return JSON.stringify(value); } catch { return String(value); }
   }).join(" ");
-  const tagged = blob.match(/kos_guest=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/i);
+  const tagged = blob.match(/kos_guest[=_]([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/i);
   if (tagged) return tagged[1];
   return undefined;
 };

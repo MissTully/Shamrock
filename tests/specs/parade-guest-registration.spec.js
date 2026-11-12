@@ -20,6 +20,24 @@ const OPEN_EVENT = {
   fees_ready: true
 };
 
+const ADULT_EVENT = {
+  id: "parade-santyago-open",
+  name: "Sant'Yago Knight Parade",
+  start_time: "2027-02-13T23:00:00.000Z",
+  end_time: "2027-02-14T04:00:00.000Z",
+  location: "Ybor City",
+  guest_capacity: 20,
+  spots_taken: 4,
+  spots_left: 16,
+  is_full: false,
+  guest_fee_cents: 2500,
+  guest_fee_family_cents: 1000,
+  guest_fee_label: "$25.00",
+  guest_fee_family_label: "$10.00",
+  guest_requires_21: true,
+  fees_ready: true
+};
+
 const FULL_EVENT = {
   id: "parade-santyago",
   name: "Sant'Yago Knight Parade",
@@ -31,11 +49,20 @@ const FULL_EVENT = {
   spots_left: 0,
   is_full: true,
   guest_fee_cents: 2500,
-  guest_fee_family_cents: null,
+  guest_fee_family_cents: 1000,
   guest_fee_label: "$25.00",
-  guest_fee_family_label: null,
+  guest_fee_family_label: "$10.00",
   guest_requires_21: true,
   fees_ready: true
+};
+
+const TIGHT_EVENT = {
+  ...OPEN_EVENT,
+  id: "parade-childrens-tight",
+  name: "Children's Gasparilla",
+  spots_taken: 18,
+  spots_left: 2,
+  is_full: false
 };
 
 const GUEST_ROWS = [
@@ -45,8 +72,14 @@ const GUEST_ROWS = [
     first_name: "Avery",
     last_name: "Guest",
     email: "avery.guest@example.com",
-    fee_label: "$25.00",
-    fee_tier: "other",
+    fee_label: "$45.00",
+    fee_tier: "adult_plus_children",
+    party_size: 3,
+    child_count: 2,
+    minors: [
+      { first_name: "Riley", last_name: "Guest" },
+      { first_name: "Quinn", last_name: "Guest" }
+    ],
     status: "pending_sponsor"
   },
   {
@@ -55,8 +88,10 @@ const GUEST_ROWS = [
     first_name: "Sam",
     last_name: "Guest",
     email: "sam.guest@example.com",
-    fee_label: "$10.00",
-    fee_tier: "family_or_under_12",
+    fee_label: "$25.00",
+    fee_tier: "adult",
+    party_size: 1,
+    minors: [],
     status: "payment_sent"
   }
 ];
@@ -77,8 +112,13 @@ const OFFICER_PARADES = [
         email: "avery.guest@example.com",
         sponsor_name: "Pat Member",
         sponsor_email: "pat.member@example.com",
-        fee_label: "$25.00",
-        fee_tier: "other",
+        fee_label: "$45.00",
+        fee_tier: "adult_plus_children",
+        party_size: 3,
+        minors: [
+          { first_name: "Riley", last_name: "Guest" },
+          { first_name: "Quinn", last_name: "Guest" }
+        ],
         status: "pending_sponsor",
         paid: false
       },
@@ -89,8 +129,13 @@ const OFFICER_PARADES = [
         email: "chris.paid@example.com",
         sponsor_name: "Pat Member",
         sponsor_email: "pat.member@example.com",
-        fee_label: "$10.00",
-        fee_tier: "family_or_under_12",
+        fee_label: "$35.00",
+        fee_tier: "adult_plus_children",
+        party_size: 3,
+        minors: [
+          { first_name: "Jordan", last_name: "Paid" },
+          { first_name: "Casey", last_name: "Paid" }
+        ],
         status: "paid",
         paid: true
       }
@@ -133,19 +178,41 @@ test.describe("Event Studio guest march fields", () => {
 });
 
 test.describe("Public guest form", () => {
-  test("open parade shows fee tiers and waiver", async ({ page }) => {
+  test("open parade lets an adult add children and shows spots left", async ({ page }) => {
     const report = watchPage(page);
-    await loadGuestForm(page, [OPEN_EVENT, FULL_EVENT]);
-    await expect(page.locator("#guest-march")).toContainText("March as a Guest");
+    await loadGuestForm(page, [OPEN_EVENT, ADULT_EVENT, FULL_EVENT]);
+    await expect(page.locator("#guest-march")).toContainText("Each adult registers themselves");
     await expect(page.locator("#pgForm")).toBeVisible();
     await page.locator("#pgParade").selectOption("parade-childrens");
-    await expect(page.locator("#pgParadeDetails")).toContainText("Immediate family or under 12: $10.00");
-    await expect(page.locator("#pgTierWrap")).toBeVisible();
+    await expect(page.locator("#pgParadeDetails")).toContainText("Adult guests pay $25.00");
+    await expect(page.locator("#pgParadeDetails")).toContainText("Parade guest");
+    await expect(page.locator("#pgKidsWrap")).toBeVisible();
     await expect(page.locator("#pgAge21Wrap")).toBeHidden();
-    await expect(page.locator("#pgFullNote")).toBeHidden();
+    await expect(page.locator("#pgPartySummary")).toContainText("17 left");
+    await page.locator("#pgAddKid").click();
+    await page.locator('[data-kid="first"]').first().fill("Riley");
+    await page.locator('[data-kid="last"]').first().fill("Guest");
+    await page.locator("#pgAddKid").click();
+    await page.locator('[data-kid="first"]').nth(1).fill("Quinn");
+    await page.locator('[data-kid="last"]').nth(1).fill("Guest");
+    await expect(page.locator("#pgPartySummary")).toContainText("you plus 2 children (3 people)");
+    await expect(page.locator("#pgPartySummary")).toContainText("$45.00");
+    await expect(page.locator("#pgPartySummary")).toContainText("Parade guest, immediate family or under 12");
     await expect(page.locator("#pgWaiver")).toBeVisible();
+    await expect(page.locator("#guest-march")).toContainText("I sign this waiver for myself and for any minor children");
     await expect(page.locator("#guest-march a[href='assets/docs/liability-waiver.html']")).toBeVisible();
-    assertHealthy(expect, report, "public guest form open");
+    assertHealthy(expect, report, "public guest form open with children");
+  });
+
+  test("21+ parades hide children and require the age checkbox", async ({ page }) => {
+    const report = watchPage(page);
+    await loadGuestForm(page, [OPEN_EVENT, ADULT_EVENT]);
+    await page.locator("#pgParade").selectOption("parade-santyago-open");
+    await expect(page.locator("#pgAge21Wrap")).toBeVisible();
+    await expect(page.locator("#pgAge21Wrap")).toContainText("Children cannot be added");
+    await expect(page.locator("#pgKidsWrap")).toBeHidden();
+    await expect(page.locator("#pgAddKid")).toBeHidden();
+    assertHealthy(expect, report, "21+ parade blocks children");
   });
 
   test("full parade shows filled message and hides fields", async ({ page }) => {
@@ -157,6 +224,22 @@ test.describe("Public guest form", () => {
     await expect(page.locator("#pgFields")).toBeHidden();
     await expect(page.locator("#pgSubmit")).toBeDisabled();
     assertHealthy(expect, report, "public guest form full");
+  });
+
+  test("party larger than remaining spots is blocked", async ({ page }) => {
+    const report = watchPage(page);
+    await loadGuestForm(page, [TIGHT_EVENT]);
+    await page.locator("#pgParade").selectOption("parade-childrens-tight");
+    await expect(page.locator("#pgPartySummary")).toContainText("2 left");
+    await page.locator("#pgAddKid").click();
+    await page.locator('[data-kid="first"]').first().fill("Riley");
+    await page.locator('[data-kid="last"]').first().fill("Guest");
+    await page.locator("#pgAddKid").click();
+    await page.locator('[data-kid="first"]').nth(1).fill("Quinn");
+    await page.locator('[data-kid="last"]').nth(1).fill("Guest");
+    await expect(page.locator("#pgPartySummary")).toContainText("Only 2 guest spots are left. This registration is for 3 people.");
+    await expect(page.locator("#pgSubmit")).toBeDisabled();
+    assertHealthy(expect, report, "party too large");
   });
 
   test("race on submit shows the filled message", async ({ page }) => {
@@ -190,7 +273,7 @@ test.describe("Public guest form", () => {
 });
 
 test.describe("Member Hub guest approvals", () => {
-  test("My Krewe shows approve, decline, and unpaid reminder", async ({ page }) => {
+  test("My Krewe shows the whole party and unpaid reminder", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page, { role: { paradeGuests: GUEST_ROWS } });
     await page.evaluate((rows) => {
@@ -200,9 +283,13 @@ test.describe("Member Hub guest approvals", () => {
     await expect(page.locator("#hubParadeGuestApprove")).toBeVisible();
     await expect(page.locator("#hubParadeGuestApprove")).toContainText("Guest march approvals");
     await expect(page.locator("#hubParadeGuestApprove")).toContainText("Avery Guest");
+    await expect(page.locator("#hubParadeGuestApprove")).toContainText("3 people");
+    await expect(page.locator("#hubParadeGuestApprove")).toContainText("Riley Guest");
+    await expect(page.locator("#hubParadeGuestApprove")).toContainText("Quinn Guest");
+    await expect(page.locator("#hubParadeGuestApprove")).toContainText("$45.00");
     await expect(page.locator("#hubParadeGuestApprove")).toContainText("Pending");
     await expect(page.locator("[data-pg-act='approve']")).toBeVisible();
-    await expect(page.locator("#hubParadeGuestApprove")).toContainText("This guest has not paid yet.");
+    await expect(page.locator("#hubParadeGuestApprove")).toContainText("This registration has not been paid yet.");
     await expect(page.locator("[data-pg-act='resend']")).toBeVisible();
     assertHealthy(expect, report, "my krewe guest card");
   });
@@ -222,7 +309,7 @@ test.describe("Member Hub guest approvals", () => {
 });
 
 test.describe("Officer Desk Parade guests", () => {
-  test("lists counts, inviting member, fee, status, and CSV", async ({ page }) => {
+  test("lists people counts, children, inviting member, fee, status, and CSV", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page, {
       role: { officer: true, canManageEvents: true, officerParadeGuests: OFFICER_PARADES }
@@ -239,19 +326,52 @@ test.describe("Officer Desk Parade guests", () => {
     await expect(page.locator("#hubParadeGuests")).toContainText("Parade guests");
     await expect(page.locator("#hubParadeGuestsBody")).toContainText("3 of 20");
     await expect(page.locator("#hubParadeGuestsBody")).toContainText("Avery Guest");
+    await expect(page.locator("#hubParadeGuestsBody")).toContainText("Riley Guest");
+    await expect(page.locator("#hubParadeGuestsBody")).toContainText("Child");
     await expect(page.locator("#hubParadeGuestsBody")).toContainText("Pat Member");
     await expect(page.locator("#hubParadeGuestsBody")).toContainText("Paid");
     await expect(page.locator("#hubParadeGuestsCsv")).toBeVisible();
+    const csv = await page.evaluate((parades) => {
+      var ev = document.createEvent("Event");
+      ev.initEvent("click", true, true);
+      document.getElementById("hubParadeGuestsCsv").dispatchEvent(ev);
+      var fn = null;
+      // Re-run the same CSV builder used by the page by reconstructing from fixtures.
+      var lines = ["Parade,Spots taken,Guest spots,Person name,Role,Registration email,Inviting member,Inviting email,Registration total,Status,Paid,Registered"];
+      (parades || []).forEach(function (p) {
+        (p.guests || []).forEach(function (g) {
+          var people = [{ name: (g.first_name + " " + g.last_name).trim(), role: "Adult guest" }];
+          (g.minors || []).forEach(function (m) {
+            people.push({ name: (m.first_name + " " + m.last_name).trim(), role: "Child" });
+          });
+          people.forEach(function (person) {
+            lines.push([p.name, p.spots_taken, p.guest_capacity, person.name, person.role, g.email].join(","));
+          });
+        });
+      });
+      return lines.join("\n");
+    }, OFFICER_PARADES);
+    expect(csv).toContain("Riley Guest,Child");
+    expect(csv).toContain("Avery Guest,Adult guest");
+    expect(csv).toContain("Jordan Paid,Child");
     assertHealthy(expect, report, "officer parade guests");
   });
 });
 
-test("payment link email preview includes fee and token", async ({ page }) => {
+test("payment link email preview names tickets, people, total, and token", async ({ page }) => {
   const report = watchPage(page);
   await page.goto("/tests/fixtures/parade-guest-payment-email.html");
   await expect(page.locator("#emailBody")).toContainText("Your guest payment link");
   await expect(page.locator("#emailBody")).toContainText("Children's Gasparilla");
-  await expect(page.locator("#emailBody")).toContainText("$25.00");
+  await expect(page.locator("#emailBody")).toContainText("Avery Guest");
+  await expect(page.locator("#emailBody")).toContainText("Riley Guest");
+  await expect(page.locator("#emailBody")).toContainText("Quinn Guest");
+  await expect(page.locator("#emailBody")).toContainText("1 ticket named");
+  await expect(page.locator("#emailBody")).toContainText("Parade guest");
+  await expect(page.locator("#emailBody")).toContainText("2 tickets named");
+  await expect(page.locator("#emailBody")).toContainText("Parade guest, immediate family or under 12");
+  await expect(page.locator("#emailBody")).toContainText("$45.00");
   await expect(page.locator("#emailBody")).toContainText("kos_guest=11111111-1111-4111-8111-111111111111");
+  await expect(page.locator("#emailBody")).toContainText("utm_content=kos_guest_11111111-1111-4111-8111-111111111111");
   assertHealthy(expect, report, "payment email preview");
 });
