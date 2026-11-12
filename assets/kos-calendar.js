@@ -382,6 +382,40 @@
     return start.getTime() < now.getTime();
   }
 
+  // Dates to Remember (and similar rolling lists): keep an event until its
+  // end time, or through the end of its start day in America/New_York when
+  // there is no later end time. Undated events stay visible.
+  function eventVisibleOnDatesList(ev, now) {
+    now = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+    if (!ev) return false;
+    var startVal = ev.start_time || ev.date;
+    if (!startVal) return true;
+    var start = startVal instanceof Date ? startVal : new Date(startVal);
+    if (isNaN(start.getTime())) return true;
+    function ymd(d) {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(d);
+      function pick(type) {
+        var i, part = null;
+        for (i = 0; i < parts.length; i++) if (parts[i].type === type) part = parts[i];
+        return part ? Number(part.value) : 0;
+      }
+      return pick("year") * 10000 + pick("month") * 100 + pick("day");
+    }
+    var today = ymd(now);
+    var startDay = ymd(start);
+    if (startDay >= today) return true;
+    var endVal = ev.end_time || ev.end;
+    if (!endVal) return false;
+    var end = endVal instanceof Date ? endVal : new Date(endVal);
+    if (isNaN(end.getTime())) return false;
+    var endDay = ymd(end);
+    if (endDay > today) return true;
+    if (endDay === today) return end.getTime() >= now.getTime();
+    return false;
+  }
+
   function isLiveFeatured(ev, now) {
     if (!ev || !ev.is_featured) return false;
     var status = String(ev.status || "published").toLowerCase();
@@ -403,6 +437,7 @@
     publicSignupAction: publicSignupAction,
     signupDropdownAction: signupDropdownAction,
     eventHasEnded: eventHasEnded,
+    eventVisibleOnDatesList: eventVisibleOnDatesList,
     isLiveFeatured: isLiveFeatured
   };
 })();
