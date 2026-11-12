@@ -127,6 +127,7 @@
     ".hub-docs a{display:inline-block;background:#f0e8d2;border:1px solid rgba(168,128,28,.3);color:var(--green-800);border-radius:999px;padding:6px 13px;font-size:16px;font-family:var(--display);text-decoration:none;}",
     ".hub-docs a:hover{background:#e8ddc0;}",
     "#docs,#hubMemberDirectory,#hubEventStudio{scroll-margin-top:88px;}",
+    "#hubEventGuestMarchFields,#hubEventParadeBox{scroll-margin-top:120px;}",
     ".hub-profile{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-parade-guest-card{background:#fff;border:1px solid rgba(168,128,28,.28);border-radius:16px;padding:16px 18px;margin-bottom:14px;}",
     ".hub-parade-guest-card h3{margin:0 0 6px;font-family:var(--display);color:var(--green-800);}",
@@ -519,6 +520,7 @@
     "body.hub-app #hubOfficer .desk-group-head h3{color:#f6efdc;}",
     "body.hub-app #hubOfficer .desk-group-head .dg-sub{color:#ecd07e;}",
     "#hubOfficerLauncher .hub-officer-section{scroll-margin-top:88px;}",
+    "#hubEventGuestMarchFields,#hubEventParadeBox{scroll-margin-top:120px;}",
     /* Member FAQ tab. The group stays out of the desk until the FAQ chip
        or a #faq link opens it, so the rest of the desk keeps its height.
        Section pills swap answers in place: no scroll-into-view, no snap. */
