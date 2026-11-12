@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20260930return1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261112paradeguest1" />
 <style>
   .parade-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
   .parade-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden; }
@@ -65,6 +65,18 @@
     .page-head{ padding:32px 14px 28px; }
     #parade-season > .wrap{ padding-top:24px; }
   }
+
+  .pg-form{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); max-width:720px; margin:0 auto; }
+  .pg-form label{ display:block; font-weight:600; margin:0 0 4px; }
+  .pg-form input[type="text"], .pg-form input[type="email"], .pg-form input[type="tel"], .pg-form select{ width:100%; box-sizing:border-box; }
+  .pg-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
+  .pg-grid .wide{ grid-column:1/-1; }
+  .pg-note{ font-size:15px; color:var(--muted); margin:0 0 14px; }
+  .pg-full{ background:#f8efe0; border:1px solid rgba(168,128,28,.45); border-radius:12px; padding:12px 14px; font-weight:700; color:var(--green-800); margin:0 0 12px; }
+  .pg-msg{ min-height:1.4em; margin:12px 0 0; font-weight:600; color:var(--green-800); }
+  .pg-check{ display:flex; gap:10px; align-items:flex-start; font-weight:500; }
+  .pg-check input{ width:auto; margin-top:3px; }
+  @media (max-width:640px){ .pg-grid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -252,9 +264,76 @@
     </div>
     <div class="btns" style="margin-top:22px;justify-content:center;display:flex;flex-wrap:wrap;gap:10px;">
       <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
+      <a class="btn" href="#guest-march">March as a guest</a>
       <a class="btn" href="members.html">Member Login</a>
       <a class="btn" href="#ikc-season">See the season</a>
     </div>
+  </section>
+
+
+  <!-- GUEST MARCH REGISTRATION -->
+  <section class="wrap narrow" id="guest-march">
+    <div class="section-title">
+      <h2>March as a Guest</h2>
+      <p class="sub">Invited by a Krewe member? Register here</p>
+    </div>
+    <div class="banner-flourish" aria-hidden="true"></div>
+    <p style="text-align:center;font-size:17px;margin-bottom:20px;">
+      Personal guests march with the Krewe of Shamrock at selected parades.
+      Registration is open, and you will name the member who invited you.
+      That member approves your registration in the Member Hub, and only then
+      will you receive the payment link for the guest parade fee.
+      Guest spots are limited and are set by the parade. There is no waitlist
+      once a parade is full.
+    </p>
+    <p id="pgEmpty" class="pg-note" hidden style="text-align:center;"></p>
+    <form class="pg-form" id="pgForm" hidden>
+      <p class="pg-note">Payment is not due on this form. After the inviting member approves you, we email the payment link.</p>
+      <div class="pg-grid">
+        <div class="wide">
+          <label for="pgParade">Parade</label>
+          <select id="pgParade" required>
+            <option value="">Choose a parade</option>
+          </select>
+        </div>
+      </div>
+      <div id="pgParadeDetails" class="pg-note" hidden></div>
+      <p class="pg-full" id="pgFullNote" hidden>All guest spots for this parade are filled.</p>
+      <div id="pgFields">
+        <div class="pg-grid">
+          <div><label for="pgFirst">Your first name</label><input id="pgFirst" type="text" autocomplete="given-name" required /></div>
+          <div><label for="pgLast">Your last name</label><input id="pgLast" type="text" autocomplete="family-name" required /></div>
+          <div><label for="pgEmail">Your email</label><input id="pgEmail" type="email" autocomplete="email" required /></div>
+          <div><label for="pgPhone">Your phone</label><input id="pgPhone" type="tel" autocomplete="tel" /></div>
+          <div><label for="pgSponsorFirst">Inviting member first name</label><input id="pgSponsorFirst" type="text" /></div>
+          <div><label for="pgSponsorLast">Inviting member last name</label><input id="pgSponsorLast" type="text" /></div>
+          <div class="wide"><label for="pgSponsorEmail">Inviting member email</label><input id="pgSponsorEmail" type="email" required />
+            <p class="pg-note" style="margin-top:6px;">Must match an active Krewe member. They will be asked to approve you.</p></div>
+        </div>
+        <div id="pgTierWrap" hidden style="margin:12px 0;">
+          <p style="font-weight:600;margin:0 0 6px;">Fee category</p>
+          <label class="pg-check"><input type="radio" name="pgTier" value="immediate_family" /> Immediate family or under 12</label>
+          <label class="pg-check"><input type="checkbox" id="pgUnder12" /> This guest is under 12</label>
+          <label class="pg-check"><input type="radio" name="pgTier" value="other" checked /> Other guest</label>
+        </div>
+        <div id="pgAge21Wrap" hidden style="margin:12px 0;">
+          <label class="pg-check"><input type="checkbox" id="pgAge21" /> I confirm I am 21 or older</label>
+        </div>
+        <div style="margin:14px 0 8px;">
+          <label class="pg-check"><input type="checkbox" id="pgWaiver" /> I have read the
+            <a href="assets/docs/liability-waiver.html" target="_blank" rel="noopener">liability waiver</a>
+            and I release and hold harmless the Krewe of Shamrock, its officers, and event organizers
+            from liability arising from my voluntary participation in krewe parades and events, and I agree to follow all parade safety rules.</label>
+        </div>
+        <div>
+          <label for="pgWaiverName">Type your name to sign the waiver</label>
+          <input id="pgWaiverName" type="text" autocomplete="name" required />
+        </div>
+        <p class="pg-note" style="margin-top:10px;">This waiver is for this guest registration. It is separate from the member Parade Ready waiver.</p>
+        <div style="margin-top:16px;"><button class="btn btn-primary" type="submit" id="pgSubmit">Submit guest registration</button></div>
+      </div>
+      <p class="pg-msg" id="pgMsg" aria-live="polite"></p>
+    </form>
   </section>
 
   <!-- FULL IKC PARADE SEASON -->
@@ -447,12 +526,22 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js" defer></script>
+  <script src="assets/krewe.js?v=20261112paradeguest1" defer></script>
+  <script src="assets/kos-parade-guests.js?v=20261112paradeguest1" defer></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
     const SUPABASE_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (typeof window.__kosInitParadeGuestForm === "function") {
+      window.__kosInitParadeGuestForm({ client: supabase });
+    } else {
+      window.addEventListener("load", () => {
+        if (typeof window.__kosInitParadeGuestForm === "function") {
+          window.__kosInitParadeGuestForm({ client: supabase });
+        }
+      });
+    }
 
     const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"

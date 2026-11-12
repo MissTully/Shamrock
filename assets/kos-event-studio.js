@@ -167,6 +167,16 @@
       '<div class="hub-event-optional" id="hubEventParadeBox" hidden>' +
       '<h4>Parade season</h4>' +
       '<p class="hub-opt-hint">Keep a Parade public for parades.html recruiting cards, and Members only so there is no public march RSVP. Staging streets go in Private staging address.</p>' +
+      '<div id="hubEventGuestMarchFields">' +
+      '<h4>Guest march registration</h4>' +
+      '<p class="hub-opt-hint">Separate from Capacity (member RSVP) and volunteer caps. Leave Guest march spots blank or 0 if this parade does not take guests. It then stays off the public guest form. Hosted bylaws (Article 7, not yet confirmed against a current copy): SantaFest and Children\'s Gasparilla $10 Immediate Family or under 12, $25 others. Other parades: set the guest fee here. Paste the guest Zeffy link; guests receive it only after the inviting member approves.</p>' +
+      '<div class="hub-event-grid">' +
+      '<div><label for="hubEventGuestCapacity">Guest march spots</label><input id="hubEventGuestCapacity" type="number" min="0" step="1" placeholder="Leave blank for no guests" /></div>' +
+      '<div><label for="hubEventGuestFee">Guest fee (dollars)</label><input id="hubEventGuestFee" type="number" min="0" step="0.01" placeholder="Standard / others" /></div>' +
+      '<div><label for="hubEventGuestFeeFamily">Family / under 12 fee (dollars)</label><input id="hubEventGuestFeeFamily" type="number" min="0" step="0.01" placeholder="Optional. $10 for SantaFest and Children\'s" /></div>' +
+      '<div class="wide" style="grid-column:1/-1;"><label for="hubEventGuestPaymentUrl">Guest payment (Zeffy) URL</label><input id="hubEventGuestPaymentUrl" type="url" placeholder="https://www.zeffy.com/en-US/ticketing/..." /></div></div>' +
+      '<div class="hub-event-checks" style="margin:8px 0 10px;"><label><input type="checkbox" id="hubEventGuestRequires21" checked /> Guests must be 21 or older</label></div>' +
+      '</div>' +
       '<label for="hubEventRoleNotes">Role notes</label>' +
       '<textarea id="hubEventRoleNotes" placeholder="March, float, hospitality, etc."></textarea>' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Shown to signed-in members on the Hub parade card. Not shown on the public Parades page.</p>' +
@@ -301,6 +311,30 @@
     if (selectedId) sel.value = selectedId;
   }
 
+  function paradeNameSuggestsFamilyFees(name) {
+    var n = String(name || "").toLowerCase();
+    return /santa\s*fest/.test(n) || /child(ren)?(['']s)?\s*gasparilla/.test(n);
+  }
+  function maybePrefillParadeGuestFees() {
+    var typeEl = document.getElementById("hubEventType");
+    if (!typeEl || typeEl.value !== "parade") return;
+    var idEl = document.getElementById("hubEventId");
+    if (idEl && idEl.value) return;
+    var nameEl = document.getElementById("hubEventName");
+    var fee = document.getElementById("hubEventGuestFee");
+    var family = document.getElementById("hubEventGuestFeeFamily");
+    var req = document.getElementById("hubEventGuestRequires21");
+    var familyParade = paradeNameSuggestsFamilyFees(nameEl && nameEl.value);
+    if (familyParade) {
+      if (fee && !fee.value) fee.value = "25.00";
+      if (family && !family.value) family.value = "10.00";
+      if (req) req.checked = false;
+    } else if (req && !document.getElementById("hubEventId").value) {
+      // New, non-family parade: 21+ stays on unless the officer turns it off.
+      if (req.dataset.touched !== "1") req.checked = true;
+    }
+  }
+
   function syncOptionalEventFields() {
     var typeEl = document.getElementById("hubEventType");
     var onlineBox = document.getElementById("hubEventOnline");
@@ -314,6 +348,7 @@
     var paradeOn = !!(typeEl && typeEl.value === "parade");
     showEl("hubEventParadeBox", paradeOn);
     showEl("hubEventCreateMeetingFields", paradeOn && !!(document.getElementById("hubEventCreateMeeting") && document.getElementById("hubEventCreateMeeting").checked));
+    maybePrefillParadeGuestFees();
     setFieldLabel("hubEventStart", paradeOn ? "Muster / step-off start *" : "Start time *");
     setFieldLabel("hubEventEnd", paradeOn ? "Step-off window end" : "End time");
     setFieldLabel("hubEventLocation", paradeOn ? "Public teaser location" : "Public location teaser");
@@ -822,6 +857,11 @@
     var lm = document.getElementById("hubEventLinkedMeeting"); if (lm) lm.value = "";
     var cmMeet = document.getElementById("hubEventCreateMeeting"); if (cmMeet) cmMeet.checked = false;
     var rn = document.getElementById("hubEventRoleNotes"); if (rn) rn.value = "";
+    var gc = document.getElementById("hubEventGuestCapacity"); if (gc) gc.value = "";
+    var gf = document.getElementById("hubEventGuestFee"); if (gf) gf.value = "";
+    var gff = document.getElementById("hubEventGuestFeeFamily"); if (gff) gff.value = "";
+    var gpu = document.getElementById("hubEventGuestPaymentUrl"); if (gpu) gpu.value = "";
+    var g21 = document.getElementById("hubEventGuestRequires21"); if (g21) g21.checked = true;
     document.getElementById("hubEventFormTitle").textContent = "New event";
     document.getElementById("hubEventMsg").textContent = "";
     hidePublishButton();
@@ -886,6 +926,13 @@
     var mu = get("hubEventMeetingUrl"); if (mu) mu.value = event.meeting_url || "";
     fillLinkedMeetingSelect(event.linked_meeting_id || "");
     var rnFill = get("hubEventRoleNotes"); if (rnFill) rnFill.value = event.notes || "";
+    var gcFill = get("hubEventGuestCapacity"); if (gcFill) gcFill.value = event.guest_capacity == null ? "" : event.guest_capacity;
+    var gfFill = get("hubEventGuestFee");
+    if (gfFill) gfFill.value = event.guest_fee_cents == null ? "" : (Number(event.guest_fee_cents) / 100).toFixed(2);
+    var gffFill = get("hubEventGuestFeeFamily");
+    if (gffFill) gffFill.value = event.guest_fee_family_cents == null ? "" : (Number(event.guest_fee_family_cents) / 100).toFixed(2);
+    var gpuFill = get("hubEventGuestPaymentUrl"); if (gpuFill) gpuFill.value = event.guest_payment_url || "";
+    var g21Fill = get("hubEventGuestRequires21"); if (g21Fill) g21Fill.checked = event.guest_requires_21 !== false;
     get("hubEventFlyerUrl").value = event.flyer_url || "";
     syncFlyerPreview();
     syncOptionalEventFields();
@@ -1139,6 +1186,17 @@
     var dollars = ticketValue === "" ? null : Number(ticketValue);
     if (capacityValue !== "" && (isNaN(capacity) || capacity < 0)) { if (msg) msg.textContent = "Capacity must be a whole number."; return; }
     if (ticketValue !== "" && (isNaN(dollars) || dollars < 0)) { if (msg) msg.textContent = "Ticket price must be zero or more."; return; }
+    var guestCapValue = value("hubEventGuestCapacity");
+    var guestCap = guestCapValue === "" ? null : parseInt(guestCapValue, 10);
+    if (guestCapValue !== "" && (isNaN(guestCap) || guestCap < 0)) { if (msg) msg.textContent = "Guest march spots must be a whole number."; return; }
+    var guestFeeValue = value("hubEventGuestFee");
+    var guestFeeDollars = guestFeeValue === "" ? null : Number(guestFeeValue);
+    if (guestFeeValue !== "" && (isNaN(guestFeeDollars) || guestFeeDollars < 0)) { if (msg) msg.textContent = "The guest fee must be zero or more."; return; }
+    var guestFamilyValue = value("hubEventGuestFeeFamily");
+    var guestFamilyDollars = guestFamilyValue === "" ? null : Number(guestFamilyValue);
+    if (guestFamilyValue !== "" && (isNaN(guestFamilyDollars) || guestFamilyDollars < 0)) { if (msg) msg.textContent = "The family guest fee must be zero or more."; return; }
+    var guestPayUrl = value("hubEventGuestPaymentUrl");
+    if (guestPayUrl && !/^https?:\/\//i.test(guestPayUrl)) { if (msg) msg.textContent = "The guest payment link must start with http:// or https://."; return; }
     var rafflePriceValue = value("hubEventRafflePrice");
     var raffleDollars = rafflePriceValue === "" ? null : Number(rafflePriceValue);
     if (rafflePriceValue !== "" && (isNaN(raffleDollars) || raffleDollars < 0)) {
@@ -1211,9 +1269,25 @@
       if (res.error) throw res.error;
       if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not save event.");
       var savedId = (res.data && res.data.event_id) || payload.id;
+      var evObj = res.data && res.data.event;
+      savedId = (evObj && evObj.id) || savedId;
       if (savedId) {
         var nRes = await client.rpc("officer_set_event_member_notes", { p_event_id: savedId, p_notes: value("hubEventMemberNotes") || null });
         if (nRes.error) throw new Error("Event saved, but members-only notes did not save: " + nRes.error.message);
+      }
+      if (savedId && payload.event_type === "parade") {
+        var gRes = await client.rpc("officer_set_parade_guest_settings", {
+          p: {
+            id: savedId,
+            guest_capacity: guestCap,
+            guest_fee_cents: guestFeeValue === "" ? null : Math.round(guestFeeDollars * 100),
+            guest_fee_family_cents: guestFamilyValue === "" ? null : Math.round(guestFamilyDollars * 100),
+            guest_payment_url: guestPayUrl || null,
+            guest_requires_21: !!(document.getElementById("hubEventGuestRequires21") && document.getElementById("hubEventGuestRequires21").checked)
+          }
+        });
+        if (gRes.error) throw new Error("Event saved, but guest march settings did not save: " + gRes.error.message);
+        if (gRes.data && gRes.data.ok === false) throw new Error(gRes.data.message || "Guest march settings did not save.");
       }
       var cleared = res.data && res.data.ticket_url_cleared
         ? " The ticket payment link was cleared because another event already uses it. Paste this event's own Zeffy link."
@@ -1263,6 +1337,10 @@
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", syncOptionalEventFields);
     });
+    var nameEl = document.getElementById("hubEventName");
+    if (nameEl) nameEl.addEventListener("input", maybePrefillParadeGuestFees);
+    var req21 = document.getElementById("hubEventGuestRequires21");
+    if (req21) req21.addEventListener("change", function () { req21.dataset.touched = "1"; });
     var rafflePick = document.getElementById("hubEventRaffleEvent");
     if (rafflePick) rafflePick.addEventListener("change", onRaffleEventPicked);
     var flyerFile = document.getElementById("hubEventFlyerFile");
