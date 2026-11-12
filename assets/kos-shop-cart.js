@@ -1,9 +1,10 @@
 /* Krewe Gear cart and KOS Shop checkout.
-   Paste the live Zeffy Online Store URL into KOS_SHOP_ZEFFY_URL below
-   (or into shop settings after sql/kos_shop_unified_checkout.sql is applied). */
+   KOS_SHOP_ZEFFY_URL is the shared Zeffy shop. After
+   sql/kos_shop_unified_checkout.sql is applied, the same URL is also
+   available from shop settings. */
 (function () {
-  // DROP THE KOS SHOP URL HERE (single place to swap in the Zeffy link).
-  var KOS_SHOP_ZEFFY_URL = "https://www.zeffy.com/en-US/online-store/KOS-SHOP-URL-PLACEHOLDER";
+  // Shared KOS Shop checkout (Zeffy published this under /ticketing/).
+  var KOS_SHOP_ZEFFY_URL = "https://www.zeffy.com/en-US/ticketing/kos-shop";
   var STORAGE_KEY = "kosShopCartV1";
   var MAX_QTY = 20;
 
@@ -18,8 +19,12 @@
 
   function safeUrl(x) {
     try {
-      var u = new URL(x || "", location.href);
-      return ["http:", "https:"].includes(u.protocol) ? u.href : "";
+      var s = String(x || "").trim();
+      // Require an absolute http(s) value so a missing setting cannot
+      // resolve to the current page.
+      if (!/^https?:\/\//i.test(s)) return "";
+      var u = new URL(s);
+      return (u.protocol === "http:" || u.protocol === "https:") ? u.href : "";
     } catch (e) {
       return "";
     }

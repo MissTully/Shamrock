@@ -22,9 +22,11 @@ create table if not exists public.kos_runtime_flags (
 insert into public.kos_runtime_flags (key, value)
 values (
   'kos_shop_zeffy_url',
-  jsonb_build_object('url', 'https://www.zeffy.com/en-US/online-store/KOS-SHOP-URL-PLACEHOLDER')
+  jsonb_build_object('url', 'https://www.zeffy.com/en-US/ticketing/kos-shop')
 )
-on conflict (key) do nothing;
+on conflict (key) do update
+  set value = excluded.value,
+      updated_at = now();
 
 comment on table public.kos_runtime_flags is
   'Small runtime switches. kos_shop_zeffy_url.url is the shared KOS Shop Zeffy Online Store link.';
@@ -74,6 +76,11 @@ declare
   v_url text := lower(coalesce(public.kos_shop_checkout_url(), ''));
   v_slug text;
 begin
+  -- Match the shared campaign by slug kos-shop or name "KOS Shop",
+  -- not only by /ticketing/ vs /online-store/ in the path.
+  if v_blob ~ '(^|[^a-z0-9])kos-shop([^a-z0-9]|$)' or v_blob ~ '(^|[^a-z0-9])kos shop([^a-z0-9]|$)' then
+    return true;
+  end if;
   if v_url <> '' and position('placeholder' in v_url) = 0 then
     v_slug := regexp_replace(rtrim(v_url, '/'), '^.*/', '');
     if v_slug <> '' and position(v_slug in v_blob) > 0 then
@@ -82,12 +89,6 @@ begin
     if position(v_url in v_blob) > 0 then
       return true;
     end if;
-  end if;
-  if v_blob ~ 'kos[- ]shop' then
-    return true;
-  end if;
-  if v_blob ~ '/online-store/' or v_blob ~ '/online-shop/' then
-    return true;
   end if;
   return false;
 end;

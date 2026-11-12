@@ -120,11 +120,13 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
   // whose slug ends in "-shop". Classify as store before the ticketing check
   // below files them as events. SQL in kos_shop_unified_checkout.sql is a backstop.
   const shopBlob = `${description} ${linkBlob} ${String(payment.campaign_slug ?? metadata.campaign_slug ?? "")}`.toLowerCase();
+  // Shared KOS Shop: match slug kos-shop or campaign name "KOS Shop" so a
+  // /ticketing/ vs /online-store/ path cannot mis-file the payment as an event.
+  if (/\bkos-shop\b/.test(shopBlob) || /\bkos shop\b/.test(shopBlob)) {
+    return "store";
+  }
+  // Legacy per-item ticketing campaigns, e.g. /ticketing/krewe-of-shamrock-mug-shop.
   if (
-    /\/online-store\//.test(shopBlob) ||
-    /\/online-shop\//.test(shopBlob) ||
-    /\bkos[- ]shop\b/.test(shopBlob) ||
-    /kos-shop-url-placeholder/.test(shopBlob) ||
     /\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) ||
     /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())
   ) {
