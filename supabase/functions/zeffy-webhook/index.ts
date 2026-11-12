@@ -116,11 +116,18 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     return "other";
   }
 
-  // Shop Studio products are Zeffy ticketing campaigns whose slug ends in
-  // "-shop" (e.g. /ticketing/krewe-of-shamrock-mug-shop). Classify them as
-  // store before the ticketing check below files them as events.
-  // kos_shop_order_emails.sql also reclassifies in the database as a backstop.
-  if (/\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) || /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())) {
+  // Shared KOS Shop Online Store, plus legacy Shop Studio ticketing campaigns
+  // whose slug ends in "-shop". Classify as store before the ticketing check
+  // below files them as events. SQL in kos_shop_unified_checkout.sql is a backstop.
+  const shopBlob = `${description} ${linkBlob} ${String(payment.campaign_slug ?? metadata.campaign_slug ?? "")}`.toLowerCase();
+  if (
+    /\/online-store\//.test(shopBlob) ||
+    /\/online-shop\//.test(shopBlob) ||
+    /\bkos[- ]shop\b/.test(shopBlob) ||
+    /kos-shop-url-placeholder/.test(shopBlob) ||
+    /\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) ||
+    /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())
+  ) {
     return "store";
   }
 

@@ -40,7 +40,62 @@
 .cart-items li{ display:flex; justify-content:space-between; gap:10px; font-size:15px; border-bottom:1px dashed rgba(168,128,28,.35); padding-bottom:6px; }
 .cart-total{ font-family:var(--display); font-size:20px; color:var(--green-800); text-align:right; margin-top:8px; }
 .cart-msg{ background:rgba(236,208,126,.18); border:1px solid var(--gold); border-radius:10px; padding:12px; font-size:14px; margin-top:12px; }
-/* MOBILE STORE — thin bottom dock so cart never covers product cards/CTAs */
+.nav-cart{
+  position:relative; margin-left:8px; flex:0 0 auto;
+  display:inline-flex; align-items:center; gap:6px;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold)); color:#3a2c00;
+  border:2px solid var(--gold-deep); border-radius:999px;
+  padding:6px 12px; font-family:var(--display); font-weight:700; font-size:14px;
+  cursor:pointer; text-decoration:none; min-height:38px;
+}
+.nav-cart:hover, .nav-cart:focus-visible{ background:var(--gold-light); outline:none; box-shadow:0 0 0 3px #fff; }
+.nav-cart-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+  background:#14532d; color:#fff; font-size:12px; line-height:1;
+}
+.cart-card{ max-width:480px; }
+.cart-line{
+  display:grid; grid-template-columns:1fr auto auto; grid-template-areas:"info qty sum" "info remove sum";
+  gap:6px 10px; align-items:center; font-size:15px;
+  border-bottom:1px dashed rgba(168,128,28,.35); padding-bottom:10px;
+}
+.cart-line-info{ grid-area:info; }
+.cart-line-name{ display:block; color:var(--green-800); font-weight:700; }
+.cart-line-meta{ display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+.cart-line-qty{ grid-area:qty; display:flex; align-items:center; gap:6px; }
+.cart-qty{
+  width:36px; height:36px; border-radius:8px; border:1px solid var(--gold-deep);
+  background:#fff; color:#3a2c00; font:700 18px/1 var(--display); cursor:pointer;
+}
+.cart-qty:hover, .cart-qty:focus-visible{ background:var(--gold-light); outline:2px solid var(--green-800); }
+.cart-qty-n{ min-width:1.4em; text-align:center; font-weight:700; color:var(--green-800); }
+.cart-line-sum{ grid-area:sum; font-family:var(--display); font-weight:700; color:var(--green-800); }
+.cart-remove{
+  grid-area:remove; justify-self:start; background:none; border:none; padding:0;
+  color:#8a2f1a; font-size:13px; font-weight:700; cursor:pointer; text-decoration:underline;
+}
+.cart-actions, .checkout-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.cart-actions .btn, .checkout-actions .btn, .checkout-actions a.btn{ min-height:44px; }
+.checkout-lines{ list-style:none; padding:0; margin:12px 0; display:grid; gap:8px; }
+.checkout-lines li{ display:flex; justify-content:space-between; gap:10px; font-size:15px; border-bottom:1px dashed rgba(168,128,28,.35); padding-bottom:6px; color:var(--green-900); }
+#checkoutCopyMsg{ min-height:1.2em; margin:8px 0 0; font-size:14px; color:var(--green-800); }
+#checkoutLinkNote{ color:#8a4b08; }
+.cart-card h2{ font-size:24px; }
+.cart-card .btn-outline{
+  background:#fff; color:#14532d; border:2px solid var(--gold-deep);
+}
+.cart-card .btn-outline:hover, .cart-card .btn-outline:focus-visible{
+  background:#f6efdd; color:#14532d;
+}
+.cart-card .btn:not(.btn-primary):not(.btn-outline){
+  background:#f6efdd; color:#14532d; border:2px solid rgba(168,128,28,.55);
+}
+@media (max-width:680px){
+  .nav-cart{ padding:5px 10px; font-size:13px; margin-left:4px; }
+  .cart-line{ grid-template-columns:1fr auto; grid-template-areas:"info sum" "qty qty" "remove remove"; }
+}
+/* MOBILE STORE: thin bottom dock so cart never covers product cards/CTAs */
 @media (max-width:680px){
   .shop-grid{ grid-template-columns:1fr; gap:18px; padding-bottom:8px; }
   .shop-note{ margin:0 0 8px; padding:12px 14px; font-size:14.5px; }
@@ -163,6 +218,9 @@ a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,
       <img src="assets/img/emblem-shamrock.png" alt="Krewe of Shamrock emblem" />
       <span class="name"><b>Krewe of Shamrock</b><small>Tampa Bay · Est. 1999</small></span>
     </a>
+    <button type="button" class="nav-cart" id="navCartBtn" data-open-cart="1" aria-label="Open cart, 0 items">
+      Cart <span class="nav-cart-badge" id="navCartCount" data-cart-badge="1" hidden>0</span>
+    </button>
     <button class="nav-toggle" id="kreweNavToggle" aria-label="Open menu" aria-controls="kreweMenu" aria-expanded="false">
       <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
@@ -224,14 +282,33 @@ a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,
     <div class="vendor-list" id="vendorApparel"><p class="empty vendor-empty">Loading apparel links&#x2026;</p></div>
   </section>
 </main>
-<div class="cartbar"><button id="cartBtn" onclick="openCart()">&#x1F6D2; Cart (<span id="cartCount">0</span>)</button></div>
-<div class="cart-panel" id="cartPanel">
-  <div class="cart-card">
-    <h2>Your Cart</h2>
-    <ul class="cart-items" id="cartItems"><li>Your cart is empty.</li></ul>
-    <div class="cart-total" id="cartTotal"></div>
-    <div class="cart-msg" id="cartMsg">&#x1F340; For items without a checkout link, email <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</div>
-    <div class="btns" style="margin-top:14px;"><a class="btn btn-outline" href="#" onclick="closeCart();return false;">Keep shopping</a></div>
+<div class="cartbar"><button type="button" id="cartBtn" data-open-cart="1">Cart (<span id="cartCount" data-cart-count="1">0</span>)</button></div>
+<div class="cart-panel" id="cartPanel" aria-hidden="true">
+  <div class="cart-card" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <div id="cartView">
+      <h2 id="cartTitle">Your Cart</h2>
+      <p class="cart-msg" id="cartEmpty">Your cart is empty. Add Krewe Gear below, then check out in one payment at the KOS Shop.</p>
+      <ul class="cart-items" id="cartItems"></ul>
+      <div class="cart-total" id="cartTotal"></div>
+      <div class="cart-actions" id="cartActions" hidden>
+        <button class="btn btn-primary" type="button" id="cartCheckout">Checkout</button>
+        <button class="btn btn-outline" type="button" id="cartClose">Keep shopping</button>
+      </div>
+    </div>
+    <div id="checkoutView" hidden>
+      <h2 id="checkoutTitle">Checkout</h2>
+      <p>On the next page, add these items in the KOS Shop.</p>
+      <ul class="checkout-lines" id="checkoutLines"></ul>
+      <div class="cart-total" id="checkoutTotal"></div>
+      <p class="cart-msg" id="checkoutLinkNote" hidden>The KOS Shop checkout link is not on the site yet. You can copy this list and paste the shop URL when it is ready.</p>
+      <div class="checkout-actions">
+        <a class="btn btn-primary" id="checkoutOpen" href="#" target="_blank" rel="noopener noreferrer">Open KOS Shop</a>
+        <button class="btn" type="button" id="checkoutCopy">Copy list</button>
+        <button class="btn" type="button" id="checkoutClear">Clear cart after paying</button>
+        <button class="btn btn-outline" type="button" id="checkoutBack">Back to cart</button>
+      </div>
+      <p id="checkoutCopyMsg" aria-live="polite"></p>
+    </div>
   </div>
 </div>
 <footer class="krewe-foot">
@@ -263,22 +340,15 @@ a.vendor-tile:hover{ transform:translateY(-4px); box-shadow:0 14px 34px rgba(12,
 </div>
 <script src="assets/krewe.js" defer></script>
 <script src="assets/kos-shop-vendors.js?v=20260930vendors2" defer></script>
+<script src="assets/kos-shop-cart.js?v=20261112shopcart1" defer></script>
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
     const SUPABASE_KEY = "sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-let PRODUCTS=[],cart={};
-const esc=s=>(s??"").toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const url=x=>{try{let u=new URL(x||"",location.href);return["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return""}};
 const list=d=>Array.isArray(d)?d:(d&&Array.isArray(d.products)?d.products:[]);
-function buildGrid(){let g=document.getElementById("shopGrid");if(!PRODUCTS.length){g.innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">No merchandise is available right now. Check back soon!</p>';return}g.innerHTML=PRODUCTS.map(p=>{let id=p.id||p.slug,price=p.price_cents==null?null:Number(p.price_cents)/100,sizes=Array.isArray(p.sizes)&&p.sizes.length?p.sizes:["One size"],im=url(p.image_url),buy=url(p.zeffy_url),st=p.status||"draft",opts=sizes.map(x=>'<option>'+esc(x)+'</option>').join("");let h='<div class="product">'+(im?'<div class="pimg" style="background-image:url(\''+esc(im)+'\')"></div>':'<div class="pimg pimg-ph"><span class="ph-label">Photo coming soon</span></div>')+'<div class="pbody"><h3>'+esc(p.name||"Krewe product")+'</h3><div class="desc">'+esc(p.description||"")+'</div><div class="price">'+(price==null?"Price TBA":"$"+price.toFixed(2))+'</div>';if(st==="coming_soon"||st==="awaiting_zeffy"||price==null)h+='<div class="soon">'+(st==="awaiting_zeffy"?'⏳ Checkout linking…':'⏳ Coming soon')+'</div>';else h+='<select id="sz-'+esc(id)+'">'+opts+'</select>'+(buy?'<a class="btn btn-primary add" href="'+esc(buy)+'" target="_blank" rel="noopener noreferrer">🍀 Buy now</a>':'<button class="btn btn-primary add" data-add="'+esc(id)+'">🍀 Add to Cart</button>');return h+'</div></div>'}).join("");g.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>addToCart(b.dataset.add))}
-function addToCart(id){let p=PRODUCTS.find(x=>String(x.id||x.slug)===String(id));if(!p)return;let sz=(document.getElementById("sz-"+id)||{}).value||"One size",k=id+"|"+sz;if(!cart[k])cart[k]={name:p.name,price:Number(p.price_cents||0)/100,size:sz,qty:0};cart[k].qty++;renderCart()}
-function renderCart(){let ks=Object.keys(cart),n=ks.reduce((a,k)=>a+cart[k].qty,0);document.getElementById("cartCount").textContent=n;let u=document.getElementById("cartItems");if(!ks.length){u.innerHTML="<li>Your cart is empty.</li>";document.getElementById("cartTotal").textContent="";return}u.innerHTML=ks.map(k=>'<li><span>'+esc(cart[k].name)+' ('+esc(cart[k].size)+') x'+cart[k].qty+'</span><span>$'+(cart[k].price*cart[k].qty).toFixed(2)+'</span></li>').join("");document.getElementById("cartTotal").textContent="Total: $"+ks.reduce((a,k)=>a+cart[k].price*cart[k].qty,0).toFixed(2)}
-function openCart(){renderCart();document.getElementById("cartPanel").classList.add("open")}function closeCart(){document.getElementById("cartPanel").classList.remove("open")}
-window.openCart=openCart;window.closeCart=closeCart;window.addToCart=addToCart;document.getElementById("cartPanel").addEventListener("click",e=>{if(e.target===e.currentTarget)closeCart()});
 function paintVendors(vendors,looks,failed){let root=document.getElementById("vendorApparel"),leave=document.getElementById("vendorLeave"),courtesy=document.getElementById("vendorCourtesy");if(!root)return 0;if(failed||!window.KosShopVendors){root.innerHTML='<p class="empty vendor-empty">Vendor apparel links are temporarily unavailable. Please check back soon.</p>';if(leave)leave.hidden=true;if(courtesy)courtesy.hidden=true;return 0}let result=KosShopVendors.render(root,vendors,looks);if(leave)leave.hidden=!result.vendorCount;if(courtesy)courtesy.hidden=!result.hasPhotos;return result.vendorCount}
-async function load(){let note=document.getElementById("shopNote"),productError=false,vendorCount=0;try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");buildGrid()}catch(e){productError=true;document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>'}try{let pair=await Promise.all([supabase.rpc("list_public_shop_vendors"),supabase.rpc("list_public_shop_vendor_looks")]);if(pair[0].error)throw pair[0].error;let vendors=Array.isArray(pair[0].data)?pair[0].data:[];let looks=!pair[1].error&&Array.isArray(pair[1].data)?pair[1].data:[];vendorCount=paintVendors(vendors,looks,false)}catch(e){paintVendors([],[],true)}let ask='<a href="mailto:secretary@kreweofshamrock.com">Email the Krewe</a>';if(productError){note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, '+ask+'.'}else if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Krewe Gear below checks out in a secure payment window. Apparel further down is ordered from our vendor partners, and prices are on their sites. Questions? '+ask+'.'}else if(vendorCount){note.innerHTML='🍀 <b>Krewe Gear</b> is not listed for sale right now. Apparel further down is ordered from our vendor partners, where you choose size and color. Questions? '+ask+'.'}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now — '+ask+' if you need something sooner.'}}
+async function load(){let note=document.getElementById("shopNote"),productError=false,vendorCount=0,PRODUCTS=[];try{let r=await supabase.rpc("list_public_shop_products");if(r.error)throw r.error;PRODUCTS=list(r.data).filter(p=>(p.status||"")==="live");if(window.KosShopCart){await window.KosShopCart.loadShopUrl(supabase);window.KosShopCart.init(PRODUCTS);} }catch(e){productError=true;document.getElementById("shopGrid").innerHTML='<p class="empty" style="grid-column:1/-1;text-align:center">The shop catalog is temporarily unavailable. Please check back soon.</p>'}try{let pair=await Promise.all([supabase.rpc("list_public_shop_vendors"),supabase.rpc("list_public_shop_vendor_looks")]);if(pair[0].error)throw pair[0].error;let vendors=Array.isArray(pair[0].data)?pair[0].data:[];let looks=!pair[1].error&&Array.isArray(pair[1].data)?pair[1].data:[];vendorCount=paintVendors(vendors,looks,false)}catch(e){paintVendors([],[],true)}let ask='<a href="mailto:secretary@kreweofshamrock.com">Email the Krewe</a>';if(productError){note.innerHTML='🍀 <b>Shop catalog.</b> To ask about gear, '+ask+'.'}else if(PRODUCTS.length){note.innerHTML='🍀 <b>Krewe shop is open.</b> Add Krewe Gear to your cart and check out once for the total in the KOS Shop. Apparel further down is ordered from our vendor partners, and prices are on their sites. Questions? '+ask+'.'}else if(vendorCount){note.innerHTML='🍀 <b>Krewe Gear</b> is not listed for sale right now. Apparel further down is ordered from our vendor partners, where you choose size and color. Questions? '+ask+'.'}else{note.innerHTML='🍀 <b>New gear is on the way.</b> Nothing is listed for sale right now. '+ask+' if you need something sooner.'}}
 load();
 </script>
 
