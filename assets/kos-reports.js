@@ -341,6 +341,26 @@
     document.getElementById("hubReportCmCsv").addEventListener("click", function () { downloadCommitteeCsv(client); });
   }
 
+  function applyReportGroupAccess(card) {
+    var access = window.kosReportAccess;
+    if (!card || !access || access.all) return;
+    var eventBox = card.querySelector("#hubReportEvent");
+    var eventSection = eventBox && eventBox.closest(".hub-report-section");
+    if (eventSection && !access.events) eventSection.style.display = "none";
+    var moneyBox = card.querySelector("#hubReportFrom");
+    var moneySection = moneyBox && moneyBox.closest(".hub-report-section");
+    if (moneySection && !access.finance) moneySection.style.display = "none";
+    var committee = card.querySelector("#hubReportCm");
+    if (committee && !access.members) committee.style.display = "none";
+    if (access.merch && !access.events && !access.finance && !access.members && !access.parades) {
+      var note = document.createElement("p");
+      note.className = "sub";
+      note.textContent = "Merchandise reports are not on this screen yet. Your access to that group is saved.";
+      var body = card.querySelector(".app-body");
+      if (body) body.appendChild(note);
+    }
+  }
+
   async function loadReports(client, committeeOnly) {
     var panel = document.getElementById("hubOfficer");
     if (!panel) return;
@@ -382,6 +402,7 @@
       '<button class="btn btn-primary" type="button" id="hubReportMoneyRun">☘ Run summary</button>' +
       '</div><p class="hub-report-msg" id="hubReportMoneyMsg" aria-live="polite"></p>' +
       '<div id="hubReportMoneyOut"></div></div>' + COMMITTEE_SECTION + '</div>';
+    applyReportGroupAccess(card);
     document.getElementById("hubReportRun").addEventListener("click", function () { runEventReport(client); });
     document.getElementById("hubReportMoneyRun").addEventListener("click", function () { runMoneyReport(client); });
     wireCommitteeSection(client);
@@ -403,15 +424,17 @@
       can = !!res.data;
     } catch (e) { can = false; }
     var cm = false;
+    var reportAccess = window.kosReportAccess;
+    var grantedReport = !!(reportAccess && (reportAccess.all || reportAccess.events || reportAccess.finance || reportAccess.merch || reportAccess.parades || reportAccess.members));
     if (!can) {
       try {
         var r1 = await client.rpc("is_krewe_officer");
         var r2 = await client.rpc("is_committee_chair");
         cm = !!(r1.data || r2.data);
       } catch (e3) { cm = false; }
-      if (!cm) return;
+      if (!cm && !grantedReport) return;
     }
-    await loadReports(client, !can);
+    await loadReports(client, !can && !grantedReport);
     if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
   }
 

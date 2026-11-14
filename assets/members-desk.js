@@ -586,7 +586,8 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  window.kosHubState = state;
   var feedLock = null;
   var applicationsFixture = null;
   var joiningPacketLoadGen = 0;
@@ -3056,6 +3057,9 @@
       '<div id="hubHomeHoursSlot"></div>' +
       (phoneHome ? "" : desktopGetAppCardHtml()) +
       (phoneHome ? "" : tartanDeadlineHtml("hubTartanDeadline"));
+    if (typeof window.kosPaintHubNotices === "function") {
+      try { window.kosPaintHubNotices(top); } catch (eNotesPaint) {}
+    }
     placeHomeHours(hoursCard);
 
     renderProfileCard();
@@ -3199,6 +3203,11 @@
   window.__kosHubSetRole = function (flags) {
     flags = flags || {};
     roleFixture = flags;
+    if (Array.isArray(flags.toolKeys)) state.toolKeys = flags.toolKeys.slice();
+    if (Array.isArray(flags.notices)) window.__kosHubNotices = flags.notices;
+    if (flags.rolesAccess && typeof window.__kosSetRolesAccess === "function") {
+      try { window.__kosSetRolesAccess(flags.rolesAccess); } catch (eRoles) {}
+    }
     if ("officer" in flags) state.officer = !!flags.officer;
     if ("canManageEvents" in flags) state.canManageEvents = !!flags.canManageEvents;
     if ("canViewPayments" in flags) state.canViewPayments = !!flags.canViewPayments;
@@ -3389,6 +3398,21 @@
     if (roleFixture && ("isChair" in roleFixture)) state.isChair = !!roleFixture.isChair;
     try { var eventManager = await client.rpc("can_manage_events"); state.canManageEvents = !!eventManager.data; } catch (e) { state.canManageEvents = false; }
     try { var assignChairs = await client.rpc("kos_can_assign_chairs"); state.canAssignChairs = !!assignChairs.data; } catch (eAssign) { state.canAssignChairs = false; }
+    if (!(roleFixture && Array.isArray(roleFixture.toolKeys))) {
+      try {
+        var mine = await client.rpc("my_officer_tools");
+        if (mine && !mine.error && mine.data && mine.data.ok && Array.isArray(mine.data.tools)) {
+          state.toolKeys = mine.data.tools;
+        }
+      } catch (eTools) {}
+    }
+    if (roleFixture && Array.isArray(roleFixture.toolKeys)) state.toolKeys = roleFixture.toolKeys.slice();
+    if (!(roleFixture && Array.isArray(roleFixture.notices))) {
+      try {
+        var notes = await client.rpc("list_my_hub_notices");
+        if (notes && !notes.error && Array.isArray(notes.data)) window.__kosHubNotices = notes.data;
+      } catch (eNotes) {}
+    }
     if (roleFixture) {
       if ("officer" in roleFixture) state.officer = !!roleFixture.officer;
       if ("canManageEvents" in roleFixture) state.canManageEvents = !!roleFixture.canManageEvents;
@@ -3399,6 +3423,7 @@
     }
     await refreshApplicationAccess(client);
     await refreshVolunteerInquiryAccess(client);
+    applyToolKeyFlags();
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canAssignChairs) loadChairDesk(client);
     if (state.canViewPayments) loadPaymentsCard(client);
@@ -9626,7 +9651,7 @@
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubOfficerDirectory",
-    "hubChairDesk",
+    "hubRolesAccess",
     "hubVolunteerInbox",
     "hubApprovals",
     "hubPayments",
@@ -9647,6 +9672,7 @@
   var OFFICER_TOOL_META = {
     hubApplications: { title: "Membership Applications", desc: "Guide prospects from interest to active member", icon: "📝", section: "Membership" },
     hubOfficerDirectory: { title: "Member contacts", desc: "Contact info and committee interests. Filter by committee.", icon: "📇", section: "Membership" },
+    hubRolesAccess: { title: "Member roles and access", desc: "Set a title and choose which Officer Desk tools a member can use.", icon: "🎖", section: "Membership" },
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
@@ -9750,7 +9776,90 @@
     return !!(state.officer || state.isChair);
   }
 
+  var CARD_TOOL_KEY = {
+    hubApplications: "applications",
+    hubOfficerDirectory: "member_contacts",
+    hubRolesAccess: "roles_access",
+    hubVolunteerInbox: "volunteer_inquiries",
+    hubApprovals: "approvals",
+    hubPayments: "payments",
+    hubLockers: "lockers",
+    hubEventStudio: "event_studio",
+    hubParadeGuests: "parade_guests",
+    hubEventOutreach: "event_outreach",
+    hubShopStudio: "shop_studio",
+    hubQrStudio: "qr_studio",
+    hubDocStudio: "doc_studio",
+    hubAllKrewe: "all_krewe",
+    hubEmailMembers: "email_members",
+    hubSendInvoices: "send_invoices",
+    hubDuesWaivers: "dues_waivers"
+  };
+
+  function hasToolKey(key) {
+    return Array.isArray(state.toolKeys) && state.toolKeys.indexOf(key) !== -1;
+  }
+
+  function applyToolKeyFlags() {
+    if (!Array.isArray(state.toolKeys)) return;
+    state.canReviewApplications = hasToolKey("applications");
+    state.canViewPayments = hasToolKey("payments");
+    state.canReviewVolunteerInquiries = hasToolKey("volunteer_inquiries");
+    state.canManageEvents = hasToolKey("event_studio");
+    state.canAssignChairs = false;
+    if (state.toolKeys.length) {
+      state.officer = true;
+      state.shopOnly = false;
+      state.socialOnly = false;
+    }
+    publishReportAccess();
+  }
+
+  function publishReportAccess() {
+    if (!Array.isArray(state.toolKeys)) {
+      window.kosReportAccess = null;
+      return;
+    }
+    var all = hasToolKey("reports");
+    window.kosReportAccess = {
+      all: all,
+      events: all || hasToolKey("reports.events"),
+      merch: all || hasToolKey("reports.merch"),
+      parades: all || hasToolKey("reports.parades"),
+      members: all || hasToolKey("reports.members"),
+      finance: all || hasToolKey("reports.finance")
+    };
+  }
+
+  function toolOrderFromKeys() {
+    publishReportAccess();
+    return OFFICER_TOOL_ORDER.filter(function (id) {
+      if (id === "hubChairDesk") return false;
+      if (id === "hubReports") {
+        var access = window.kosReportAccess || {};
+        return !!(access.all || access.events || access.merch || access.parades || access.members || access.finance);
+      }
+      var key = CARD_TOOL_KEY[id];
+      return !!key && hasToolKey(key);
+    });
+  }
+
+  function canSeeRolesAccess() {
+    if (Array.isArray(state.toolKeys)) return hasToolKey("roles_access");
+    return !!(state.officer || state.isChair || state.shopOnly || state.socialOnly || state.canAssignChairs);
+  }
+
+  function placeRolesAccess(toolOrder) {
+    toolOrder = toolOrder.filter(function (id) { return id !== "hubChairDesk" && id !== "hubRolesAccess"; });
+    if (!canSeeRolesAccess()) return toolOrder;
+    var afterDir = toolOrder.indexOf("hubOfficerDirectory");
+    if (afterDir !== -1) toolOrder.splice(afterDir + 1, 0, "hubRolesAccess");
+    else toolOrder.unshift("hubRolesAccess");
+    return toolOrder;
+  }
+
   function currentOfficerToolOrder() {
+    if (Array.isArray(state.toolKeys)) return toolOrderFromKeys();
     var toolOrder = OFFICER_TOOL_ORDER.slice();
     if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
       toolOrder = [];
@@ -9783,15 +9892,7 @@
     } else {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubOfficerDirectory"; });
     }
-    if (state.canAssignChairs) {
-      if (toolOrder.indexOf("hubChairDesk") === -1) {
-        var afterDir = toolOrder.indexOf("hubOfficerDirectory");
-        if (afterDir !== -1) toolOrder.splice(afterDir + 1, 0, "hubChairDesk");
-        else toolOrder.push("hubChairDesk");
-      }
-    } else {
-      toolOrder = toolOrder.filter(function (id) { return id !== "hubChairDesk"; });
-    }
+    toolOrder = toolOrder.filter(function (id) { return id !== "hubChairDesk"; });
     if (!state.officer || state.shopOnly || state.socialOnly) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
     }
@@ -9809,7 +9910,7 @@
       if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
       else toolOrder.push("hubEventOutreach");
     }
-    return toolOrder;
+    return placeRolesAccess(toolOrder);
   }
 
   function ensureOfficerDeskChrome() {
@@ -9945,6 +10046,9 @@
       if (id === "hubOfficerDirectory") {
         try { loadMemberDirectory(); } catch (eDir) {}
       }
+      if (id === "hubRolesAccess" && typeof window.kosRolesAccessOpen === "function") {
+        try { window.kosRolesAccessOpen(); } catch (eRolesOpen) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -10031,7 +10135,9 @@
     toolOrder.forEach(ensureOfficerToolCard);
     if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
     if (toolOrder.indexOf("hubOfficerDirectory") !== -1) paintMemberDirectoryShell();
-    if (toolOrder.indexOf("hubChairDesk") !== -1) paintChairDeskShell();
+    if (toolOrder.indexOf("hubRolesAccess") !== -1 && typeof window.kosRolesAccessPaint === "function") {
+      try { window.kosRolesAccessPaint(); } catch (eRolesPaint) {}
+    }
     if (toolOrder.indexOf("hubParadeGuests") !== -1) paintParadeGuestsShell();
 
     var cards = officerDeskCards();
@@ -10058,7 +10164,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubParadeGuests")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
@@ -10103,7 +10209,18 @@
     }
 
     var reports = officerReportDefs();
-    if (state.shopOnly && !state.socialOnly) {
+    if (Array.isArray(state.toolKeys)) {
+      var reportAccess = window.kosReportAccess || {};
+      if (!reportAccess.all) {
+        var groupOk = {
+          "Events & Attendance": !!reportAccess.events,
+          "Parade Readiness": !!reportAccess.parades,
+          "Membership": !!reportAccess.members,
+          "Dues & Finance": !!reportAccess.finance
+        };
+        reports = reports.filter(function (r) { return !!groupOk[r.cat]; });
+      }
+    } else if (state.shopOnly && !state.socialOnly) {
       reports = [];
     } else if (state.socialOnly) {
       var SOCIAL_REPORT_CATS = { "Events & Attendance": true };
@@ -10191,6 +10308,7 @@
   }
 
   window.kosRefreshOfficerDesk = wireOfficerDeskPicker;
+  window.kosEnsureOfficerToolCard = ensureOfficerToolCard;
 
 
   var hubBootStarted = false;
