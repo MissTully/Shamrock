@@ -6283,8 +6283,30 @@
   function syncVolunteerCapHint() {
     var el = document.getElementById("hubEventVolunteerCap");
     var hint = document.getElementById("hubEventVolunteerCapHint");
+    var typeEl = document.getElementById("hubEventType");
     if (!el || !hint) return;
+    var parade = !!(typeEl && typeEl.value === "parade");
+    var label = document.querySelector('label[for="hubEventVolunteerCap"]');
+    if (label) label.textContent = parade ? "Security volunteers needed" : "Volunteer slots";
+    el.placeholder = parade ? "No total" : "No cap";
     var raw = String(el.value || "").trim();
+    if (parade) {
+      if (raw === "") {
+        hint.textContent = "How many security volunteers this parade needs. Leave blank for no total. Shift sizes in Parade security cannot add up past this number, and signups stop when it is full. Change it here in Event Studio.";
+        return;
+      }
+      var pn = parseInt(raw, 10);
+      if (isNaN(pn) || pn < 0) {
+        hint.textContent = "Enter a whole number, or leave blank for no total.";
+        return;
+      }
+      if (pn === 0) {
+        hint.textContent = "Zero security volunteers. Members cannot sign up for security shifts on this parade.";
+        return;
+      }
+      hint.textContent = "This parade needs " + pn + " security volunteer" + (pn === 1 ? "" : "s") + ". Parade security shifts cannot add up to more than that, and signups stop when it is full. Change this number here in Event Studio.";
+      return;
+    }
     if (raw === "") {
       hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.";
       return;
@@ -7334,7 +7356,12 @@
     var volunteerCap = volunteerCapValue === "" ? null : parseInt(volunteerCapValue, 10);
     var dollars = ticketValue === "" ? null : Number(ticketValue);
     if (capacityValue !== "" && (isNaN(capacity) || capacity < 0)) { if (msg) msg.textContent = "Capacity must be a whole number."; return; }
-    if (volunteerCapValue !== "" && (isNaN(volunteerCap) || volunteerCap < 0)) { if (msg) msg.textContent = "Volunteer slots must be a whole number, or blank for no cap."; return; }
+    if (volunteerCapValue !== "" && (isNaN(volunteerCap) || volunteerCap < 0)) {
+      if (msg) msg.textContent = (value("hubEventType") === "parade")
+        ? "Security volunteers needed must be a whole number, or blank for no total."
+        : "Volunteer slots must be a whole number, or blank for no cap.";
+      return;
+    }
     if (ticketValue !== "" && (isNaN(dollars) || dollars < 0)) { if (msg) msg.textContent = "Ticket price must be zero or more."; return; }
     var guestCapValue = value("hubEventGuestCapacity");
     var guestCap = guestCapValue === "" ? null : parseInt(guestCapValue, 10);

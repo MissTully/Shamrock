@@ -105,7 +105,7 @@
     return "tel:" + digits;
   }
 
-  function spotsLeft(shift) {
+  function shiftSpots(shift) {
     if (!shift) return 0;
     if (Array.isArray(shift.signups)) {
       var used = 0;
@@ -116,6 +116,36 @@
     }
     if (shift.spots_left == null) return 0;
     return Math.max(0, Number(shift.spots_left) || 0);
+  }
+
+  function paradeFilledCount(parade) {
+    if (!parade) return 0;
+    if (parade.parade_filled != null && parade.parade_filled !== "") return Number(parade.parade_filled) || 0;
+    var n = 0;
+    (parade.shifts || []).forEach(function (shift) {
+      if (Array.isArray(shift.signups)) {
+        shift.signups.forEach(function (row) {
+          if (row && row.status === "signed_up") n += 1;
+        });
+      } else if (shift.capacity != null && shift.spots_left != null) {
+        n += Math.max(0, (Number(shift.capacity) || 0) - (Number(shift.spots_left) || 0));
+      }
+    });
+    return n;
+  }
+
+  function paradeCapLeft(parade) {
+    if (!parade || parade.volunteer_cap == null || parade.volunteer_cap === "") return null;
+    var cap = Number(parade.volunteer_cap);
+    if (isNaN(cap)) return null;
+    return Math.max(0, cap - paradeFilledCount(parade));
+  }
+
+  function spotsLeft(shift, parade) {
+    var left = shiftSpots(shift);
+    var paradeLeft = paradeCapLeft(parade);
+    if (paradeLeft == null) return left;
+    return Math.min(left, paradeLeft);
   }
 
   function spotsLabel(n) {
@@ -219,12 +249,16 @@
     if (!pickedShift || !findShift(parade, pickedShift)) {
       var open = null;
       shifts.forEach(function (shift) {
-        if (!open && shift.my_status !== "signed_up" && spotsLeft(shift) > 0) open = shift;
+        if (!open && shift.my_status !== "signed_up" && spotsLeft(shift, parade) > 0) open = shift;
       });
       pickedShift = String((open || shifts[0] || {}).id || "");
     }
     var shift = findShift(parade, pickedShift);
 
+    if (parade.volunteer_cap != null && parade.volunteer_cap !== "") {
+      html += '<p class="ps-spots">' + esc(String(paradeFilledCount(parade)) + " of " + String(parade.volunteer_cap)) +
+        " security volunteers filled for this parade.</p>";
+    }
     html += '<div class="ps-form hub-event-grid">';
     html += '<div><label for="psParade">Parade</label><select id="psParade">';
     parades.forEach(function (row) {
@@ -234,14 +268,14 @@
     html += "</select></div>";
     html += '<div><label for="psShift">Shift</label><select id="psShift">';
     shifts.forEach(function (row) {
-      var left = spotsLeft(row);
+      var left = spotsLeft(row, parade);
       var tag = row.my_status === "signed_up" ? " (signed up)" : (left === 0 ? " (full)" : "");
       html += '<option value="' + esc(row.id) + '"' + (shift && String(row.id) === String(shift.id) ? " selected" : "") + ">" +
         esc(row.label || "Shift") + esc(tag) + "</option>";
     });
     html += "</select></div>";
     if (shift) {
-      var leftNow = spotsLeft(shift);
+      var leftNow = spotsLeft(shift, parade);
       var phone = shift.my_status === "signed_up" && shift.my_phone ? shift.my_phone : (memberModel.phone || "");
       html += '<div class="wide"><p class="ps-spots" id="psSpots">' + esc(spotsLabel(leftNow)) + "</p>" +
         "<p class=\"ps-note\" style=\"margin:0;\">" + esc(shiftWhen(shift.starts_at, shift.ends_at)) +
@@ -476,13 +510,22 @@
       html += '<p class="empty">No security shifts yet. Add the first shift above.</p>';
     }
     parades.forEach(function (parade) {
+      var filled = paradeFilledCount(parade);
       html += '<h3 style="margin:16px 0 6px;">' + esc(parade.name || "Parade") + "</h3>";
+      if (parade.volunteer_cap == null || parade.volunteer_cap === "") {
+        html += '<p class="ps-note">No security volunteer total is set. Open Event Studio and set Security volunteers needed on this parade.</p>';
+      } else {
+        html += '<p class="ps-spots">' + esc(String(filled) + " of " + String(parade.volunteer_cap)) + " security volunteers filled</p>";
+        html += '<p class="ps-note">This number is Security volunteers needed in Event Studio. Change it there.</p>';
+      }
+      html += '<div class="ps-actions"><button type="button" class="btn" data-ps-open-studio="1">Open Event Studio</button></div>';
       (parade.shifts || []).forEach(function (shift) {
-        var left = spotsLeft(shift);
+        var onShift = shiftSpots(shift);
+        var left = spotsLeft(shift, parade);
         html += '<div class="hub-parade-guest-parade" style="margin:0 0 14px;">';
         html += "<p style=\"margin:0 0 6px;\"><b>" + esc(shift.label || "Shift") + "</b> · " +
           esc(shiftWhen(shift.starts_at, shift.ends_at)) + " · " +
-          esc(String((Number(shift.capacity) || 0) - left) + " of " + String(shift.capacity || 0)) +
+          esc(String((Number(shift.capacity) || 0) - onShift) + " of " + String(shift.capacity || 0)) +
           " · " + esc(spotsLabel(left)) + "</p>";
         if (shift.notes) html += '<p class="ps-note">' + esc(shift.notes) + "</p>";
         html += '<div class="ps-actions">' +
@@ -543,6 +586,18 @@
     host.querySelectorAll("[data-ps-delete]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         deleteShift(btn.getAttribute("data-ps-delete"));
+      });
+    });
+    host.querySelectorAll("[data-ps-open-studio]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var sel = document.getElementById("officerToolSelect");
+        if (!sel) return;
+        var has = Array.prototype.some.call(sel.options, function (opt) {
+          return opt.value === "tool:hubEventStudio";
+        });
+        if (!has) return;
+        sel.value = "tool:hubEventStudio";
+        if (sel.onchange) sel.onchange();
       });
     });
   }

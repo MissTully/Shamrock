@@ -13,6 +13,8 @@ const MEMBER_SHIFTS = {
       event_id: "santa",
       name: "SantaFest",
       start_time: "2026-12-05T18:00:00.000Z",
+      volunteer_cap: 8,
+      parade_filled: 7,
       shifts: [
         {
           id: "shift-stage",
@@ -20,7 +22,7 @@ const MEMBER_SHIFTS = {
           starts_at: "2026-12-05T16:00:00.000Z",
           ends_at: "2026-12-05T18:00:00.000Z",
           capacity: 6,
-          spots_left: 2,
+          spots_left: 5,
           notes: "Meet at the castle float for vest pickup.",
           my_status: "signed_up",
           my_phone: "(813) 555-0148"
@@ -67,6 +69,7 @@ const OFFICER_ROSTER = {
       event_id: "santa",
       name: "SantaFest",
       start_time: "2026-12-05T18:00:00.000Z",
+      volunteer_cap: 12,
       shifts: [
         {
           id: "shift-stage",
@@ -149,12 +152,13 @@ test("Member Hub security sign-up lists shifts, spots, and the member phone", as
   const card = page.locator("#hubParadeSecurityCard");
   await expect(card).toContainText("Your shifts");
   await expect(card).toContainText("Staging detail");
-  await expect(card).toContainText("4 spots left");
+  await expect(card).toContainText("7 of 8 security volunteers filled");
+  await expect(card).toContainText("1 spot left");
   await expect(card.locator("#psPhone")).toHaveValue("(813) 555-0148");
   await expect(card.locator("#psSignup")).toHaveText("Sign up");
   await expect(card).toContainText("No drinking while you are on duty.");
   await page.waitForTimeout(400);
-  await expect(card).toContainText("4 spots left");
+  await expect(card).toContainText("1 spot left");
   await shot(page, card, "parade-security-shifts-desktop.png");
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -200,6 +204,9 @@ test("Officer Desk parade security shows the roster and a tap-to-call phone", as
   await expect(card).toContainText("Cancelled");
   await expect(card.locator('a.ps-tel[href="tel:8135550142"]')).toHaveText("(813) 555-0142");
   await expect(card.locator("#psOffCsv")).toHaveText("Export CSV");
+  await expect(card).toContainText("2 of 12 security volunteers filled");
+  await expect(card).toContainText("Security volunteers needed in Event Studio");
+  await expect(card.locator("[data-ps-open-studio]")).toHaveText("Open Event Studio");
   await shot(page, card, "parade-security-officer-desktop.png");
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -207,6 +214,28 @@ test("Officer Desk parade security shows the roster and a tap-to-call phone", as
   await shot(page, card, "parade-security-officer-mobile.png");
   await expect(card.locator("#psOffSave")).toBeVisible();
   assertHealthy(expect, report, "parade security officer");
+});
+
+test("Event Studio parade field is Security volunteers needed", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page, { role: { officer: true, canManageEvents: true, toolKeys: ["event_studio"] } });
+  await page.locator('[data-hub-tab="officer"]').click();
+  await page.waitForSelector('.hub-officer-tile[data-tool="tool:hubEventStudio"]');
+  await page.locator('.hub-officer-tile[data-tool="tool:hubEventStudio"]').click();
+  await expect(page.locator("#hubEventType")).toBeVisible();
+  await expect(page.locator('label[for="hubEventVolunteerCap"]')).toHaveText("Volunteer slots");
+  await page.locator("#hubEventType").selectOption("parade");
+  await expect(page.locator('label[for="hubEventVolunteerCap"]')).toHaveText("Security volunteers needed");
+  await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("security volunteers");
+  await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("Event Studio");
+  await page.locator("#hubEventVolunteerCap").fill("12");
+  await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("needs 12 security volunteers");
+  const field = page.locator("#hubEventVolunteerCap").locator("xpath=..");
+  await shot(page, field, "event-studio-security-volunteers-desktop.png");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await field.scrollIntoViewIfNeeded();
+  await shot(page, field, "event-studio-security-volunteers-mobile.png");
+  assertHealthy(expect, report, "event studio security volunteers");
 });
 
 test("parades.html invites members to sign up and shows the SantaFest time", async ({ page }) => {

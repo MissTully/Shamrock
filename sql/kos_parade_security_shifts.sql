@@ -4,6 +4,13 @@
 -- Members pick a shift in the Member Hub. Officers with has_tool('parade_security')
 -- add shifts and read the roster (name, phone, email). Phones stay off public pages.
 --
+-- events.volunteer_cap is the parade security total when it is set (the Event
+-- Studio field Security volunteers needed). The sum of shift capacities cannot
+-- pass it, and active signups across every shift on that parade cannot pass it.
+-- A blank cap means no parade total. These rows live in parade_security_signups.
+-- They are not event_signups, so kos_guard_volunteer_cap does not count them
+-- and does not block them.
+--
 -- The tool is on the Committee Chair of Parade bundle, and on every title that
 -- already manages parades (the parade_guests bundle). Site admins and webmasters
 -- already pass has_tool for every tool, including this one, through kos_is_site_admin().
@@ -151,6 +158,9 @@ as $$
 declare
   v_cap integer;
   v_used integer;
+  v_event uuid;
+  v_parade_cap integer;
+  v_parade_used integer;
 begin
   if new.status is distinct from 'signed_up' then
     return new;
@@ -178,6 +188,28 @@ begin
 
   if v_used >= v_cap then
     raise exception 'That shift is full. Pick another time or check back if a spot opens.';
+  end if;
+
+  -- Parade total from Event Studio (events.volunteer_cap). Already signed-up
+  -- members updating a phone returned above, so they are not counted twice.
+  -- This does not read event_signups, so kos_guard_volunteer_cap is not involved.
+  select e.id, e.volunteer_cap
+    into v_event, v_parade_cap
+  from public.parade_security_shifts sh
+  join public.events e on e.id = sh.event_id
+  where sh.id = new.shift_id
+  for update of e;
+
+  if v_parade_cap is not null then
+    select count(*)::int into v_parade_used
+    from public.parade_security_signups u
+    join public.parade_security_shifts sh on sh.id = u.shift_id
+    where sh.event_id = v_event
+      and u.status = 'signed_up'
+      and u.id is distinct from new.id;
+    if v_parade_used >= v_parade_cap then
+      raise exception 'Security volunteers for this parade are filled. The total is set in Event Studio.';
+    end if;
   end if;
   return new;
 end;
@@ -212,6 +244,44 @@ create trigger kos_parade_security_touch_signups
   before update on public.parade_security_signups
   for each row
   execute function public.kos_parade_security_touch();
+
+-- Shift sizes cannot add up past events.volunteer_cap when that total is set.
+create or replace function public.kos_guard_parade_security_shift_total()
+returns trigger
+language plpgsql
+set search_path to 'public'
+as $$
+declare
+  v_cap integer;
+  v_sum integer;
+begin
+  select e.volunteer_cap into v_cap
+  from public.events e
+  where e.id = new.event_id
+  for update;
+
+  if v_cap is null then
+    return new;
+  end if;
+
+  select coalesce(sum(s.capacity), 0)::int into v_sum
+  from public.parade_security_shifts s
+  where s.event_id = new.event_id
+    and s.id is distinct from new.id;
+
+  if coalesce(v_sum, 0) + new.capacity > v_cap then
+    raise exception 'Shift capacities add up to more than the % security volunteers needed for this parade. Lower a shift, or raise Security volunteers needed in Event Studio.', v_cap;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists kos_guard_parade_security_shift_total on public.parade_security_shifts;
+create trigger kos_guard_parade_security_shift_total
+  before insert or update of capacity, event_id
+  on public.parade_security_shifts
+  for each row
+  execute function public.kos_guard_parade_security_shift_total();
 
 -- ---------------------------------------------------------------------------
 -- D. RLS. Writes go through the functions below.
@@ -275,6 +345,14 @@ begin
         'event_id', e.id,
         'name', e.name,
         'start_time', e.start_time,
+        'volunteer_cap', e.volunteer_cap,
+        'parade_filled', (
+          select count(*)::int
+          from public.parade_security_signups pu
+          join public.parade_security_shifts ps on ps.id = pu.shift_id
+          where ps.event_id = e.id
+            and pu.status = 'signed_up'
+        ),
         'shifts', coalesce((
           select jsonb_agg(jsonb_build_object(
             'id', s.id,
@@ -284,14 +362,29 @@ begin
             'capacity', s.capacity,
             'sort_order', s.sort_order,
             'notes', s.notes,
-            'spots_left', greatest(
-              s.capacity - (
-                select count(*)::int
-                from public.parade_security_signups u
-                where u.shift_id = s.id
-                  and u.status = 'signed_up'
+            'spots_left', least(
+              greatest(
+                s.capacity - (
+                  select count(*)::int
+                  from public.parade_security_signups u
+                  where u.shift_id = s.id
+                    and u.status = 'signed_up'
+                ),
+                0
               ),
-              0
+              case
+                when e.volunteer_cap is null then 2147483647
+                else greatest(
+                  e.volunteer_cap - (
+                    select count(*)::int
+                    from public.parade_security_signups u
+                    join public.parade_security_shifts ps on ps.id = u.shift_id
+                    where ps.event_id = e.id
+                      and u.status = 'signed_up'
+                  ),
+                  0
+                )
+              end
             ),
             'my_status', (
               select u.status
@@ -377,6 +470,17 @@ begin
       and lower(coalesce(e.status, 'published')) in ('published', 'live')
   ) then
     return jsonb_build_object('ok', false, 'message', 'That parade is not open for security sign-up.');
+  end if;
+
+  -- Already on the shift: change the phone only. Do not take another spot,
+  -- even when the shift or the parade total is full.
+  update public.parade_security_signups
+  set phone = v_phone
+  where shift_id = v_shift.id
+    and member_id = v_mid
+    and status = 'signed_up';
+  if found then
+    return jsonb_build_object('ok', true, 'message', 'Phone updated. The parade chairs have your number.');
   end if;
 
   insert into public.parade_security_signups (shift_id, member_id, phone, status)
@@ -466,6 +570,14 @@ begin
         'event_id', e.id,
         'name', e.name,
         'start_time', e.start_time,
+        'volunteer_cap', e.volunteer_cap,
+        'parade_filled', (
+          select count(*)::int
+          from public.parade_security_signups pu
+          join public.parade_security_shifts ps on ps.id = pu.shift_id
+          where ps.event_id = e.id
+            and pu.status = 'signed_up'
+        ),
         'shifts', coalesce((
           select jsonb_agg(jsonb_build_object(
             'id', s.id,
@@ -475,14 +587,29 @@ begin
             'capacity', s.capacity,
             'sort_order', s.sort_order,
             'notes', coalesce(s.notes, ''),
-            'spots_left', greatest(
-              s.capacity - (
-                select count(*)::int
-                from public.parade_security_signups u
-                where u.shift_id = s.id
-                  and u.status = 'signed_up'
+            'spots_left', least(
+              greatest(
+                s.capacity - (
+                  select count(*)::int
+                  from public.parade_security_signups u
+                  where u.shift_id = s.id
+                    and u.status = 'signed_up'
+                ),
+                0
               ),
-              0
+              case
+                when e.volunteer_cap is null then 2147483647
+                else greatest(
+                  e.volunteer_cap - (
+                    select count(*)::int
+                    from public.parade_security_signups u
+                    join public.parade_security_shifts ps on ps.id = u.shift_id
+                    where ps.event_id = e.id
+                      and u.status = 'signed_up'
+                  ),
+                  0
+                )
+              end
             ),
             'signups', coalesce((
               select jsonb_agg(jsonb_build_object(
@@ -537,6 +664,8 @@ declare
   v_notes text;
   v_used integer;
   v_id uuid;
+  v_parade_cap integer;
+  v_sum integer;
 begin
   if auth.uid() is null then
     return jsonb_build_object('ok', false, 'message', 'Sign in to edit security shifts.');
@@ -563,6 +692,24 @@ begin
   end if;
   if p_capacity is null or p_capacity < 1 or p_capacity > 500 then
     return jsonb_build_object('ok', false, 'message', 'Capacity needs to be at least 1.');
+  end if;
+
+  select e.volunteer_cap into v_parade_cap
+  from public.events e
+  where e.id = p_event_id
+  for update;
+  if v_parade_cap is not null then
+    select coalesce(sum(s.capacity), 0)::int into v_sum
+    from public.parade_security_shifts s
+    where s.event_id = p_event_id
+      and (p_id is null or s.id <> p_id);
+    if coalesce(v_sum, 0) + p_capacity > v_parade_cap then
+      return jsonb_build_object(
+        'ok', false,
+        'message', 'Those shift sizes add up to more than the ' || v_parade_cap ||
+          ' security volunteers needed for this parade. Lower a shift, or raise Security volunteers needed in Event Studio.'
+      );
+    end if;
   end if;
 
   if p_id is not null then
@@ -642,6 +789,7 @@ end;
 $$;
 
 revoke all on function public.kos_guard_parade_security_cap() from public, anon, authenticated;
+revoke all on function public.kos_guard_parade_security_shift_total() from public, anon, authenticated;
 revoke all on function public.kos_parade_security_touch() from public, anon, authenticated;
 
 revoke all on function public.member_parade_security_shifts() from public, anon;
