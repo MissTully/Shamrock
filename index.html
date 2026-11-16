@@ -269,7 +269,7 @@ simply love good music and a good party, there's a place for you at our table.</
 <span class="label" id="kreweMusicLabel">Tap for a tune &#9752;</span>
 </div>
 <script src="assets/krewe.js?v=20261012deadline1" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><audio id="failteAudio" src="assets/audio/100 thousand welcomes.mp3" preload="none"></audio><script>(function(){function wire(btnId,audioId){var btn=document.getElementById(btnId);var audio=document.getElementById(audioId);if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});}wire('craicDefBtn','craicAudio');wire('failteDefBtn','failteAudio');})();</script>
-<script src="assets/kos-calendar.js?v=20261030feature1"></script>
+<script src="assets/kos-calendar.js?v=20261116listday1"></script>
 
 <!-- EVENTS DATA -->
 <script type="module">
@@ -284,11 +284,19 @@ function liveFeatured(ev) {
   if (window.kosCalendar && typeof window.kosCalendar.isLiveFeatured === "function") return window.kosCalendar.isLiveFeatured(ev);
   return !!(ev && ev.is_featured);
 }
+function listLabel(ev) {
+  if (window.kosCalendar && typeof window.kosCalendar.eventListLabel === "function") {
+    return window.kosCalendar.eventListLabel(ev) || "";
+  }
+  return "";
+}
 (async () => {
-  const nowIso = new Date().toISOString();
+  const sinceIso = (window.kosCalendar && typeof window.kosCalendar.eventListSinceIso === "function")
+    ? window.kosCalendar.eventListSinceIso()
+    : new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
   const publicCols = "id, name, event_type, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, members_only, status, registration_closes_at";
   const featuredCols = publicCols + ", is_featured";
-  const upcoming = `start_time.gte.${nowIso},end_time.gte.${nowIso},start_time.is.null`;
+  const upcoming = `start_time.gte.${sinceIso},end_time.gte.${sinceIso},start_time.is.null`;
   let { data, error } = await supabase
     .from("v_public_events")
     .select(featuredCols)
@@ -315,6 +323,7 @@ function liveFeatured(ev) {
 
   list.innerHTML = "";
   const visible = data.filter((ev) => {
+    if (window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function" && !window.kosCalendar.eventStaysListed(ev)) return false;
     if (!window.kosCalendar || typeof window.kosCalendar.publicSignupAction !== "function") return true;
     return window.kosCalendar.publicSignupAction(ev) !== "hide";
   });
@@ -365,7 +374,7 @@ function liveFeatured(ev) {
       (featuredHere ? `<div class="type">Featured</div>` : "") +
       `<div class="type">${isIkc ? "Inter-Krewe Council" : esc(ev.event_type ?? "event")}${membersOnly ? " · Members only" : ""}</div>` +
       `<h3>${esc(ev.name)}</h3>` +
-      `<div class="meta">${when}${where ? " · " + esc(where) : ""}</div>` +
+      `<div class="meta">${when}${listLabel(ev) ? " · " + esc(listLabel(ev)) : ""}${where ? " · " + esc(where) : ""}</div>` +
       rsvp;
     list.appendChild(card);
   }
@@ -401,7 +410,7 @@ function liveFeatured(ev) {
       `<article class="featured-event-card">` +
       `<p class="kicker">Featured event</p>` +
       `<h3>${esc(featuredEv.name)}</h3>` +
-      `<p class="meta">${when}${where ? " · " + esc(where) : ""}</p>` +
+      `<p class="meta">${when}${listLabel(featuredEv) ? " · " + esc(listLabel(featuredEv)) : ""}${where ? " · " + esc(where) : ""}</p>` +
       rsvp +
       `</article>`;
     featureBand.hidden = false;

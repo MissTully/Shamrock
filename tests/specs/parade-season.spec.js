@@ -265,6 +265,78 @@ test("public signup action matches published events, not drafts, past dates, or 
   assertHealthy(expect, report, "public signup action");
 });
 
+test("events stay listed through the next Eastern day, then drop off", async ({ page }) => {
+  const report = watchPage(page);
+  await page.goto("/event-signup.html");
+  await page.waitForFunction(() => window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function");
+  const result = await page.evaluate(() => {
+    const cal = window.kosCalendar;
+    const social = {
+      name: "Shamrock Social",
+      source: "krewe",
+      status: "published",
+      event_type: "social",
+      start_time: "2026-11-16T22:00:00Z"
+    };
+    const during = new Date("2026-11-16T22:01:00Z");
+    const grace = new Date("2026-11-18T04:59:00Z");
+    const gone = new Date("2026-11-18T05:00:00Z");
+    const multi = {
+      name: "Weekend",
+      source: "krewe",
+      status: "published",
+      event_type: "social",
+      start_time: "2026-11-16T22:00:00Z",
+      end_time: "2026-11-18T01:00:00Z"
+    };
+    const withEnd = {
+      name: "Book Club",
+      source: "krewe",
+      status: "published",
+      event_type: "social",
+      start_time: "2026-11-16T22:00:00Z",
+      end_time: "2026-11-16T23:00:00Z"
+    };
+    return {
+      duringListed: cal.eventStaysListed(social, during),
+      duringAction: cal.publicSignupAction(social, during),
+      duringLabel: cal.eventListLabel(social, during),
+      duringClosed: cal.eventSignupClosed(social, during),
+      graceListed: cal.eventStaysListed(social, grace),
+      graceLabel: cal.eventListLabel(social, grace),
+      goneListed: cal.eventStaysListed(social, gone),
+      goneAction: cal.publicSignupAction(social, gone),
+      multiGrace: cal.eventStaysListed(multi, new Date("2026-11-19T04:59:00Z")),
+      multiGone: cal.eventStaysListed(multi, new Date("2026-11-19T05:00:00Z")),
+      endedLabel: cal.eventListLabel(withEnd, new Date("2026-11-16T23:01:00Z")),
+      before: cal.publicSignupAction(social, new Date("2026-11-16T21:00:00Z")),
+      dstGrace: cal.eventStaysListed(
+        { start_time: "2026-03-06T22:00:00Z", status: "published" },
+        new Date("2026-03-08T04:59:00Z")
+      ),
+      dstGone: cal.eventStaysListed(
+        { start_time: "2026-03-06T22:00:00Z", status: "published" },
+        new Date("2026-03-08T05:00:00Z")
+      )
+    };
+  });
+  expect(result.duringListed).toBe(true);
+  expect(result.duringAction).toBe("closed");
+  expect(result.duringLabel).toBe("Started");
+  expect(result.duringClosed).toBe(true);
+  expect(result.graceListed).toBe(true);
+  expect(result.graceLabel).toBe("Yesterday");
+  expect(result.goneListed).toBe(false);
+  expect(result.goneAction).toBe("hide");
+  expect(result.multiGrace).toBe(true);
+  expect(result.multiGone).toBe(false);
+  expect(result.endedLabel).toBe("Ended");
+  expect(result.before).toBe("rsvp");
+  expect(result.dstGrace).toBe(true);
+  expect(result.dstGone).toBe(false);
+  assertHealthy(expect, report, "listing window");
+});
+
 test("parade season shows Already RSVP'd instead of a fresh RSVP button", async ({ page }) => {
   const report = watchPage(page);
   await unlockMemberHub(page);

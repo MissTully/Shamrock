@@ -166,13 +166,14 @@
       }
     }
     var full = !!(ev && ev.is_full);
+    var closed = !!(ev && signupClosed(ev));
     if (fullNote) {
       fullNote.hidden = !full;
       fullNote.textContent = full ? "All guest spots for this parade are filled." : "";
     }
-    if (fields) fields.hidden = !ev || full;
+    if (fields) fields.hidden = !ev || full || closed;
     if (ageWrap) {
-      var need21 = !!(ev && ev.guest_requires_21 && !full);
+      var need21 = !!(ev && ev.guest_requires_21 && !full && !closed);
       ageWrap.hidden = !need21;
       if (!need21) {
         var age = $("pgAge21");
@@ -185,12 +186,34 @@
     updatePartySummary(ev, full);
     if (submit) {
       var left = ev && ev.spots_left != null ? Number(ev.spots_left) : 0;
-      submit.disabled = !ev || full || partySize() > left;
+      submit.disabled = !ev || full || closed || partySize() > left;
+      if (closed) submit.textContent = "Registration closed";
+      else if (submit.textContent === "Registration closed") submit.textContent = "Submit guest registration";
+    }
+    if (closed && fullNote) {
+      fullNote.hidden = false;
+      fullNote.textContent = "This parade has already started, so new guest registrations are closed.";
     }
   }
 
+  function staysListed(ev) {
+    if (global.kosCalendar && typeof global.kosCalendar.eventStaysListed === "function") {
+      return global.kosCalendar.eventStaysListed(ev);
+    }
+    return true;
+  }
+
+  function signupClosed(ev) {
+    if (global.kosCalendar && typeof global.kosCalendar.eventSignupClosed === "function") {
+      return global.kosCalendar.eventSignupClosed(ev);
+    }
+    if (!ev || !ev.start_time) return false;
+    var t = new Date(ev.start_time).getTime();
+    return !isNaN(t) && t <= Date.now();
+  }
+
   function renderEvents(list) {
-    events = Array.isArray(list) ? list : [];
+    events = (Array.isArray(list) ? list : []).filter(staysListed);
     var sel = $("pgParade");
     var empty = $("pgEmpty");
     var form = $("pgForm");
@@ -233,6 +256,10 @@
     var parade = selectedEvent();
     if (!parade) {
       if (msg) msg.textContent = "Please choose a parade.";
+      return;
+    }
+    if (signupClosed(parade)) {
+      if (msg) msg.textContent = "This parade has already started, so new guest registrations are closed.";
       return;
     }
     if (parade.is_full) {

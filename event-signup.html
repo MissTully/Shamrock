@@ -338,7 +338,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20261112dates1"></script>
+  <script src="assets/kos-calendar.js?v=20261116listday1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -426,6 +426,8 @@
       const when = date && !isNaN(date) ? dateStrFull(date) : "Date to be announced";
       const end = event.end_time ? new Date(event.end_time) : null;
       const until = end && !isNaN(end) ? " · ends " + timeStr(end) : "";
+      const featLabel = (window.kosCalendar && window.kosCalendar.eventListLabel)
+        ? window.kosCalendar.eventListLabel(event) : "";
       const payFeat = ticketCheckoutUrlFor(event);
       const price = event.ticket_price_cents != null ? "$" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
       const ticketBits = [event.ticket_label, price].filter(Boolean).join(" · ");
@@ -457,7 +459,7 @@
         : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">RSVP</a>');
       content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + '</div></div>' +
         '<div class="ft-text"><h2>' + esc(event.name || "Upcoming event") + '</h2>' +
-        '<p><b>' + esc(when + until) + '</b></p>' +
+        '<p><b>' + esc(when + until + (featLabel ? " · " + featLabel : "")) + '</b></p>' +
         '<p><b>Where:</b> ' + esc(publicWhere(event) || 'Address to be announced') + '</p>' +
         (membersOnlyFeat ? '<p><b>Members only.</b> ' + esc(membersOnlyLabel()) + '</p>' : '') +
         (closedFeat && !membersOnlyFeat ? '<p><b>Registration:</b> Closed</p>' : '') +
@@ -487,6 +489,8 @@
       strip.innerHTML = upcoming.map((ev) => {
         const d = new Date(ev.start_time);
         const when = !isNaN(d) ? (hasTime(d) ? dateStrShort(d) + ", " + timeStr(d) : dateStrShort(d)) : "Date TBD";
+        const prevLabel = (window.kosCalendar && window.kosCalendar.eventListLabel)
+          ? window.kosCalendar.eventListLabel(ev) : "";
         const pay = ticketCheckoutUrlFor(ev);
         const price = ev.ticket_price_cents != null ? "$" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
         const ticketBits = [ev.ticket_label, price].filter(Boolean).join(" · ");
@@ -517,7 +521,7 @@
           '<div class="ev-body">' +
           (featuredCard ? '<p class="ev-meta"><b>Featured</b></p>' : '') +
           '<h3>' + esc(ev.name) + '</h3>' +
-          '<p class="ev-meta"><b>When:</b> ' + esc(when) + '</p>' +
+          '<p class="ev-meta"><b>When:</b> ' + esc(when) + (prevLabel ? " · " + esc(prevLabel) : "") + '</p>' +
           '<p class="ev-meta"><b>Where:</b> ' + esc(publicWhere(ev) || 'Address to be announced') + '</p>' +
           (membersOnlyPrev ? '<p class="ev-meta"><b>Members only.</b> ' + esc(membersOnlyLabel()) + '</p>' : '') +
           (closedPrev && !membersOnlyPrev ? '<p class="ev-meta"><b>Registration:</b> Closed</p>' : '') +
@@ -633,7 +637,9 @@
         if (ev.start_time) opt.dataset.startTime = ev.start_time;
         if (ev.end_time) opt.dataset.endTime = ev.end_time;
         if (publicWhere(ev)) opt.dataset.location = publicWhere(ev);
-        if (isRegistrationClosed(ev)) opt.dataset.regClosed = "1";
+        const started = !!(window.kosCalendar && window.kosCalendar.eventHasStarted && window.kosCalendar.eventHasStarted(ev));
+        if (started) opt.dataset.started = "1";
+        if (isRegistrationClosed(ev) || started) opt.dataset.regClosed = "1";
         else if (ev.registration_closes_at) opt.dataset.regClosesAt = ev.registration_closes_at;
         if (ev.volunteer_cap != null && ev.volunteer_cap !== "") opt.dataset.volunteerCap = String(ev.volunteer_cap);
         if (ev.volunteer_slots_used != null && ev.volunteer_slots_used !== "") opt.dataset.volunteerSlotsUsed = String(ev.volunteer_slots_used);
@@ -739,7 +745,9 @@
           purchasedByWrap.style.display = "none";
           btn.textContent = "Registration closed";
           btn.disabled = true;
-          showMessage("Registration closed for this event. Existing RSVPs and tickets already purchased stay on file for officers.", "error");
+          showMessage(opt.dataset.started === "1"
+            ? "This event has already started, so new signups are closed."
+            : "Registration closed for this event. Existing RSVPs and tickets already purchased stay on file for officers.", "error");
           return;
         }
         // The "ticket already purchased" option only applies to attendees of ticketed events.
@@ -837,8 +845,13 @@
     // events list, so search engines can show rich results with dates,
     // locations, and ticket links — and it can never go stale.
     function injectEventSchema(events) {
-      const upcoming = (events || []).filter((ev) =>
-        ev.start_time && new Date(ev.start_time) >= new Date() && ev.status !== "cancelled");
+      const upcoming = (events || []).filter((ev) => {
+        if (String(ev.status || "").toLowerCase() === "cancelled" || !ev.start_time) return false;
+        if (window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function") {
+          return window.kosCalendar.eventStaysListed(ev);
+        }
+        return new Date(ev.start_time) >= new Date();
+      });
       if (!upcoming.length) return;
       const items = upcoming.map((ev) => {
         const item = {
@@ -959,19 +972,13 @@
       if (window.kosCalendar && typeof window.kosCalendar.eventVisibleOnDatesList === "function") {
         return window.kosCalendar.eventVisibleOnDatesList(ev, now);
       }
-      const start = ev && ev.date;
-      if (!start || isNaN(start.getTime())) return true;
+      const anchor = (ev && ev.end && !isNaN(ev.end.getTime())) ? ev.end : (ev && ev.date);
+      if (!anchor || isNaN(anchor.getTime())) return true;
       const today = nyFields(now);
-      const startP = nyFields(start);
-      const todayN = today.y * 10000 + (today.m + 1) * 100 + today.day;
-      const startN = startP.y * 10000 + (startP.m + 1) * 100 + startP.day;
-      if (startN >= todayN) return true;
-      if (!ev.end || isNaN(ev.end.getTime())) return false;
-      const endP = nyFields(ev.end);
-      const endN = endP.y * 10000 + (endP.m + 1) * 100 + endP.day;
-      if (endN > todayN) return true;
-      if (endN === todayN) return ev.end.getTime() >= now.getTime();
-      return false;
+      const last = nyFields(anchor);
+      const todayUtc = Date.UTC(today.y, today.m, today.day);
+      const lastUtc = Date.UTC(last.y, last.m, last.day);
+      return todayUtc < lastUtc + 2 * 86400000;
     }
 
     function buildCalendar(events) {
@@ -1043,7 +1050,9 @@
       const ticketPurchased = !volunteering && selected && selected.dataset.redirect &&
         document.getElementById("haveTicket").checked;
       if (selected && selected.dataset.regClosed === "1") {
-        showMessage("Registration closed for this event. Existing RSVPs and tickets already purchased stay on file for officers.", "error");
+        showMessage(selected.dataset.started === "1"
+          ? "This event has already started, so new signups are closed."
+          : "Registration closed for this event. Existing RSVPs and tickets already purchased stay on file for officers.", "error");
         return;
       }
       if (volunteering && selected && selected.dataset.volunteerCap != null && selected.dataset.volunteerCap !== "") {

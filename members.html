@@ -3615,27 +3615,39 @@
       }
       return s;
     }
+    function cupStaysListed(ev){
+      if(window.kosCalendar && typeof window.kosCalendar.eventStaysListed==="function") return window.kosCalendar.eventStaysListed(ev);
+      return !!(ev && ev.start_time && new Date(ev.start_time).getTime()>=Date.now());
+    }
+    function cupSignupClosed(ev){
+      if(window.kosCalendar && typeof window.kosCalendar.eventSignupClosed==="function") return window.kosCalendar.eventSignupClosed(ev);
+      return !!(ev && ev.start_time && new Date(ev.start_time).getTime()<=Date.now());
+    }
     async function renderCupEvents(){
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Fetching the season calendar…</p>';
+      const sinceIso=(window.kosCalendar && typeof window.kosCalendar.eventListSinceIso==="function")
+        ? window.kosCalendar.eventListSinceIso()
+        : new Date(Date.now()-3*24*60*60*1000).toISOString();
+      const cupWindow=`start_time.gte.${sinceIso},end_time.gte.${sinceIso}`;
       let evs = await sb.from("events")
         .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
-        .gte("start_time", new Date().toISOString())
+        .or(cupWindow)
         .order("start_time",{ascending:true})
-        .limit(24);
+        .limit(60);
       if(evs.error){
         evs = await sb.from("events")
           .select("id,name,description,start_time,end_time,location,status,source,external_url")
-          .gte("start_time", new Date().toISOString())
+          .or(cupWindow)
           .order("start_time",{ascending:true})
-          .limit(24);
+          .limit(60);
       }
       if(evs.error){ setConn(false); box.innerHTML='<p class="msg error">Could not load events just now. Try again in a moment.</p>'; return; }
       setConn(true);
       const list=(evs.data||[]).filter(function(e){
         const st=String(e.status||"published").toLowerCase();
-        return st==="published"||st==="live";
-      });
+        return (st==="published"||st==="live") && cupStaysListed(e);
+      }).slice(0,24);
       let html='<div class="cup-remind">📣 <div><b>Don’t let easy Clovers pass you by!</b> Every RSVP is an automatic <b>+5 🍀</b> and showing up earns the real points. Check back here, or browse the full calendar on the <a href="event-signup.html">Events page</a>.</div></div>';
       if(!list.length){
         html+='<p class="empty">No upcoming events on the calendar just now. New ones land here as soon as officers post them - keep an eye on the <a href="event-signup.html">Events page</a>.</p>';
@@ -3657,14 +3669,18 @@
           detailBits.push('<div class="ce-detail">'+facts.join("<br>")+'</div>');
           if(ev.flyer_url) detailBits.push('<div class="ce-detail"><a href="'+E(ev.flyer_url)+'" target="_blank" rel="noopener">Open the event flyer ↗</a></div>');
           const rsvpHref="event-signup.html?event="+encodeURIComponent(ev.id||"");
-          let btns='<a class="ce-rsvp" href="'+rsvpHref+'">🍀 RSVP · +5 Clovers</a>';
-          if(ev.ticket_payment_url) btns+='<a class="ce-reg" href="'+E(ev.ticket_payment_url)+'" target="_blank" rel="noopener">🎟️ Buy tickets / register ↗</a>';
+          const cupLabel=(window.kosCalendar && window.kosCalendar.eventListLabel) ? window.kosCalendar.eventListLabel(ev) : "";
+          const cupClosed=cupSignupClosed(ev);
+          let btns=cupClosed
+            ? '<span class="ce-rsvp" aria-disabled="true">Registration closed'+(cupLabel?(" · "+E(cupLabel)):"")+'</span>'
+            : '<a class="ce-rsvp" href="'+rsvpHref+'">🍀 RSVP · +5 Clovers</a>';
+          if(!cupClosed && ev.ticket_payment_url) btns+='<a class="ce-reg" href="'+E(ev.ticket_payment_url)+'" target="_blank" rel="noopener">🎟️ Buy tickets / register ↗</a>';
           else if(ev.external_url) btns+='<a class="ce-reg" href="'+E(ev.external_url)+'" target="_blank" rel="noopener">🔗 Event page ↗</a>';
           return '<div class="cup-event"><div class="ce-top">'+
             cupDateChip(ev.start_time)+
             '<div style="flex:1;min-width:200px;">'+
             '<div class="ce-nm">'+E(ev.name||"Krewe event")+(ev.members_only?' <span class="cup-st">members only</span>':'')+'</div>'+
-            '<div class="ce-meta">'+E(cupWhen(ev))+(where?(" · "+E(where)):"")+'</div>'+
+            '<div class="ce-meta">'+E(cupWhen(ev))+(cupLabel?(" · "+E(cupLabel)):"")+(where?(" · "+E(where)):"")+'</div>'+
             '<div class="ce-hint">'+(String(ev.source||"").toLowerCase()==="ikc"?"+5 🍀 to RSVP · +20 🍀 when you claim attendance":"+5 🍀 to RSVP · +20 🍀 when you attend")+'</div>'+
             '<details><summary>View details</summary>'+detailBits.join("")+'</details>'+
             '<div class="ce-btns">'+btns+'</div>'+
@@ -4747,14 +4763,14 @@
 
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
-<script src="assets/kos-calendar.js?v=20261030feature1"></script>
+<script src="assets/kos-calendar.js?v=20261116listday1"></script>
 <script src="assets/kos-roles-access-rules.js?v=20261114roles1" defer></script>
 <script src="assets/kos-roles-access.js?v=20261114roles1" defer></script>
-<script src="assets/members-desk.js?v=20261114roles1" defer></script>
+<script src="assets/members-desk.js?v=20261116listday1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
-  <script src="assets/kos-event-studio.js?v=20261112paradeguest1" defer></script>
+  <script src="assets/kos-event-studio.js?v=20261116listday1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20261112shopcart1" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
   <script src="assets/kos-reports.js?v=20261114roles1" defer></script>
