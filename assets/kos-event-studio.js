@@ -743,6 +743,12 @@
 
   function featureResultMessage(event, on) {
     if (!on) return "Removed from the public featured spot.";
+    if (window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function") {
+      if (!window.kosCalendar.eventStaysListed(event)) {
+        return "Featured. This event is past the public listing window, so it will not be highlighted on the public site.";
+      }
+      return "Featured on the public site.";
+    }
     if (eventHasEnded(event)) return "Featured. This event has already ended, so it will not be highlighted on the public site.";
     return "Featured on the public site.";
   }

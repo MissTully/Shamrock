@@ -563,7 +563,8 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js?v=20261112marchpromo2" defer></script>
-  <script src="assets/kos-parade-guests.js?v=20261112marchpromo2" defer></script>
+  <script src="assets/kos-calendar.js?v=20261116listday1"></script>
+  <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -647,6 +648,13 @@
     function marchCardRank(card, now) {
       const start = cardStartMs(card);
       if (start == null) return 1;
+      if (window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function") {
+        const ev = {
+          start_time: card.getAttribute("data-start"),
+          end_time: card.getAttribute("data-end") || ""
+        };
+        return window.kosCalendar.eventStaysListed(ev, new Date(now)) ? 0 : 2;
+      }
       return start >= now ? 0 : 2;
     }
 
@@ -719,8 +727,9 @@
     function paradeCardHtml(ev) {
       const d = ev.start_time ? new Date(ev.start_time) : null;
       const startAttr = ev.start_time ? ' data-start="' + esc(ev.start_time) + '"' : "";
+      const endAttr = ev.end_time ? ' data-end="' + esc(ev.end_time) + '"' : "";
       const blurb = ev.description || "March with Tampa's original kilted krewe. Members RSVP in the Member Hub.";
-      return '<article class="parade-card ev-card"' + startAttr + ">" +
+      return '<article class="parade-card ev-card"' + startAttr + endAttr + ">" +
         cardMedia(ev) +
         '<div class="mo">' + esc(monthLabel(d, ev)) + "</div>" +
         "<h3>" + esc(ev.name || "Krewe parade") + "</h3>" +

@@ -340,20 +340,141 @@
     return "";
   }
 
+  function clock(now) {
+    return now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+  }
+
+  function instant(value) {
+    if (!value) return null;
+    var d = value instanceof Date ? value : new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function nyParts(value) {
+    var d = instant(value);
+    if (!d) return null;
+    var parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(d);
+    function pick(type) {
+      var i, part = null;
+      for (i = 0; i < parts.length; i++) if (parts[i].type === type) part = parts[i];
+      if (!part) return 0;
+      if (type === "hour" && part.value === "24") return 0;
+      return Number(part.value);
+    }
+    return { y: pick("year"), m: pick("month"), d: pick("day"), h: pick("hour"), min: pick("minute"), s: pick("second") };
+  }
+
+  function ymdAdd(y, m, d, days) {
+    var utc = new Date(Date.UTC(y, m - 1, d));
+    utc.setUTCDate(utc.getUTCDate() + days);
+    return { y: utc.getUTCFullYear(), m: utc.getUTCMonth() + 1, d: utc.getUTCDate() };
+  }
+
+  function nyOffsetMs(date) {
+    var p = nyParts(date);
+    if (!p) return 0;
+    return Date.UTC(p.y, p.m - 1, p.d, p.h, p.min, p.s) - date.getTime();
+  }
+
+  // Midnight at the start of a calendar day in America/New_York.
+  function nyMidnight(y, m, d) {
+    var guess = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+    var adjusted = new Date(guess.getTime() - nyOffsetMs(guess));
+    return new Date(guess.getTime() - nyOffsetMs(adjusted));
+  }
+
+  // Last instant that counts for the listing window: end_time when set
+  // (including multi-day events), otherwise start_time.
+  function eventAnchor(ev) {
+    if (!ev) return null;
+    return instant(ev.end_time || ev.end) || instant(ev.start_time || ev.date);
+  }
+
+  // Keep an event through 11:59 PM America/New_York on the day after its
+  // last day. The cutoff is midnight at the start of the day two days later.
+  function eventListCutoff(ev) {
+    var anchor = eventAnchor(ev);
+    if (!anchor) return null;
+    var p = nyParts(anchor);
+    var day = ymdAdd(p.y, p.m, p.d, 2);
+    return nyMidnight(day.y, day.m, day.d);
+  }
+
+  function eventStaysListed(ev, now) {
+    now = clock(now);
+    if (!ev) return false;
+    var cutoff = eventListCutoff(ev);
+    if (!cutoff) return true;
+    return now.getTime() < cutoff.getTime();
+  }
+
+  function eventHasStarted(ev, now) {
+    now = clock(now);
+    var start = instant(ev && (ev.start_time || ev.date));
+    if (!start) return false;
+    return start.getTime() <= now.getTime();
+  }
+
+  // New signups stop once the event has started or its registration
+  // deadline has passed. Listing the event for the rest of the day, and
+  // the day after, does not keep the RSVP button open.
+  function eventSignupClosed(ev, now) {
+    now = clock(now);
+    if (!ev) return true;
+    if (eventHasStarted(ev, now)) return true;
+    var end = instant(ev.end_time || ev.end);
+    if (end && end.getTime() <= now.getTime()) return true;
+    if (ev.registration_closes_at) {
+      var closes = instant(ev.registration_closes_at);
+      if (closes && now.getTime() >= closes.getTime()) return true;
+    }
+    return false;
+  }
+
+  function eventListLabel(ev, now) {
+    now = clock(now);
+    if (!ev || !eventStaysListed(ev, now) || !eventHasStarted(ev, now)) return "";
+    var anchor = eventAnchor(ev);
+    if (!anchor) return "";
+    var last = nyParts(anchor);
+    var today = nyParts(now);
+    var lastN = last.y * 10000 + last.m * 100 + last.d;
+    var todayN = today.y * 10000 + today.m * 100 + today.d;
+    if (lastN < todayN) return "Yesterday";
+    var end = instant(ev.end_time || ev.end);
+    if (end && end.getTime() <= now.getTime()) return "Ended";
+    return "Started";
+  }
+
+  // Loose lower bound for list queries. The client filter is the real cutoff.
+  // Three days covers the grace day plus a timezone and daylight-saving cushion.
+  function eventListSinceIso(now) {
+    now = clock(now);
+    return new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  }
+
   function publicSignupAction(ev, now) {
-    now = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+    now = clock(now);
     if (!ev) return "hide";
     var status = String(ev.status || "").toLowerCase();
     if (status !== "published" && status !== "live") return "hide";
     var start = ev.start_time ? new Date(ev.start_time) : null;
     if (!start || isNaN(start.getTime())) return "hide";
-    var end = ev.end_time ? new Date(ev.end_time) : null;
-    var stillOn = end && !isNaN(end.getTime()) ? end.getTime() >= now.getTime() : start.getTime() >= now.getTime();
-    if (!stillOn) return "hide";
+    if (!eventStaysListed(ev, now)) return "hide";
     if (String(ev.source || "").toLowerCase() === "ikc") return "ikc";
     if (String(ev.event_type || "").toLowerCase() === "parade") {
       return ev.members_only ? "parade-members" : "parade";
     }
+    if (eventHasStarted(ev, now)) return "closed";
     if (ev.members_only) return "members";
     if (ev.registration_closes_at) {
       var closes = new Date(ev.registration_closes_at);
@@ -382,38 +503,10 @@
     return start.getTime() < now.getTime();
   }
 
-  // Dates to Remember (and similar rolling lists): keep an event until its
-  // end time, or through the end of its start day in America/New_York when
-  // there is no later end time. Undated events stay visible.
+  // Dates to Remember uses the same America/New_York window as the other
+  // upcoming lists. Undated events stay visible.
   function eventVisibleOnDatesList(ev, now) {
-    now = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
-    if (!ev) return false;
-    var startVal = ev.start_time || ev.date;
-    if (!startVal) return true;
-    var start = startVal instanceof Date ? startVal : new Date(startVal);
-    if (isNaN(start.getTime())) return true;
-    function ymd(d) {
-      var parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit"
-      }).formatToParts(d);
-      function pick(type) {
-        var i, part = null;
-        for (i = 0; i < parts.length; i++) if (parts[i].type === type) part = parts[i];
-        return part ? Number(part.value) : 0;
-      }
-      return pick("year") * 10000 + pick("month") * 100 + pick("day");
-    }
-    var today = ymd(now);
-    var startDay = ymd(start);
-    if (startDay >= today) return true;
-    var endVal = ev.end_time || ev.end;
-    if (!endVal) return false;
-    var end = endVal instanceof Date ? endVal : new Date(endVal);
-    if (isNaN(end.getTime())) return false;
-    var endDay = ymd(end);
-    if (endDay > today) return true;
-    if (endDay === today) return end.getTime() >= now.getTime();
-    return false;
+    return eventStaysListed(ev, now);
   }
 
   function isLiveFeatured(ev, now) {
@@ -421,7 +514,7 @@
     var status = String(ev.status || "published").toLowerCase();
     if (status === "cancelled" || status === "draft") return false;
     if (ev.is_public === false) return false;
-    return !eventHasEnded(ev, now);
+    return eventStaysListed(ev, now);
   }
 
   window.kosCalendar = {
@@ -437,6 +530,11 @@
     publicSignupAction: publicSignupAction,
     signupDropdownAction: signupDropdownAction,
     eventHasEnded: eventHasEnded,
+    eventHasStarted: eventHasStarted,
+    eventSignupClosed: eventSignupClosed,
+    eventStaysListed: eventStaysListed,
+    eventListLabel: eventListLabel,
+    eventListSinceIso: eventListSinceIso,
     eventVisibleOnDatesList: eventVisibleOnDatesList,
     isLiveFeatured: isLiveFeatured
   };
