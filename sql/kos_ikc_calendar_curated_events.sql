@@ -196,11 +196,11 @@ where coalesce(source, 'krewe') = 'krewe'
   and (start_time at time zone 'America/New_York')::date = date '2026-10-24';
 
 update public.events
-set start_time = timestamptz '2026-12-05 17:00:00-05',
-    end_time = timestamptz '2026-12-05 21:00:00-05',
+set start_time = timestamptz '2026-12-05 13:00:00-05',
+    end_time = timestamptz '2026-12-05 17:00:00-05',
     location = 'Downtown Tampa, FL',
-    description = 'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. Shamrock marches about 5:00–9:00 PM. Exact step-off and staging post on the Member Hub closer to the date.',
-    notes = 'Public step-off times are approximate until Member Hub staging is posted. Add the private staging address in Event Studio. Never put a street address in the public teaser.'
+    description = 'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. It runs Saturday, December 5, 2026, from 1:00 to 5:00 PM ET, with a 1:00 PM step-off at Morgan and Madison and an end at Ashley and Cass. Krewe staging time is still to be announced.',
+    notes = 'Step-off is 1:00 PM at Morgan and Madison. The parade ends at Ashley and Cass. Krewe staging time is still to be announced. Add the private staging address in Event Studio. Never put a street address in the public teaser.'
 where coalesce(source, 'krewe') = 'krewe'
   and event_type = 'parade'
   and name = 'SantaFest'

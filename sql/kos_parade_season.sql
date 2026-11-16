@@ -787,8 +787,8 @@ begin
     select * from (values
       (
         'SantaFest',
-        'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. Shamrock marches about 5:00–9:00 PM. Exact step-off and staging post on the Member Hub closer to the date.',
-        timestamp '2026-12-05 17:00:00',
+        'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. It runs Saturday, December 5, 2026, from 1:00 to 5:00 PM ET, with a 1:00 PM step-off at Morgan and Madison and an end at Ashley and Cass. Krewe staging time is still to be announced.',
+        timestamp '2026-12-05 13:00:00',
         'Downtown Tampa, FL',
         'https://www.friendsoftamparec.org/santa-fest--tree-lighting.html',
         'assets/img/parades/santafest.webp',
@@ -852,6 +852,18 @@ begin
       'Seeded parade-season marketing card. Add the private staging address in Event Studio. Never put a street address in the public teaser.'
     );
   end loop;
+
+  update public.events
+  set start_time = timestamp '2026-12-05 13:00:00' at time zone 'America/New_York',
+      end_time = timestamp '2026-12-05 17:00:00' at time zone 'America/New_York',
+      location = 'Downtown Tampa, FL',
+      description = 'Tampa''s downtown holiday kickoff parade, a festive start to the krewe''s marching season. It runs Saturday, December 5, 2026, from 1:00 to 5:00 PM ET, with a 1:00 PM step-off at Morgan and Madison and an end at Ashley and Cass. Krewe staging time is still to be announced.',
+      notes = 'Step-off is 1:00 PM at Morgan and Madison. The parade ends at Ashley and Cass. Krewe staging time is still to be announced. Add the private staging address in Event Studio. Never put a street address in the public teaser.'
+  where event_type = 'parade'
+    and coalesce(source, 'krewe') = 'krewe'
+    and name = 'SantaFest'
+    and start_time >= timestamptz '2026-12-05 00:00:00-05'
+    and start_time < timestamptz '2026-12-06 00:00:00-05';
 
   -- Attach castle-float card art to existing Shamrock marches that have no flyer yet.
   update public.events e

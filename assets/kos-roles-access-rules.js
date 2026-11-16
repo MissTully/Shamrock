@@ -11,7 +11,7 @@
 
   var FULL = [
     "member_contacts", "volunteer_inquiries", "approvals", "lockers",
-    "event_studio", "parade_guests", "event_outreach", "shop_studio",
+    "event_studio", "parade_guests", "parade_security", "event_outreach", "shop_studio",
     "qr_studio", "doc_studio", "reports", "reports.events", "reports.parades",
     "reports.members", "all_krewe", "email_members", "roles_access"
   ];
@@ -33,6 +33,7 @@
     { key: "approvals", label: "Approvals", section: "Approvals" },
     { key: "event_studio", label: "Event Studio", section: "Events" },
     { key: "parade_guests", label: "Parade guests", section: "Events" },
+    { key: "parade_security", label: "Parade security", section: "Events" },
     { key: "event_outreach", label: "Event outreach", section: "Events" },
     { key: "qr_studio", label: "QR Code Studio", section: "Events" },
     { key: "doc_studio", label: "Document Studio", section: "Documents" },
