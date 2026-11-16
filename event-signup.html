@@ -61,6 +61,15 @@
     display:block; white-space:pre-wrap; overflow-wrap:anywhere;}
   .ev-card .ev-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
   #featured-event-content.feature{align-items:start;}
+  #featured-event[hidden]{display:none !important;}
+  .featured-skel{
+    border-radius:12px;
+    background:linear-gradient(90deg, rgba(168,128,28,.18), rgba(255,252,245,.95), rgba(168,128,28,.18));
+    background-size:200% 100%;
+    min-height:280px;
+  }
+  .ft-text .featured-skel.skel-line{min-height:16px;margin:0 0 12px;}
+  .ft-text .featured-skel.skel-line.short{width:62%;}
   .ev-card.is-featured{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(20,83,45,.12), var(--shadow);}
   .feature .ft-text, .feature .ft-media{min-width:0;}
   .feature .ft-text{overflow:visible;}
@@ -128,29 +137,31 @@
     </div>
   </nav>
 
-  <!-- UPCOMING EVENT PREVIEWS: full details + scrolling images -->
+  <!-- FEATURED EVENT stays above the upcoming grid. The grid used to be first in
+       the page but hidden, so unhiding it pushed this block off the top. -->
+  <section class="wrap" id="featured-event" style="padding-top:28px;" aria-busy="true">
+    <div class="section-title">
+      <h2 id="featured-event-title">Featured Event</h2>
+      <p class="sub" id="featured-event-sub">Loading the featured event</p>
+    </div>
+    <div class="banner-flourish" aria-hidden="true"></div>
+    <div class="feature" id="featured-event-content">
+      <div class="ft-media" aria-hidden="true"><div class="featured-skel"></div></div>
+      <div class="ft-text" aria-hidden="true">
+        <div class="featured-skel skel-line"></div>
+        <div class="featured-skel skel-line short"></div>
+        <div class="featured-skel skel-line"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPCOMING EVENT PREVIEWS sit under the featured event -->
   <section class="wrap ev-strip-wrap" id="event-previews" style="padding-top:28px;" hidden>
     <div class="section-title">
       <h2>Upcoming Krewe Events</h2>
       <p class="sub">Full details and flyers for every upcoming public Krewe event</p>
     </div>
     <div class="ev-strip" id="eventPreviewStrip" aria-label="Upcoming event previews"></div>
-  </section>
-
-  <!-- FEATURED EVENT: earliest published public flyer -->
-  <section class="wrap" id="featured-event" style="padding-top:28px;">
-    <div class="section-title">
-      <h2 id="featured-event-title">Featured Event</h2>
-      <p class="sub" id="featured-event-sub">The next Krewe event with a flyer</p>
-    </div>
-    <div class="banner-flourish" aria-hidden="true"></div>
-    <div class="feature" id="featured-event-content">
-      <div class="ft-text">
-        <h2>Event flyers are coming soon</h2>
-        <p>We’ll feature the next public Krewe event here as soon as its flyer is ready.</p>
-        <a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a>
-      </div>
-    </div>
   </section>
 
   <div class="form-stage">
@@ -338,7 +349,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js" defer></script>
-  <script src="assets/kos-calendar.js?v=20261116listday1"></script>
+  <script src="assets/kos-calendar.js?v=20261116flyer1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -411,17 +422,30 @@
       return "Members only. Sign in for details and address.";
     }
 
+    function bindFlyerFallback(root) {
+      if (!root) return;
+      root.querySelectorAll("img.featured-flyer").forEach((img) => {
+        img.addEventListener("error", function onFlyerError() {
+          img.removeEventListener("error", onFlyerError);
+          const full = img.getAttribute("data-full");
+          if (full && img.getAttribute("src") !== full) img.src = full;
+        });
+      });
+    }
+
     function renderFeaturedEvent(event, officerPinned) {
+      const section = document.getElementById("featured-event");
       const title = document.getElementById("featured-event-title");
       const sub = document.getElementById("featured-event-sub");
       const content = document.getElementById("featured-event-content");
       if (!title || !sub || !content) return;
+      if (section) section.setAttribute("aria-busy", "false");
       if (!event) {
-        title.textContent = "Featured Event";
-        sub.textContent = "The next public Krewe event";
-        content.innerHTML = '<div class="ft-text"><h2>No upcoming events yet</h2><p>Check back soon for the next Krewe gathering.</p><a class="btn btn-primary" href="#rsvpForm">☘ View RSVP options</a></div>';
+        if (section) section.hidden = true;
+        content.innerHTML = "";
         return;
       }
+      if (section) section.hidden = false;
       const date = event.start_time ? new Date(event.start_time) : null;
       const when = date && !isNaN(date) ? dateStrFull(date) : "Date to be announced";
       const end = event.end_time ? new Date(event.end_time) : null;
@@ -434,10 +458,13 @@
       let media = "";
       if (event.flyer_url) {
         const isPdf = /\.pdf(?:$|[?#])/i.test(event.flyer_url);
+        const display = !isPdf && window.kosCalendar && typeof window.kosCalendar.flyerDisplayUrl === "function"
+          ? window.kosCalendar.flyerDisplayUrl(event.flyer_url, 900)
+          : event.flyer_url;
         media = isPdf
           ? '<object data="' + esc(event.flyer_url) + '" type="application/pdf" style="display:block;width:100%;min-height:420px;border:0;"></object>' +
             '<p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open flyer PDF ↗</a></p>'
-          : '<img src="' + esc(event.flyer_url) + '" alt="Image for ' + esc(event.name) + '" loading="lazy" style="display:block;width:100%;height:auto;" />' +
+          : '<img class="featured-flyer" src="' + esc(display) + '" data-full="' + esc(event.flyer_url) + '" alt="Flyer for ' + esc(event.name) + '" fetchpriority="high" style="display:block;width:100%;height:auto;" />' +
             '<p style="text-align:center;margin:10px 0 0;"><a class="btn" href="' + esc(event.flyer_url) + '" target="_blank" rel="noopener">Open image ↗</a></p>';
       } else {
         media = '<div style="display:grid;place-items:center;min-height:220px;padding:24px;background:linear-gradient(160deg,#1a3a24,#0d1f14);color:#f5e6b8;border-radius:12px;font-family:var(--display);text-align:center;">Event image coming soon<br><small style="font-family:var(--fancy);font-style:italic;opacity:.85;">Officers can upload in Event Studio</small></div>';
@@ -448,7 +475,11 @@
       const membersOnlyFeat = !!event.members_only;
       const featAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
         ? window.kosCalendar.publicSignupAction(event) : "";
-      const ctaFeat = (featAction === "members" || membersOnlyFeat)
+      const ctaFeat = (featAction === "parade" || featAction === "parade-members")
+        ? (featAction === "parade-members"
+          ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
+          : '<a class="btn btn-primary" href="parades.html">Parade details</a>')
+        : (featAction === "members" || membersOnlyFeat)
         ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
         : (featAction === "closed" || closedFeat)
         ? '<a class="btn" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">Registration closed</a>'
@@ -467,6 +498,7 @@
         (event.description ? '<p class="feat-desc">' + esc(event.description) + '</p>' : '<p class="feat-desc">Join the Krewe of Shamrock. Details are in RSVP below.</p>') +
         '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + ctaFeat +
         '<a class="btn" href="#event-previews">Browse all upcoming</a></div></div>';
+      bindFlyerFallback(content);
     }
 
     function renderEventPreviews(events) {
@@ -833,9 +865,11 @@
         const action = String(ev.event_type || "").toLowerCase() === "parade" ? "parade" : "rsvp";
         return !!dropdownActions[action];
       });
-      const pinned = signupEvents.find((ev) => window.kosCalendar && window.kosCalendar.isLiveFeatured && window.kosCalendar.isLiveFeatured(ev)) || null;
-      const featured = pinned || signupEvents[0] || null;
-      renderFeaturedEvent(featured, !!pinned);
+      const featured = (window.kosCalendar && typeof window.kosCalendar.pickFeaturedEvent === "function")
+        ? window.kosCalendar.pickFeaturedEvent(data)
+        : null;
+      const pinned = !!(featured && window.kosCalendar.isLiveFeatured && window.kosCalendar.isLiveFeatured(featured));
+      renderFeaturedEvent(featured, pinned);
       renderEventPreviews(signupEvents);
       injectEventSchema(ours);
       buildCalendar(data);

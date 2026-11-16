@@ -517,6 +517,63 @@
     return eventStaysListed(ev, now);
   }
 
+  // Published Krewe events (not Inter-Krewe Council) that are still inside
+  // the list-through-next-day window.
+  function isKrewePublicListed(ev, now) {
+    if (!ev || ev.is_public === false) return false;
+    var status = String(ev.status || "").toLowerCase();
+    if (status !== "published" && status !== "live") return false;
+    if (String(ev.source || "").toLowerCase() === "ikc") return false;
+    return eventStaysListed(ev, now);
+  }
+
+  function eventHasFlyer(ev) {
+    return !!(ev && String(ev.flyer_url || "").trim());
+  }
+
+  // Officer-pinned featured event first. Otherwise the next listed public
+  // Krewe event that already has a flyer. Parades stay eligible: a featured
+  // parade is not the same thing as an RSVP-dropdown row.
+  function pickFeaturedEvent(events, now) {
+    var rows = (events || []).slice().sort(function (a, b) {
+      var as = a && a.start_time ? new Date(a.start_time).getTime() : Infinity;
+      var bs = b && b.start_time ? new Date(b.start_time).getTime() : Infinity;
+      if (isNaN(as)) as = Infinity;
+      if (isNaN(bs)) bs = Infinity;
+      return as - bs;
+    });
+    var i;
+    for (i = 0; i < rows.length; i++) {
+      if (isLiveFeatured(rows[i], now)) return rows[i];
+    }
+    for (i = 0; i < rows.length; i++) {
+      if (isKrewePublicListed(rows[i], now) && eventHasFlyer(rows[i])) return rows[i];
+    }
+    return null;
+  }
+
+  // Supabase Storage image transformation. A full-size flyer can be several
+  // megabytes; the render endpoint returns a sized WebP when the project
+  // allows it. Callers keep the original URL for the full-size link and for
+  // the image error fallback. PDFs are not images.
+  function flyerDisplayUrl(url, width) {
+    var raw = String(url || "").trim();
+    if (!raw || /\.pdf(?:$|[?#])/i.test(raw)) return "";
+    var px = parseInt(width, 10);
+    if (!px || px < 1) px = 800;
+    if (px > 1600) px = 1600;
+    var marker = "/storage/v1/object/public/";
+    var at = raw.indexOf(marker);
+    if (at === -1) return raw;
+    var path = raw.slice(at + marker.length).split("#")[0].split("?")[0];
+    if (!path) return raw;
+    // Width alone makes this project's renderer keep the original height and
+    // squash the picture. A contain box keeps the real aspect ratio.
+    var boxH = px * 2;
+    return raw.slice(0, at) + "/storage/v1/render/image/public/" + path +
+      "?width=" + px + "&height=" + boxH + "&resize=contain&quality=60&format=webp";
+  }
+
   window.kosCalendar = {
     buildIcs: buildIcs,
     download: download,
@@ -536,6 +593,9 @@
     eventListLabel: eventListLabel,
     eventListSinceIso: eventListSinceIso,
     eventVisibleOnDatesList: eventVisibleOnDatesList,
-    isLiveFeatured: isLiveFeatured
+    isLiveFeatured: isLiveFeatured,
+    isKrewePublicListed: isKrewePublicListed,
+    pickFeaturedEvent: pickFeaturedEvent,
+    flyerDisplayUrl: flyerDisplayUrl
   };
 })();
