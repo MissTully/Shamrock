@@ -633,6 +633,10 @@ grant execute on function public.upsert_shop_vendor_look(jsonb) to authenticated
 -- Inserts a vendor only when its short name is new.
 -- Re-running fills blank contact, blurb, and season fields.
 -- It does not overwrite a store URL an officer has already changed.
+-- Studio 19 gets cheryl@studio19designs.com when that email is blank.
+-- No phone is stored for Studio 19.
+-- A re-run also replaces Studio 19's earlier generic shipping note
+-- with the tailor-made note. A note an officer already rewrote stays.
 -- Melissa assigned the family-crest long-sleeve and mermaid tee to Red's.
 -- The hoodie and raglan stay on Studio 19 until she assigns them.
 -- Each tile still opens that vendor's store. No product-page URLs.
@@ -661,6 +665,7 @@ insert into public.shop_vendors (
 
 insert into public.shop_vendors (
   name, short_name, store_url, website_url,
+  contact_email,
   showcase_images,
   blurb, fulfillment_note, active, sort_order
 ) values (
@@ -668,12 +673,13 @@ insert into public.shop_vendors (
   'Studio 19',
   'https://studio19shop.com/shop/ols/categories/krewe-of-shamrock',
   'https://studio19shop.com',
+  'cheryl@studio19designs.com',
   array[
     '/assets/img/store/vendor-crest-hoodie.png',
     '/assets/img/store/vendor-shenanigans-raglan.png'
   ],
   'Tanks, jackets, and extra colors for parade season and the rest of the year.',
-  'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.',
+  'Custom orders are tailor-made and take a few weeks. Returns are rare. Sizing and status questions go to cheryl@studio19designs.com.',
   true,
   20
 ) on conflict (short_name) do nothing;
@@ -712,13 +718,21 @@ where v.short_name = 'Red''s'
 update public.shop_vendors v
 set
   website_url = coalesce(nullif(btrim(v.website_url), ''), 'https://studio19shop.com'),
+  contact_email = coalesce(nullif(btrim(v.contact_email), ''), 'cheryl@studio19designs.com'),
   blurb = coalesce(nullif(btrim(v.blurb), ''), 'Tanks, jackets, and extra colors for parade season and the rest of the year.'),
-  fulfillment_note = coalesce(nullif(btrim(v.fulfillment_note), ''), 'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.')
+  fulfillment_note = case
+    when nullif(btrim(v.fulfillment_note), '') is null
+      or btrim(v.fulfillment_note) = 'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.'
+    then 'Custom orders are tailor-made and take a few weeks. Returns are rare. Sizing and status questions go to cheryl@studio19designs.com.'
+    else v.fulfillment_note
+  end
 where v.short_name = 'Studio 19'
   and (
     nullif(btrim(v.website_url), '') is null
+    or nullif(btrim(v.contact_email), '') is null
     or nullif(btrim(v.blurb), '') is null
     or nullif(btrim(v.fulfillment_note), '') is null
+    or btrim(v.fulfillment_note) = 'Shipped to your home. Orders are processed weekly and usually finish 2–3 weeks later.'
   );
 
 -- Set each collage on every run. Does not change store_url.
