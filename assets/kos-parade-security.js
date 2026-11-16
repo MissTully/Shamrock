@@ -32,7 +32,11 @@
       ".ps-mine{margin:0 0 14px;}",
       ".ps-shift-line{margin:0 0 8px;}",
       "#hubParadeSecurity a.ps-tel,#hubParadeSecurityCard a.ps-tel{color:var(--green-800);font-weight:700;}",
-      ".ps-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px;}"
+      ".ps-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px;}",
+      /* Same inset as Parade guests: .hub-wrap .app-body is 16px on every side. */
+      "#hubParadeSecurity.app-card > .app-body{padding:16px;}",
+      "#hubParadeSecurityDesk{max-width:100%;}",
+      "#hubParadeSecurityDesk .hub-report-tablewrap{max-width:100%;}"
     ].join("");
     document.head.appendChild(s);
   }
@@ -488,7 +492,7 @@
         if (!rows.length) {
           html += '<p class="empty">No signups yet.</p>';
         } else {
-          html += '<div style="overflow:auto;"><table class="hub-report-table"><thead><tr>' +
+          html += '<div class="hub-report-tablewrap"><table class="hub-report-table"><thead><tr>' +
             "<th>Name</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead><tbody>";
           rows.forEach(function (row) {
             var href = telHref(row.phone);

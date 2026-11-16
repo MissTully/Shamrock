@@ -200,12 +200,11 @@ test("Officer Desk parade security shows the roster and a tap-to-call phone", as
   await expect(card).toContainText("Cancelled");
   await expect(card.locator('a.ps-tel[href="tel:8135550142"]')).toHaveText("(813) 555-0142");
   await expect(card.locator("#psOffCsv")).toHaveText("Export CSV");
-  const desk = page.locator("#hubParadeSecurityDesk");
-  await shot(page, desk, "parade-security-officer-desktop.png");
+  await shot(page, card, "parade-security-officer-desktop.png");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await desk.scrollIntoViewIfNeeded();
-  await shot(page, desk, "parade-security-officer-mobile.png");
+  await card.scrollIntoViewIfNeeded();
+  await shot(page, card, "parade-security-officer-mobile.png");
   await expect(card.locator("#psOffSave")).toBeVisible();
   assertHealthy(expect, report, "parade security officer");
 });
