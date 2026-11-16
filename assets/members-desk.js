@@ -1561,6 +1561,15 @@
         '<div class="app-body"><div class="hub-parade-season-list" id="hubParadeSeasonDeskList"><p class="empty">Loading parade season…</p></div></div>';
       parade.appendChild(seasonCard);
     }
+    if (parade && !document.getElementById("hubParadeSecurityCard")) {
+      var securityCard = document.createElement("section");
+      securityCard.className = "app-card";
+      securityCard.id = "hubParadeSecurityCard";
+      securityCard.innerHTML =
+        '<div class="app-head"><span class="ic">🦺</span><div><h2>Parade security sign-up</h2><small>Pick your parade and shift</small></div></div>' +
+        '<div class="app-body" id="hubParadeSecurityBody"><p class="empty">Loading security shifts…</p></div>';
+      parade.appendChild(securityCard);
+    }
     var fun = document.getElementById("hubFun");
     var officer = document.getElementById("hubOfficer");
     var homeGrid = document.getElementById("hubHomeGrid");
@@ -1666,8 +1675,8 @@
      claims files in last on Parade, so future desk cards never vanish. */
   var DESK_GROUPS = [
     { id: "deskSeason", icon: "🎗️", chip: "Season checklist", title: "Get Season Ready",
-      sub: "Dues, waiver, parade RSVP, meeting check-in, and photo release. Volunteer hours are on the Home tab.",
-      cards: ["prCard", "hubParadeSeasonCard"] },
+      sub: "Dues, waiver, parade RSVP, security shifts, meeting check-in, and photo release. Volunteer hours are on the Home tab.",
+      cards: ["prCard", "hubParadeSeasonCard", "hubParadeSecurityCard"] },
     { id: "deskTravel", icon: "🚐", chip: "Rides & locker", title: "Getting There & Your Gear",
       sub: "Carpools, seats on the krewe vans, and locker rentals.",
       cards: ["carpoolCard", "vanCard", "lockerCard"] }
@@ -3282,6 +3291,13 @@
       window.__kosOfficerParadeGuests = flags.officerParadeGuests;
       officerParadeGuests = flags.officerParadeGuests;
     }
+    if ("paradeSecurity" in flags) {
+      window.__kosParadeSecurity = flags.paradeSecurity || { phone: "", parades: [] };
+      window.__kosParadeSecurityLocked = true;
+    }
+    if (flags.officerParadeSecurity) {
+      window.__kosOfficerParadeSecurity = flags.officerParadeSecurity;
+    }
     syncOfficerChip();
     renderHome();
     if (canOpenOfficerDesk()) {
@@ -3324,6 +3340,9 @@
     syncOfficerChip();
     try { sessionStorage.setItem("kosHubTab", tab); } catch (e) {}
     if (tab === "krewe") ensureMyParadeGuests();
+    if (tab === "parade" && window.kosParadeSecurity && typeof window.kosParadeSecurity.refreshMember === "function") {
+      try { window.kosParadeSecurity.refreshMember(); } catch (eSec) {}
+    }
     if (tab === "officer") {
       try { sessionStorage.setItem("kosOfficerDeskSeen", "1"); } catch (e2) {}
       var pulseCards = document.querySelectorAll(".hub-officer-card.hub-officer-pulse");
@@ -3566,6 +3585,9 @@
       }
       renderHubMemberEvents(state.hubEvents);
       await loadParadeSeason(client);
+      if (window.kosParadeSecurity && typeof window.kosParadeSecurity.refreshMember === "function") {
+        try { window.kosParadeSecurity.refreshMember(); } catch (eSecLoad) {}
+      }
     } catch (e) {
       if (!(feedLock && Array.isArray(feedLock.events))) {
         state.nextEvents = [];
@@ -3574,6 +3596,9 @@
         renderHubMemberEvents([]);
       }
       try { await loadParadeSeason(client); } catch (pe) { renderHubParadeSeason([]); }
+      if (window.kosParadeSecurity && typeof window.kosParadeSecurity.refreshMember === "function") {
+        try { window.kosParadeSecurity.refreshMember(); } catch (eSecLoad) {}
+      }
     }
     try {
       var meId = (window.kosProfile || {}).member_id || null;
@@ -9583,6 +9608,25 @@
     return lines.join("\n");
   }
 
+  function paintParadeSecurityShell() {
+    var card = document.getElementById("hubParadeSecurity");
+    if (!card) {
+      if (typeof ensureOfficerToolCard === "function") card = ensureOfficerToolCard("hubParadeSecurity");
+    }
+    if (!card) return;
+    var head = card.querySelector(".app-head");
+    if (head) {
+      head.innerHTML = '<span class="ic">🦺</span><div><h2>Parade security</h2><small>Add shifts, see who signed up, and export the roster. Phone numbers stay on this desk.</small></div>';
+    }
+    var body = card.querySelector(".app-body");
+    if (body && !document.getElementById("hubParadeSecurityDesk")) {
+      body.innerHTML = '<div id="hubParadeSecurityDesk"><p class="empty">Loading security shifts…</p></div>';
+    }
+    if (window.kosParadeSecurity && typeof window.kosParadeSecurity.paintOfficer === "function") {
+      try { window.kosParadeSecurity.paintOfficer(); } catch (ePs) {}
+    }
+  }
+
   function paintParadeGuestsShell() {
     var card = document.getElementById("hubParadeGuests");
     if (!card) {
@@ -9734,6 +9778,7 @@
     "hubLockers",
     "hubEventStudio",
     "hubParadeGuests",
+    "hubParadeSecurity",
     "hubEventOutreach",
     "hubShopStudio",
     "hubQrStudio",
@@ -9756,6 +9801,7 @@
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubParadeGuests: { title: "Parade guests", desc: "Guest march list per parade, with counts, status, and CSV.", icon: "🥁", section: "Events" },
+    hubParadeSecurity: { title: "Parade security", desc: "Security shifts, the roster, and a CSV for each parade.", icon: "🦺", section: "Events" },
     hubEventOutreach: { title: "Event outreach", desc: "Website RSVP prospects, unmatched Zeffy buyers, and legacy emails", icon: "📬", section: "Events" },
     hubShopStudio: { title: "Shop Studio", desc: "Products, Zeffy links, shop QR", icon: "🛍️", section: "Shop" },
     hubQrStudio: { title: "QR Code Studio", desc: "Meeting check-in and handy link QRs", icon: "📱", section: "Events" },
@@ -9862,6 +9908,7 @@
     hubLockers: "lockers",
     hubEventStudio: "event_studio",
     hubParadeGuests: "parade_guests",
+    hubParadeSecurity: "parade_security",
     hubEventOutreach: "event_outreach",
     hubShopStudio: "shop_studio",
     hubQrStudio: "qr_studio",
@@ -9973,11 +10020,18 @@
       toolOrder = toolOrder.filter(function (id) { return id !== "hubLockers"; });
     }
     if (!(state.officer || state.canManageEvents)) {
-      toolOrder = toolOrder.filter(function (id) { return id !== "hubParadeGuests"; });
-    } else if (toolOrder.indexOf("hubParadeGuests") === -1) {
-      var afterParadeStudio = toolOrder.indexOf("hubEventStudio");
-      if (afterParadeStudio !== -1) toolOrder.splice(afterParadeStudio + 1, 0, "hubParadeGuests");
-      else toolOrder.push("hubParadeGuests");
+      toolOrder = toolOrder.filter(function (id) { return id !== "hubParadeGuests" && id !== "hubParadeSecurity"; });
+    } else {
+      if (toolOrder.indexOf("hubParadeGuests") === -1) {
+        var afterParadeStudio = toolOrder.indexOf("hubEventStudio");
+        if (afterParadeStudio !== -1) toolOrder.splice(afterParadeStudio + 1, 0, "hubParadeGuests");
+        else toolOrder.push("hubParadeGuests");
+      }
+      if (toolOrder.indexOf("hubParadeSecurity") === -1) {
+        var afterGuests = toolOrder.indexOf("hubParadeGuests");
+        if (afterGuests !== -1) toolOrder.splice(afterGuests + 1, 0, "hubParadeSecurity");
+        else toolOrder.push("hubParadeSecurity");
+      }
     }
     if (!canSeeEventOutreach()) {
       toolOrder = toolOrder.filter(function (id) { return id !== "hubEventOutreach"; });
@@ -10125,6 +10179,7 @@
       if (id === "hubRolesAccess" && typeof window.kosRolesAccessOpen === "function") {
         try { window.kosRolesAccessOpen(); } catch (eRolesOpen) {}
       }
+      if (id === "hubParadeSecurity") paintParadeSecurityShell();
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -10215,6 +10270,7 @@
       try { window.kosRolesAccessPaint(); } catch (eRolesPaint) {}
     }
     if (toolOrder.indexOf("hubParadeGuests") !== -1) paintParadeGuestsShell();
+    if (toolOrder.indexOf("hubParadeSecurity") !== -1) paintParadeSecurityShell();
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -10240,7 +10296,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
