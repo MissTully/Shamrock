@@ -5,6 +5,13 @@ test("home page highlights a live featured event and skips one that has ended", 
   const report = watchPage(page);
   const future = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
   const past = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  await page.route("**/storage/v1/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64")
+    });
+  });
   await page.route("**/rest/v1/v_public_events*", async (route) => {
     await route.fulfill({
       status: 200,
@@ -31,7 +38,8 @@ test("home page highlights a live featured event and skips one that has ended", 
           status: "published",
           is_public: true,
           is_featured: true,
-          members_only: false
+          members_only: false,
+          flyer_url: "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/event-flyers/shamrock-social.png"
         }
       ])
     });
@@ -41,6 +49,11 @@ test("home page highlights a live featured event and skips one that has ended", 
   await expect(page.locator("#featuredEventCard")).toContainText("Shamrock Social");
   await expect(page.locator("#featuredEventCard")).toContainText("Featured event");
   await expect(page.locator("#featuredEventCard")).not.toContainText("Past Ceili");
+  const flyer = page.locator("#featuredEventCard img.featured-flyer");
+  await expect(flyer).toBeVisible();
+  await expect(flyer).toHaveAttribute("alt", "Flyer for Shamrock Social");
+  await expect(flyer).toHaveAttribute("src", /\/storage\/v1\/render\/image\/public\/event-flyers\/shamrock-social\.png\?width=800&height=1600&resize=contain&quality=60&format=webp/);
+  await expect(flyer).toHaveAttribute("data-full", /\/storage\/v1\/object\/public\/event-flyers\/shamrock-social\.png$/);
   await expect(page.locator("#eventList")).toContainText("Shamrock Social");
   await expect(page.locator("#eventList .event-card.is-featured")).toContainText("Shamrock Social");
   await expect(page.locator("#eventList")).not.toContainText("Past Ceili");
