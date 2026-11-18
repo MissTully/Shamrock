@@ -667,7 +667,7 @@
 
   function esc(s) {
     return (s == null ? "" : String(s)).replace(/[&<>"']/g, function (c) {
-      return ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' })[c];
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
 
@@ -1851,40 +1851,6 @@
     return '<span class="hub-chip ' + cls + '">🤝 ' + n + "/12 volunteer hours</span>";
   }
 
-  function craicHeroHtml() {
-    var g = state.game || {};
-    var found = !!g.found;
-    var life = found ? Number(g.lifetime || 0) : 0;
-    var season = found ? Number(g.season || 0) : 0;
-    var rank = found ? (g.rank_name || "Newcomer") : "Newcomer";
-    var icon = found ? (g.rank_icon || "🌱") : "🌱";
-    var next = g.next_rank_name || null;
-    var need = Number(g.clovers_to_next || 0);
-    var total = life + need;
-    var pct = total > 0 ? Math.min(100, Math.round(life / total * 100)) : 0;
-    var kickoffNote = (life > 0)
-      ? '<p class="tag" style="margin-top:-6px;opacity:.95;">You\'re off the line with a head start. Now see if you can climb. Kind rivalry only. ☘️</p>'
-      : '<p class="tag" style="margin-top:-6px;opacity:.95;">Show up, pitch in, collect Clovers. Cheer your krewe, then try to catch them.</p>';
-    return '<div class="hub-craic">' +
-      '<div class="tag">☘ Our kindly competitive game of showing up</div>' +
-      '<h2>This is the Craic Cup</h2>' +
-      kickoffNote +
-      '<div class="hub-craic-grid">' +
-      '<div class="rank-big">' + esc(icon) + '</div>' +
-      '<div><div style="font-size:17px;opacity:.9;">Right now you\'re a</div>' +
-      '<div style="font-family:var(--display);font-size:24px;margin:2px 0 6px;">' + esc(icon) + ' ' + esc(rank) + '</div>' +
-      '<div class="clovers">' + life + ' 🍀</div>' +
-      '<div class="meta">This season: <b>' + season + '</b>' +
-      (next ? (' · <b>' + need + '</b> Clovers to ' + esc(next)) : ' · you\'re at the top of the ladder!') + '</div>' +
-      (next ? ('<div class="prog"><i style="width:' + pct + '%"></i></div>') : '') +
-      '</div></div>' +
-      nextQuestHtml() +
-      '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">' +
-      '<button type="button" class="btn" id="hubClaimClovers" style="background:#f0d78c;color:#14532d;border:0;font-weight:700;">Claim Clovers</button>' +
-      '<button type="button" class="btn" id="hubOpenCraic" style="background:transparent;border:1px solid rgba(240,215,140,.55);color:#f6efdc;">See the standings →</button></div>' +
-      '</div>';
-  }
-
   function questDateChip(iso) {
     if (!iso) return "Soon";
     var d = new Date(iso);
@@ -2968,47 +2934,6 @@
     applyFeedLock();
   };
 
-  /* ---- Welcome hero: the home page opens with the member, not the game.
-     Greeting, standing chips, and the season checklist up top; the Craic
-     Cup keeps its own clearly-labeled card further down the stack. */
-  function welcomeDeskHtml() {
-    var me = state.parade;
-    var needsProfile = !!(window.kosNeedsProfile);
-    var bits = [];
-    if (me) {
-      if (!me.waiver_signed) bits.push("liability waiver");
-      if (!me.dues_paid && !profileDuesExempt()) bits.push("dues");
-      if (!me.meeting_attended) bits.push("mandatory meeting");
-    }
-    if ((state.hoursApproved || 0) < 1) bits.push("hours since July 1");
-    if (needsProfile) bits.push("My Krewe profile");
-    var ready = !!(me && duesGateMet(me) && me.waiver_signed && me.meeting_attended);
-    var line = "Parade Ready, volunteer hours, media sharing, rides, and your locker - all on one desk.";
-    if (ready && !needsProfile && (state.hoursApproved || 0) >= 1) {
-      line = "You are set for the season. The desk still has your rides, locker, and media sharing.";
-    } else if (bits.length) {
-      line = "Still open: " + bits.join(", ") + ".";
-    }
-    var profileBtn = needsProfile
-      ? '<button type="button" class="btn" id="hubOpenProfile" style="margin-top:8px;width:100%;">Complete My Krewe profile</button>'
-      : '';
-    return '<div class="hub-welcome" id="hubWelcomeCard">' +
-      '<p class="hub-hello">☘ Fáilte, a chara - welcome, friend</p>' +
-      '<h2>Welcome home, ' + esc(firstName() || 'friend') + '</h2>' +
-      '<div class="hub-chips">' + standingChip() + paradeChip() + hoursChip() + '</div>' +
-      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.4;">' + esc(line) + '</p>' +
-      '<ul class="hub-status-list" aria-label="Season checklist">' +
-      '<li><span class="mark" aria-hidden="true">1</span><span>Parade Ready: waiver and Photo Release</span></li>' +
-      '<li><span class="mark" aria-hidden="true">2</span><span>My Krewe profile</span></li>' +
-      '<li><span class="mark" aria-hidden="true">3</span><span>Total hours since July 1</span></li>' +
-      (profileDuesExempt() ? "" :
-        '<li id="hubDuesCheck"><span class="mark" aria-hidden="true">4</span><span>Pay membership dues <button type="button" class="btn" data-app-go="dues">Pay dues</button></span></li>') +
-      '</ul>' +
-      '<button type="button" class="btn btn-primary" data-hub-action="parade" style="width:100%;">Open Member desk</button>' +
-      profileBtn +
-      '</div>';
-  }
-
   function renderHome() {
     var home = document.getElementById("hubHome");
     if (!home) return;
@@ -3028,50 +2953,6 @@
       grid.id = "hubHomeGrid";
       home.appendChild(grid);
     }
-    var officerPulse = "";
-    try {
-      if (canOpenOfficerDesk() && sessionStorage.getItem("kosOfficerDeskSeen") !== "1") {
-        officerPulse = " hub-officer-pulse";
-      }
-    } catch (pe) {}
-    var hostHoursOnly = state.canReviewHours && !state.officer && !state.canManageEvents && !state.canReviewApplications && !state.canReviewVolunteerInquiries;
-    var officerCard = !canOpenOfficerDesk()
-      ? ""
-      : hostHoursOnly
-      ? '<div class="hub-officer-card' + officerPulse + '" data-hub-action="officer" role="button" tabindex="0">' +
-        '<div class="hub-officer-card-top">' +
-        '<div class="ic" aria-hidden="true">✅</div>' +
-        '<div class="copy"><b>Hour approvals</b><div class="sub">Confirm volunteer hours for events you host.</div></div>' +
-        '<div class="go">Open →</div></div></div>'
-      : '<div class="hub-officer-card' + officerPulse + '" data-hub-action="officer" role="button" tabindex="0">' +
-        '<div class="hub-officer-card-top">' +
-        '<div class="ic" aria-hidden="true">🎖️</div>' +
-        '<div class="copy"><b>Officer desk</b><div class="sub">Events, approvals, money, and reports in one calm place.</div></div>' +
-        '<div class="go">Open →</div></div>' +
-        '<div class="hub-officer-inside-wrap">' +
-        '<div style="font-family:var(--display);font-size:15px;margin:0 0 6px;color:#7a5b00;">What\'s inside</div>' +
-        '<ul class="hub-officer-inside" aria-label="Officer desk tools">' +
-        (state.canReviewApplications ? '<li>Membership Applications</li>' : '') +
-        (state.canReviewVolunteerInquiries ? '<li>Volunteer inquiries</li>' : '') +
-        '<li>Event Studio and calendar</li>' +
-        '<li>Approvals (hours, photos, videos, clovers)</li>' +
-        '<li>Shop, member records, and money</li>' +
-        '<li>Reports, QR tools, and messages</li>' +
-        '</ul></div></div>';
-    var appsBanner = state.canReviewApplications
-      ? '<button type="button" class="hub-apps-banner" id="hubAppsHomeLink" data-hub-goto="applications">' +
-        '<span class="ic" aria-hidden="true">📝</span>' +
-        '<span class="copy"><b>' + esc(newApplicationLabel(state.applicationCount)) + '</b>' +
-        '<span class="sub">Membership Applications on your Officer desk. Move an applicant through new, background check, and dues pending, or approve, decline, or archive.</span></span>' +
-        '<span class="go">Open</span></button>'
-      : "";
-    var volunteerBanner = state.canReviewVolunteerInquiries
-      ? '<button type="button" class="hub-apps-banner" id="hubVolunteerHomeLink" data-hub-goto="volunteer-inquiries">' +
-        '<span class="ic" aria-hidden="true">🤝</span>' +
-        '<span class="copy"><b>' + esc(newVolunteerInquiryLabel(volunteerInquiryCountOf("new"))) + '</b>' +
-        '<span class="sub">Charity inbox on your Officer desk. New, contacted, and done.</span></span>' +
-        '<span class="go">Open</span></button>'
-      : "";
     function quickTile(goto, icon, title, sub) {
       return '<button type="button" class="hub-action" data-hub-goto="' + goto + '">' +
         qkIcon(icon) +
@@ -4631,6 +4512,7 @@
       syncApplicationFixtureCounts();
       renderApplicationsFromState();
       renderHome();
+      try { wireOfficerDeskPicker(); } catch (eTile) {}
       return;
     }
     if (!client) client = window.__kosSb || null;
@@ -8692,6 +8574,7 @@
       state.volunteerInquiryFlash = status === "done" ? "Marked done." : "Marked contacted.";
       renderHome();
       renderVolunteerInquiriesFromState();
+      try { wireOfficerDeskPicker(); } catch (eTile) {}
       openOfficerTool("tool:hubVolunteerInbox", false);
       return;
     }
@@ -10290,6 +10173,9 @@
     if (!panel) return;
 
     var toolOrder = currentOfficerToolOrder();
+    var officerSig = toolOrder.join("|") + ":" + (state.applicationCount || 0) + ":" + volunteerInquiryCountOf("new");
+    if (panel._kosOfficerSig === officerSig && document.getElementById("hubOfficerLauncher")) return;
+    panel._kosOfficerSig = officerSig;
     toolOrder.forEach(ensureOfficerToolCard);
     if (toolOrder.indexOf("hubEventOutreach") !== -1) paintEventOutreachShell();
     if (toolOrder.indexOf("hubOfficerDirectory") !== -1) paintMemberDirectoryShell();
@@ -10442,8 +10328,12 @@
       else openOfficerTool(raw, true);
     };
 
-    if (picked) openOfficerTool(picked, false);
-    else showOfficerOverview();
+    if (picked) {
+      var openId = picked.indexOf("tool:") === 0 ? picked.slice(5) : "";
+      var openCard = openId ? document.getElementById(openId) : null;
+      var alreadyOpen = !!(openCard && openCard.style.display !== "none" && !openCard.classList.contains("hub-officer-hidden"));
+      if (!alreadyOpen) openOfficerTool(picked, false);
+    } else showOfficerOverview();
 
     if (!panel._kosOfficerObs) {
       var timer = null;

@@ -66,7 +66,8 @@ test.describe("Member Hub phone app shell", () => {
     for (const label of labels) {
       await expect(page.locator(".app-tile", { hasText: label })).toBeVisible();
     }
-    await expect(page.locator('.app-tile[data-app-go="chat"]')).toContainText("Coming soon");
+    await expect(page.locator('.app-tile[data-app-go="chat"]')).toContainText("Chat");
+    await expect(page.locator('.app-tile[data-app-go="chat"]')).not.toContainText("Coming soon");
 
     await expect(page.locator('#hubTabs [data-hub-tab="hub"]')).toContainText("Home");
     await expect(page.locator('#hubTabs [data-hub-tab="events"]')).toContainText("Events");
@@ -79,14 +80,16 @@ test.describe("Member Hub phone app shell", () => {
     assertHealthy(expect, report, "app home shell");
   });
 
-  test("chat tile stays on Home and does not leave the hub", async ({ page }) => {
+  test("chat tile opens Krewe Chat and stays in the hub", async ({ page }) => {
     const report = watchPage(page);
     await openApp(page);
     await page.locator('.app-tile[data-app-go="chat"]').click();
+    await expect(page.locator("#kosChat")).toBeVisible();
+    await expect(page.locator("#kcTitle")).toHaveText("Krewe Chat");
     await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
-    await expect(page.locator("#appToast")).toContainText("Chat is coming soon");
     await expect(page).toHaveURL(/members\.html/);
-    assertHealthy(expect, report, "chat coming soon");
+    await expect(page.locator('.app-tile[data-app-go="chat"]')).not.toContainText("Coming soon");
+    assertHealthy(expect, report, "chat opens");
   });
 
   test("member card, dues, RSVP, and carpool use real hub destinations", async ({ page }) => {
@@ -164,16 +167,16 @@ test.describe("Member Hub phone app shell", () => {
     const events = page.locator("#deskOff-events .desk-group-head h3");
     await expect(membership).toBeVisible();
     await expect(events).toBeVisible();
-    const paint = await page.locator("#deskOff-membership .desk-group-head").evaluate((head) => {
-      const title = head.querySelector("h3");
-      const sub = head.querySelector(".dg-sub");
-      return {
-        heading: title ? getComputedStyle(title).color : "",
-        sub: sub ? getComputedStyle(sub).color : ""
-      };
-    });
-    expect(paint.heading).toBe("rgb(246, 239, 220)");
-    expect(paint.sub).toBe("rgb(236, 208, 126)");
+    await expect.poll(async () => {
+      return page.locator("#deskOff-membership .desk-group-head").evaluate((head) => {
+        const title = head.querySelector("h3");
+        const sub = head.querySelector(".dg-sub");
+        return {
+          heading: title ? getComputedStyle(title).color : "",
+          sub: sub ? getComputedStyle(sub).color : ""
+        };
+      });
+    }).toEqual({ heading: "rgb(246, 239, 220)", sub: "rgb(236, 208, 126)" });
     assertHealthy(expect, report, "officer tab");
   });
 

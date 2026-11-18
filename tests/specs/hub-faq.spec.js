@@ -30,20 +30,19 @@ async function unlockOnFaq(page, hash) {
   });
   await page.waitForSelector("#hubRoot");
   await expect(page.locator("#hubFaq")).toBeVisible();
-  await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
-  await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/desk-faq-on/);
+  await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
+  await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/desk-faq-on/);
 }
 
 test.describe("Member desk FAQ", () => {
   test("FAQ chip opens the tab and topic pills swap sections without scrolling", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
-    await page.locator('[data-hub-tab="parade"]').click();
-    await expect(page.locator("#deskHero")).toBeVisible();
-    await expect(page.locator('#deskHero [data-desk-goto="deskFaq"]')).toBeVisible();
+    await expect(page.locator("#homeDeskHero")).toBeVisible();
+    await expect(page.locator('#homeDeskHero [data-desk-goto="deskFaq"]')).toBeVisible();
     await expect(page.locator("#hubFaq")).toBeHidden();
 
-    await page.locator('#deskHero [data-desk-goto="deskFaq"]').click();
+    await page.locator('#homeDeskHero [data-desk-goto="deskFaq"]').click();
     await expect(page.locator("#hubFaq")).toBeVisible();
     await expect(page.locator("#hubFaq h3.faq-title")).toHaveText("Frequently Asked Questions");
     await expect(page.locator('[data-faq-section="events"]')).toBeVisible();
@@ -53,7 +52,7 @@ test.describe("Member desk FAQ", () => {
 
     const before = await page.evaluate(() => ({
       y: window.scrollY,
-      panel: (document.querySelector("[data-hub-panel='parade']") || {}).scrollTop || 0
+      panel: (document.querySelector("[data-hub-panel='hub']") || {}).scrollTop || 0
     }));
     await page.locator('[data-faq-pill="beads"]').click();
     await expect(page.locator('[data-faq-section="beads"]')).toBeVisible();
@@ -62,7 +61,7 @@ test.describe("Member desk FAQ", () => {
     await expect(page).toHaveURL(/#faq-beads$/);
     const after = await page.evaluate(() => ({
       y: window.scrollY,
-      panel: (document.querySelector("[data-hub-panel='parade']") || {}).scrollTop || 0
+      panel: (document.querySelector("[data-hub-panel='hub']") || {}).scrollTop || 0
     }));
     expect(after.y).toBe(before.y);
     expect(after.panel).toBe(before.panel);

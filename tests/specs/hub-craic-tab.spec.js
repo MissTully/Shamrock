@@ -132,15 +132,8 @@ test.describe("Craic Cup tab active state", () => {
 
     await page.locator('#hubTabs [data-hub-tab="hub"]').click();
     const quick = page.locator('[data-hub-goto="fun"]');
-    await quick.scrollIntoViewIfNeeded();
+    await expect(quick).toBeVisible();
     await quick.click();
-    await expect(page.locator("[data-hub-panel='fun']")).toHaveClass(/hub-on/);
-    expectOnly(await tabState(page), "fun");
-
-    await page.locator('#hubTabs [data-hub-tab="hub"]').click();
-    const claim = page.locator("#hubClaimClovers");
-    await claim.scrollIntoViewIfNeeded();
-    await claim.click();
     await expect(page.locator("[data-hub-panel='fun']")).toHaveClass(/hub-on/);
     await expect(page.locator("#hubClaimCard")).toBeVisible();
     expectOnly(await tabState(page), "fun");

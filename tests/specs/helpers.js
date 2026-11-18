@@ -100,4 +100,19 @@ const PAGES = [
   { file: "raffle.html", title: /Raffle/ },
 ];
 
-module.exports = { watchPage, assertHealthy, PAGES, unlockMemberHub };
+// Phone home uses data-app-go tiles. Desktop home uses data-hub-goto quick links.
+// The same shortcut name works for both (event-studio, directory, faq, fun, desk, docs).
+function homeShortcut(page, name) {
+  const size = page.viewportSize();
+  const width = size && size.width ? size.width : 1280;
+  if (width < 960) return page.locator(`.app-tile[data-app-go="${name}"]`);
+  return page.locator(`[data-hub-goto="${name}"]`);
+}
+
+async function openHomeShortcut(page, name) {
+  const tile = homeShortcut(page, name);
+  await tile.waitFor({ state: "visible" });
+  await tile.click();
+}
+
+module.exports = { watchPage, assertHealthy, PAGES, unlockMemberHub, homeShortcut, openHomeShortcut };

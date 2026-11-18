@@ -1,6 +1,6 @@
 // Guest parade registration: Event Studio fields, public form, Hub approval, officer list.
 const { test, expect } = require("@playwright/test");
-const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 const OPEN_EVENT = {
   id: "parade-childrens",
@@ -145,8 +145,7 @@ const OFFICER_PARADES = [
 
 async function openEventStudio(page) {
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
-  await page.waitForSelector('[data-hub-goto="event-studio"]');
-  await page.locator('[data-hub-goto="event-studio"]').click();
+  await openHomeShortcut(page, "event-studio");
   await expect(page.locator("#hubEventStudio")).toBeVisible();
   await expect(page.locator("#hubEventForm")).toBeVisible();
 }

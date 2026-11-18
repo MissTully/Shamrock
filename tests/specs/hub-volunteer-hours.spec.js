@@ -3,7 +3,7 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
-const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 const SHOTS = "/opt/cursor/artifacts/screenshots";
 
@@ -12,13 +12,20 @@ function shot(page, name) {
   return page.screenshot({ path: path.join(SHOTS, name), fullPage: false });
 }
 
+function daysFromNow(days, hourUtc) {
+  const when = new Date();
+  when.setUTCDate(when.getUTCDate() + days);
+  when.setUTCHours(hourUtc, 0, 0, 0);
+  return when.toISOString();
+}
+
 const OPEN_EVENT = {
   id: "11111111-1111-4111-8111-111111111111",
   name: "Float work day",
   source: "krewe",
   status: "published",
-  start_time: "2026-10-04T18:00:00.000Z",
-  end_time: "2026-10-04T21:00:00.000Z",
+  start_time: daysFromNow(14, 18),
+  end_time: daysFromNow(14, 21),
   location: "Krewe float barn",
   event_type: "volunteer",
   is_public: true,
@@ -31,7 +38,7 @@ const FULL_EVENT = {
   name: "Parade security",
   source: "krewe",
   status: "published",
-  start_time: "2026-10-11T16:00:00.000Z",
+  start_time: daysFromNow(21, 16),
   location: "Bayshore",
   event_type: "volunteer",
   is_public: true,
@@ -39,10 +46,9 @@ const FULL_EVENT = {
   volunteer_slots_used: 1
 };
 
-async function openParadeHours(page) {
+async function openHomeHours(page) {
   await unlockMemberHub(page);
-  await page.locator('[data-hub-tab="parade"]').click();
-  const card = page.locator("#hubHoursCard");
+  const card = page.locator("#hubHome #hubHoursCard");
   await expect(card).toBeVisible();
   await card.scrollIntoViewIfNeeded();
   return card;
@@ -51,7 +57,7 @@ async function openParadeHours(page) {
 test.describe("Hub volunteer hours", () => {
   test("member hours form does not send people to Track It Forward", async ({ page }) => {
     const report = watchPage(page);
-    const card = await openParadeHours(page);
+    const card = await openHomeHours(page);
     await expect(card).toContainText("Log hours for this season");
     await expect(card.locator("#vhKind")).toBeVisible();
     await expect(card.locator("#vhActivity")).toBeVisible();
@@ -73,8 +79,7 @@ test.describe("Hub volunteer hours", () => {
   test("FAQ tells members to log hours in the Hub", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page);
-    await page.locator('[data-hub-tab="parade"]').click();
-    await page.locator('#deskHero [data-desk-goto="deskFaq"]').click();
+    await page.locator('#homeDeskHero [data-desk-goto="deskFaq"]').click();
     await page.locator('[data-faq-pill="charities"]').click();
     const block = page.locator('[data-faq-section="charities"]');
     await expect(block).toBeVisible();
@@ -169,7 +174,7 @@ test.describe("Event Studio volunteer cap", () => {
   test("cap hint says a full roster will not overbook", async ({ page }) => {
     const report = watchPage(page);
     await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
-    await page.locator('[data-hub-goto="event-studio"]').click();
+    await openHomeShortcut(page, "event-studio");
     await expect(page.locator("#hubEventVolunteerCap")).toBeVisible();
     await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("pending hours");
     await page.locator("#hubEventVolunteerCap").fill("2");

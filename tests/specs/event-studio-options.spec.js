@@ -1,11 +1,10 @@
 // Event Studio optional raffle / meal / online fields, and signup meal visibility.
 const { test, expect } = require("@playwright/test");
-const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 async function openEventStudio(page) {
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
-  await page.waitForSelector('[data-hub-goto="event-studio"]');
-  await page.locator('[data-hub-goto="event-studio"]').click();
+  await openHomeShortcut(page, "event-studio");
   await expect(page.locator("#hubEventStudio")).toBeVisible();
   await expect(page.locator("#hubEventForm")).toBeVisible();
 }
@@ -172,8 +171,7 @@ test.describe("Event Studio permanent delete", () => {
       if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
       if (typeof window.kosUnlock === "function") window.kosUnlock();
     }, { officer: true, canManageEvents: true });
-    await page.waitForSelector('[data-hub-goto="event-studio"]');
-    await page.locator('[data-hub-goto="event-studio"]').click();
+    await openHomeShortcut(page, "event-studio");
     await expect(page.locator("#hubEventStudio")).toBeVisible();
     await expect(page.locator("[data-event-delete]")).toHaveCount(2);
     await expect(page.locator("[data-event-delete]").first()).toHaveText("Delete");
@@ -242,7 +240,7 @@ test.describe("Feature on public site", () => {
       if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
       if (typeof window.kosUnlock === "function") window.kosUnlock();
     }, { officer: true, canManageEvents: true });
-    await page.locator('[data-hub-goto="event-studio"]').click();
+    await openHomeShortcut(page, "event-studio");
     await expect(page.locator("#hubEventStudio")).toBeVisible();
     const star = page.locator("[data-event-feature]");
     await expect(star).toContainText("Feature on public site");
@@ -368,7 +366,7 @@ test("Member Hub Events tab has a member event list for signed-in members", asyn
   await page.locator('[data-hub-tab="events"]').click();
   await expect(page.locator("[data-hub-panel='events']")).toHaveClass(/hub-on/);
   await expect(page.locator("#hubMemberEventList")).toBeVisible();
-  await expect(page.locator("[data-hub-panel='events']")).toContainText("Member addresses show here after you sign in");
+  await expect(page.locator("[data-hub-panel='events']")).toContainText("Flyers, full details, addresses, and your RSVPs");
   assertHealthy(expect, report, "hub member events list");
 });
 

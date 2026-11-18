@@ -1,11 +1,10 @@
 // Parade season: Event Studio parade + meeting link, Hub status, public cards, .ics.
 const { test, expect } = require("@playwright/test");
-const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 async function openEventStudio(page) {
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
-  await page.waitForSelector('[data-hub-goto="event-studio"]');
-  await page.locator('[data-hub-goto="event-studio"]').click();
+  await openHomeShortcut(page, "event-studio");
   await expect(page.locator("#hubEventStudio")).toBeVisible();
   await expect(page.locator("#hubEventForm")).toBeVisible();
 }

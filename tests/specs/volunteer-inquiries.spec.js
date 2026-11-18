@@ -136,11 +136,12 @@ test.describe("Charity volunteer inbox", () => {
       }
     });
 
-    const home = page.locator("#hubVolunteerHomeLink");
-    await expect(home).toBeVisible();
-    await expect(home).toContainText("1 new volunteer inquiry");
-
+    await expect(page.locator("#hubVolunteerHomeLink")).toHaveCount(0);
     await page.locator("[data-hub-tab='officer']").click();
+    const inboxTile = page.locator('[data-tool="tool:hubVolunteerInbox"]');
+    await expect(inboxTile).toBeVisible();
+    await expect(inboxTile).toContainText("1 new person asked to help");
+
     // The desk rebuilds its tiles once after the tab opens.
     await page.waitForTimeout(200);
     const section = page.locator("#deskOff-charity");
@@ -166,7 +167,8 @@ test.describe("Charity volunteer inbox", () => {
     await tool.locator("[data-vol-contacted='vol-nia']").click();
     await expect(tool).toContainText("Marked contacted.");
     await expect(tool.locator("[data-vol-id='vol-nia']")).toHaveCount(0);
-    await expect(page.locator("#hubVolunteerHomeLink")).toContainText("No new volunteer inquiries");
+    await expect(tool.locator("[data-vol-status='new']")).toContainText("New (0)");
+    await expect(tool).toContainText("No new volunteer inquiries.");
 
     await tool.locator("[data-vol-status='contacted']").click();
     await expect(tool).toContainText("Nia Byrne");

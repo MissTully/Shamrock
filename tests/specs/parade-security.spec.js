@@ -240,6 +240,22 @@ test("Event Studio parade field is Security volunteers needed", async ({ page })
 
 test("parades.html invites members to sign up and shows the SantaFest time", async ({ page }) => {
   const report = watchPage(page);
+  await page.route("**/rest/v1/v_public_events**", (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET, OPTIONS"
+    };
+    if (route.request().method() === "OPTIONS") {
+      return route.fulfill({ status: 204, headers });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers,
+      body: "[]"
+    });
+  });
   await page.goto("/parades.html");
   const cta = page.locator("#paradeSecurityCta");
   await expect(cta).toContainText("Want to work security? Sign in to the Member Hub to pick your parade and shift.");
