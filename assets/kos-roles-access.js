@@ -772,6 +772,10 @@
   function openRoles() {
     paintShell();
     if (fixture) {
+      // Officer desk wiring re-opens this tool after the member is already
+      // on screen. Re-applying the fixture would wipe an in-progress edit.
+      var already = document.getElementById("kosRolesMember");
+      if (already && model && draft && String(model.selectedId) === String(fixture.selectedId)) return;
       useModel(fixture, true);
       return;
     }

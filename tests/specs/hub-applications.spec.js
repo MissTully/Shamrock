@@ -80,6 +80,20 @@ const APPLICATIONS = [
   }
 ];
 
+async function applicationsTile(page) {
+  await expect(page.locator("#hubAppsHomeLink")).toHaveCount(0);
+  await page.locator("[data-hub-tab='officer']").click();
+  const tile = page.locator('[data-tool="tool:hubApplications"]');
+  await expect(tile).toBeVisible();
+  return tile;
+}
+
+async function openApplicationsTile(page) {
+  const tile = await applicationsTile(page);
+  await tile.click();
+  return tile;
+}
+
 test.describe("Membership Applications", () => {
   test("officers who cannot review applications do not see the tool", async ({ page }) => {
     const report = watchPage(page);
@@ -103,10 +117,9 @@ test.describe("Membership Applications", () => {
       }
     });
 
-    const home = page.locator("#hubAppsHomeLink");
-    await expect(home).toBeVisible();
-    await expect(home).toContainText("3 new applications");
-    await home.click();
+    const tile = await applicationsTile(page);
+    await expect(tile).toContainText("3 new applications");
+    await tile.click();
 
     await expect(page.locator("[data-hub-panel='officer']")).toHaveClass(/hub-on/);
     const tool = page.locator("#hubApplications");
@@ -155,7 +168,7 @@ test.describe("Membership Applications", () => {
     await expect(tool).toContainText("Create or reset your password");
     await expect(tool.locator("[data-app-id='app-nia']")).toHaveCount(0);
     await expect(tool.locator("[data-app-history='approve']")).toContainText("Nia Byrne");
-    await expect(page.locator("#hubAppsHomeLink")).toContainText("2 new applications");
+    await expect(page.locator("#appOfficerBadge")).toHaveText("2");
     assertHealthy(expect, report, "applications review");
   });
 
@@ -186,7 +199,7 @@ test.describe("Membership Applications", () => {
         }
       });
     });
-    await page.locator("#hubAppsHomeLink").click();
+    await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
     await expect(tool.locator("[data-app-bucket='background']")).toContainText("Background check");
     await expect(tool.locator("[data-app-bucket='dues']")).toContainText("Dues pending");
@@ -267,7 +280,7 @@ test.describe("Membership Applications", () => {
         applications: withPartner
       }
     });
-    await page.locator("#hubAppsHomeLink").click();
+    await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
     const nia = tool.locator("[data-app-id='app-nia']");
     const owen = tool.locator("[data-app-id='app-owen']");
@@ -292,8 +305,9 @@ test.describe("Membership Applications", () => {
     expect(dlBtn.x).toBeGreaterThan(dlText.x);
     expect(Math.abs((dlBtn.y + dlBtn.height / 2) - (dlText.y + dlText.height / 2))).toBeLessThan(24);
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
-    await nia.screenshot({ path: "/opt/cursor/artifacts/screenshots/membership-chair-copy-dl-ssn.png" });
-    await nia.screenshot({ path: "/opt/cursor/artifacts/membership_chair_dob_copy.png" });
+    await nia.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: "/opt/cursor/artifacts/screenshots/membership-chair-copy-dl-ssn.png" });
+    await page.screenshot({ path: "/opt/cursor/artifacts/membership_chair_dob_copy.png" });
 
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']").click();
     await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='dl']")).toHaveText("Copied");
@@ -367,7 +381,7 @@ test.describe("Membership Applications", () => {
         }
       };
     });
-    await page.locator("#hubAppsHomeLink").click();
+    await openApplicationsTile(page);
     const nia = page.locator("#hubApplications [data-app-id='app-nia']");
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
     await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']")).toHaveText("Copied");
@@ -391,7 +405,7 @@ test.describe("Membership Applications", () => {
         applications: APPLICATIONS
       }
     });
-    await page.locator("#hubAppsHomeLink").click();
+    await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
     await expect(tool.locator("#hubEditJoiningPacket")).toHaveText("Edit joining packet email");
     await tool.locator("#hubEditJoiningPacket").click();
@@ -495,7 +509,7 @@ test.describe("Membership Applications", () => {
         }
       });
     });
-    await page.locator("#hubAppsHomeLink").click();
+    await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
 
     await tool.locator("[data-app-bucket='prospect']").click();
@@ -548,7 +562,7 @@ test.describe("Membership Applications", () => {
     await expect(nia).toHaveAttribute("data-app-status", "pending-new");
     await expect(nia.locator("[data-app-record-note]")).toContainText("Left a voicemail.");
     await expect(tool.locator("[data-app-bucket='new']")).toContainText("New applications (3)");
-    await expect(page.locator("#hubAppsHomeLink")).toContainText("3 new applications");
+    await expect(page.locator("#appOfficerBadge")).toHaveText("3");
 
     await tool.locator("[data-app-bucket='renewal']").click();
     await expect(tool.locator("[data-app-save-note='app-rowan']")).toHaveText("Save note");

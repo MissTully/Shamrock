@@ -25,7 +25,22 @@ test("Reserve a locker shows Tim's open counts and the real Zeffy pay links", as
     window.__kosSb = {
       auth: { getSession: async () => ({ data: { session: null } }) },
       from() {
-        return { select: async () => ({ data: [], error: null }) };
+        function query(rows) {
+            const builder = {
+              order() { return builder; },
+              eq() { return builder; },
+              in() { return builder; },
+              gte() { return builder; },
+              lte() { return builder; },
+              limit() { return builder; },
+              or() { return builder; },
+              then(onFulfilled, onRejected) {
+                return Promise.resolve({ data: rows, error: null }).then(onFulfilled, onRejected);
+              }
+            };
+            return builder;
+          }
+          return { select() { return query([]); } };
       },
       rpc: async (name) => {
         if (name === "locker_availability") return { data: { small: 5, large: 8 }, error: null };
@@ -93,8 +108,23 @@ test("Joining the locker list inserts a reservation, not a locker row", async ({
     window.__kosSb = {
       auth: { getSession: async () => ({ data: { session: { user: { id: "member-1" } } } }) },
       from(table) {
+        function query(data) {
+          const builder = {
+            order() { return builder; },
+            eq() { return builder; },
+            in() { return builder; },
+            gte() { return builder; },
+            lte() { return builder; },
+            limit() { return builder; },
+            or() { return builder; },
+            then(onFulfilled, onRejected) {
+              return Promise.resolve({ data: data, error: null }).then(onFulfilled, onRejected);
+            }
+          };
+          return builder;
+        }
         return {
-          select: async () => ({ data: [], error: null }),
+          select() { return query([]); },
           insert: async (payload) => {
             window.__kosInserted = { table: table, payload: payload };
             return { error: null };
@@ -345,7 +375,22 @@ test("A member who holds lockers can renew them on the matching Zeffy link", asy
     window.__kosSb = {
       auth: { getSession: async () => ({ data: { session: { user: { id: "tim" } } } }) },
       from() {
-        return { select: async () => ({ data: [], error: null }) };
+        function query(rows) {
+            const builder = {
+              order() { return builder; },
+              eq() { return builder; },
+              in() { return builder; },
+              gte() { return builder; },
+              lte() { return builder; },
+              limit() { return builder; },
+              or() { return builder; },
+              then(onFulfilled, onRejected) {
+                return Promise.resolve({ data: rows, error: null }).then(onFulfilled, onRejected);
+              }
+            };
+            return builder;
+          }
+          return { select() { return query([]); } };
       },
       rpc: async (name, args) => {
         if (name === "locker_availability") return { data: { small: 5, large: 8 }, error: null };
@@ -421,7 +466,22 @@ test("One large locker renews on the large Zeffy link, and a paid renewal cannot
     window.__kosSb = {
       auth: { getSession: async () => ({ data: { session: { user: { id: "doug" } } } }) },
       from() {
-        return { select: async () => ({ data: [], error: null }) };
+        function query(rows) {
+            const builder = {
+              order() { return builder; },
+              eq() { return builder; },
+              in() { return builder; },
+              gte() { return builder; },
+              lte() { return builder; },
+              limit() { return builder; },
+              or() { return builder; },
+              then(onFulfilled, onRejected) {
+                return Promise.resolve({ data: rows, error: null }).then(onFulfilled, onRejected);
+              }
+            };
+            return builder;
+          }
+          return { select() { return query([]); } };
       },
       rpc: async (name, args) => {
         if (name === "locker_availability") return { data: { small: 1, large: 1 }, error: null };

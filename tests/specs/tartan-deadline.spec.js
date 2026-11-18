@@ -91,9 +91,9 @@ test.describe("signed-in hubs", () => {
     await expect(badge).toHaveText(HUB_LABEL);
     await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
     await expect(page.locator("#appTartanDeadline")).toHaveCount(0);
-    const welcome = await page.locator("#hubWelcomeCard").boundingBox();
+    const tabs = await page.locator("#hubTabs").boundingBox();
     const box = await badge.boundingBox();
-    expect(box.y).toBeLessThan(welcome.y);
+    expect(box.y).toBeGreaterThan(tabs.y);
   });
 
   test("phone app shell shows the Saturday reminder at the top of home", async ({ page }) => {

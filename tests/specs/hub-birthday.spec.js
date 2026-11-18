@@ -45,7 +45,8 @@ test.describe("Member Hub birthday card", () => {
 
     const order = await page.locator("#hubHomeTop").innerHTML();
     expect(order.indexOf("hubBirthdayCard")).toBeGreaterThanOrEqual(0);
-    expect(order.indexOf("hubBirthdayCard")).toBeLessThan(order.indexOf("hubWelcomeCard"));
+    await expect(page.locator("#hubWelcomeCard")).toHaveCount(0);
+    await expect(page.locator('[data-hub-goto="desk"]')).toBeVisible();
 
     const art = page.locator("#hubBirthdayCard .hub-birthday-art");
     await expect(art).toBeVisible();
@@ -80,7 +81,8 @@ test.describe("Member Hub birthday card", () => {
     ], today), TODAY);
     await expect(page.locator("#hubBirthdayCard")).toHaveCount(0);
     await expect(page.locator(".hub-birthday-art")).toHaveCount(0);
-    await expect(page.locator("#hubWelcomeCard")).toBeVisible();
+    await expect(page.locator("#hubWelcomeCard")).toHaveCount(0);
+    await expect(page.locator('[data-hub-goto="desk"]')).toBeVisible();
     assertHealthy(expect, report, "no birthdays");
   });
 

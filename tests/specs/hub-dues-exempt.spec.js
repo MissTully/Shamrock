@@ -36,8 +36,10 @@ test.describe("Dues checklist exemption", () => {
       member_role: "member",
       officer_title: ""
     });
-    await expect(page.locator('.app-tile[data-app-go="dues"]')).toBeVisible();
-    await expect(page.locator("#hubDuesCheck")).toContainText("Pay membership dues");
+    const dues = page.locator('.app-tile[data-app-go="dues"]');
+    await expect(dues).toBeVisible();
+    await expect(dues).toContainText("Pay Dues");
+    await expect(page.locator("#hubDuesCheck")).toHaveCount(0);
     await page.evaluate(() => {
       window.__kosPreviewParadeReady({
         member_id: "m-maeve",

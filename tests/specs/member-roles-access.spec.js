@@ -236,7 +236,9 @@ test.describe("Member roles and access", () => {
     await page.locator("#kosRolesConfirm").scrollIntoViewIfNeeded();
     await page.screenshot({ path: dir + "/desktop-confirm.png" });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator("#kosRolesSearch").scrollIntoViewIfNeeded();
+    const search = page.locator("#kosRolesSearch");
+    await expect(search).toBeVisible();
+    await search.scrollIntoViewIfNeeded();
     await page.screenshot({ path: dir + "/mobile.png" });
     await page.locator("#kosRolesConfirm").scrollIntoViewIfNeeded();
     await page.screenshot({ path: dir + "/mobile-confirm.png" });

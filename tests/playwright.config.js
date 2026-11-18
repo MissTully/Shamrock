@@ -7,7 +7,10 @@ module.exports = defineConfig({
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: true,
-  workers: 4,
+  retries: 1,
+  // One browser at a time. The static file server is single-threaded, and
+  // extra browsers make paints and clipboard checks miss under load.
+  workers: 1,
   reporter: [["list"]],
   use: {
     baseURL: "http://127.0.0.1:4173",

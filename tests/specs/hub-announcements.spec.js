@@ -74,7 +74,7 @@ test.describe("Krewe Tidings announcements", () => {
     const report = watchPage(page);
     await page.setViewportSize({ width: 390, height: 844 });
     await unlockMemberHub(page);
-    await page.waitForSelector('[data-hub-goto="directory"]');
+    await page.waitForSelector('.app-tile[data-app-go="directory"]');
     const tail = "TAIL_MARKER_END";
     const longBody = "<p><strong>Toys</strong> for the flight are due this fall.</p><p>" +
       ("Bring a sturdy toy. ".repeat(40)) + tail + "</p>";
@@ -146,7 +146,8 @@ test.describe("Krewe Tidings announcements", () => {
     await expect(page.locator("#appPageTitle")).toHaveText("Home");
     await expect(page.locator(".hub-board")).toBeVisible();
     const after = await page.evaluate(() => document.querySelector('[data-hub-panel="hub"]').scrollTop);
-    expect(Math.abs(after - before)).toBeLessThan(48);
+    expect(before).toBeGreaterThan(300);
+    expect(after).toBe(0);
 
     await page.locator("#hubBoardArchiveBtn").click();
     const archive = page.locator("#hubBoardArchive");

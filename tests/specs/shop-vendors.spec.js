@@ -136,7 +136,10 @@ test("vendor apparel is links and photos, with Krewe Gear unchanged", async ({ p
   await page.goto("/store.html");
   await expect(page.locator("#shopGrid .product")).toHaveCount(1);
   await expect(page.locator("#shopGrid")).toContainText("$12.00");
-  await expect(page.locator("#shopGrid a.add")).toHaveAttribute("href", PIN);
+  const add = page.locator("#shopGrid button.add");
+  await expect(add).toHaveCount(1);
+  await expect(add).toHaveText("Add to Cart");
+  await expect(add).toHaveAttribute("data-add", "pin-1");
 
   const vendorsSection = page.locator("#vendors");
   await expect(vendorsSection).toBeVisible();

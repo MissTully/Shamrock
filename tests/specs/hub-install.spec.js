@@ -64,7 +64,9 @@ test.describe("Member Hub home-screen install", () => {
     await expect(banner).toBeVisible();
     await expect(banner).toContainText("Get the mobile app");
     await expect(page.locator("#hubInstallCard")).toHaveCount(0);
-    await expect(page.locator("#hubHome")).toContainText("This is the Craic Cup");
+    const craic = page.locator('.app-tile[data-app-go="fun"]');
+    await expect(craic).toBeVisible();
+    await expect(craic).toContainText("Craic Cup");
     await page.locator('[data-hub-tab="krewe"]').click();
     await expect(page.locator("#hubInstallMe")).toBeVisible();
     await expect(page.locator("#hubInstallMe")).toContainText("Install the app");

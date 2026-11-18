@@ -72,7 +72,7 @@ test.describe("Member Hub Quick Links", () => {
 
     await page.locator('[data-hub-goto="docs"]').click();
 
-    await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
+    await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
     await expect(page.locator("#docs")).toBeVisible();
     await expect(page.locator("#docs h2")).toHaveText(/^Documents$/i);
     await expect(page.locator("#docs")).toContainText("Governing documents");
@@ -110,8 +110,7 @@ test.describe("Member Hub Quick Links", () => {
     await unlockMemberHub(page);
     await waitForQuickLinks(page);
 
-    await page.locator('[data-hub-tab="parade"]').click();
-    await expect(page.locator("#orientationCard")).toBeVisible();
+    await expect(page.locator("[data-hub-panel='hub'] #orientationCard")).toBeVisible();
     await page.locator("#orientationCard a[href='#docs']").click();
 
     await expect(page.locator("#docs")).toBeVisible();
@@ -131,14 +130,18 @@ test.describe("Member Hub Quick Links", () => {
 
     // The four counters, in reading order, each holding its cards.
     await expect(page.locator("#deskSeason #prCard")).toBeAttached();
-    await expect(page.locator("#deskSeason #hubHoursCard")).toBeAttached();
-    await expect(page.locator("#deskShare #shareCard")).toBeAttached();
-    await expect(page.locator("#deskShare #shareCard h2")).toHaveText(/Share Your Media/i);
+    await expect(page.locator("#deskSeason #hubHoursCard")).toHaveCount(0);
     await expect(page.locator("#deskTravel #carpoolCard")).toBeAttached();
     await expect(page.locator("#deskTravel #vanCard")).toBeAttached();
     await expect(page.locator("#deskTravel #lockerCard")).toBeAttached();
+
+    await page.locator('[data-hub-tab="hub"]').click();
+    await expect(page.locator("#hubHome #hubHoursCard")).toBeAttached();
+    await expect(page.locator("#deskShare #shareCard")).toBeAttached();
+    await expect(page.locator("#deskShare #shareCard h2")).toHaveText(/Share Your Media/i);
     await expect(page.locator("#deskLearn #orientationCard")).toBeAttached();
     await expect(page.locator("#deskLearn #docs")).toBeAttached();
+    await expect(page.locator("#homeDeskHero [data-desk-goto='deskFaq']")).toBeVisible();
 
     // Orientation video now lives on the desk, not on My Krewe.
     await expect(page.locator("[data-hub-panel='krewe'] #orientationCard")).toHaveCount(0);
@@ -158,8 +161,9 @@ test.describe("Member Hub Quick Links", () => {
 
     // Illuminated section headers with the labeled groups.
     await expect(page.locator("#deskOff-events .desk-group-head h3")).toHaveText("Events");
-    const deskHeading = await page.locator("#deskOff-events .desk-group-head h3").evaluate((el) => getComputedStyle(el).color);
-    expect(deskHeading).toBe("rgb(20, 83, 45)");
+    await expect.poll(async () => {
+      return page.locator("#deskOff-events .desk-group-head h3").evaluate((el) => getComputedStyle(el).color);
+    }).toBe("rgb(20, 83, 45)");
     await expect(page.locator("#deskOff-approvals")).toBeAttached();
     await expect(page.locator("#deskOff-reports")).toBeAttached();
 
@@ -178,7 +182,7 @@ test.describe("Member Hub Quick Links", () => {
     await waitForQuickLinks(page);
 
     await page.locator('[data-hub-goto="share"]').click();
-    await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
+    await expect(page.locator("[data-hub-panel='hub']")).toHaveClass(/hub-on/);
     await expect(page.locator("#deskShare #shareCard")).toBeVisible();
     assertHealthy(expect, report, "share quick link");
   });

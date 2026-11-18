@@ -183,15 +183,15 @@ test("members.html #docs shows a Documents card with Bylaws and Code of Conduct"
     const content = document.getElementById("memberContent");
     if (content) content.style.display = "block";
     if (window.kosRevealDocs) window.kosRevealDocs();
-    else if (window.__hubShowTab) window.__hubShowTab("parade", { skipScroll: true });
+    else if (window.__hubShowTab) window.__hubShowTab("hub", { skipScroll: true });
   });
   await expect.poll(async () => page.evaluate(() => {
     const card = document.getElementById("docs");
     const panel = card && card.closest("[data-hub-panel]");
-    return !!(card && panel && panel.classList.contains("hub-on") && panel.getAttribute("data-hub-panel") === "parade");
+    return !!(card && panel && panel.classList.contains("hub-on") && panel.getAttribute("data-hub-panel") === "hub");
   }), { timeout: 8000 }).toBe(true);
 
   await expect(page.locator("#docs")).toBeVisible();
-  await expect(page.locator("#prCard")).toBeVisible();
+  await expect(page.locator("#homeDeskHero")).toBeVisible();
   await expect(page.locator("[data-hub-panel='krewe'] .hub-docs")).toHaveCount(0);
 });
