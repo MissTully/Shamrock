@@ -417,7 +417,11 @@ Deno.serve(async (req: Request) => {
     description,
     product_kind: inferKind(metadata, payment),
     ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
-    raw: envelope,
+    // An id-only webhook has no items or phone. Keep the API payment on data
+    // so shop receipts and chair emails can read the same shape as a normal event.
+    raw: loadedFromApi
+      ? { ...envelope, type: text(envelope.type, envelope.event) ?? eventName, data: payment }
+      : envelope,
   };
 
   const recordResponse = await fetch(

@@ -18,6 +18,8 @@ test("backfill function is idempotent and summary is opt-in", () => {
   assert.match(fn, /shop_po:/);
   assert.match(fn, /shop_po_summary:/);
   assert.match(fn, /kos_match_member_by_email/);
+  assert.match(fn, /data,data,created/);
+  assert.match(fn, /kos_shop_order_time\(p\.raw, p\.created_at\)/);
   assert.match(fn, /kos_match_member_by_name/);
   assert.match(fn, /revoke all on function public\.kos_backfill_shop_orders\(jsonb, text\) from public, anon, authenticated/);
   assert.doesNotMatch(fn, /tabirnley@gmail\.com/);
@@ -50,5 +52,6 @@ test("webhook records shop payments that are not only payment.completed", () => 
   assert.match(webhook, /resolvePayment/);
   assert.match(webhook, /campaign_title/);
   assert.match(webhook, /loadedFromApi/);
+  assert.match(webhook, /data: payment/);
   assert.match(webhook, /Shop \/ store before ticketing/);
 });

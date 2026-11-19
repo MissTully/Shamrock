@@ -123,6 +123,8 @@ begin
 end;
 $$;
 
+-- Purchase time from the payment object. A replay can nest the original event
+-- and put the replay clock on data.created, so that field is not the purchase.
 create or replace function public.kos_shop_order_time(p_raw jsonb, p_created timestamptz)
 returns timestamptz
 language plpgsql
@@ -130,10 +132,53 @@ stable
 set search_path to 'public'
 as $$
 declare
+  v_obj jsonb := coalesce(p_raw, '{}'::jsonb);
+  v_pay jsonb;
   v_created text;
   v_ts timestamptz;
+  v_i int := 0;
 begin
-  v_created := nullif(btrim(coalesce(p_raw #>> '{data,created}', p_raw->>'created', '')), '');
+  while v_i < 6 and jsonb_typeof(v_obj) = 'object' loop
+    v_i := v_i + 1;
+    if jsonb_typeof(v_obj->'items') = 'array'
+       or jsonb_typeof(v_obj->'buyer') = 'object'
+       or (v_obj ? 'amount' and jsonb_typeof(v_obj->'object') = 'string')
+    then
+      v_pay := v_obj;
+      exit;
+    end if;
+    if jsonb_typeof(v_obj->'payment') = 'object' then
+      v_obj := v_obj->'payment';
+    elsif jsonb_typeof(v_obj->'data'->'data') = 'object'
+          and (
+            jsonb_typeof(v_obj->'data'->'data'->'items') = 'array'
+            or jsonb_typeof(v_obj->'data'->'data'->'buyer') = 'object'
+            or (v_obj->'data'->'data' ? 'amount')
+          )
+    then
+      v_obj := v_obj->'data'->'data';
+    elsif jsonb_typeof(v_obj->'data') = 'object' then
+      v_obj := v_obj->'data';
+    elsif jsonb_typeof(v_obj->'object') = 'object' then
+      v_obj := v_obj->'object';
+    else
+      exit;
+    end if;
+  end loop;
+
+  v_created := nullif(btrim(coalesce(
+    v_pay->>'created',
+    v_pay->>'created_at',
+    v_pay->>'paid_at',
+    v_pay->>'purchased_at',
+    ''
+  )), '');
+  if v_created is null then
+    v_created := nullif(btrim(coalesce(p_raw #>> '{data,data,created}', '')), '');
+  end if;
+  if v_created is null and v_pay is null then
+    v_created := nullif(btrim(coalesce(p_raw #>> '{data,created}', p_raw->>'created', '')), '');
+  end if;
   if v_created ~ '^[0-9]+(\.[0-9]+)?$' then
     return to_timestamp(v_created::numeric);
   end if;
@@ -216,10 +261,9 @@ begin
     v_ts := public.kos_shop_order_time(new.raw, new.created_at);
     if v_ts is not null and exists (
       select 1 from public.payments p
-      where coalesce(p.raw->>'backfill', '') = 'true'
-        and p.product_kind = 'store'
+      where p.product_kind = 'store'
         and lower(p.payer_email) = lower(new.payer_email)
-        and abs(extract(epoch from (p.created_at - v_ts))) <= 180
+        and abs(extract(epoch from (public.kos_shop_order_time(p.raw, p.created_at) - v_ts))) <= 180
     ) then
       return null;
     end if;
@@ -639,6 +683,11 @@ begin
     where p.provider_event_id in (v_event_id, v_shop_key)
        or p.provider_payment_id in (v_event_id, v_shop_key)
        or p.raw->>'shop_key' = v_shop_key
+       or (
+         p.product_kind = 'store'
+         and lower(coalesce(p.payer_email, '')) = v_email
+         and abs(extract(epoch from (public.kos_shop_order_time(p.raw, p.created_at) - v_ts))) <= 180
+       )
     limit 1;
     if v_existing is not null then
       v_skipped := v_skipped + 1;

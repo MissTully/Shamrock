@@ -254,15 +254,12 @@ test("members area: shows the auth gate, never the private content", async ({ pa
   assertHealthy(expect, report, "members gate");
 });
 
-test("store: cart opens and starts empty", async ({ page }) => {
+test("store: catalog page has no cart", async ({ page }) => {
   const report = watchPage(page);
   await page.goto("/store.html");
 
   await expect(page.locator("#shopGrid")).toBeAttached();
-  const cartBtn = page.locator("#cartBtn");
-  await expect(cartBtn).toBeVisible();
-  await expect(page.locator("#cartCount")).toHaveText(/^0?$/);
-  await cartBtn.click();
-  await expect(page.locator("#cartPanel")).toBeVisible();
-  assertHealthy(expect, report, "store cart");
+  await expect(page.locator("#shopNote")).toBeVisible();
+  await expect(page.locator("#cartBtn, #cartCount, #cartPanel, .cartbar, #navCartBtn, [data-open-cart]")).toHaveCount(0);
+  assertHealthy(expect, report, "store catalog");
 });
