@@ -54,11 +54,12 @@ function shareBar(locator) {
 async function expectShareBar(bar, id) {
   const facebook = bar.locator("a.kos-share-fb");
   await expect(facebook).toBeVisible();
-  // The Hub event screen slides in from the right. Wait until it has settled.
+  // The Hub event screen slides in from the right. Measure it after it lands.
   await expect.poll(async () => {
     const box = await facebook.boundingBox();
-    return box ? box.x : 999;
-  }).toBeLessThan(80);
+    if (!box) return false;
+    return box.x >= -1 && box.x + box.width <= 361;
+  }).toBe(true);
   await expect(facebook).toHaveText("Share on Facebook");
   const href = await facebook.getAttribute("href");
   const parsed = new URL(href);
@@ -213,7 +214,7 @@ test("per-event URL returns SantaFest Open Graph tags and hides unpublished even
   const html = await ok.text();
   expect(html).toContain('property="og:title" content="SantaFest"');
   expect(html).toContain('property="og:description" content="Saturday, December 5, 2026, 1:00 PM Eastern. Starts at Morgan St. and Madison St., Downtown Tampa, FL. Tampa\'s downtown holiday kickoff parade and the start of the krewe\'s marching season. The parade steps off at 1:00 PM at Morgan Street and Madison Street."');
-  expect(html).toContain('property="og:image" content="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/render/image/public/event-flyers/1794544500325-sand-save-1794544458706.png?width=1200&amp;height=630&amp;resize=contain&amp;quality=75&amp;format=webp"');
+  expect(html).toContain('property="og:image" content="https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/render/image/public/event-flyers/1794544500325-sand-save-1794544458706.png?width=1200&amp;height=2400&amp;resize=contain&amp;quality=75&amp;format=webp"');
   expect(html).toContain('property="og:url" content="https://www.kreweofshamrock.com/events/fixture-santafest"');
   expect(html).toContain('property="og:type" content="website"');
   expect(html).toContain('property="og:site_name" content="Krewe of Shamrock"');

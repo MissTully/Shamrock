@@ -57,7 +57,7 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   const html = res.body;
   assert.match(html, /property="og:title" content="SantaFest"/);
   assert.match(html, /property="og:description" content="Saturday, December 5, 2026, 1:00 PM Eastern\. Starts at Morgan St\. and Madison St\., Downtown Tampa, FL\. Tampa's downtown holiday kickoff parade and the start of the krewe's marching season\. The parade steps off at 1:00 PM at Morgan Street and Madison Street\."/);
-  assert.match(html, /property="og:image" content="https:\/\/oazwkwflgbthojvnclfc\.supabase\.co\/storage\/v1\/render\/image\/public\/event-flyers\/1794544500325-sand-save-1794544458706\.png\?width=1200&amp;height=630&amp;resize=contain&amp;quality=75&amp;format=webp"/);
+  assert.match(html, /property="og:image" content="https:\/\/oazwkwflgbthojvnclfc\.supabase\.co\/storage\/v1\/render\/image\/public\/event-flyers\/1794544500325-sand-save-1794544458706\.png\?width=1200&amp;height=2400&amp;resize=contain&amp;quality=75&amp;format=webp"/);
   assert.match(html, /property="og:url" content="https:\/\/www\.kreweofshamrock\.com\/events\/fixture-santafest"/);
   assert.match(html, /property="og:type" content="website"/);
   assert.match(html, /property="og:site_name" content="Krewe of Shamrock"/);
@@ -144,6 +144,26 @@ test("a database failure asks the visitor to try again", async () => {
   assert.equal(res.statusCode, 503);
   assert.match(res.body, /try again/i);
   assert.equal(res.body.includes("db down"), false);
+});
+
+test("an Inter-Krewe event links to the host site", () => {
+  const html = share.renderEventSharePage({
+    id: "11111111-1111-4111-8111-111111111111",
+    name: "Ye Mystic Krewe Social",
+    source: "ikc",
+    status: "published",
+    is_public: true,
+    event_type: "parade",
+    start_time: "2026-12-20T23:00:00.000Z",
+    location: "Tampa",
+    external_url: "https://example-krewe.example/rsvp",
+    description: "Friends of the krewe."
+  });
+  assert.match(html, /href="https:\/\/example-krewe\.example\/rsvp"/);
+  assert.match(html, /Details on the host krewe/);
+  assert.equal(html.includes("/event-signup.html?event="), false);
+  assert.equal(html.includes('href="/parades.html"'), false);
+  assert.equal(html.includes('href="/members.html"'), false);
 });
 
 test("a pdf flyer falls back to the Krewe image", () => {
