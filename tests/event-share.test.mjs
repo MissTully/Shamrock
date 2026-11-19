@@ -74,6 +74,8 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   assert.equal(html.includes("123 Hidden Lane"), false);
   assert.equal(html.includes("Gate code 4321"), false);
   assert.match(html, /Parade details/);
+  assert.match(html, /class="share-kicker">Parade</);
+  assert.match(html, /href="\/parades\.html">Back to Parades</);
   assert.equal(html.includes("/event-signup.html?event=fixture-santafest"), false);
 });
 
@@ -102,6 +104,8 @@ test("a started event stays on its link and signup is closed", async () => {
   assert.equal(res.statusCode, 200);
   assert.match(res.body, /Registration is closed/);
   assert.equal(res.body.includes("/event-signup.html?event=fixture-started"), false);
+  assert.equal(res.body.includes("Back to Parades"), false);
+  assert.match(res.body, /All upcoming events/);
   assert.match(res.body, /property="og:title" content="Past Social"/);
 });
 
