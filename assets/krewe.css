@@ -36,6 +36,17 @@ html{
   scroll-behavior:smooth;
   overflow-x:clip;
   max-width:100%;
+  /* Stop Android from inflating text on a narrow glass and blowing the layout out. */
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+/* A foldable can lay the page out wider than the glass. krewe.js pins
+   the document to the visible width when that happens. */
+html.kos-vv-lock,
+html.kos-vv-lock body{
+  width:var(--kos-vv);
+  max-width:var(--kos-vv);
+  overflow-x:clip;
 }
 
 body{
@@ -399,8 +410,33 @@ form.krewe-form{ padding:26px 30px 30px; }
   .feature.rev .ft-media{ order:0; }
   .pillars{ grid-template-columns:1fr; }
 }
+@media (max-width:959px){
+  /* Phone and Fold widths. Desktop (960px and up) keeps the 20px body. */
+  body{ font-size:16px; line-height:1.6; }
+  .hero h1{ font-size:clamp(30px, 9vw, 48px); }
+  .hero .lede{ font-size:clamp(16px, 4.4vw, 20px); }
+  .hero .eyebrow{ font-size:clamp(16px, 4vw, 20px); }
+  .page-head h1{ font-size:clamp(26px, 7.5vw, 40px); }
+  .page-head p.sub{ font-size:clamp(16px, 4vw, 18px); }
+  .section-title h2{ font-size:clamp(24px, 6.2vw, 34px); }
+  .section-title .sub{ font-size:16px; }
+  .feature h2{ font-size:clamp(22px, 5.8vw, 30px); }
+  .pillar h3{ font-size:clamp(18px, 4.8vw, 21px); }
+  .pillar p{ font-size:16px; }
+  .event-card h3{ font-size:clamp(18px, 4.8vw, 21px); }
+  .event-card .meta{ font-size:16px; }
+  #failteDefBtn{
+    font-size:clamp(20px, 5.6vw, 32px) !important;
+    white-space:normal;
+    max-width:100%;
+  }
+  #failteDefBtn .word{ white-space:normal; }
+  .wrap, .hero, .page-head, .feature, .pillar, .section-title{
+    overflow-wrap:break-word;
+  }
+}
 @media (max-width:680px){
-  body{ font-size:19px; }
+  body{ font-size:16px; }
   .krewe-links a{ font-size:16px; padding:7px 9px; margin-left:2px; }
   .krewe-nav .brand .name small{ display:none; }
   .krewe-music .label{ display:none; }
@@ -425,7 +461,7 @@ form.krewe-form{ padding:26px 30px 30px; }
   .form-card .fc-head{ padding:26px 18px 20px; }
   .photo-band .pb-inner{ padding:48px 16px; }
   .banner-flourish{ height:48px; margin:12px auto 4px; }
-  .section-title .sub{ font-size:17px; }
+  .section-title .sub{ font-size:16px; }
 }
 @media (prefers-reduced-motion:reduce){
   *{ animation:none !important; scroll-behavior:auto; }
@@ -809,7 +845,8 @@ table{ max-width:100%; }
 @media (max-width:768px){
   .hero h1{ font-size:clamp(32px,10vw,48px); }
   .page-head h1{ font-size:clamp(26px,8vw,40px); }
-  #failteDefBtn{ font-size:clamp(26px,7vw,40px) !important; }
+  #failteDefBtn{ font-size:clamp(20px,5.6vw,32px) !important; white-space:normal; max-width:100%; }
+  #failteDefBtn .word{ white-space:normal; }
   .pillars{ grid-template-columns:1fr; }
   .feature{ grid-template-columns:1fr; gap:22px; }
   .mosaic .wide,.mosaic .big{ grid-column:span 2; }
@@ -928,6 +965,10 @@ table{ max-width:100%; }
 /* Larger tap targets in the hub: members use it on phones at parades, so
    every main button is at least 44px tall with 17px text. */
 .hub .btn{ min-height:44px; font-size:17px; display:inline-flex; align-items:center; justify-content:center; }
+@media (max-width:959px){
+  .hub{ font-size:16px; }
+  .hub .btn{ font-size:16px; }
+}
 .hub .hub-tabs button,
 .hub .game-tabs button,
 .hub .gn-step,
