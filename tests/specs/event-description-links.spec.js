@@ -44,6 +44,10 @@ test.describe("event description links", () => {
     await expect(button).toHaveAttribute("href", URL);
     await expect(button).toHaveAttribute("target", "_blank");
     await expect(page.locator("body")).not.toContainText("javascript:");
+    await expect(page.locator(".kos-share-group")).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText("Share in our Krewe group");
+    await expect(page.locator(".kos-share-fb")).toHaveText("Share on my Facebook");
+    await expect(page.locator(".kos-share-copy")).toHaveText("Copy link");
     await noHorizontalOverflow(page);
 
     await page.setViewportSize({ width: 344, height: 700 });
@@ -54,7 +58,7 @@ test.describe("event description links", () => {
     await desc.scrollIntoViewIfNeeded();
     fs.mkdirSync(SHOTS, { recursive: true });
     await page.screenshot({
-      path: path.join(SHOTS, "public-event-description-link-390.png"),
+      path: path.join(SHOTS, "public-event-description-link-390-no-group.png"),
       fullPage: false
     });
 
@@ -76,10 +80,11 @@ test.describe("event description links", () => {
     await expect(hubLink).toHaveAttribute("target", "_blank");
     await expect(hubLink).toHaveAttribute("rel", "noopener noreferrer");
     await expect(card.locator("a.hub-ev-btn-alt", { hasText: "Event website" })).toHaveAttribute("href", URL);
+    await expect(card.locator("a.kos-share-group")).toHaveText("Share in our Krewe group");
     await noHorizontalOverflow(page);
     await hubLink.scrollIntoViewIfNeeded();
     await page.screenshot({
-      path: path.join(SHOTS, "hub-event-card-description-link-390.png"),
+      path: path.join(SHOTS, "hub-event-card-description-link-390-group.png"),
       fullPage: false
     });
 
