@@ -88,6 +88,10 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     payment.campaign,
     payment.campaignName,
     payment.campaign_name,
+    payment.campaign_title,
+    payment.campaignTitle,
+    payment.form_name,
+    payment.formName,
     payment.product,
     payment.productName,
     payment.product_name,
@@ -95,6 +99,9 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     payment.title,
     payment.name,
     payment.rate_title,
+    metadata.campaign_title,
+    metadata.campaign_name,
+    metadata.title,
   ].filter(Boolean).join(" ").toLowerCase();
   const linkBlob = [
     payment.url,
@@ -138,11 +145,14 @@ const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
     payment.campaignType,
     payment.campaign_category,
     payment.campaignCategory,
+    metadata.campaign_type,
+    metadata.campaign_category,
   )?.toLowerCase() ?? "";
+  // Shop / store before ticketing. The KOS Shop URL lives under /ticketing/.
+  if (/(shop|store|merch)/.test(campaignType)) return "store";
   if (/(ticket|ticketing|event)/.test(campaignType)) return "event";
   if (/(donation|donate)/.test(campaignType)) return "donation";
   if (/(membership|dues)/.test(campaignType)) return "dues";
-  if (/(shop|store|merch)/.test(campaignType)) return "store";
   if (/\b(dues|membership)\b/.test(description)) return "dues";
   if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
   if (/\bdonation|donor|gift\b/.test(description)) return "donation";
@@ -180,6 +190,40 @@ const extractGuestToken = (...values: unknown[]): string | undefined => {
   return undefined;
 };
 
+const eventNameOf = (envelope: JsonObject): string =>
+  (text(envelope.type, envelope.event, envelope.name) ?? "").toLowerCase();
+
+/** Payment fields live on data. data.object is often the string "payment". */
+const resolvePayment = (envelope: JsonObject): JsonObject => {
+  const data = asObject(envelope.data);
+  const candidates = [data.payment, data.object, envelope.payment];
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
+      const obj = candidate as JsonObject;
+      if (text(obj.id, obj.payment_id, obj.paymentId, obj.transaction_id) || obj.amount != null || obj.items) {
+        return obj;
+      }
+    }
+  }
+  if (text(data.id, data.payment_id, data.paymentId) || data.amount != null || data.items) return data;
+  return {};
+};
+
+const RECORDABLE_EVENTS = new Set([
+  "payment.completed",
+  "payment.created",
+  "payment.updated",
+  "payment.succeeded",
+  "order.completed",
+  "checkout.completed",
+]);
+
+const paidStatus = (payment: JsonObject): boolean => {
+  const status = (text(payment.status) ?? "").toLowerCase();
+  if (!status) return true;
+  return ["succeeded", "paid", "completed", "succeded", "complete"].includes(status);
+};
+
 const slugFromText = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
   const slug = value
@@ -206,12 +250,48 @@ Deno.serve(async (req: Request) => {
   } catch {
     return json({ error: "Invalid JSON" }, 400);
   }
-  if (envelope.type !== "payment.completed") {
-    return json({ error: "Expected payment.completed" }, 400);
+  const eventName = eventNameOf(envelope);
+  if (eventName.startsWith("contact.") || eventName === "payment.deleted") {
+    console.log("zeffy webhook ignored", eventName);
+    return json({ received: true, ignored: eventName });
+  }
+  if (!RECORDABLE_EVENTS.has(eventName)) {
+    console.log("zeffy webhook unexpected event", eventName || "(none)");
+    return json({ error: "Unexpected event", event: eventName || null }, 400);
   }
 
-  const data = asObject(envelope.data);
-  const payment = asObject(data.payment ?? envelope.payment ?? data ?? envelope);
+  let payment = resolvePayment(envelope);
+  let loadedFromApi = false;
+  const earlyId = text(
+    payment.id,
+    payment.paymentId,
+    payment.payment_id,
+    payment.transactionId,
+    payment.transaction_id,
+    asObject(envelope.data).id,
+  );
+  if (earlyId && resolveAmountCents(payment) === undefined) {
+    const zeffyApiKey = Deno.env.get("ZEFFY_API_KEY");
+    if (!zeffyApiKey) {
+      console.log("zeffy webhook id-only payload", eventName);
+      return json({ error: "Payment amount is required" }, 400);
+    }
+    const loadedResponse = await fetch(
+      `https://api.zeffy.com/api/v1/payments/${encodeURIComponent(earlyId)}`,
+      { headers: { accept: "application/json", authorization: `Bearer ${zeffyApiKey}` } },
+    );
+    if (!loadedResponse.ok) return json({ error: "Unable to load payment from Zeffy" }, 502);
+    const loadedBody = asObject(await loadedResponse.json());
+    const loaded = resolvePayment({ data: asObject(loadedBody.data ?? loadedBody) });
+    if (loaded.amount != null || text(loaded.id, loaded.payment_id)) {
+      payment = loaded;
+      loadedFromApi = true;
+    }
+  }
+  if (!paidStatus(payment) && (eventName === "payment.created" || eventName === "payment.updated")) {
+    console.log("zeffy webhook ignored unpaid", eventName);
+    return json({ received: true, ignored: "not_paid", event: eventName });
+  }
   const metadata = asObject(payment.metadata ?? payment.meta);
   const contact = pickContact(payment);
 
@@ -257,7 +337,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const zeffyApiKey = Deno.env.get("ZEFFY_API_KEY");
-  if (zeffyApiKey) {
+  if (zeffyApiKey && !loadedFromApi) {
     const verifyResponse = await fetch(
       `https://api.zeffy.com/api/v1/payments/${encodeURIComponent(paymentId)}`,
       { headers: { accept: "application/json", authorization: `Bearer ${zeffyApiKey}` } },
@@ -284,6 +364,8 @@ Deno.serve(async (req: Request) => {
     payment.description,
     payment.campaignName,
     payment.campaign_name,
+    payment.campaign_title,
+    payment.campaignTitle,
     payment.productName,
   );
   const campaignSlug = slugFromText(
@@ -318,6 +400,8 @@ Deno.serve(async (req: Request) => {
     campaign_name: text(
       payment.campaignName,
       payment.campaign_name,
+      payment.campaign_title,
+      payment.campaignTitle,
       payment.campaign,
       payment.title,
     ),
