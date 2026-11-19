@@ -36,6 +36,22 @@
   .parade-card .parade-actions .btn{ font-size:14px; }
   .parade-card .ev-meta{ font-size:15px; margin:0 0 6px; }
   .parade-card .ev-meta b{ color:var(--green-800); }
+  .parade-card > p{ font-size:16px; line-height:1.45; overflow-wrap:anywhere; }
+  .parade-card .parade-flyer-link{
+    display:block; margin:-22px -22px 14px; max-width:none; text-decoration:none;
+  }
+  .parade-card .parade-flyer{
+    display:block; width:100%; max-width:100%; height:auto; background:#fffdf8;
+    border-bottom:1px solid rgba(168,128,28,.35);
+  }
+  .parade-card .parade-flyer-pdf{ margin:0 0 12px; font-size:16px; }
+  .parade-card .parade-flyer-pdf .btn{ min-height:44px; font-size:16px; }
+  .parade-card .kos-share{ margin-top:12px; }
+  .parade-card .kos-share a,
+  .parade-card .kos-share button{
+    font-size:15px; min-height:44px; text-decoration:none;
+  }
+  .parade-card .kos-share a.kos-share-fb:hover{ color:#fffaf0; }
   .why-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; max-width:860px; margin:0 auto; }
   .why-item{ background:rgba(255,255,255,.7); border:1px solid rgba(168,128,28,.22); border-radius:14px; padding:16px 18px; }
   .why-item h3{ margin:0 0 6px; font-family:var(--display); font-size:17px; color:var(--green-800); }
@@ -562,6 +578,7 @@
   <script src="assets/kos-calendar.js?v=20261116listday1"></script>
   <script src="assets/kos-linkify.js?v=20261119links3"></script>
   <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
+  <script src="assets/kos-share.js?v=20261119public1"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -688,7 +705,8 @@
       return '<div class="parade-actions">' +
         '<a class="btn btn-primary" href="membership-application.html">☘ Join</a>' +
         '<a class="btn" href="members.html">Member Login</a>' +
-        info + "</div>";
+        info + "</div>" +
+        paradeShareHtml(ev);
     }
 
     function paradeArtFor(name) {
@@ -715,14 +733,52 @@
       return null;
     }
 
+    function flyerSrc(raw) {
+      // Supabase storage objects get the sized WebP. Same-origin flyer JPGs
+      // and any other address stay as they are.
+      if (raw.indexOf("/storage/v1/object/public/") === -1) return raw;
+      if (window.kosCalendar && typeof window.kosCalendar.flyerDisplayUrl === "function") {
+        return window.kosCalendar.flyerDisplayUrl(raw, 800) || raw;
+      }
+      return raw;
+    }
+
     function cardMedia(ev) {
-      const flyer = ev.flyer_url && !/\.pdf(?:$|[?#])/i.test(ev.flyer_url) ? String(ev.flyer_url) : "";
-      const localParadePhoto = /^assets\/img\/parades\//.test(flyer);
-      const art = flyer && !localParadePhoto
-        ? { src: flyer, alt: ev.name || "Parade" }
-        : paradeArtFor(ev && ev.name);
-      if (!art) return "";
-      return '<div class="parade-media"><img src="' + esc(art.src) + '" alt="' + esc(art.alt || ev.name || "") + '" loading="lazy" width="1632" height="736" /></div>';
+      const raw = String((ev && ev.flyer_url) || "").trim();
+      const isPdf = /\.pdf(?:$|[?#])/i.test(raw);
+      if (raw && isPdf && /^https?:\/\//i.test(raw)) {
+        return '<p class="parade-flyer-pdf"><a class="btn" href="' + esc(raw) + '" target="_blank" rel="noopener noreferrer">Open the parade flyer (PDF)</a></p>';
+      }
+      const localParadePhoto = /^assets\/img\/parades\//.test(raw);
+      const named = paradeArtFor(ev && ev.name);
+      if (raw && !isPdf && !localParadePhoto) {
+        const alt = (named && named.alt) || ("Flyer for " + (ev.name || "the parade"));
+        return '<a class="parade-flyer-link" href="' + esc(raw) + '" target="_blank" rel="noopener noreferrer">' +
+          '<div class="parade-media"><img class="parade-flyer" src="' + esc(flyerSrc(raw)) + '" data-full="' + esc(raw) + '" alt="' + esc(alt) + '" loading="lazy" width="864" height="1080" /></div></a>';
+      }
+      if (!named) return "";
+      return '<div class="parade-media"><img src="' + esc(named.src) + '" alt="' + esc(named.alt || (ev && ev.name) || "") + '" loading="lazy" width="864" height="1080" /></div>';
+    }
+
+    function paradeShareHtml(ev) {
+      if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+      const status = String(ev.status || "published").toLowerCase();
+      if (status !== "published" && status !== "live") return "";
+      if (ev.is_public === false) return "";
+      return window.kosShare.html(ev.id, ev.name || "Krewe parade");
+    }
+
+    function bindParadeFlyers(root) {
+      const scope = root && root.querySelectorAll ? root : document;
+      scope.querySelectorAll("img.parade-flyer").forEach((img) => {
+        if (img.getAttribute("data-bound") === "1") return;
+        img.setAttribute("data-bound", "1");
+        img.addEventListener("error", function onFlyerError() {
+          img.removeEventListener("error", onFlyerError);
+          const full = img.getAttribute("data-full");
+          if (full && img.getAttribute("src") !== full) img.src = full;
+        });
+      });
     }
 
     function paradeCardHtml(ev) {
@@ -785,6 +841,8 @@
           if (liveNames.some((live) => live === n || live.includes(n) || n.includes(live))) card.remove();
         });
         grid.insertAdjacentHTML("beforeend", ours.map(paradeCardHtml).join(""));
+        bindParadeFlyers(grid);
+        if (window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(grid);
         orderMarchGrid();
       }
       highlightIkcRows(ours);
