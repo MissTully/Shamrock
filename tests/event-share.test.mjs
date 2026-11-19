@@ -64,6 +64,10 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   assert.match(html, /name="twitter:card" content="summary_large_image"/);
   assert.match(html, /name="twitter:title" content="SantaFest"/);
   assert.match(html, /https:\/\/www\.facebook\.com\/sharer\/sharer\.php\?u=https%3A%2F%2Fwww\.kreweofshamrock\.com%2Fevents%2Ffixture-santafest/);
+  assert.match(html, /href="https:\/\/www\.facebook\.com\/groups\/1790675004521855"/);
+  assert.match(html, /Share in our Krewe group/);
+  assert.match(html, /Share on my Facebook/);
+  assert.equal(html.includes(">Share on Facebook<"), false);
   assert.equal(html.includes("123 Hidden Lane"), false);
   assert.equal(html.includes("Gate code 4321"), false);
   assert.match(html, /Parade details/);
@@ -164,6 +168,21 @@ test("an Inter-Krewe event links to the host site", () => {
   assert.equal(html.includes("/event-signup.html?event="), false);
   assert.equal(html.includes('href="/parades.html"'), false);
   assert.equal(html.includes('href="/members.html"'), false);
+});
+
+test("the members group URL is one shared constant", () => {
+  assert.equal(share.MEMBERS_FACEBOOK_GROUP_URL, "https://www.facebook.com/groups/1790675004521855");
+  const buttons = share.shareButtonsHtml("fixture-santafest", "SantaFest");
+  const hrefs = buttons.match(/https:\/\/www\.facebook\.com\/groups\/1790675004521855/g) || [];
+  assert.equal(hrefs.length, 1);
+  assert.match(buttons, /class="kos-share-group"/);
+  assert.match(buttons, /Share on my Facebook/);
+  const client = readFileSync(join(here, "../assets/kos-share.js"), "utf8");
+  const server = readFileSync(join(here, "../lib/event-share.js"), "utf8");
+  assert.equal((client.match(/1790675004521855/g) || []).length, 1);
+  assert.equal(server.includes("1790675004521855"), false);
+  assert.equal(client.includes("—"), false);
+  assert.equal(buttons.includes("—"), false);
 });
 
 test("a pdf flyer falls back to the Krewe image", () => {
