@@ -114,6 +114,38 @@ test("quotes in a title are escaped in the meta tag", () => {
   assert.equal(html.includes("still private"), false);
 });
 
+test("a non-uuid id is not available, not a server error", async () => {
+  let calls = 0;
+  const res = memoryRes();
+  await httpShare.handleShareRequest({ query: { id: "not-a-real-event" } }, res, {
+    fetch: async function () {
+      calls += 1;
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({ code: "22P02", message: "invalid input syntax for type uuid" })
+      };
+    }
+  });
+  assert.equal(res.statusCode, 404);
+  assert.match(res.body, /This event is not available/);
+  assert.equal(res.body.includes("not-a-real-event"), false);
+  assert.equal(res.body.includes("invalid input"), false);
+  assert.equal(calls, 1);
+});
+
+test("a database failure asks the visitor to try again", async () => {
+  const res = memoryRes();
+  await httpShare.handleShareRequest({ query: { id: "11111111-1111-4111-8111-111111111111" } }, res, {
+    fetch: async function () {
+      return { ok: false, status: 500, json: async () => ({ message: "db down" }) };
+    }
+  });
+  assert.equal(res.statusCode, 503);
+  assert.match(res.body, /try again/i);
+  assert.equal(res.body.includes("db down"), false);
+});
+
 test("a pdf flyer falls back to the Krewe image", () => {
   const image = share.ogImage({
     name: "Notes",
