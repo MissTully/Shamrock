@@ -147,6 +147,7 @@
       var root = target.closest(".kos-share");
       if (!root) return;
       ev.stopPropagation();
+      try { window.focus(); } catch (err) {}
       var group = target.closest(".kos-share-group");
       var copyBtn = target.closest(".kos-share-copy");
       var nativeBtn = target.closest(".kos-share-native");

@@ -74,6 +74,8 @@ async function expectShareBar(bar, id) {
   const page = bar.page();
   const vw = page.viewportSize().width;
   await bar.scrollIntoViewIfNeeded();
+  await expect(bar).toBeVisible();
+  await bar.evaluate((el) => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
   await expect(group).toBeVisible();
   await expect(facebook).toBeVisible();
   // The Hub event screen slides in from the right. Measure it after it lands.
@@ -140,10 +142,29 @@ async function silenceFacebook(page) {
 }
 
 async function clickGroup(bar) {
-  const popupPromise = bar.page().waitForEvent("popup");
+  const page = bar.page();
+  const popupPromise = page.waitForEvent("popup");
   await bar.locator("a.kos-share-group").click();
   const popup = await popupPromise;
   await popup.close().catch(() => {});
+  await page.bringToFront();
+}
+
+async function quietHubNetwork(page) {
+  await page.route("**://*.supabase.co/**", async (route) => {
+    const type = route.request().resourceType();
+    if (type === "image") {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64")
+      });
+      return;
+    }
+    const url = route.request().url();
+    const body = url.includes("/auth/") ? "{}" : "[]";
+    await route.fulfill({ status: 200, contentType: "application/json", body: body });
+  });
 }
 
 async function expectNoHorizontalOverflow(page) {
@@ -278,7 +299,9 @@ test.describe("hub event share buttons", () => {
 
   test("Events list and the event screen can share, and copy does not open the screen", async ({ page }) => {
     const report = watchPage(page);
+    await quietHubNetwork(page);
     await unlockMemberHub(page);
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForSelector("#appTop");
     await page.evaluate((ev) => {
       window.__kosHubSetFeed({
