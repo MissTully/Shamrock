@@ -1,4 +1,34 @@
 /* Krewe of Shamrock: floating music player, nav, and members-desk loader. */
+
+/* A foldable sometimes reports a layout width wider than the glass.
+   Pin the page to the visible width so the Hub column is not clipped.
+   Ignore a real pinch-zoom (scale above 1) and ordinary scrollbar noise. */
+(function () {
+  var root = document.documentElement;
+  function fit() {
+    var vv = window.visualViewport;
+    if (!vv || (vv.scale || 1) > 1.01) {
+      root.classList.remove("kos-vv-lock");
+      root.style.removeProperty("--kos-vv");
+      return;
+    }
+    if (window.innerWidth - vv.width > 48) {
+      root.classList.add("kos-vv-lock");
+      root.style.setProperty("--kos-vv", Math.round(vv.width) + "px");
+    } else {
+      root.classList.remove("kos-vv-lock");
+      root.style.removeProperty("--kos-vv");
+    }
+  }
+  fit();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fit);
+    window.visualViewport.addEventListener("scroll", fit);
+  }
+  window.addEventListener("resize", fit);
+  window.addEventListener("orientationchange", fit);
+})();
+
 (function () {
   var BODY_PATH = "M22 17.5C17 17.5 13.5 19.5 12.8 24C12.3 27 12.8 29 13.6 31" +
     "C15.2 33 16.6 33.6 16.6 35C16.6 36.4 15 37 13.4 39C11.6 41.4 10.6 45 10.8 48.5" +

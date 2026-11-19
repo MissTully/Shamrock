@@ -53,12 +53,14 @@ function shareBar(locator) {
 
 async function expectShareBar(bar, id) {
   const facebook = bar.locator("a.kos-share-fb");
+  const page = bar.page();
+  const vw = page.viewportSize().width;
   await expect(facebook).toBeVisible();
   // The Hub event screen slides in from the right. Measure it after it lands.
   await expect.poll(async () => {
     const box = await facebook.boundingBox();
     if (!box) return false;
-    return box.x >= -1 && box.x + box.width <= 361;
+    return box.x >= -1 && box.x + box.width <= vw + 1;
   }).toBe(true);
   await expect(facebook).toHaveText("Share on Facebook");
   const href = await facebook.getAttribute("href");
@@ -73,11 +75,10 @@ async function expectShareBar(bar, id) {
   expect(box.height).toBeGreaterThanOrEqual(44);
   const copyBox = await copy.boundingBox();
   expect(copyBox.height).toBeGreaterThanOrEqual(44);
-  const width = 360;
   expect(box.x).toBeGreaterThanOrEqual(-1);
-  expect(box.x + box.width).toBeLessThanOrEqual(width + 1);
+  expect(box.x + box.width).toBeLessThanOrEqual(vw + 1);
   expect(copyBox.x).toBeGreaterThanOrEqual(-1);
-  expect(copyBox.x + copyBox.width).toBeLessThanOrEqual(width + 1);
+  expect(copyBox.x + copyBox.width).toBeLessThanOrEqual(vw + 1);
 }
 
 async function expectNoHorizontalOverflow(page) {
@@ -205,6 +206,35 @@ test.describe("hub event share buttons", () => {
     await expectShareBar(shareBar(detail), SANTA_ID);
     await expectNoHorizontalOverflow(page);
     assertHealthy(expect, report, "hub share buttons");
+  });
+});
+
+test.describe("share buttons at a Fold width", () => {
+  test.use({ viewport: { width: 344, height: 800 } });
+
+  test("events page, home card, and Hub stay inside 344px", async ({ page }) => {
+    const report = watchPage(page);
+    await stubPublicEvents(page, [santaRow()]);
+    await page.goto("/event-signup.html");
+    await expectShareBar(shareBar(page.locator("#featured-event")), SANTA_ID);
+    await expectNoHorizontalOverflow(page);
+
+    await page.goto("/index.html");
+    await expectShareBar(shareBar(page.locator("#featuredEventCard")), SANTA_ID);
+    await expectNoHorizontalOverflow(page);
+
+    await unlockMemberHub(page);
+    await page.waitForSelector("#appTop");
+    await page.evaluate((ev) => {
+      window.__kosHubSetFeed({
+        profile: { first_name: "Maeve", last_name: "Kelly", email: "maeve@example.com" },
+        events: [ev]
+      });
+    }, santaRow());
+    await page.locator('[data-hub-tab="events"]').click();
+    await expectShareBar(shareBar(page.locator("#hubMemberEventList")), SANTA_ID);
+    await expectNoHorizontalOverflow(page);
+    assertHealthy(expect, report, "share buttons at 344");
   });
 });
 

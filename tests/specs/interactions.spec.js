@@ -252,8 +252,11 @@ test.describe("header auth toggle", () => {
     await expect(hub).toHaveText("Log out");
     await hub.click();
     await expect(page.locator("nav.krewe-nav a.nav-hub")).toHaveText("Member Hub Login", { timeout: 15000 });
-    const stillStored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
-    expect(stillStored).toBeNull();
+    // Sign-out reloads members.html. A read that lands mid-navigation throws,
+    // so poll until the new document is up and the session is gone.
+    await expect.poll(async () => {
+      return page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY).catch(() => "pending");
+    }).toBeNull();
   });
 });
 
