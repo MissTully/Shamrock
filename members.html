@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=optional" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261119public1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261119links2" />
 <script src="assets/show-password.js?v=20260929pw1" defer></script>
 <style>
   .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
@@ -619,7 +619,12 @@
   .cup-event .ce-hint{ font-size:16px; color:var(--cup-crimson); font-weight:700; margin-top:4px; }
   .cup-event details{ margin-top:8px; }
   .cup-event summary{ cursor:pointer; font-family:var(--display); color:var(--cup-green); font-size:15px; }
-  .cup-event .ce-detail{ font-size:15px; color:var(--cup-ink); margin-top:6px; line-height:1.45; }
+  .cup-event .ce-detail{ font-size:15px; color:var(--cup-ink); margin-top:6px; line-height:1.45; overflow-wrap:anywhere; }
+  .cup-event .ce-detail a.kos-url{
+    color:#313770; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  .cup-event .ce-detail a.kos-url:hover{ color:var(--cup-green); }
   .cup-event .ce-btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
   .cup-event .ce-btns a{ text-decoration:none; border-radius:999px; padding:8px 16px; font-family:var(--display); font-size:15px; display:inline-block; }
   .ce-rsvp{ background:var(--cup-green); color:var(--cup-cream); border:1px solid var(--cup-green-deep); box-shadow:0 2px 6px rgba(15,61,42,.3); }
@@ -1184,7 +1189,20 @@
   .hub-ev-flyer img{ display:block; width:100%; height:auto; max-height:380px; object-fit:contain; }
   .hub-ev-zoom{ position:absolute; right:8px; bottom:8px; background:rgba(20,83,45,.9); color:#fffaf0; font-size:12px; padding:3px 10px; border-radius:999px; font-family:var(--display); }
   .hub-ev-facts{ margin:6px 0; }
-  .hub-ev-desc{ margin:8px 0; white-space:normal; }
+  .hub-ev-desc{ margin:8px 0; white-space:normal; overflow-wrap:anywhere; min-width:0; }
+  .app-detail p{ overflow-wrap:anywhere; }
+  body.hub-desk .hub-ev-desc a.kos-url{ color:#313770; }
+  body.hub-app .hub-ev-desc a.kos-url,
+  .app-detail a.kos-url{
+    color:#ffe9a8; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  body.hub-app .hub-ev-desc a.kos-url:hover,
+  .app-detail a.kos-url:hover{ color:#fff6d4; }
+  body.hub-app .hub-desc-preview a.kos-url,
+  body.hub-desk .hub-desc-preview a.kos-url{ color:#313770; }
+  body.hub-app .hub-desc-preview a.kos-url:hover,
+  body.hub-desk .hub-desc-preview a.kos-url:hover{ color:#14532d; }
   .hub-ev-private{ margin:8px 0; padding:8px 10px; border-radius:10px; background:rgba(226,193,90,.16); border:1px dashed rgba(226,193,90,.7); }
   .hub-ev-links{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
   .hub-ev-links a.hub-ev-btn, .hub-ev-flyer-pdf a.hub-ev-btn, a.hub-ev-btn:visited{ display:inline-block; text-decoration:none; padding:8px 14px; border-radius:999px; background:#14532d; color:#fffaf0 !important; border:1px solid #0f3d22; font-family:var(--display); font-weight:700; font-size:14px; }
@@ -2263,6 +2281,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
+  <script src="assets/kos-linkify.js?v=20261119links3"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -3428,6 +3447,10 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const sb = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
     const E = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+    function eventDescHtml(text) {
+      const escaped = E(text == null ? "" : text);
+      return window.kosLinkify ? window.kosLinkify(escaped) : escaped;
+    }
     const medal = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':('#'+p);
 
     const RANKS = [
@@ -3674,7 +3697,7 @@
           const price = ev.ticket_price_cents ? ("$"+(ev.ticket_price_cents/100).toFixed(2)+(ev.ticket_label?(" · "+ev.ticket_label):"")) : null;
           const where = ev.member_address || ev.location || (ev.is_online ? "Online" : "");
           const detailBits=[];
-          if(ev.description) detailBits.push('<div class="ce-detail">'+E(ev.description)+'</div>');
+          if(ev.description) detailBits.push('<div class="ce-detail">'+eventDescHtml(ev.description)+'</div>');
           if(ev.member_notes) detailBits.push('<div class="ce-detail ce-private"><b>🔒 Members only:</b> '+E(ev.member_notes).replace(/\n/g,"<br>")+'</div>');
           const facts=[];
           facts.push("<b>When:</b> "+E(cupWhen(ev)));
@@ -4783,12 +4806,12 @@
 <script src="assets/kos-leadership.js?v=20260916lead6"></script>
 <script src="assets/hub-install.js?v=20260928desk1"></script>
 <script src="assets/kos-calendar.js?v=20261116listday1"></script>
-<script src="assets/kos-share.js?v=20261119public1" defer></script>
+<script src="assets/kos-share.js?v=20261119links2" defer></script>
 <script src="assets/kos-roles-access-rules.js?v=20261116security1" defer></script>
 <script src="assets/kos-roles-access.js?v=20261114roles1" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
 <script src="assets/kos-whos-coming.js?v=20261119whos1" defer></script>
-<script src="assets/members-desk.js?v=20261119public1" defer></script>
+<script src="assets/members-desk.js?v=20261119links2" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>

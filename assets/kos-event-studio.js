@@ -37,6 +37,10 @@
     ".hub-flyer-preview.show{display:flex;}",
     ".hub-flyer-preview img{max-width:160px;max-height:120px;border-radius:10px;border:1px solid rgba(168,128,28,.35);object-fit:cover;background:#fff;}",
     ".hub-flyer-preview a{font-size:13px;}",
+    ".hub-desc-preview{margin:8px 0 0;padding:10px 12px;border:1px solid rgba(168,128,28,.35);border-radius:10px;background:#fffdf6;color:#23291f;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}",
+    ".hub-desc-preview[hidden]{display:none !important;}",
+    ".hub-desc-label{margin:0 0 6px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#7a5c12;}",
+    ".hub-desc-preview a.kos-url{color:#313770;font-weight:700;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;word-break:break-word;}",
     ".hub-event-thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid rgba(168,128,28,.35);background:#f3efe2;flex:none;}",
     ".hub-event-thumb.ph{display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;}",
     ".hub-event-optional{grid-column:1/-1;margin-top:8px;padding:12px;border:1px solid rgba(168,128,28,.28);border-radius:12px;background:#fff;}",
@@ -58,6 +62,25 @@
     return (s == null ? "" : String(s)).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
+  }
+
+  function linkifyPlain(raw) {
+    var escaped = esc(String(raw == null ? "" : raw));
+    return window.kosLinkify ? window.kosLinkify(escaped) : escaped;
+  }
+
+  function syncEventDescPreview() {
+    var box = document.getElementById("hubEventDescPreview");
+    var field = document.getElementById("hubEventDescription");
+    if (!box || !field) return;
+    var text = field.value || "";
+    if (!String(text).trim()) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = '<p class="hub-desc-label">Preview</p>' + linkifyPlain(text);
   }
 
   function showOfficerTab() {
@@ -118,7 +141,8 @@
       '<div class="wide"><label for="hubEventMemberNotes">Members-only notes (gate code, lockbox, parking)</label><textarea id="hubEventMemberNotes" placeholder="Gate code, lockbox, where to park" autocomplete="off"></textarea>' +
       '<p class="hub-opt-hint" style="margin-top:6px;">Shown only to signed-in members in the Member Hub. Never put a gate code in the Description: the Description is public.</p></div>' +
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
-      '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
+      '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea>' +
+      '<div class="hub-desc-preview" id="hubEventDescPreview" hidden></div></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
       '<label><input type="checkbox" id="hubEventMembersOnly" /> Members only</label>' +
       '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
@@ -876,6 +900,7 @@
     var note = document.getElementById("hubEventFlyerNote");
     if (note) note.textContent = FLYER_NOTE_DEFAULT;
     syncFlyerPreview();
+    syncEventDescPreview();
     syncOptionalEventFields();
   }
 
@@ -941,6 +966,7 @@
     var g21Fill = get("hubEventGuestRequires21"); if (g21Fill) g21Fill.checked = event.guest_requires_21 !== false;
     get("hubEventFlyerUrl").value = event.flyer_url || "";
     syncFlyerPreview();
+    syncEventDescPreview();
     syncOptionalEventFields();
     get("hubEventFormTitle").textContent = "Edit event";
     get("hubEventMsg").textContent = "";
@@ -974,6 +1000,7 @@
         : '<div class="hub-event-thumb ph">No image</div>';
       html += '<div class="hub-event-row">' + thumb + '<div style="flex:1;min-width:0;"><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
+        (event.description ? '<div class="hub-desc-preview">' + linkifyPlain(event.description) + '</div>' : '') +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
         (event.is_featured ? " · Featured" : "") +
         (event.collect_raffle || event.raffle_event_id ? " · raffle" : "") +
@@ -1339,6 +1366,8 @@
       eventForm.addEventListener("input", onEventFormEdited);
       eventForm.addEventListener("change", onEventFormEdited);
     }
+    var descField = document.getElementById("hubEventDescription");
+    if (descField) descField.addEventListener("input", syncEventDescPreview);
     ["hubEventType", "hubEventCollectRaffle", "hubEventCollectMeals", "hubEventOnline", "hubEventMembersOnly", "hubEventCreateMeeting"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", syncOptionalEventFields);
@@ -1360,6 +1389,7 @@
         var url = await uploadEventFlyer(client, file);
         document.getElementById("hubEventFlyerUrl").value = url;
         syncFlyerPreview();
+    syncEventDescPreview();
         if (note) note.textContent = "Uploaded. Press ☘ Save event to attach it to this event.";
       } catch (e) {
         if (note) note.textContent = "Upload failed: " + ((e && e.message) || e);
@@ -1373,6 +1403,7 @@
     if (flyerClear) flyerClear.addEventListener("click", function () {
       if (flyerUrl) flyerUrl.value = "";
       syncFlyerPreview();
+    syncEventDescPreview();
       var note = document.getElementById("hubEventFlyerNote");
       if (note) note.textContent = "Cleared. Save the event to remove it from the public page.";
     });

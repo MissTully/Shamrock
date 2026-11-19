@@ -4,7 +4,8 @@ const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const SANTA_ID = "6918ff19-f232-4ddf-83d7-82f0a141eb95";
 const SANTA_URL = "https://www.kreweofshamrock.com/events/" + SANTA_ID;
-const FLYER = "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/event-flyers/1794544500325-sand-save-1794544458706.png";
+const FLYER = "https://www.kreweofshamrock.com/assets/flyers/santafest-2026.jpg";
+const STORAGE_FLYER = "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/event-flyers/1794544500325-sand-save-1794544458706.png";
 const RENDER = "/storage/v1/render/image/public/event-flyers/1794544500325-sand-save-1794544458706.png?width=800&height=1600&resize=contain&quality=60&format=webp";
 const OG_IMAGE = "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/render/image/public/event-flyers/1794544500325-sand-save-1794544458706.png?width=1200&height=2400&resize=contain&quality=75&format=webp";
 const WIDTHS = [344, 360, 390, 412, 673, 884];
@@ -29,6 +30,9 @@ function santaParade(extra) {
 }
 
 async function stubParadeList(page, rows) {
+  await page.route("**/assets/flyers/**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "image/png", body: PNG });
+  });
   await page.route("**/storage/v1/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "image/png", body: PNG });
   });
@@ -102,9 +106,10 @@ test.describe("public parade flyers and share", () => {
     await expect(card).toBeVisible();
     const flyer = card.locator("img.parade-flyer");
     await expect(flyer).toBeVisible();
-    await expect(flyer).toHaveAttribute("alt", "Flyer for SantaFest");
-    await expect(flyer).toHaveAttribute("src", new RegExp(RENDER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    await expect(flyer).toHaveAttribute("alt", /steps off at 1:00 PM/);
+    await expect(flyer).toHaveAttribute("src", FLYER);
     await expect(flyer).toHaveAttribute("data-full", FLYER);
+    expect(await flyer.getAttribute("src")).not.toContain("/storage/v1/render/");
     const link = card.locator("a.parade-flyer-link");
     await expect(link).toHaveAttribute("href", FLYER);
     await expect(link).toHaveAttribute("target", "_blank");
@@ -120,7 +125,7 @@ test.describe("public parade flyers and share", () => {
     assertHealthy(expect, report, "public parade flyer and share");
   });
 
-  test("a broken resized flyer falls back to the original file", async ({ page }) => {
+  test("a same-origin flyer is not resized, and a broken Supabase resize falls back", async ({ page }) => {
     const report = watchPage(page);
     await page.route("**/storage/v1/render/image/**", (route) => route.abort());
     await page.route("**/storage/v1/object/public/**", async (route) => {
@@ -130,13 +135,26 @@ test.describe("public parade flyers and share", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([santaParade()])
+        body: JSON.stringify([
+          santaParade(),
+          santaParade({
+            id: "storage-santa",
+            name: "Storage Santa",
+            flyer_url: STORAGE_FLYER,
+            start_time: "2026-12-06T18:00:00.000Z"
+          })
+        ])
       });
     });
     await page.goto("/parades.html");
-    const flyer = santaCard(page).locator("img.parade-flyer");
-    await expect(flyer).toHaveAttribute("src", FLYER);
-    await expect(flyer).toHaveAttribute("data-full", FLYER);
+    const siteFlyer = santaCard(page).locator("img.parade-flyer");
+    await expect(siteFlyer).toHaveAttribute("src", FLYER);
+    const storage = page.locator("#paradeStaticGrid .parade-card", {
+      has: page.getByRole("heading", { level: 3, name: "Storage Santa" })
+    }).locator("img.parade-flyer");
+    await expect(storage).toHaveAttribute("src", STORAGE_FLYER);
+    await expect(storage).toHaveAttribute("data-full", STORAGE_FLYER);
+    expect(await storage.getAttribute("src")).not.toMatch(new RegExp(RENDER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     assertHealthy(expect, report, "parade flyer fallback");
   });
 
@@ -198,7 +216,7 @@ test("the parade share page has Open Graph tags, the flyer, and a link back to P
   const flyer = page.locator("img.share-flyer");
   await expect(flyer).toBeVisible();
   await expect(flyer).toHaveAttribute("src", OG_IMAGE);
-  await expect(page.locator("a.parade-flyer-link, a[href='" + FLYER + "']").first()).toBeVisible();
+  await expect(page.locator("a[href='" + STORAGE_FLYER + "']")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to Parades" })).toHaveAttribute("href", "/parades.html");
   await expect(page.locator("a.kos-share-group")).toHaveCount(0);
   await expect(page.locator("a.kos-share-fb")).toBeVisible();

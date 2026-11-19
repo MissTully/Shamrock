@@ -14,19 +14,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261119mobile1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261119links2" />
 <style>
   .parade-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
   .parade-card{ background:#fff; border:1px solid rgba(168,128,28,.28); border-radius:16px; padding:22px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden; }
   .parade-card .mo{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-deep); }
   .parade-card h3{ color:var(--green-800); font-size:20px; margin:6px 0 8px; }
-  .parade-card p{ font-size:15px; margin:0 0 12px; color:var(--ink); }
+  .parade-card p{ font-size:15px; margin:0 0 12px; color:var(--ink); overflow-wrap:anywhere; }
+  .parade-card p a.kos-url{
+    color:#14532d; font-weight:700; font-size:15px; text-decoration:underline; text-underline-offset:3px;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  .parade-card p a.kos-url:hover{ color:#0c3b21; }
   .parade-card a{ font-family:var(--display); font-weight:600; color:var(--green-700); text-decoration:none; font-size:14px; }
   .parade-card a:hover{ color:var(--gold-deep); }
   .parade-card .dt{ font-weight:600; color:var(--green-800); font-size:15px; margin:-2px 0 10px; }
-  .parade-card .parade-media{ margin:-22px -22px 14px; aspect-ratio:16/7.2; background:linear-gradient(160deg,#1a3a24,#0d1f14); display:grid; place-items:center; overflow:hidden; color:#f5e6b8; font-family:var(--display); }
-  .parade-card .parade-media picture{ display:block; width:100%; height:100%; }
-  .parade-card .parade-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .parade-card .parade-media{ margin:-22px -22px 14px; background:#f6efdd; overflow:hidden; }
+  .parade-card .parade-media picture{ display:block; width:100%; }
+  .parade-card .parade-media img{ width:100%; height:auto; object-fit:contain; display:block; }
   .parade-card .parade-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
   .parade-card .parade-actions .btn{ font-size:14px; }
   .parade-card .ev-meta{ font-size:15px; margin:0 0 6px; }
@@ -59,7 +64,7 @@
     font-family:var(--display); font-size:13px; letter-spacing:.8px; text-transform:uppercase; padding:12px 16px; text-align:left; }
   table.season td{ padding:11px 16px; border-top:1px solid rgba(168,128,28,.18); font-size:15.5px; }
   table.season td.mo{ font-family:var(--display); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-deep); white-space:nowrap; }
-  table.season td.dt{ white-space:nowrap; font-weight:600; color:var(--green-800); }
+  table.season td.dt{ white-space:normal; font-weight:600; color:var(--green-800); }
   table.season a{ color:var(--green-700); font-weight:600; text-decoration:none; }
   table.season a:hover{ color:var(--gold-deep); }
   table.season tr.ours td{ background:rgba(212,175,55,.12); }
@@ -186,83 +191,68 @@
       <div class="parade-grid" id="paradeStaticGrid">
         <article class="parade-card" data-start="2026-12-05T13:00:00-05:00">
           <div class="parade-media">
-            <picture>
-              <source type="image/webp" srcset="assets/img/parades/santafest.webp" />
-              <img src="assets/img/parades/santafest.jpg" alt="Krewe of Shamrock castle float decorated with garland and gifts at SantaFest" width="1632" height="736" fetchpriority="high" />
-            </picture>
+            <img src="assets/flyers/santafest-2026.jpg" alt="Krewe of Shamrock SantaFest flyer. Saturday, December 5, 2026. The parade steps off at 1:00 PM at Morgan St and Madison St, Downtown Tampa." width="864" height="1080" fetchpriority="high" />
           </div>
           <div class="mo">December</div><h3>SantaFest</h3>
-          <p class="ev-meta"><b>When:</b> Saturday, December 5, 2026, 1:00 to 5:00 PM ET</p>
-          <p class="ev-meta"><b>Where:</b> Step-off at Morgan and Madison, ending at Ashley and Cass, Tampa, FL</p>
-          <p>Tampa's downtown holiday kickoff parade, a festive start to the krewe's marching season. It runs Saturday, December 5, 2026, from 1:00 to 5:00 PM ET, with a 1:00 PM step-off at Morgan and Madison and an end at Ashley and Cass. Krewe staging time is still to be announced.</p>
+          <p class="ev-meta"><b>When:</b> Saturday, December 5, 2026, steps off at 1:00 PM</p>
+          <p class="ev-meta"><b>Where:</b> Morgan St and Madison St, Downtown Tampa</p>
+          <p>Tampa's downtown holiday kickoff parade, a festive start to the krewe's marching season. The parade steps off at 1:00 PM at Morgan St and Madison St, Downtown Tampa. Krewe staging time is still to be announced.</p>
           <div class="parade-actions">
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info →</a>
           </div>
         </article>
-        <article class="parade-card" data-start="2027-01-23T09:00:00-05:00">
+        <article class="parade-card" data-start="2027-01-23T15:30:00-05:00">
           <div class="parade-media">
-            <picture>
-              <source type="image/webp" srcset="assets/img/parades/childrens-gasparilla.webp" />
-              <img src="assets/img/parades/childrens-gasparilla.jpg" alt="Krewe of Shamrock castle float on Bayshore at Children's Gasparilla with families along the route" width="1632" height="736" fetchpriority="high" />
-            </picture>
+            <img src="assets/flyers/childrens-gasparilla-2026.jpg" alt="Krewe of Shamrock Children's Gasparilla flyer. Saturday, January 23, 2027. The parade steps off at 3:30 PM on Bayshore Blvd." width="864" height="1080" />
           </div>
           <div class="mo">January</div><h3>Children's Gasparilla</h3>
-          <p class="ev-meta"><b>When:</b> Saturday, January 23, 2027 · about 9:00 AM–2:00 PM</p>
-          <p class="ev-meta"><b>Where:</b> Bayshore Boulevard, Tampa, FL</p>
-          <p>The family-friendly, alcohol-free daytime parade along Bayshore. Shamrock marches about 9:00 AM–2:00 PM. Staging posts on the Member Hub.</p>
+          <p class="ev-meta"><b>When:</b> Saturday, January 23, 2027, steps off at 3:30 PM</p>
+          <p class="ev-meta"><b>Where:</b> Bayshore Blvd</p>
+          <p>The family-friendly, alcohol-free daytime parade along Bayshore. The parade steps off at 3:30 PM. Staging posts on the Member Hub.</p>
           <div class="parade-actions">
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
           </div>
         </article>
-        <article class="parade-card" data-start="2027-01-30T12:00:00-05:00">
+        <article class="parade-card" data-start="2027-01-30T14:00:00-05:00">
           <div class="parade-media">
-            <picture>
-              <source type="image/webp" srcset="assets/img/parades/gasparilla-pirates.webp" />
-              <img src="assets/img/parades/gasparilla-pirates.jpg" alt="Krewe of Shamrock castle float on Bayshore at the Gasparilla Parade of Pirates" width="1632" height="736" loading="lazy" />
-            </picture>
+            <img src="assets/flyers/parade-of-pirates-2026.jpg" alt="Krewe of Shamrock Gasparilla Parade of Pirates flyer. Saturday, January 30, 2027. The parade steps off at 2:00 PM on Bayshore Blvd." width="864" height="1080" loading="lazy" />
           </div>
           <div class="mo">January</div><h3>Gasparilla Parade of Pirates</h3>
-          <p class="ev-meta"><b>When:</b> Saturday, January 30, 2027 · about 12:00–6:00 PM</p>
-          <p class="ev-meta"><b>Where:</b> Bayshore Boulevard, Tampa, FL</p>
-          <p>The legendary pirate parade down Bayshore Boulevard, with the Castle of Shenanigans float. Shamrock marches about 12:00–6:00 PM. Staging posts on the Member Hub.</p>
+          <p class="ev-meta"><b>When:</b> Saturday, January 30, 2027, steps off at 2:00 PM</p>
+          <p class="ev-meta"><b>Where:</b> Bayshore Blvd</p>
+          <p>The legendary pirate parade down Bayshore Boulevard, with the Castle of Shenanigans float. The parade steps off at 2:00 PM. Staging posts on the Member Hub.</p>
           <div class="parade-actions">
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
           </div>
         </article>
-        <article class="parade-card" data-start="2027-02-13T18:00:00-05:00">
+        <article class="parade-card" data-start="2027-02-13T19:00:00-05:00">
           <div class="parade-media">
-            <picture>
-              <source type="image/webp" srcset="assets/img/parades/santyago-knight.webp" />
-              <img src="assets/img/parades/santyago-knight.jpg" alt="Krewe of Shamrock castle float at dusk in the Sant'Yago Knight Parade" width="1632" height="736" loading="lazy" />
-            </picture>
+            <img src="assets/flyers/santyago-knight-parade-2026.jpg" alt="Krewe of Shamrock Sant'Yago Knight Parade flyer. Saturday, February 13, 2027. The parade steps off at 7:00 PM in Ybor City." width="864" height="1080" loading="lazy" />
           </div>
           <div class="mo">February</div><h3>Sant'Yago Knight Parade</h3>
-          <p class="ev-meta"><b>When:</b> Saturday, February 13, 2027 · about 6:00–11:00 PM</p>
-          <p class="ev-meta"><b>Where:</b> Ybor City, Tampa, FL</p>
-          <p>The night parade through historic Ybor City. Shamrock marches about 6:00–11:00 PM. Staging posts on the Member Hub.</p>
+          <p class="ev-meta"><b>When:</b> Saturday, February 13, 2027, steps off at 7:00 PM</p>
+          <p class="ev-meta"><b>Where:</b> Ybor City</p>
+          <p>The night parade through historic Ybor City. The parade steps off at 7:00 PM. Staging posts on the Member Hub.</p>
           <div class="parade-actions">
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info →</a>
           </div>
         </article>
-        <article class="parade-card" data-start="2027-03-01T12:00:00-05:00">
+        <article class="parade-card" data-start="2027-03-13T14:00:00-05:00">
           <div class="parade-media">
-            <picture>
-              <source type="image/webp" srcset="assets/img/parades/st-patricks.webp" />
-              <img src="assets/img/parades/st-patricks.jpg" alt="Krewe of Shamrock castle float on the Tampa waterfront at the St. Patrick's Day Parade" width="1632" height="736" loading="lazy" />
-            </picture>
+            <img src="assets/flyers/st-patricks-day-parade-2026.jpg" alt="Krewe of Shamrock St. Patrick's Day Parade flyer. Saturday, March 13, 2027. The parade steps off at 2:00 PM in Downtown Tampa." width="864" height="1080" loading="lazy" />
           </div>
           <div class="mo">March</div><h3>St. Patrick's Day Parade</h3>
-          <p class="ev-meta"><b>When:</b> March 2027 · date to be announced</p>
-          <p class="ev-meta"><b>Where:</b> Tampa</p>
-          <p>Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Kilts and a sea of green.</p>
+          <p class="ev-meta"><b>When:</b> Saturday, March 13, 2027, steps off at 2:00 PM</p>
+          <p class="ev-meta"><b>Where:</b> Downtown Tampa</p>
+          <p>Our home holiday, the parade where the Krewe of Shamrock was born in 1999. Kilts and a sea of green. The parade steps off at 2:00 PM in Downtown Tampa.</p>
           <div class="parade-actions">
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
@@ -386,15 +376,15 @@
             <tr><td class="mo">October</td><td>USF Homecoming Parade</td><td class="dt">Friday, October 16, 2026</td><td><a href="https://www.usf.edu/student-affairs/homecoming/information/paradeinformation.aspx" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">November</td><td>Tampa Veterans Parade</td><td class="dt">Cancelled for 2026</td><td><a href="https://www.veteransparade.org/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">November</td><td>Ruskin Veterans Parade</td><td class="dt">Date TBA</td><td><a href="https://vfw6287.org/di/vfw/v2/default.asp" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">December</td><td>SantaFest</td><td class="dt">Saturday, December 5, 2026, 1:00 to 5:00 PM ET</td><td><a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">December</td><td>SantaFest</td><td class="dt">Saturday, December 5, 2026, steps off at 1:00 PM</td><td><a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">December</td><td>Anna Maria Island Christmas Parade</td><td class="dt">Date TBA</td><td><a href="https://www.annamaria.com/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">December</td><td>ReliaQuest Bowl Parade</td><td class="dt">Date TBA</td><td><a href="https://www.visittampabay.com/tampa-events/details/reliaquest-bowl-parade-%26-pep-rally/93644/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">January</td><td>Martin Luther King, Jr. Parade</td><td class="dt">Monday, January 18, 2027</td><td><a href="https://mlkjrparade.com/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">January</td><td>Children's Gasparilla</td><td class="dt">Saturday, January 23, 2027 · about 9:00 AM–2:00 PM</td><td><a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">January</td><td>Gasparilla Parade of Pirates</td><td class="dt">Saturday, January 30, 2027 · about 12:00–6:00 PM</td><td><a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">February</td><td>Sant'Yago Knight Parade</td><td class="dt">Saturday, February 13, 2027 · about 6:00–11:00 PM</td><td><a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">January</td><td>Children's Gasparilla</td><td class="dt">Saturday, January 23, 2027, steps off at 3:30 PM</td><td><a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">January</td><td>Gasparilla Parade of Pirates</td><td class="dt">Saturday, January 30, 2027, steps off at 2:00 PM</td><td><a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">February</td><td>Sant'Yago Knight Parade</td><td class="dt">Saturday, February 13, 2027, steps off at 7:00 PM</td><td><a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
             <tr><td class="mo">February</td><td>Krewe of St. Andrews Mardi Gras</td><td class="dt">Date TBA</td><td><a href="https://standrewsmardigras.com/festival-info/" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
-            <tr class="ours"><td class="mo">March</td><td>St. Patrick's Day Parade</td><td class="dt">March 2027 · Date TBA</td><td><a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
+            <tr class="ours"><td class="mo">March</td><td>St. Patrick's Day Parade</td><td class="dt">Saturday, March 13, 2027, steps off at 2:00 PM</td><td><a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info &rarr;</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -586,6 +576,7 @@
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
   <script src="assets/kos-calendar.js?v=20261116listday1"></script>
+  <script src="assets/kos-linkify.js?v=20261119links3"></script>
   <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
   <script src="assets/kos-share.js?v=20261119public1"></script>
   <script type="module">
@@ -606,6 +597,10 @@
     const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
     }[c]));
+    function eventDescHtml(text) {
+      const escaped = esc(text == null ? "" : text);
+      return window.kosLinkify ? window.kosLinkify(escaped) : escaped;
+    }
     const TZ = "America/New_York";
     const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -626,6 +621,15 @@
       return monthHint(ev) || "Season";
     }
 
+    function clockLabel(d) {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ, hour: "numeric", minute: "2-digit", hour12: true
+      }).formatToParts(d);
+      const part = (type) => (parts.find((p) => p.type === type) || {}).value || "";
+      const dayPeriod = part("dayPeriod").toUpperCase();
+      return part("hour") + ":" + part("minute") + (dayPeriod ? " " + dayPeriod : "");
+    }
+
     function dateLabel(ev) {
       if (!ev || !ev.start_time) {
         const mon = monthHint(ev);
@@ -640,21 +644,11 @@
       }).formatToParts(d);
       const pick = (type) => Number((parts.find((p) => p.type === type) || {}).value || 0);
       const midnight = pick("hour") === 0 && pick("minute") === 0;
-      const end = ev.end_time ? new Date(ev.end_time) : null;
-      const startText = midnight
-        ? d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: TZ })
-        : d.toLocaleString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: TZ });
-      if (!midnight && end && !isNaN(end.getTime())) {
-        const endParts = new Intl.DateTimeFormat("en-US", {
-          timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-        }).formatToParts(end);
-        const endHour = Number((endParts.find((p) => p.type === "hour") || {}).value || 0);
-        const endMin = Number((endParts.find((p) => p.type === "minute") || {}).value || 0);
-        if (!(endHour === 0 && endMin === 0)) {
-          return startText + " to " + end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: TZ });
-        }
-      }
-      return startText;
+      const dateText = d.toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: TZ
+      });
+      if (midnight) return dateText;
+      return dateText + ", steps off at " + clockLabel(d);
     }
 
     function normalizeName(name) {
@@ -719,24 +713,34 @@
       const n = normalizeName(name);
       if (!n) return null;
       if (n.includes("santa") && n.includes("fest")) {
-        return { src: "assets/img/parades/santafest.webp", alt: "Krewe of Shamrock castle float decorated with garland and gifts at SantaFest" };
+        return { src: "assets/flyers/santafest-2026.jpg", alt: "Krewe of Shamrock SantaFest flyer. The parade steps off at 1:00 PM at Morgan St and Madison St, Downtown Tampa." };
       }
       if (n.includes("gasparilla") && n.includes("children")) {
-        return { src: "assets/img/parades/childrens-gasparilla.webp", alt: "Krewe of Shamrock castle float on Bayshore at Children's Gasparilla with families along the route" };
+        return { src: "assets/flyers/childrens-gasparilla-2026.jpg", alt: "Krewe of Shamrock Children's Gasparilla flyer. The parade steps off at 3:30 PM on Bayshore Blvd." };
       }
       if (n.includes("gasparilla") && !n.includes("children")) {
-        return { src: "assets/img/parades/gasparilla-pirates.webp", alt: "Krewe of Shamrock castle float on Bayshore at the Gasparilla Parade of Pirates" };
+        return { src: "assets/flyers/parade-of-pirates-2026.jpg", alt: "Krewe of Shamrock Gasparilla Parade of Pirates flyer. The parade steps off at 2:00 PM on Bayshore Blvd." };
       }
       if (n.includes("yago") || (n.includes("knight") && n.includes("parade"))) {
-        return { src: "assets/img/parades/santyago-knight.webp", alt: "Krewe of Shamrock castle float at dusk in the Sant'Yago Knight Parade" };
+        return { src: "assets/flyers/santyago-knight-parade-2026.jpg", alt: "Krewe of Shamrock Sant'Yago Knight Parade flyer. The parade steps off at 7:00 PM in Ybor City." };
       }
       if (n.includes("pride")) {
         return { src: "assets/img/parades/tampa-pride.webp", alt: "Krewe of Shamrock castle float at night with a Pride flag at Tampa Pride" };
       }
       if (n.includes("patrick") || n.includes("st pat")) {
-        return { src: "assets/img/parades/st-patricks.webp", alt: "Krewe of Shamrock castle float on the Tampa waterfront at the St. Patrick's Day Parade" };
+        return { src: "assets/flyers/st-patricks-day-parade-2026.jpg", alt: "Krewe of Shamrock St. Patrick's Day Parade flyer. The parade steps off at 2:00 PM in Downtown Tampa." };
       }
       return null;
+    }
+
+    function flyerSrc(raw) {
+      // Supabase storage objects get the sized WebP. Same-origin flyer JPGs
+      // and any other address stay as they are.
+      if (raw.indexOf("/storage/v1/object/public/") === -1) return raw;
+      if (window.kosCalendar && typeof window.kosCalendar.flyerDisplayUrl === "function") {
+        return window.kosCalendar.flyerDisplayUrl(raw, 800) || raw;
+      }
+      return raw;
     }
 
     function cardMedia(ev) {
@@ -745,19 +749,15 @@
       if (raw && isPdf && /^https?:\/\//i.test(raw)) {
         return '<p class="parade-flyer-pdf"><a class="btn" href="' + esc(raw) + '" target="_blank" rel="noopener noreferrer">Open the parade flyer (PDF)</a></p>';
       }
-      if (raw && !isPdf) {
-        const sized = window.kosCalendar && typeof window.kosCalendar.flyerDisplayUrl === "function"
-          ? window.kosCalendar.flyerDisplayUrl(raw, 800)
-          : raw;
-        const src = sized || raw;
-        const alt = "Flyer for " + (ev.name || "the parade");
+      const localParadePhoto = /^assets\/img\/parades\//.test(raw);
+      const named = paradeArtFor(ev && ev.name);
+      if (raw && !isPdf && !localParadePhoto) {
+        const alt = (named && named.alt) || ("Flyer for " + (ev.name || "the parade"));
         return '<a class="parade-flyer-link" href="' + esc(raw) + '" target="_blank" rel="noopener noreferrer">' +
-          '<img class="parade-flyer" src="' + esc(src) + '" data-full="' + esc(raw) + '" alt="' + esc(alt) + '" loading="lazy" />' +
-          "</a>";
+          '<div class="parade-media"><img class="parade-flyer" src="' + esc(flyerSrc(raw)) + '" data-full="' + esc(raw) + '" alt="' + esc(alt) + '" loading="lazy" width="864" height="1080" /></div></a>';
       }
-      const art = paradeArtFor(ev && ev.name);
-      if (!art) return "";
-      return '<div class="parade-media"><img src="' + esc(art.src) + '" alt="' + esc(art.alt || ev.name || "") + '" loading="lazy" width="1632" height="736" /></div>';
+      if (!named) return "";
+      return '<div class="parade-media"><img src="' + esc(named.src) + '" alt="' + esc(named.alt || (ev && ev.name) || "") + '" loading="lazy" width="864" height="1080" /></div>';
     }
 
     function paradeShareHtml(ev) {
@@ -792,7 +792,7 @@
         "<h3>" + esc(ev.name || "Krewe parade") + "</h3>" +
         '<p class="ev-meta"><b>When:</b> ' + esc(dateLabel(ev)) + "</p>" +
         '<p class="ev-meta"><b>Where:</b> ' + esc(publicWhere(ev) || "Route announced to members") + "</p>" +
-        "<p>" + esc(blurb) + "</p>" +
+        "<p>" + eventDescHtml(blurb) + "</p>" +
         cardActions(ev) +
         "</article>";
     }

@@ -204,6 +204,28 @@ test("the members group URL is one shared constant and stays off the public page
   assert.equal(hub.includes("—"), false);
 });
 
+test("a same-origin parade flyer is the Open Graph image with no storage resize", () => {
+  const url = "https://www.kreweofshamrock.com/assets/flyers/santafest-2026.jpg";
+  const html = share.renderEventSharePage({
+    id: "fixture-site-flyer",
+    name: "SantaFest",
+    event_type: "parade",
+    status: "published",
+    is_public: true,
+    source: "krewe",
+    start_time: "2026-12-05T18:00:00.000Z",
+    location: "Downtown Tampa",
+    description: "The parade steps off at 1:00 PM. Details at https://www.friendsoftamparec.org/santa-fest--tree-lighting.html.",
+    flyer_url: url
+  });
+  assert.match(html, /property="og:image" content="https:\/\/www\.kreweofshamrock\.com\/assets\/flyers\/santafest-2026\.jpg"/);
+  assert.equal(html.includes("/storage/v1/render/"), false);
+  assert.match(html, /class="share-kicker">Parade</);
+  assert.match(html, /href="\/parades\.html">Back to Parades</);
+  assert.match(html, /class="kos-url"/);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+});
+
 test("a pdf flyer falls back to the Krewe image", () => {
   const image = share.ogImage({
     name: "Notes",
