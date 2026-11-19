@@ -265,13 +265,19 @@ test("parades.html invites members to sign up and shows the SantaFest time", asy
   const santa = page.locator("#parade-season .parade-card", {
     has: page.getByRole("heading", { level: 3, name: "SantaFest" })
   });
-  await expect(santa).toContainText("1:00 to 5:00 PM ET");
-  await expect(santa).toContainText("Morgan and Madison");
-  await expect(santa).toContainText("Ashley and Cass");
+  await expect(santa).toContainText("steps off at 1:00 PM");
+  await expect(santa).toContainText("Morgan St and Madison St");
+  await expect(santa).toContainText("Downtown Tampa");
   await expect(santa).toContainText("Krewe staging time is still to be announced");
   await expect(santa).not.toContainText("9:00");
   await expect(santa).not.toContainText("about 5:00");
-  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, December 5, 2026, 1:00 to 5:00 PM ET");
+  await expect(santa).not.toContainText("1:00 to 5:00");
+  await expect(santa).not.toContainText("Ashley and Cass");
+  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, December 5, 2026, steps off at 1:00 PM");
+  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, January 23, 2027, steps off at 3:30 PM");
+  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, January 30, 2027, steps off at 2:00 PM");
+  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, February 13, 2027, steps off at 7:00 PM");
+  await expect(page.locator("#ikcSeasonTable")).toContainText("Saturday, March 13, 2027, steps off at 2:00 PM");
   await shot(page, cta, "parades-security-cta-desktop.png");
   await shot(page, santa, "santafest-time-desktop.png");
 

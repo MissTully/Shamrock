@@ -112,21 +112,36 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   expect(html).toContain("Parade of Pirates");
   expect(html).toContain("St. Patrick's Day Parade");
   expect(html).not.toContain("Rough Riders");
-  expect(html).toContain("March 2027 · date to be announced");
-  expect(html).toContain("<b>Where:</b> Tampa</p>");
+  expect(html).toContain("Saturday, March 13, 2027, steps off at 2:00 PM");
+  expect(html).not.toContain("March 2027 · date to be announced");
+  expect(html).not.toContain("about 9:00");
+  expect(html).not.toContain("about 12:00");
+  expect(html).not.toContain("about 6:00");
+  expect(html).not.toContain("1:00 to 5:00");
+  expect(html).not.toContain("5:00 to 9:00");
+  expect(html).toContain("<b>Where:</b> Downtown Tampa</p>");
   expect(html).toContain("the parade where the Krewe of Shamrock was born in 1999");
   expect(html).toContain("Kilts and a sea of green.");
   expect(html).not.toMatch(/born in 1999\.\s*Pipes/);
   for (const file of [
-    "santafest",
-    "childrens-gasparilla",
-    "gasparilla-pirates",
-    "santyago-knight",
-    "st-patricks"
+    "assets/flyers/santafest-2026.jpg",
+    "assets/flyers/childrens-gasparilla-2026.jpg",
+    "assets/flyers/parade-of-pirates-2026.jpg",
+    "assets/flyers/santyago-knight-parade-2026.jpg",
+    "assets/flyers/st-patricks-day-parade-2026.jpg"
   ]) {
-    expect(html, "static march cards must include " + file).toContain("assets/img/parades/" + file);
+    expect(html, "static march cards must include " + file).toContain(file);
   }
 
+  await page.route("**/rest/v1/v_public_events**", (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET, OPTIONS"
+    };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    return route.fulfill({ status: 200, contentType: "application/json", headers, body: "[]" });
+  });
   await page.goto("/parades.html");
   const firstSection = page.locator("header.page-head + section");
   await expect(firstSection).toHaveAttribute("id", "parade-season");
@@ -135,13 +150,12 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
     has: page.getByRole("heading", { level: 3, name: "St. Patrick's Day Parade" })
   });
   await expect(stPatricks).toBeVisible();
-  await expect(stPatricks).toContainText("March 2027");
-  await expect(stPatricks).toContainText("date to be announced");
-  await expect(stPatricks).toContainText("Tampa");
+  await expect(stPatricks).toContainText("Saturday, March 13, 2027, steps off at 2:00 PM");
+  await expect(stPatricks).toContainText("Downtown Tampa");
   await expect(stPatricks).toContainText("born in 1999");
   await expect(stPatricks).toContainText("Kilts and a sea of green");
   await expect(stPatricks).not.toContainText(/pipes/i);
-  await expect(stPatricks).not.toContainText(/March \d{1,2}, 2027/);
+  await expect(stPatricks).not.toContainText("date to be announced");
   await expect(page.locator("#parade-season")).not.toContainText("Rough Riders");
   await expect(page.locator("header.page-head")).toContainText("Gasparilla");
   await expect(page.locator("#parade-season")).toContainText("Children's Gasparilla");
@@ -179,6 +193,15 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
 
 test("parades.html march cards put the next upcoming parade first", async ({ page }) => {
   const report = watchPage(page);
+  await page.route("**/rest/v1/v_public_events**", (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET, OPTIONS"
+    };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    return route.fulfill({ status: 200, contentType: "application/json", headers, body: "[]" });
+  });
   await page.goto("/parades.html");
   await page.waitForFunction(() => typeof window.__kosOrderMarchGrid === "function");
 
@@ -210,6 +233,64 @@ test("parades.html march cards put the next upcoming parade first", async ({ pag
   });
   expect(titles).toEqual(expected.map((item) => item.title));
   assertHealthy(expect, report, "parade cards upcoming-first");
+});
+
+test("published parade cards show the step-off time and the season flyer", async ({ page }) => {
+  const report = watchPage(page);
+  await page.route("**/rest/v1/v_public_events**", (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET, OPTIONS"
+    };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers,
+      body: JSON.stringify([
+        {
+          id: "child",
+          name: "Children's Gasparilla",
+          description: "The family-friendly parade. The parade steps off at 3:30 PM.",
+          start_time: "2027-01-23T20:30:00+00:00",
+          end_time: "2027-01-24T01:30:00+00:00",
+          location: "Bayshore Boulevard, Tampa, FL",
+          source: "krewe",
+          status: "published",
+          event_type: "parade",
+          flyer_url: null
+        },
+        {
+          id: "patrick",
+          name: "St. Patrick's Day Parade",
+          description: "Our home holiday. The parade steps off at 2:00 PM.",
+          start_time: "2027-03-13T19:00:00+00:00",
+          end_time: "2027-03-13T23:00:00+00:00",
+          location: "Downtown Tampa, FL",
+          source: "krewe",
+          status: "published",
+          event_type: "parade",
+          flyer_url: "assets/img/parades/st-patricks.webp"
+        }
+      ])
+    });
+  });
+  await page.goto("/parades.html");
+  const child = page.locator("#parade-season .parade-card", {
+    has: page.getByRole("heading", { level: 3, name: "Children's Gasparilla" })
+  });
+  await expect(child).toContainText("Saturday, January 23, 2027, steps off at 3:30 PM");
+  await expect(child).not.toContainText("8:30");
+  await expect(child).not.toContainText("about");
+  await expect(child.locator(".parade-media img")).toHaveAttribute("src", "assets/flyers/childrens-gasparilla-2026.jpg");
+  const patrick = page.locator("#parade-season .parade-card", {
+    has: page.getByRole("heading", { level: 3, name: "St. Patrick's Day Parade" })
+  });
+  await expect(patrick).toContainText("Saturday, March 13, 2027, steps off at 2:00 PM");
+  await expect(patrick).not.toContainText("6:00 PM");
+  await expect(patrick.locator(".parade-media img")).toHaveAttribute("src", "assets/flyers/st-patricks-day-parade-2026.jpg");
+  assertHealthy(expect, report, "published parade step-off");
 });
 
 test("calendar helper writes a teaser-only .ics", async ({ page }) => {
