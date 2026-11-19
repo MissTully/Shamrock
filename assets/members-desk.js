@@ -196,6 +196,10 @@
     ".hub-event-msg{min-height:1.2em;color:var(--green-800);font-size:16px;margin:8px 0 0;}",
     ".hub-event-form{margin-top:18px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
     ".hub-flyer-note{font-size:14px;color:var(--muted);margin:4px 0 0;}",
+    ".hub-desc-preview{margin:8px 0 0;padding:10px 12px;border:1px solid rgba(168,128,28,.35);border-radius:10px;background:#fffdf6;color:#23291f;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}",
+    ".hub-desc-preview[hidden]{display:none !important;}",
+    ".hub-desc-label{margin:0 0 6px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#7a5c12;}",
+    ".hub-desc-preview a.kos-url{color:#313770;font-weight:700;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;word-break:break-word;}",
     ".hub-flyer-preview{margin-top:10px;display:none;align-items:center;gap:12px;flex-wrap:wrap;}",
     ".hub-flyer-preview.show{display:flex;}",
     ".hub-flyer-preview img{max-width:160px;max-height:120px;border-radius:10px;border:1px solid rgba(168,128,28,.35);object-fit:cover;background:#fff;}",
@@ -687,6 +691,23 @@
     });
   }
 
+  function safeHttpUrl(url) {
+    if (window.kosLinkify && typeof window.kosLinkify.safeHttp === "function") return window.kosLinkify.safeHttp(url);
+    var value = String(url || "").trim();
+    if (!/^https?:\/\//i.test(value)) return "";
+    if (/[\u0000-\u0020<>"']/.test(value)) return "";
+    return value;
+  }
+
+  function linkifyPlain(raw) {
+    var escaped = esc(String(raw == null ? "" : raw));
+    return window.kosLinkify ? window.kosLinkify(escaped) : escaped;
+  }
+
+  function eventDescriptionHtml(raw) {
+    return linkifyPlain(raw).replace(/\n/g, "<br>");
+  }
+
   /* Phone-app shell helpers. The signed-in hub keeps every existing panel.
      This layer adds the header, countdown, tiles, and bottom tabs. */
   function svgIcon(inner) {
@@ -852,13 +873,15 @@
     }
     facts.push("<b>Your RSVP:</b> " + (going ? "You're going ✅" : (eventSignupClosed(ev) ? "Registration is closed." : "Not yet. Tap RSVP above.")));
     out.push('<div class="hub-ev-facts">' + facts.join("<br>") + "</div>");
-    if (ev.description) out.push('<div class="hub-ev-desc">' + esc(String(ev.description)).replace(/\n/g, "<br>") + "</div>");
+    if (ev.description) out.push('<div class="hub-ev-desc">' + eventDescriptionHtml(ev.description) + "</div>");
     if (ev.member_notes) out.push('<div class="hub-ev-private"><b>🔒 Members only:</b> ' + esc(String(ev.member_notes)).replace(/\n/g, "<br>") + "</div>");
     var links = [];
-    var pay = ev.ticket_payment_url || (/zeffy\.com/i.test(ev.external_url || "") ? ev.external_url : "");
-    if (pay && !eventSignupClosed(ev)) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener">🎟️ Buy tickets / pay ↗</a>');
-    if (ev.meeting_url) links.push('<a class="hub-ev-btn" href="' + esc(ev.meeting_url) + '" target="_blank" rel="noopener">💻 Join online ↗</a>');
-    if (ev.external_url && ev.external_url !== pay) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">🔗 Event website ↗</a>');
+    var pay = safeHttpUrl(ev.ticket_payment_url) || (/zeffy\.com/i.test(ev.external_url || "") ? safeHttpUrl(ev.external_url) : "");
+    var site = safeHttpUrl(ev.external_url);
+    var meeting = safeHttpUrl(ev.meeting_url);
+    if (pay && !eventSignupClosed(ev)) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">🎟️ Buy tickets / pay ↗</a>');
+    if (meeting) links.push('<a class="hub-ev-btn" href="' + esc(meeting) + '" target="_blank" rel="noopener noreferrer">💻 Join online ↗</a>');
+    if (site && site !== pay) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">🔗 Event website ↗</a>');
     links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="event-signup.html?event=' + encodeURIComponent(ev.id || "") + '">📅 Event page</a>');
     out.push('<div class="hub-ev-links">' + links.join("") + "</div>");
     return '<div class="hub-ev-detail">' + out.join("") + "</div>";
@@ -1963,30 +1986,8 @@
 
   /* Plain text in, escaped HTML out, with http(s) addresses as links. */
   function linkifyText(raw) {
-    var re = /https?:\/\/[^\s<>"']+/gi;
-    var s = String(raw || "");
-    var out = "";
-    var last = 0;
-    var m;
-    while ((m = re.exec(s))) {
-      out += esc(s.slice(last, m.index));
-      var href = m[0];
-      var trail = "";
-      while (href && /[.,);:!?]$/.test(href)) {
-        var ch = href.slice(-1);
-        if (ch === ")" && (href.split("(").length >= href.split(")").length)) break;
-        trail = ch + trail;
-        href = href.slice(0, -1);
-      }
-      if (!/^https?:\/\//i.test(href)) out += esc(m[0]);
-      else {
-        out += '<a class="tidings-link" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' +
-          esc(href) + "</a>" + esc(trail);
-      }
-      last = m.index + m[0].length;
-    }
-    out += esc(s.slice(last));
-    return out;
+    if (window.kosLinkify) return window.kosLinkify(esc(String(raw || "")), { className: "tidings-link" });
+    return esc(String(raw || ""));
   }
 
   function tidingsMastHtml() {
@@ -5952,6 +5953,20 @@
     return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
   }
 
+  function syncEventDescPreview() {
+    var box = document.getElementById("hubEventDescPreview");
+    var field = document.getElementById("hubEventDescription");
+    if (!box || !field) return;
+    var text = field.value || "";
+    if (!String(text).trim()) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = '<p class="hub-desc-label">Preview</p>' + linkifyPlain(text);
+  }
+
   function eventStudioFormHtml() {
     return '<div class="hub-event-form" id="hubEventFormWrap">' +
       '<h3 id="hubEventFormTitle">New event</h3>' +
@@ -5973,7 +5988,8 @@
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div><label for="hubEventVolunteerCap">Volunteer slots</label><input id="hubEventVolunteerCap" type="number" min="0" step="1" placeholder="No cap" />' +
       '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.</p></div>' +
-      '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea></div></div>' +
+      '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea>' +
+      '<div class="hub-desc-preview" id="hubEventDescPreview" hidden></div></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
       '<label><input type="checkbox" id="hubEventMembersOnly" /> Members only</label>' +
       '<label><input type="checkbox" id="hubEventMandatory" /> Mandatory meeting</label></div>' +
@@ -6938,6 +6954,7 @@
     if (note) note.textContent = "Upload fills the URL above. Then press Save event to attach it. Published public events show on the Events page.";
     syncFlyerPreview();
     syncOptionalEventFields();
+    syncEventDescPreview();
   }
 
   function fillEventForm(event) {
@@ -6999,6 +7016,7 @@
     if (event.id && eventStudioClient) loadEventEmailSchedule(eventStudioClient, event.id);
     syncFlyerPreview();
     syncOptionalEventFields();
+    syncEventDescPreview();
     get("hubEventFormTitle").textContent = "Edit event";
     get("hubEventMsg").textContent = "";
     showEventDeleteButton(!!event.id);
@@ -7033,6 +7051,7 @@
         : '<div class="hub-event-thumb ph">No image</div>';
       html += '<div class="hub-event-row">' + thumb + '<div class="hub-event-copy"><b>' + esc(event.name) + '</b>' +
         '<div class="muted">' + esc(details.join(" · ") || "Date to be announced") + '</div>' +
+        (event.description ? '<div class="hub-desc-preview">' + linkifyPlain(event.description) + '</div>' : '') +
         '<div class="muted">' + esc(event.status || "published") + (event.event_type ? " · " + esc(event.event_type) : "") + esc(ticket) +
         (event.is_featured ? " · Featured" : "") +
         (event.collect_raffle || event.raffle_event_id ? " · raffle" : "") +
@@ -7486,6 +7505,8 @@
       eventForm.addEventListener("input", onEventFormEdited);
       eventForm.addEventListener("change", onEventFormEdited);
     }
+    var descField = document.getElementById("hubEventDescription");
+    if (descField) descField.addEventListener("input", syncEventDescPreview);
     ["hubEventType", "hubEventCollectRaffle", "hubEventCollectMeals", "hubEventOnline", "hubEventMembersOnly",
       "hubEventCreateMeeting", "hubEventVolunteerCap",
       "hubEventEmails", "hubEventEmailAnnounce", "hubEventEmailTicket", "hubEventEmailClosing"].forEach(function (id) {
@@ -7811,7 +7832,8 @@
         "<h2>" + esc(ev.name || "Krewe event") + "</h2>" +
         "<p>" + esc(when) + (detailTag ? " · " + esc(detailTag) : "") + (ev.members_only ? " · Members only" : "") + "</p>" +
         (loc ? "<p>" + esc(loc) + "</p>" : "") +
-        (desc ? "<p>" + esc(desc) + "</p>" : "") +
+        (desc ? "<p>" + linkifyPlain(desc) + "</p>" : "") +
+        (safeHttpUrl(ev.external_url) ? '<p><a class="kos-url" href="' + esc(safeHttpUrl(ev.external_url)) + '" target="_blank" rel="noopener noreferrer">Event link</a></p>' : "") +
         more +
         "<p>" + note + "</p>" +
         eventShareHtml(ev) +
