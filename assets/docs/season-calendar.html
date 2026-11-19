@@ -129,12 +129,11 @@
     { day: "2027-01-23", name: "Children's Gasparilla", type: "parade" },
     { day: "2027-01-30", name: "Gasparilla Parade of Pirates", type: "parade" },
     { day: "2027-02-13", name: "Sant'Yago Knight Parade", type: "parade" },
+    { day: "2027-03-13", name: "St. Patrick's Day Parade", type: "parade" },
     { day: "2027-03-17", name: "St. Patrick's Day ☘", type: "note" }
   ];
   // Month notes for dates still to be announced (keyed by YYYY-MM).
-  var TBA_NOTES = {
-    "2027-03": ["St. Patrick's Day Parade, our home parade; date to be announced"]
-  };
+  var TBA_NOTES = {};
 
   function esc(v) {
     return (v == null ? "" : String(v)).replace(/[&<>"']/g, function (c) {
