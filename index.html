@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261116flyer1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261119share1" />
 </head>
 <body>
 
@@ -270,6 +270,7 @@ simply love good music and a good party, there's a place for you at our table.</
 </div>
 <script src="assets/krewe.js?v=20261012deadline1" defer></script><audio id="craicAudio" src="assets/audio/ElevenLabs_Untitled_project.mp3" preload="none"></audio><audio id="failteAudio" src="assets/audio/100 thousand welcomes.mp3" preload="none"></audio><script>(function(){function wire(btnId,audioId){var btn=document.getElementById(btnId);var audio=document.getElementById(audioId);if(!btn||!audio)return;btn.addEventListener('click',function(){if(audio.paused){audio.currentTime=0;audio.play();btn.setAttribute('aria-pressed','true');btn.classList.add('playing');}else{audio.pause();btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');}});audio.addEventListener('ended',function(){btn.setAttribute('aria-pressed','false');btn.classList.remove('playing');});}wire('craicDefBtn','craicAudio');wire('failteDefBtn','failteAudio');})();</script>
 <script src="assets/kos-calendar.js?v=20261116flyer1"></script>
+<script src="assets/kos-share.js?v=20261119share1"></script>
 
 <!-- EVENTS DATA -->
 <script type="module">
@@ -280,6 +281,13 @@ const supabase = createClient(
   );
 const list = document.getElementById("eventList");
 const esc = (s)=> (s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+function shareBlock(ev) {
+  if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+  const st = String(ev.status || "published").toLowerCase();
+  if (st !== "published" && st !== "live") return "";
+  if (ev.is_public === false) return "";
+  return window.kosShare.html(ev.id, ev.name || "");
+}
 function liveFeatured(ev) {
   if (window.kosCalendar && typeof window.kosCalendar.isLiveFeatured === "function") return window.kosCalendar.isLiveFeatured(ev);
   return !!(ev && ev.is_featured);
@@ -377,7 +385,8 @@ function listLabel(ev) {
       `<div class="type">${isIkc ? "Inter-Krewe Council" : esc(ev.event_type ?? "event")}${membersOnly ? " · Members only" : ""}</div>` +
       `<h3>${esc(ev.name)}</h3>` +
       `<div class="meta">${when}${listLabel(ev) ? " · " + esc(listLabel(ev)) : ""}${where ? " · " + esc(where) : ""}</div>` +
-      rsvp;
+      rsvp +
+      shareBlock(ev);
     list.appendChild(card);
   }
   if (visible.length > shown.length) {
@@ -435,6 +444,7 @@ function listLabel(ev) {
       `<h3>${esc(featuredEv.name)}</h3>` +
       `<p class="meta">${when}${listLabel(featuredEv) ? " · " + esc(listLabel(featuredEv)) : ""}${where ? " · " + esc(where) : ""}</p>` +
       rsvp +
+      shareBlock(featuredEv) +
       `</article>`;
     const flyerImg = featureSlot.querySelector(".featured-flyer");
     if (flyerImg) {
@@ -446,6 +456,7 @@ function listLabel(ev) {
     }
     featureBand.hidden = false;
   }
+  if (window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(document);
 })();
 </script>
 </body>

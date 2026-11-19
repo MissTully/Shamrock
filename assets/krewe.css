@@ -1112,3 +1112,77 @@ body.hub-desk .tartan-deadline-slot{ margin:0 0 -8px; }
 @media (prefers-reduced-motion:reduce){
   a.tartan-deadline{ transition:none; }
 }
+
+/* Share a published event. Buttons stay inside the card on a phone. */
+.kos-share{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.kos-share a,
+.kos-share button{
+  flex:1 1 148px;
+  box-sizing:border-box;
+  min-width:0;
+  min-height:44px;
+  max-width:100%;
+  margin:0;
+  padding:10px 12px;
+  border-radius:999px;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:15px;
+  line-height:1.2;
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.kos-share .kos-share-native[hidden]{ display:none !important; }
+.kos-share a.kos-share-fb,
+.kos-share a.kos-share-fb:visited,
+body.hub-app .kos-share a.kos-share-fb,
+body.hub-desk .kos-share a.kos-share-fb{
+  background:#14532d;
+  color:#fffaf0 !important;
+  border:1px solid #e2c15a;
+}
+.kos-share button.kos-share-copy{
+  background:#fffdf6;
+  color:#14532d;
+  border:1px solid #a8801c;
+}
+.kos-share button.kos-share-native{
+  background:#e2c15a;
+  color:#14532d;
+  border:1px solid #a8801c;
+}
+.kos-share a:focus-visible,
+.kos-share button:focus-visible{
+  outline:2px solid #e2c15a;
+  outline-offset:2px;
+}
+.hub-ev-card > .kos-share,
+.cup-event .kos-share{ padding:0 12px 12px; margin-top:0; }
+.app-event > .kos-share{ grid-column:1 / -1; margin-top:4px; }
+.hub-event-row > .kos-share{ flex:1 1 100%; }
+.app-detail,
+.app-drill-scroll,
+.hub-ev-card,
+.app-event{
+  min-width:0;
+  max-width:100%;
+}
+@media (max-width:480px){
+  .kos-share a,
+  .kos-share button{
+    flex:1 1 100%;
+  }
+}
