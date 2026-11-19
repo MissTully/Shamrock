@@ -1173,7 +1173,7 @@ body.hub-desk .tartan-deadline-slot{ margin:0 0 -8px; }
   min-height:44px;
   max-width:100%;
   margin:0;
-  padding:10px 12px;
+  padding:10px 8px;
   border-radius:999px;
   font-family:var(--display);
   font-weight:700;
@@ -1185,12 +1185,22 @@ body.hub-desk .tartan-deadline-slot{ margin:0 0 -8px; }
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  white-space:normal;
+  overflow-wrap:anywhere;
 }
-.kos-share .kos-share-native[hidden]{ display:none !important; }
+.kos-share .kos-share-native[hidden],
+.kos-share .kos-share-note[hidden],
+.kos-share .kos-share-fallback[hidden]{ display:none !important; }
+/* The two Facebook actions sit side by side and use the same weight. */
+.kos-share a.kos-share-group,
+.kos-share a.kos-share-group:visited,
 .kos-share a.kos-share-fb,
 .kos-share a.kos-share-fb:visited,
+body.hub-app .kos-share a.kos-share-group,
+body.hub-desk .kos-share a.kos-share-group,
 body.hub-app .kos-share a.kos-share-fb,
 body.hub-desk .kos-share a.kos-share-fb{
+  flex:1 1 calc(50% - 8px);
   background:#14532d;
   color:#fffaf0 !important;
   border:1px solid #e2c15a;
@@ -1206,9 +1216,48 @@ body.hub-desk .kos-share a.kos-share-fb{
   border:1px solid #a8801c;
 }
 .kos-share a:focus-visible,
-.kos-share button:focus-visible{
+.kos-share button:focus-visible,
+.kos-share-fallback input:focus-visible{
   outline:2px solid #e2c15a;
   outline-offset:2px;
+}
+.kos-share-note,
+.kos-share-fallback{
+  flex:1 1 100%;
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+  margin:4px 0 0;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fbf7ec;
+  color:#14532d;
+  border:1px solid rgba(168,128,28,.55);
+  font-family:var(--body);
+  font-size:16px;
+  font-weight:500;
+  line-height:1.4;
+  text-align:center;
+  box-shadow:0 8px 20px rgba(12,59,33,.16);
+}
+.kos-share-fallback{
+  display:grid;
+  gap:8px;
+}
+.kos-share-fallback input{
+  width:100%;
+  min-height:44px;
+  box-sizing:border-box;
+  margin:0;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #a8801c;
+  background:#fff;
+  color:#14532d;
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.3;
+  text-align:left;
 }
 .hub-ev-card > .kos-share,
 .cup-event .kos-share{ padding:0 12px 12px; margin-top:0; }
@@ -1222,7 +1271,6 @@ body.hub-desk .kos-share a.kos-share-fb{
   max-width:100%;
 }
 @media (max-width:480px){
-  .kos-share a,
   .kos-share button{
     flex:1 1 100%;
   }
