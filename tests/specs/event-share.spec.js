@@ -131,6 +131,74 @@ async function expectShareBar(bar, id) {
   expect(paint.groupBg).not.toBe(paint.copyBg);
 }
 
+async function expectFilledShareRow(bar) {
+  const rows = await bar.evaluate((root) => {
+    const barBox = root.getBoundingClientRect();
+    const items = Array.from(root.querySelectorAll("a, button")).filter((el) => {
+      if (el.hidden) return false;
+      const style = getComputedStyle(el);
+      return style.display !== "none" && style.visibility !== "hidden";
+    });
+    const grouped = [];
+    items.forEach((el) => {
+      const box = el.getBoundingClientRect();
+      let row = grouped.find((entry) => Math.abs(entry.top - box.top) <= 3);
+      if (!row) {
+        row = { top: box.top, left: box.left, right: box.right, height: box.height };
+        grouped.push(row);
+      } else {
+        row.left = Math.min(row.left, box.left);
+        row.right = Math.max(row.right, box.right);
+        row.height = Math.max(row.height, box.height);
+      }
+    });
+    return grouped.map((row) => ({
+      missingLeft: row.left - barBox.left,
+      missingRight: barBox.right - row.right,
+      height: row.height,
+      count: items.length
+    }));
+  });
+  expect(rows.length).toBeGreaterThan(0);
+  for (const row of rows) {
+    expect(row.height).toBeGreaterThanOrEqual(44);
+    expect(row.missingLeft).toBeLessThanOrEqual(2);
+    expect(row.missingRight).toBeLessThanOrEqual(2);
+  }
+}
+
+async function expectPublicShareBar(bar, id) {
+  const facebook = bar.locator("a.kos-share-fb");
+  const page = bar.page();
+  const vw = page.viewportSize().width;
+  await bar.scrollIntoViewIfNeeded();
+  await expect(bar).toBeVisible();
+  await bar.evaluate((el) => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
+  await expect(bar.locator("a.kos-share-group")).toHaveCount(0);
+  await expect(bar.locator(".kos-share-note")).toHaveCount(0);
+  await expect(bar.locator(".kos-share-fallback")).toHaveCount(0);
+  await expect(bar).not.toContainText(GROUP_LABEL);
+  const markup = await bar.evaluate((el) => el.innerHTML);
+  expect(markup).not.toContain("1790675004521855");
+  expect(markup).not.toContain("kos-share-group");
+  expect(markup).not.toContain("Paste it into a new post");
+  await expect(facebook).toBeVisible();
+  await expectInside(facebook, vw);
+  await expect(facebook).toHaveText(MINE_LABEL);
+  const href = await facebook.getAttribute("href");
+  const parsed = new URL(href);
+  expect(parsed.origin + parsed.pathname).toBe("https://www.facebook.com/sharer/sharer.php");
+  expect(parsed.searchParams.get("u")).toBe(eventLink(id));
+  await expect(facebook).toHaveAttribute("target", "_blank");
+  const copy = bar.locator("button.kos-share-copy");
+  await expect(copy).toBeVisible();
+  await expect(copy).toHaveText("Copy link");
+  await expectInside(copy, vw);
+  const native = bar.locator("button.kos-share-native");
+  if (await native.isVisible()) await expectInside(native, vw);
+  await expectFilledShareRow(bar);
+}
+
 async function silenceFacebook(page) {
   const blank = route => route.fulfill({
     status: 200,
@@ -198,12 +266,12 @@ test.describe("public event share buttons", () => {
     await expect(page.locator("#featured-event")).toContainText("SantaFest");
     const featured = shareBar(page.locator("#featured-event"));
     await featured.scrollIntoViewIfNeeded();
-    await expectShareBar(featured, SANTA_ID);
+    await expectPublicShareBar(featured, SANTA_ID);
     await expect(page.locator("#featured-event")).toContainText("Parade details");
 
     const card = page.locator("#eventPreviewStrip .ev-card", { hasText: "Morning Coffee" });
     await expect(card).toContainText("Registration closed");
-    await expectShareBar(shareBar(card), "started-social");
+    await expectPublicShareBar(shareBar(card), "started-social");
     await expectNoHorizontalOverflow(page);
 
     await featured.locator(".kos-share-copy").click();
@@ -212,46 +280,23 @@ test.describe("public event share buttons", () => {
     assertHealthy(expect, report, "events page share buttons");
   });
 
-  test("the public event page offers the Krewe group and a personal Facebook share", async ({ page }) => {
+  test("the public event page keeps a personal Facebook share and leaves out the Krewe group", async ({ page }) => {
     const report = watchPage(page);
-    await silenceFacebook(page);
     await page.goto("/events/fixture-santafest");
     const bar = shareBar(page.locator("main"));
     await bar.scrollIntoViewIfNeeded();
-    await expectShareBar(bar, "fixture-santafest");
+    await expectPublicShareBar(bar, "fixture-santafest");
     await expectNoHorizontalOverflow(page);
-    await clickGroup(bar);
-    await expect(bar.locator(".kos-share-note")).toBeVisible();
-    await expect(bar.locator(".kos-share-note")).toHaveText(GROUP_NOTE);
+    const html = await page.content();
+    expect(html).not.toContain(GROUP_URL);
+    expect(html).not.toContain(GROUP_LABEL);
+    expect(html).not.toContain("kos-share-fallback");
+    await bar.locator(".kos-share-copy").click();
+    await expect(bar.locator(".kos-share-copy")).toHaveText("Link copied");
     await expect(page).toHaveURL(/\/events\/fixture-santafest/);
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(eventLink("fixture-santafest"));
     await expectNoHorizontalOverflow(page);
-    assertHealthy(expect, report, "public event group share");
-  });
-
-  test("a blocked clipboard shows the event link to copy by hand", async ({ page }) => {
-    const report = watchPage(page);
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, "clipboard", {
-        configurable: true,
-        value: { writeText: function () { return Promise.reject(new Error("blocked")); } }
-      });
-      document.execCommand = function () { return false; };
-    });
-    await silenceFacebook(page);
-    await page.goto("/events/fixture-santafest");
-    const bar = shareBar(page.locator("main"));
-    await bar.scrollIntoViewIfNeeded();
-    await clickGroup(bar);
-    const field = bar.locator(".kos-share-fallback-url");
-    await expect(field).toBeVisible();
-    await expect(field).toHaveValue(eventLink("fixture-santafest"));
-    const fieldBox = await field.boundingBox();
-    expect(fieldBox.height).toBeGreaterThanOrEqual(44);
-    await expect(bar.locator(".kos-share-note")).toHaveText("Select this link, then paste it into a new post in the group.");
-    await expect(page).toHaveURL(/\/events\/fixture-santafest/);
-    await expectNoHorizontalOverflow(page);
-    assertHealthy(expect, report, "clipboard fallback");
+    assertHealthy(expect, report, "public event share without the group");
   });
 
   test("home featured card can be shared", async ({ page }) => {
@@ -261,7 +306,7 @@ test.describe("public event share buttons", () => {
     const featured = shareBar(page.locator("#featuredEventCard"));
     await expect(page.locator("#featuredEventCard")).toContainText("SantaFest");
     await featured.scrollIntoViewIfNeeded();
-    await expectShareBar(featured, SANTA_ID);
+    await expectPublicShareBar(featured, SANTA_ID);
     await expectNoHorizontalOverflow(page);
     assertHealthy(expect, report, "home featured share");
   });
@@ -280,6 +325,7 @@ test.describe("public event share buttons", () => {
     const native = page.locator("#featured-event .kos-share-native");
     await native.scrollIntoViewIfNeeded();
     await expect(native).toBeVisible();
+    await expectPublicShareBar(shareBar(page.locator("#featured-event")), SANTA_ID);
     const box = await native.boundingBox();
     expect(box.height).toBeGreaterThanOrEqual(44);
     await native.click();
@@ -347,6 +393,46 @@ test.describe("hub event share buttons", () => {
     await expectNoHorizontalOverflow(page);
     assertHealthy(expect, report, "hub share buttons");
   });
+
+  test("a blocked clipboard on a Hub card shows the event link to copy by hand", async ({ page }) => {
+    const report = watchPage(page);
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: function () { return Promise.reject(new Error("blocked")); } }
+      });
+      document.execCommand = function () { return false; };
+    });
+    await quietHubNetwork(page);
+    await silenceFacebook(page);
+    await unlockMemberHub(page);
+    await page.waitForLoadState("networkidle").catch(() => {});
+    await page.waitForSelector("#appTop");
+    await page.evaluate((ev) => {
+      window.__kosHubSetFeed({
+        profile: { first_name: "Maeve", last_name: "Kelly", email: "maeve@example.com" },
+        parades: [],
+        events: [ev],
+        paradeReady: { dues_paid: true, waiver_signed: true, meeting_attended: true },
+        membershipStatus: "active"
+      });
+    }, santaRow());
+    await page.locator('[data-hub-tab="events"]').click();
+    const card = page.locator("#hubMemberEventList .hub-ev-card");
+    await expect(card).toContainText("SantaFest");
+    const bar = shareBar(card);
+    await bar.scrollIntoViewIfNeeded();
+    await clickGroup(bar);
+    const field = bar.locator(".kos-share-fallback-url");
+    await expect(field).toBeVisible();
+    await expect(field).toHaveValue(SANTA_URL);
+    const fieldBox = await field.boundingBox();
+    expect(fieldBox.height).toBeGreaterThanOrEqual(44);
+    await expect(bar.locator(".kos-share-note")).toHaveText("Select this link, then paste it into a new post in the group.");
+    await expect(page.locator("#appEventDetail")).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+    assertHealthy(expect, report, "hub clipboard fallback");
+  });
 });
 
 for (const width of WIDTHS) {
@@ -355,17 +441,28 @@ for (const width of WIDTHS) {
 
     test("events page, home card, public event, and Hub stay inside the glass", async ({ page }) => {
       const report = watchPage(page);
+      await page.addInitScript(() => {
+        if (typeof navigator.share !== "function") {
+          navigator.share = function () { return Promise.resolve(); };
+        }
+      });
       await stubPublicEvents(page, [santaRow()]);
       await page.goto("/event-signup.html");
-      await expectShareBar(shareBar(page.locator("#featured-event")), SANTA_ID);
+      const featured = shareBar(page.locator("#featured-event"));
+      await expectPublicShareBar(featured, SANTA_ID);
+      await expect(featured.locator("button.kos-share-native")).toBeVisible();
       await expectNoHorizontalOverflow(page);
 
       await page.goto("/events/fixture-santafest");
-      await expectShareBar(shareBar(page.locator("main")), "fixture-santafest");
+      const eventBar = shareBar(page.locator("main"));
+      await expectPublicShareBar(eventBar, "fixture-santafest");
+      await expect(eventBar.locator("button.kos-share-native")).toBeVisible();
       await expectNoHorizontalOverflow(page);
 
       await page.goto("/index.html");
-      await expectShareBar(shareBar(page.locator("#featuredEventCard")), SANTA_ID);
+      const home = shareBar(page.locator("#featuredEventCard"));
+      await expectPublicShareBar(home, SANTA_ID);
+      await expect(home.locator("button.kos-share-native")).toBeVisible();
       await expectNoHorizontalOverflow(page);
 
       await unlockMemberHub(page);
@@ -394,8 +491,10 @@ test("per-event URL returns SantaFest Open Graph tags and hides unpublished even
   expect(html).toContain('property="og:url" content="https://www.kreweofshamrock.com/events/fixture-santafest"');
   expect(html).toContain('property="og:type" content="website"');
   expect(html).toContain('property="og:site_name" content="Krewe of Shamrock"');
-  expect(html).toContain('href="https://www.facebook.com/groups/1790675004521855"');
-  expect(html).toContain("Share in our Krewe group");
+  expect(html).not.toContain('href="https://www.facebook.com/groups/1790675004521855"');
+  expect(html).not.toContain("Share in our Krewe group");
+  expect(html).not.toContain("kos-share-note");
+  expect(html).not.toContain("kos-share-fallback");
   expect(html).toContain("Share on my Facebook");
   expect(html).not.toContain(">Share on Facebook<");
   expect(html).toContain('name="twitter:card" content="summary_large_image"');

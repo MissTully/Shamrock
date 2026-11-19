@@ -1191,7 +1191,8 @@ body.hub-desk .tartan-deadline-slot{ margin:0 0 -8px; }
 .kos-share .kos-share-native[hidden],
 .kos-share .kos-share-note[hidden],
 .kos-share .kos-share-fallback[hidden]{ display:none !important; }
-/* The two Facebook actions sit side by side and use the same weight. */
+/* Facebook actions use the same green weight. On a Hub card the group
+   button and Share on my Facebook sit side by side. */
 .kos-share a.kos-share-group,
 .kos-share a.kos-share-group:visited,
 .kos-share a.kos-share-fb,
@@ -1200,10 +1201,19 @@ body.hub-app .kos-share a.kos-share-group,
 body.hub-desk .kos-share a.kos-share-group,
 body.hub-app .kos-share a.kos-share-fb,
 body.hub-desk .kos-share a.kos-share-fb{
-  flex:1 1 calc(50% - 8px);
   background:#14532d;
   color:#fffaf0 !important;
   border:1px solid #e2c15a;
+}
+.kos-share-members a.kos-share-group,
+.kos-share-members a.kos-share-group:visited,
+.kos-share-members a.kos-share-fb,
+.kos-share-members a.kos-share-fb:visited,
+body.hub-app .kos-share-members a.kos-share-group,
+body.hub-desk .kos-share-members a.kos-share-group,
+body.hub-app .kos-share-members a.kos-share-fb,
+body.hub-desk .kos-share-members a.kos-share-fb{
+  flex:1 1 calc(50% - 8px);
 }
 .kos-share button.kos-share-copy{
   background:#fffdf6;
@@ -1273,5 +1283,24 @@ body.hub-desk .kos-share a.kos-share-fb{
 @media (max-width:480px){
   .kos-share button{
     flex:1 1 100%;
+  }
+}
+/* Public row: Share on my Facebook, Copy link, and Share.
+   On a narrow card each control takes the full line. On a wide card
+   the visible controls share one line, so a hidden Share button does
+   not leave an empty cell. */
+.kos-share:not(.kos-share-members){
+  container-type:inline-size;
+}
+.kos-share:not(.kos-share-members) > a.kos-share-fb,
+.kos-share:not(.kos-share-members) > button.kos-share-copy,
+.kos-share:not(.kos-share-members) > button.kos-share-native{
+  flex:1 1 100%;
+}
+@container (min-width: 36rem){
+  .kos-share:not(.kos-share-members) > a.kos-share-fb,
+  .kos-share:not(.kos-share-members) > button.kos-share-copy,
+  .kos-share:not(.kos-share-members) > button.kos-share-native{
+    flex:1 1 0;
   }
 }

@@ -869,7 +869,7 @@
     var st = String(ev.status || "published").toLowerCase();
     if (st !== "published" && st !== "live") return "";
     if (ev.is_public === false) return "";
-    return window.kosShare.html(ev.id, ev.name || "");
+    return window.kosShare.html(ev.id, ev.name || "", { members: true });
   }
 
   function prepareShare(root) {

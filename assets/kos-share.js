@@ -1,7 +1,7 @@
 /* Share a published event.
-   Share in our Krewe group copies the public event link and opens the
-   members-only Facebook group. Share on my Facebook uses sharer.php.
-   Copy link and the phone share sheet stay beside them.
+   Public pages offer Share on my Facebook, Copy link, and the phone Share button.
+   Member Hub cards also offer Share in our Krewe group. That button copies the
+   public event link and opens the members-only Facebook group.
    The group URL below is the only copy. lib/event-share.js reads it from here. */
 (function (root, factory) {
   var api = factory();
@@ -31,18 +31,27 @@
     return "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(eventUrl(id));
   }
 
-  function html(id, title) {
+  // Pass { members: true } on signed-in Hub cards. Public pages omit it so the
+  // members-only group button, its note, and the hand-copy field stay off those pages.
+  function html(id, title, options) {
     var safeId = String(id || "").trim();
     if (!safeId) return "";
+    var members = !!(options && options.members);
     var url = eventUrl(safeId);
     var label = String(title || "Krewe of Shamrock event");
-    return '<div class="kos-share" data-share-id="' + escAttr(safeId) + '" data-share-url="' + escAttr(url) + '" data-share-title="' + escAttr(label) + '">' +
-      '<a class="kos-share-group" href="' + escAttr(MEMBERS_FACEBOOK_GROUP_URL) + '" target="_blank" rel="noopener noreferrer">' + GROUP_LABEL + "</a>" +
+    var group = members
+      ? '<a class="kos-share-group" href="' + escAttr(MEMBERS_FACEBOOK_GROUP_URL) + '" target="_blank" rel="noopener noreferrer">' + GROUP_LABEL + "</a>"
+      : "";
+    var afterCopy = members
+      ? '<p class="kos-share-note" role="status" hidden></p>' +
+        '<div class="kos-share-fallback" hidden><input type="text" readonly class="kos-share-fallback-url" aria-label="Event link" spellcheck="false" /></div>'
+      : "";
+    return '<div class="kos-share' + (members ? " kos-share-members" : "") + '" data-share-id="' + escAttr(safeId) + '" data-share-url="' + escAttr(url) + '" data-share-title="' + escAttr(label) + '">' +
+      group +
       '<a class="kos-share-fb" href="' + escAttr(facebookHref(safeId)) + '" target="_blank" rel="noopener noreferrer">' + MINE_LABEL + "</a>" +
       '<button type="button" class="kos-share-copy">Copy link</button>' +
       '<button type="button" class="kos-share-native" hidden>Share</button>' +
-      '<p class="kos-share-note" role="status" hidden></p>' +
-      '<div class="kos-share-fallback" hidden><input type="text" readonly class="kos-share-fallback-url" aria-label="Event link" spellcheck="false" /></div>' +
+      afterCopy +
       "</div>";
   }
 
