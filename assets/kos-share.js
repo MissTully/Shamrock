@@ -79,22 +79,35 @@
   }
 
   function copyText(url) {
+    // Ask for the clipboard while this click still owns the page. Opening the
+    // group tab can leave writeText pending, so give up after a short wait
+    // and use the older copy command.
     return new Promise(function (resolve) {
-      function finish(ok) { resolve(!!ok); }
+      var settled = false;
+      function finish(ok) {
+        if (settled) return;
+        settled = true;
+        resolve(!!ok);
+      }
+      var timer = setTimeout(function () { finish(legacyCopy(url)); }, 700);
+      function done(ok) {
+        clearTimeout(timer);
+        finish(ok);
+      }
       if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
         var pending;
         try {
           pending = navigator.clipboard.writeText(url);
         } catch (err) {
-          finish(legacyCopy(url));
+          done(legacyCopy(url));
           return;
         }
         if (pending && typeof pending.then === "function") {
-          pending.then(function () { finish(true); }).catch(function () { finish(legacyCopy(url)); });
+          pending.then(function () { done(true); }).catch(function () { done(legacyCopy(url)); });
           return;
         }
       }
-      finish(legacyCopy(url));
+      done(legacyCopy(url));
     });
   }
 
@@ -129,6 +142,7 @@
   if (typeof document !== "undefined") {
     document.addEventListener("click", function (ev) {
       var target = ev.target;
+      if (target && target.nodeType === 3) target = target.parentElement;
       if (!target || !target.closest) return;
       var root = target.closest(".kos-share");
       if (!root) return;

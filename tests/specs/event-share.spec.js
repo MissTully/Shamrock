@@ -73,6 +73,7 @@ async function expectShareBar(bar, id) {
   const facebook = bar.locator("a.kos-share-fb");
   const page = bar.page();
   const vw = page.viewportSize().width;
+  await bar.scrollIntoViewIfNeeded();
   await expect(group).toBeVisible();
   await expect(facebook).toBeVisible();
   // The Hub event screen slides in from the right. Measure it after it lands.
@@ -91,13 +92,17 @@ async function expectShareBar(bar, id) {
   await expect(copy).toBeVisible();
   await expect(copy).toHaveText("Copy link");
   await expectInside(copy, vw);
-  const groupBox = await group.boundingBox();
-  const facebookBox = await facebook.boundingBox();
-  const copyBox = await copy.boundingBox();
-  expect(Math.abs(groupBox.y - facebookBox.y)).toBeLessThanOrEqual(2);
-  expect(Math.abs(groupBox.width - facebookBox.width)).toBeLessThanOrEqual(2);
-  expect(Math.abs(groupBox.height - facebookBox.height)).toBeLessThanOrEqual(2);
-  expect(facebookBox.x).toBeGreaterThan(groupBox.x + 8);
+  await expect.poll(async () => {
+    const groupBox = await group.boundingBox();
+    const facebookBox = await facebook.boundingBox();
+    const copyBox = await copy.boundingBox();
+    if (!groupBox || !facebookBox || !copyBox) return false;
+    return Math.abs(groupBox.y - facebookBox.y) <= 2 &&
+      Math.abs(groupBox.width - facebookBox.width) <= 2 &&
+      Math.abs(groupBox.height - facebookBox.height) <= 2 &&
+      facebookBox.x > groupBox.x + 8 &&
+      copyBox.y > groupBox.y + 8;
+  }).toBe(true);
   const paint = await bar.evaluate((root) => {
     const groupEl = root.querySelector(".kos-share-group");
     const mineEl = root.querySelector(".kos-share-fb");
@@ -122,12 +127,16 @@ async function expectShareBar(bar, id) {
   expect(paint.groupSize).toBe(paint.mineSize);
   expect(paint.groupWeight).toBe(paint.mineWeight);
   expect(paint.groupBg).not.toBe(paint.copyBg);
-  expect(copyBox.y).toBeGreaterThan(groupBox.y + 8);
 }
 
 async function silenceFacebook(page) {
-  await page.context().route("https://www.facebook.com/**", (route) => route.abort());
-  await page.context().route("https://m.facebook.com/**", (route) => route.abort());
+  const blank = route => route.fulfill({
+    status: 200,
+    contentType: "text/html",
+    body: "<!DOCTYPE html><title>Facebook</title><p>Facebook</p>"
+  });
+  await page.context().route("https://www.facebook.com/**", blank);
+  await page.context().route("https://m.facebook.com/**", blank);
 }
 
 async function clickGroup(bar) {
