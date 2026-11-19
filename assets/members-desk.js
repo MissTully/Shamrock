@@ -9723,6 +9723,7 @@
     "hubPayments",
     "hubLockers",
     "hubEventStudio",
+    "hubWhosComing",
     "hubParadeGuests",
     "hubParadeSecurity",
     "hubEventOutreach",
@@ -9746,6 +9747,7 @@
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
+    hubWhosComing: { title: "Who's coming", desc: "RSVP list for one event, including public signups, with headcount and CSV.", icon: "👥", section: "Events" },
     hubParadeGuests: { title: "Parade guests", desc: "Guest march list per parade, with counts, status, and CSV.", icon: "🥁", section: "Events" },
     hubParadeSecurity: { title: "Parade security", desc: "Security shifts, the roster, and a CSV for each parade.", icon: "🦺", section: "Events" },
     hubEventOutreach: { title: "Event outreach", desc: "Website RSVP prospects, unmatched Zeffy buyers, and legacy emails", icon: "📬", section: "Events" },
@@ -9777,7 +9779,7 @@
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
     "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
-    "Events": { icon: "📅", sub: "Event Studio, the outreach list, QR check-in, and the calendar." },
+    "Events": { icon: "📅", sub: "Event Studio, who's coming, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
@@ -9853,6 +9855,7 @@
     hubPayments: "payments",
     hubLockers: "lockers",
     hubEventStudio: "event_studio",
+    hubWhosComing: "event_studio",
     hubParadeGuests: "parade_guests",
     hubParadeSecurity: "parade_security",
     hubEventOutreach: "event_outreach",
@@ -9927,8 +9930,24 @@
     return toolOrder;
   }
 
+  function placeWhosComing(toolOrder) {
+    var next = toolOrder.filter(function (id) { return id !== "hubWhosComing"; });
+    var at = next.indexOf("hubEventStudio");
+    if (at === -1) return next;
+    next.splice(at + 1, 0, "hubWhosComing");
+    return next;
+  }
+
+  function openWhosComing() {
+    if (!window.kosWhosComing) return;
+    try {
+      if (typeof window.kosWhosComing.useEsc === "function") window.kosWhosComing.useEsc(esc);
+      window.kosWhosComing.open();
+    } catch (eWc) {}
+  }
+
   function currentOfficerToolOrder() {
-    if (Array.isArray(state.toolKeys)) return toolOrderFromKeys();
+    if (Array.isArray(state.toolKeys)) return placeWhosComing(toolOrderFromKeys());
     var toolOrder = OFFICER_TOOL_ORDER.slice();
     if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
       toolOrder = [];
@@ -9986,7 +10005,7 @@
       if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
       else toolOrder.push("hubEventOutreach");
     }
-    return placeRolesAccess(toolOrder);
+    return placeWhosComing(placeRolesAccess(toolOrder));
   }
 
   function ensureOfficerDeskChrome() {
@@ -10126,6 +10145,7 @@
         try { window.kosRolesAccessOpen(); } catch (eRolesOpen) {}
       }
       if (id === "hubParadeSecurity") paintParadeSecurityShell();
+      if (id === "hubWhosComing") openWhosComing();
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -10220,6 +10240,12 @@
     }
     if (toolOrder.indexOf("hubParadeGuests") !== -1) paintParadeGuestsShell();
     if (toolOrder.indexOf("hubParadeSecurity") !== -1) paintParadeSecurityShell();
+    if (toolOrder.indexOf("hubWhosComing") !== -1 && window.kosWhosComing) {
+      try {
+        if (typeof window.kosWhosComing.useEsc === "function") window.kosWhosComing.useEsc(esc);
+        window.kosWhosComing.paintShell();
+      } catch (eWc) {}
+    }
 
     var cards = officerDeskCards();
     var sel = document.getElementById("officerToolSelect");
@@ -10245,7 +10271,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity" || card.id === "hubWhosComing")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
