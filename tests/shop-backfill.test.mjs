@@ -20,6 +20,8 @@ test("backfill function is idempotent and summary is opt-in", () => {
   assert.match(fn, /kos_match_member_by_email/);
   assert.match(fn, /data,data,created/);
   assert.match(fn, /kos_shop_order_time\(p\.raw, p\.created_at\)/);
+  assert.match(fn, /p\.amount_cents = new\.amount_cents/);
+  assert.match(fn, /not like 'kos-shop:%'/);
   assert.match(fn, /kos_match_member_by_name/);
   assert.match(fn, /revoke all on function public\.kos_backfill_shop_orders\(jsonb, text\) from public, anon, authenticated/);
   assert.doesNotMatch(fn, /tabirnley@gmail\.com/);

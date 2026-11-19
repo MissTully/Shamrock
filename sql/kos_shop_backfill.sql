@@ -259,11 +259,21 @@ begin
   end if;
   if new.product_kind = 'store' and position('@' in coalesce(new.payer_email, '')) > 0 then
     v_ts := public.kos_shop_order_time(new.raw, new.created_at);
+    -- Link a synthetic kos-shop: key to one real Zeffy payment only.
+    -- Two webhook payments with different ids, or different amounts, both stay.
     if v_ts is not null and exists (
       select 1 from public.payments p
       where p.product_kind = 'store'
         and lower(p.payer_email) = lower(new.payer_email)
+        and p.amount_cents = new.amount_cents
         and abs(extract(epoch from (public.kos_shop_order_time(p.raw, p.created_at) - v_ts))) <= 180
+        and (
+          (coalesce(new.provider_payment_id, '') like 'kos-shop:%'
+           and coalesce(p.provider_payment_id, '') not like 'kos-shop:%')
+          or
+          (coalesce(p.provider_payment_id, '') like 'kos-shop:%'
+           and coalesce(new.provider_payment_id, '') not like 'kos-shop:%')
+        )
     ) then
       return null;
     end if;
@@ -686,7 +696,12 @@ begin
        or (
          p.product_kind = 'store'
          and lower(coalesce(p.payer_email, '')) = v_email
+         and p.amount_cents = v_cents
          and abs(extract(epoch from (public.kos_shop_order_time(p.raw, p.created_at) - v_ts))) <= 180
+         and (
+           (v_payment_id like 'kos-shop:%' and coalesce(p.provider_payment_id, '') not like 'kos-shop:%')
+           or (coalesce(p.provider_payment_id, '') like 'kos-shop:%' and v_payment_id not like 'kos-shop:%')
+         )
        )
     limit 1;
     if v_existing is not null then
