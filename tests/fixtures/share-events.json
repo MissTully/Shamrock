@@ -1,0 +1,54 @@
+{
+  "fixture-santafest": {
+    "id": "fixture-santafest",
+    "name": "SantaFest",
+    "description": "Tampa's downtown holiday kickoff parade and the start of the krewe's marching season. The parade steps off at 1:00 PM at Morgan Street and Madison Street.",
+    "event_type": "parade",
+    "start_time": "2026-12-05T18:00:00.000Z",
+    "end_time": "2026-12-05T22:00:00.000Z",
+    "location": "Starts at Morgan St. and Madison St., Downtown Tampa, FL",
+    "status": "published",
+    "is_public": true,
+    "source": "krewe",
+    "members_only": false,
+    "flyer_url": "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/event-flyers/1794544500325-sand-save-1794544458706.png",
+    "member_address": "123 Hidden Lane",
+    "member_notes": "Gate code 4321"
+  },
+  "fixture-draft": {
+    "id": "fixture-draft",
+    "name": "Secret Draft Gala",
+    "description": "Officers only draft notes about the gala.",
+    "status": "draft",
+    "is_public": true,
+    "start_time": "2026-12-12T23:00:00.000Z",
+    "location": "Secret hall",
+    "member_notes": "Do not publish this draft"
+  },
+  "fixture-cancelled": {
+    "id": "fixture-cancelled",
+    "name": "Cancelled Ceili",
+    "status": "cancelled",
+    "is_public": true,
+    "start_time": "2026-12-20T23:00:00.000Z",
+    "location": "Tampa"
+  },
+  "fixture-private": {
+    "id": "fixture-private",
+    "name": "Private Unlisted Social",
+    "status": "published",
+    "is_public": false,
+    "start_time": "2026-12-20T23:00:00.000Z",
+    "location": "Members house"
+  },
+  "fixture-started": {
+    "id": "fixture-started",
+    "name": "Past Social",
+    "description": "Already happened.",
+    "event_type": "social",
+    "status": "published",
+    "is_public": true,
+    "start_time": "2020-01-01T18:00:00.000Z",
+    "location": "Tampa"
+  }
+}

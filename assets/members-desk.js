@@ -864,6 +864,18 @@
     return '<div class="hub-ev-detail">' + out.join("") + "</div>";
   }
 
+  function eventShareHtml(ev) {
+    if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+    var st = String(ev.status || "published").toLowerCase();
+    if (st !== "published" && st !== "live") return "";
+    if (ev.is_public === false) return "";
+    return window.kosShare.html(ev.id, ev.name || "");
+  }
+
+  function prepareShare(root) {
+    if (root && window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(root);
+  }
+
   function renderHubMemberEvents(list) {
     var target = document.getElementById("hubMemberEventList");
     if (!target) return;
@@ -904,8 +916,10 @@
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         '</span><span class="app-event-acts"><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
         (going ? "Already RSVP'd" : (closed ? "Closed" : "RSVP")) + "</span>" + calBtn + "</span></div>" +
+        eventShareHtml(ev) +
         hubEventDetailHtml(ev, going) + "</article>";
     }).join("");
+    prepareShare(target);
     target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         // Keep the click from also opening the event detail screen.
@@ -1018,7 +1032,8 @@
       "</div>" +
       meetLine + warn +
       '<p class="hub-parade-msg" data-parade-msg="' + esc(row.id) + '"></p></div>' +
-      '<div class="hub-appr-btns">' + btns.join("") + "</div></div>";
+      '<div class="hub-appr-btns">' + btns.join("") + "</div>" +
+      eventShareHtml(row) + "</div>";
   }
 
   function wireParadeSeasonList(root, list) {
@@ -1060,6 +1075,7 @@
     document.querySelectorAll(".hub-parade-season-list").forEach(function (target) {
       target.innerHTML = html;
       wireParadeSeasonList(target, rows);
+      prepareShare(target);
     });
   }
   window.__kosRenderParadeSeason = renderHubParadeSeason;
@@ -2653,7 +2669,8 @@
         '<div class="app-event-copy"><h3>' + esc(ev.name || "Krewe event") + "</h3><p>" + esc(bits.line) + (nextTag ? " · " + esc(nextTag) : "") + "</p>" +
         (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
         '</div><button type="button" class="app-rsvp' + (goingNext ? " is-going" : "") + '" data-app-event="' + esc(ev.id || "") + '">' +
-        (goingNext ? "Already RSVP'd" : (closedNext ? "Closed" : "RSVP")) + "</button></article>";
+        (goingNext ? "Already RSVP'd" : (closedNext ? "Closed" : "RSVP")) + "</button>" +
+        eventShareHtml(ev) + "</article>";
     }
     return '<div id="appDash">' +
       tartanDeadlineHtml("appTartanDeadline") +
@@ -3023,6 +3040,7 @@
       try { window.kosPaintHubNotices(top); } catch (eNotesPaint) {}
     }
     placeHomeHours(hoursCard);
+    prepareShare(top);
 
     renderProfileCard();
     ensureMyParadeGuests();
@@ -7796,7 +7814,9 @@
         (desc ? "<p>" + esc(desc) + "</p>" : "") +
         more +
         "<p>" + note + "</p>" +
+        eventShareHtml(ev) +
         "</article>";
+      prepareShare(scroll);
       actions.innerHTML = going
         ? '<button type="button" class="app-rsvp is-going" id="appRsvpBtn" disabled>Already RSVP\'d</button>' +
           '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>' +
