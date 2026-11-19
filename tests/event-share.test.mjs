@@ -64,8 +64,11 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   assert.match(html, /name="twitter:card" content="summary_large_image"/);
   assert.match(html, /name="twitter:title" content="SantaFest"/);
   assert.match(html, /https:\/\/www\.facebook\.com\/sharer\/sharer\.php\?u=https%3A%2F%2Fwww\.kreweofshamrock\.com%2Fevents%2Ffixture-santafest/);
-  assert.match(html, /href="https:\/\/www\.facebook\.com\/groups\/1790675004521855"/);
-  assert.match(html, /Share in our Krewe group/);
+  assert.equal(html.includes("1790675004521855"), false);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+  assert.equal(html.includes("kos-share-group"), false);
+  assert.equal(html.includes("kos-share-note"), false);
+  assert.equal(html.includes("kos-share-fallback"), false);
   assert.match(html, /Share on my Facebook/);
   assert.equal(html.includes(">Share on Facebook<"), false);
   assert.equal(html.includes("123 Hidden Lane"), false);
@@ -170,19 +173,31 @@ test("an Inter-Krewe event links to the host site", () => {
   assert.equal(html.includes('href="/members.html"'), false);
 });
 
-test("the members group URL is one shared constant", () => {
+test("the members group URL is one shared constant and stays off the public page", () => {
   assert.equal(share.MEMBERS_FACEBOOK_GROUP_URL, "https://www.facebook.com/groups/1790675004521855");
   const buttons = share.shareButtonsHtml("fixture-santafest", "SantaFest");
-  const hrefs = buttons.match(/https:\/\/www\.facebook\.com\/groups\/1790675004521855/g) || [];
-  assert.equal(hrefs.length, 1);
-  assert.match(buttons, /class="kos-share-group"/);
+  assert.equal(buttons.includes("1790675004521855"), false);
+  assert.equal(buttons.includes("kos-share-group"), false);
+  assert.equal(buttons.includes("kos-share-note"), false);
+  assert.equal(buttons.includes("kos-share-fallback"), false);
   assert.match(buttons, /Share on my Facebook/);
+  assert.match(buttons, /Copy link/);
+  assert.match(buttons, />Share</);
   const client = readFileSync(join(here, "../assets/kos-share.js"), "utf8");
   const server = readFileSync(join(here, "../lib/event-share.js"), "utf8");
+  const kosShare = require("../assets/kos-share.js");
+  const hub = kosShare.html("fixture-santafest", "SantaFest", { members: true });
+  const hrefs = hub.match(/https:\/\/www\.facebook\.com\/groups\/1790675004521855/g) || [];
+  assert.equal(hrefs.length, 1);
+  assert.match(hub, /class="kos-share kos-share-members"/);
+  assert.match(hub, /class="kos-share-group"/);
+  assert.match(hub, /kos-share-note/);
+  assert.match(hub, /kos-share-fallback/);
   assert.equal((client.match(/1790675004521855/g) || []).length, 1);
   assert.equal(server.includes("1790675004521855"), false);
   assert.equal(client.includes("—"), false);
   assert.equal(buttons.includes("—"), false);
+  assert.equal(hub.includes("—"), false);
 });
 
 test("a pdf flyer falls back to the Krewe image", () => {
