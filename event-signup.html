@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261119group1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261119links1" />
 <style>
 .kos-cal-offer{margin-top:14px;padding:12px 14px;border:1px solid rgba(168,128,28,.45);border-radius:12px;background:#fffdf8;}
 .kos-cal-offer p{margin:0 0 10px;font-size:15px;color:#3a3a2e;line-height:1.4;}
@@ -75,6 +75,17 @@
   .feature .ft-text{overflow:visible;}
   .feature .ft-text h2, .feature .ft-text p{overflow-wrap:anywhere; white-space:normal;}
   .feature .ft-text .feat-desc{font-size:17px; line-height:1.6; white-space:pre-wrap;}
+  .feat-desc a.kos-url, .ev-desc a.kos-url{
+    color:#14532d; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  .feat-desc a.kos-url:hover, .ev-desc a.kos-url:hover{ color:#0c3b21; }
+  #kcal-list .kcal-detail{display:block;font-size:13px;color:#f1ead4;margin-top:2px;overflow-wrap:anywhere;}
+  #kcal-list a.kos-url{
+    color:#ffe9a8; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  #kcal-list a.kos-url:hover{ color:#fff6d4; }
   @media (max-width:680px){
     .ev-strip{
       grid-template-columns:1fr;
@@ -351,6 +362,7 @@
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
   <script src="assets/kos-calendar.js?v=20261116flyer1"></script>
   <script src="assets/kos-share.js?v=20261119group1"></script>
+  <script src="assets/kos-linkify.js?v=20261119links1"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -375,6 +387,10 @@
     const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const DOW = ["Su","Mo","Tu","We","Th","Fr","Sa"];
     const esc = (s)=> (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+    function eventDescHtml(text) {
+      const escaped = esc(text == null ? "" : text);
+      return window.kosLinkify ? window.kosLinkify(escaped) : escaped;
+    }
     function shareBlock(ev) {
       if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
       const st = String(ev.status || "published").toLowerCase();
@@ -503,7 +519,7 @@
         (membersOnlyFeat ? '<p><b>Members only.</b> ' + esc(membersOnlyLabel()) + '</p>' : '') +
         (closedFeat && !membersOnlyFeat ? '<p><b>Registration:</b> Closed</p>' : '') +
         (ticketBits && !membersOnlyFeat ? '<p><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
-        (event.description ? '<p class="feat-desc">' + esc(event.description) + '</p>' : '<p class="feat-desc">Join the Krewe of Shamrock. Details are in RSVP below.</p>') +
+        (event.description ? '<p class="feat-desc">' + eventDescHtml(event.description) + '</p>' : '<p class="feat-desc">Join the Krewe of Shamrock. Details are in RSVP below.</p>') +
         '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + ctaFeat +
         '<a class="btn" href="#event-previews">Browse all upcoming</a></div>' +
         shareBlock(event) + '</div>';
@@ -568,7 +584,7 @@
           (membersOnlyPrev ? '<p class="ev-meta"><b>Members only.</b> ' + esc(membersOnlyLabel()) + '</p>' : '') +
           (closedPrev && !membersOnlyPrev ? '<p class="ev-meta"><b>Registration:</b> Closed</p>' : '') +
           (ticketBits && !membersOnlyPrev ? '<p class="ev-meta"><b>Tickets:</b> ' + esc(ticketBits) + '</p>' : '') +
-          (ev.description ? '<p class="ev-desc">' + esc(ev.description) + '</p>' : '<p class="ev-desc">Krewe event. Open RSVP below for more.</p>') +
+          (ev.description ? '<p class="ev-desc">' + eventDescHtml(ev.description) + '</p>' : '<p class="ev-desc">Krewe event. Open RSVP below for more.</p>') +
           '<div class="ev-actions">' + cta +
           (ev.flyer_url ? '<a class="btn" href="' + esc(ev.flyer_url) + '" target="_blank" rel="noopener">Flyer</a>' : '') +
           '</div>' + shareBlock(ev) + '</div></article>';
@@ -1010,7 +1026,7 @@
     function listDetail(ev) {
       const text = String((ev && ev.description) || "").replace(/\s+/g, " ").trim();
       if (!text || text.length > 240) return "";
-      return '<span style="display:block;font-size:13px;color:#f1ead4;opacity:.92;margin-top:2px;">' + esc(text) + "</span>";
+      return '<span class="kcal-detail">' + eventDescHtml(text) + "</span>";
     }
 
     function stillOnDatesList(ev, now) {

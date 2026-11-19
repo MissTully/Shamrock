@@ -41,6 +41,20 @@
     "start_time": "2026-12-20T23:00:00.000Z",
     "location": "Members house"
   },
+  "fixture-metro": {
+    "id": "fixture-metro",
+    "name": "Metropolitan Ministries",
+    "description": "Sign up to volunteer with the Krewe at Metropolitan Ministries: https://metromin.volunteerhub.com/vv2/lp/KreweofShamrock/",
+    "event_type": "fundraiser",
+    "start_time": "2026-12-12T15:00:00.000Z",
+    "end_time": "2026-12-12T19:00:00.000Z",
+    "location": "Tampa",
+    "status": "published",
+    "is_public": true,
+    "source": "krewe",
+    "members_only": false,
+    "external_url": "https://metromin.volunteerhub.com/vv2/lp/KreweofShamrock/"
+  },
   "fixture-started": {
     "id": "fixture-started",
     "name": "Past Social",
