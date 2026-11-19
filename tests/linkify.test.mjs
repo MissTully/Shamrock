@@ -46,8 +46,25 @@ test("an xss attempt stays text and javascript is not a link", () => {
   assert.equal(/href="javascript:/i.test(html), false);
   assert.equal(/href="data:/i.test(html), false);
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-  assert.match(html, /href="https:\/\/example\.com\/\?q=1&amp;b=2&quot;"/);
+  assert.match(html, /href="https:\/\/example\.com\/\?q=1&amp;b=2"/);
+  assert.match(html, /<\/a>&quot;/);
   assert.equal((html.match(/<a /g) || []).length, 1);
+});
+
+test("a wrapping quote or angle bracket stays outside the link", () => {
+  const html = linkify(esc('See "https://example.com/a". and <https://example.com/b> plus \'https://example.com/c\''));
+  assert.match(html, /&quot;<a class="kos-url" href="https:\/\/example\.com\/a" target="_blank" rel="noopener noreferrer">https:\/\/example\.com\/a<\/a>&quot;\./);
+  assert.match(html, /&lt;<a class="kos-url" href="https:\/\/example\.com\/b" target="_blank" rel="noopener noreferrer">https:\/\/example\.com\/b<\/a>&gt;/);
+  assert.match(html, /&#39;<a class="kos-url" href="https:\/\/example\.com\/c" target="_blank" rel="noopener noreferrer">https:\/\/example\.com\/c<\/a>&#39;/);
+  assert.equal(html.includes('href="https://example.com/a&quot;"'), false);
+  assert.equal(html.includes('href="https://example.com/b&gt;"'), false);
+  assert.equal((html.match(/<a /g) || []).length, 3);
+});
+
+test("an ampersand inside a url stays escaped in the href", () => {
+  const html = linkify(esc("Go to https://example.com/?a=1&b=2."));
+  assert.match(html, /href="https:\/\/example\.com\/\?a=1&amp;b=2"/);
+  assert.match(html, /<\/a>\./);
 });
 
 test("safeHttp accepts only http and https", () => {

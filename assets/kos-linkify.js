@@ -32,10 +32,19 @@
       out += s.slice(last, m.index);
       var href = m[0];
       var trail = "";
-      while (href && /[.,);:!?]$/.test(href)) {
+      // Escaping runs first, so a wrapping " or > arrives as &quot; or &gt; and
+      // would otherwise stay inside the href. Peel those closers, then sentence punctuation.
+      while (href) {
+        var closer = href.match(/&(?:quot|gt|#39|#34|#62|#x22|#x27|#x3e);$/i);
+        if (closer) {
+          trail = closer[0] + trail;
+          href = href.slice(0, -closer[0].length);
+          continue;
+        }
+        if (!/[.,);:!?]$/.test(href)) break;
         var ch = href.slice(-1);
         if (ch === ")" && (href.split("(").length >= href.split(")").length)) break;
-        // A semicolon that finishes &amp; / &quot; / &#39; is part of the escaped URL.
+        // Keep a semicolon that finishes an entity inside the URL, such as &amp;.
         if (ch === ";" && /&(?:\#\d+|\#x[0-9a-f]+|[a-z]{2,8})$/i.test(href.slice(0, -1))) break;
         trail = ch + trail;
         href = href.slice(0, -1);
