@@ -584,6 +584,22 @@
     "body.hub-desk.app-ann.app-screen #appDrillActions{display:none !important;}",
     "@media (max-width:380px){.tidings-archive{font-size:13px;}.tidings-column{width:min(38rem,calc(100% - 28px));padding-top:26px;}}",
 
+    /* Phone and Fold type. Desktop (960px and up) keeps the sizes above. */
+    "@media (max-width:959px){",
+    ".hub-board{padding:16px 14px;}",
+    ".hub-board h3{font-size:clamp(18px,5vw,21px);overflow-wrap:anywhere;}",
+    ".hub-board h4{font-size:clamp(16px,4.6vw,18px);line-height:1.25;overflow-wrap:anywhere;}",
+    ".hub-board .hub-board-date{font-size:clamp(12px,3.3vw,14px);letter-spacing:.01em;overflow-wrap:anywhere;}",
+    ".hub-board p{font-size:16px;line-height:1.45;overflow-wrap:break-word;}",
+    ".hub-board-more{font-size:15px;}",
+    ".hub-board-old summary{font-size:15px;white-space:normal;overflow-wrap:anywhere;}",
+    ".tidings-mast h2{font-size:clamp(26px,7vw,40px);}",
+    ".tidings-title{font-size:clamp(22px,6vw,32px);}",
+    ".tidings-when{font-size:13px;letter-spacing:.04em;overflow-wrap:anywhere;}",
+    ".tidings-body{font-size:16px;}",
+    ".tidings-from{font-size:18px;}",
+    "}",
+
   ].join("");
 
   var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="48x48" href="assets/img/favicon-48.png" />
@@ -13,15 +15,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Shamrock" />
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Krewe of Shamrock · Members Only</title>
 <meta name="description" content="Members-only coordination tools for the Krewe of Shamrock: locker rentals, carpools, van pools, and the member directory." />
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=optional" rel="stylesheet">
-<link rel="stylesheet" href="assets/krewe.css?v=20261012deadline1" />
+<link rel="stylesheet" href="assets/krewe.css?v=20261119mobile1" />
 <script src="assets/show-password.js?v=20260929pw1" defer></script>
 <style>
   .gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
@@ -821,9 +821,12 @@
   body.hub-app .hub-member-bar,
   body.hub-app .hub-wrap::before{ display:none !important; }
   body.hub-app #memberContent.wrap{
-    width:min(460px, 100%);
-    max-width:none;
-    margin:0 auto;
+    /* Full bleed on a phone or Fold. A 460px column centered in a wider
+       layout viewport left a dark gutter and clipped the card on the glass. */
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    margin:0;
     padding:0;
     height:100dvh;
     max-height:100dvh;
@@ -1338,7 +1341,22 @@
     body.hub-app.app-nav-pop #appDrill{ animation:none !important; }
   }
   @media (min-width:960px){
-    body.hub-app #memberContent.wrap{ width:min(840px, calc(100% - 32px)); }
+    body.hub-app #memberContent.wrap{
+      width:min(840px, calc(100% - 32px));
+      max-width:none;
+      margin:0 auto;
+    }
+  }
+  @media (max-width:959px){
+    #memberContent, #memberContent .app-body, #hubRoot, .hub-wrap{ font-size:16px; }
+    #appPageTitle{ font-size:clamp(22px, 6.2vw, 26px); }
+    .app-hero h2{ font-size:clamp(20px, 5.6vw, 28px); }
+    .app-count strong{ font-size:clamp(20px, 6vw, 26px); }
+    body.hub-app .hub-tabs{ width:100%; max-width:100%; box-sizing:border-box; }
+    body.hub-app #hubRoot,
+    body.hub-app .hub-panel,
+    body.hub-app .hub-home-stack,
+    body.hub-app .hub-board{ min-width:0; max-width:100%; }
   }
 
   /* The hub page should not smooth-scroll. A smooth scroll plus a later
@@ -2244,7 +2262,7 @@
     </button>
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
-  <script src="assets/krewe.js?v=20261019saturday1" defer></script>
+  <script src="assets/krewe.js?v=20261119mobile1" defer></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -4767,7 +4785,7 @@
 <script src="assets/kos-roles-access-rules.js?v=20261116security1" defer></script>
 <script src="assets/kos-roles-access.js?v=20261114roles1" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
-<script src="assets/members-desk.js?v=20261116security3" defer></script>
+<script src="assets/members-desk.js?v=20261119mobile1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
