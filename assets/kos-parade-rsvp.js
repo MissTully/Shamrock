@@ -117,7 +117,7 @@
 
   function statusOf(ev) {
     var st = String((ev && (ev.parade_rsvp_status || ev.rsvp_status)) || "").toLowerCase();
-    if (!st && ev && ev.parade_rsvpd) st = "registered";
+    if (!st && ev && (ev.parade_rsvpd || ev.rsvpd)) st = "registered";
     return st;
   }
 
