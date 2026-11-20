@@ -51,7 +51,31 @@
     if (ev.ticket_price_cents == null && el.getAttribute("data-ticket-cents")) {
       ev.ticket_price_cents = Number(el.getAttribute("data-ticket-cents"));
     }
+    if (ev.collect_meals == null) ev.collect_meals = el.getAttribute("data-collect-meals") === "1";
+    if (ev.meal_options == null) ev.meal_options = el.getAttribute("data-meal-options") || "";
     return ev;
+  }
+
+  function collectsMeal(ev) {
+    var flag = ev && ev.collect_meals;
+    return flag === true || flag === 1 || flag === "1" || flag === "true";
+  }
+
+  function mealOptionList(ev) {
+    return String((ev && ev.meal_options) || "").split(/[\n,]+/).map(function (s) {
+      return s.trim();
+    }).filter(Boolean);
+  }
+
+  function needsMeal(ev) {
+    return collectsMeal(ev) && !paradeGuestUi(ev) && mealOptionList(ev).length > 0;
+  }
+
+  function mealLink(ev) {
+    if (!collectsMeal(ev) || paradeGuestUi(ev)) return "";
+    var id = String((ev && ev.id) || "").trim();
+    if (!id) return "";
+    return '<p class="kos-pr-meal"><a href="/event-signup.html?event=' + encodeURIComponent(id) + '">Choose your meal on the full signup form</a></p>';
   }
 
   // Guest count and the Zeffy guest fee stay on Krewe parades. Other events,
@@ -145,7 +169,7 @@
     return '<div class="kos-pr-actions">' +
       '<a class="btn btn-primary" href="' + esc(signInHref(eventId)) + '">Sign in to RSVP</a>' +
       ticketInner(ev) +
-      "</div>";
+      "</div>" + mealLink(ev);
   }
 
   function closedInner(ev) {
@@ -185,6 +209,7 @@
       "</div>" +
       '<p class="kos-pr-state">' + esc(state) + "</p>" +
       guests +
+      mealLink(ev) +
       '<p class="kos-pr-msg" role="status"></p>';
   }
 
@@ -210,7 +235,9 @@
       ' data-collect-guests="' + (paradeGuestUi(ev) ? "1" : "0") + '"' +
       ' data-parade-pay="' + esc(safeHttp(ev.guest_payment_url) || "") + '"' +
       ' data-ticket-url="' + esc(ticket) + '"' +
-      ' data-ticket-cents="' + esc(cents) + '">' +
+      ' data-ticket-cents="' + esc(cents) + '"' +
+      ' data-collect-meals="' + (collectsMeal(ev) ? "1" : "0") + '"' +
+      ' data-meal-options="' + esc(ev.meal_options || "") + '">' +
       inner + "</div>";
   }
 
@@ -354,17 +381,83 @@
       setMsg(el, "Your profile needs a first name, last name, and email before you can RSVP.");
       return;
     }
-    var guests = paradeGuestUi(ev) ? readCount(el) : 0;
     var goingBtn = el.querySelector(".kos-pr-going");
     if (goingBtn) { goingBtn.disabled = true; goingBtn.textContent = "Saving..."; }
-    client.rpc("rsvp_to_event", {
-      p_event_id: ev.id,
-      p_first_name: profile.first_name,
-      p_last_name: profile.last_name,
-      p_email: profile.email,
-      p_guests_count: guests,
-      p_signup_role: "attendee"
-    }).then(function (res) {
+    if (paradeGuestUi(ev)) {
+      sendGoing(el, options, profile, {
+        p_event_id: ev.id,
+        p_first_name: profile.first_name,
+        p_last_name: profile.last_name,
+        p_email: profile.email,
+        p_guests_count: readCount(el),
+        p_signup_role: "attendee"
+      });
+      return;
+    }
+    readSignup(client, profile, ev.id).then(function (found) {
+      if (found && found.error) {
+        restoreGoing(el, options, profile, "Could not read your current RSVP. Use the full signup form so guests and meals stay as they are.");
+        return;
+      }
+      var row = found && found.row;
+      if (needsMeal(ev) && !(row && row.meal_choice)) {
+        restoreGoing(el, options, profile, "Choose a meal on the full signup form, then you can mark Going.");
+        return;
+      }
+      var guests = 0;
+      var role = "attendee";
+      var args = {
+        p_event_id: ev.id,
+        p_first_name: profile.first_name,
+        p_last_name: profile.last_name,
+        p_email: profile.email
+      };
+      if (row) {
+        guests = Number(row.guests_count);
+        if (!isFinite(guests) || guests < 0) guests = 0;
+        if (guests > 20) guests = 20;
+        role = String(row.signup_role || "attendee");
+        if (role !== "attendee" && role !== "volunteer" && role !== "organizer") role = "attendee";
+        if (row.meal_choice) args.p_meal_choice = row.meal_choice;
+        if (row.raffle_tickets != null && row.raffle_tickets !== "") args.p_raffle_tickets = Number(row.raffle_tickets) || 0;
+        if (row.payment_status) args.p_payment_status = row.payment_status;
+        if ((role === "volunteer" || role === "organizer") && row.volunteer_hours_planned) {
+          args.p_volunteer_hours_planned = Number(row.volunteer_hours_planned);
+        }
+      }
+      args.p_guests_count = Math.floor(guests);
+      args.p_signup_role = role;
+      sendGoing(el, options, profile, args);
+    });
+  }
+
+  function restoreGoing(el, options, profile, message) {
+    paint(el);
+    wire(el, options, profile);
+    setMsg(el, message);
+  }
+
+  function readSignup(client, profile, eventId) {
+    if (!client || typeof client.from !== "function" || !profile || !profile.member_id || !isUuid(eventId) || !isUuid(profile.member_id)) {
+      return Promise.resolve({ row: null });
+    }
+    return client.from("event_signups")
+      .select("status,guests_count,signup_role,meal_choice,raffle_tickets,payment_status,volunteer_hours_planned")
+      .eq("event_id", eventId)
+      .eq("member_id", profile.member_id)
+      .maybeSingle()
+      .then(function (res) {
+        if (!res) return { row: null };
+        if (res.error) return { error: true };
+        return { row: res.data || null };
+      })
+      .catch(function () { return { error: true }; });
+  }
+
+  function sendGoing(el, options, profile, args) {
+    var client = clientOf(options);
+    var guests = args.p_guests_count;
+    client.rpc("rsvp_to_event", args).then(function (res) {
       if (res && res.error) throw res.error;
       if (res && res.data && res.data.ok === false) throw new Error(res.data.message || "Could not RSVP.");
       var status = (res && res.data && res.data.status) || "registered";
@@ -375,7 +468,7 @@
       var clovers = Number(res && res.data && res.data.clovers_awarded) || 0;
       if (clovers > 0) message += " +" + clovers + " Clovers.";
       setMsg(el, message);
-      notify(options, { eventId: ev.id, status: status, guests: guests, message: message });
+      notify(options, { eventId: args.p_event_id, status: status, guests: guests, message: message });
     }).catch(function (err) {
       paint(el);
       wire(el, options, profile);

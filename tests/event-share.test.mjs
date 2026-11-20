@@ -180,6 +180,26 @@ test("an Inter-Krewe event links to the host site", () => {
   assert.equal(html.includes("Share in our Krewe group"), false);
 });
 
+test("a meal event keeps RSVP and the full signup form", () => {
+  const html = share.renderEventSharePage({
+    id: "22222222-2222-4222-8222-222222222222",
+    name: "Supper with a plate choice",
+    source: "krewe",
+    status: "published",
+    is_public: true,
+    event_type: "social",
+    start_time: "2026-12-20T23:00:00.000Z",
+    location: "Tampa",
+    collect_meals: true,
+    meal_options: "Chicken, Garden plate",
+    description: "Pick a meal."
+  });
+  assert.match(html, /Sign in to RSVP/);
+  assert.match(html, /Choose your meal on the full signup form/);
+  assert.match(html, /\/event-signup\.html\?event=22222222-2222-4222-8222-222222222222/);
+  assert.equal(html.includes("—"), false);
+});
+
 test("a ticketed event keeps member RSVP beside Buy tickets", () => {
   const html = share.renderEventSharePage({
     id: "b7fe09b4-cbff-4c86-8007-878b3836041c",

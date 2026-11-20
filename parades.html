@@ -914,7 +914,7 @@
 
     function mountParadeRsvp() {
       if (window.kosParadeRsvp && typeof window.kosParadeRsvp.mountAll === "function") {
-        window.kosParadeRsvp.mountAll(document.getElementById("paradeStaticGrid") || document, {
+        window.kosParadeRsvp.mountAll(document, {
           client: supabase,
           publicPage: true
         });

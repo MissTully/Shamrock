@@ -320,7 +320,7 @@ function membersNoteHtml(ev) {
   const sinceIso = (window.kosCalendar && typeof window.kosCalendar.eventListSinceIso === "function")
     ? window.kosCalendar.eventListSinceIso()
     : new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-  const publicCols = "id, name, description, event_type, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, members_only, status, registration_closes_at, flyer_url";
+  const publicCols = "id, name, description, event_type, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, members_only, status, registration_closes_at, flyer_url, collect_meals, meal_options";
   const featuredCols = publicCols + ", is_featured";
   const upcoming = `start_time.gte.${sinceIso},end_time.gte.${sinceIso},start_time.is.null`;
   let { data, error } = await supabase
