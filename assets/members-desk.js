@@ -873,8 +873,8 @@
     }
     var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
     var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
-    var paradeCant = paradeCard && !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
-    facts.push("<b>Your RSVP:</b> " + (going ? "You're going." : (paradeCant ? "Can't go." : (eventSignupClosed(ev) ? "Registration is closed." : (paradeCard ? "Not yet. Choose Going or Can't go below." : "Not yet. Tap RSVP above.")))));
+    var paradeCant = !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
+    facts.push("<b>Your RSVP:</b> " + (going ? "You're going." : (paradeCant ? "Can't go." : (eventSignupClosed(ev) ? "Registration is closed." : "Not yet. Choose Going or Can't go below."))));
     out.push('<div class="hub-ev-facts">' + facts.join("<br>") + "</div>");
     if (ev.description) out.push('<div class="hub-ev-desc">' + eventDescriptionHtml(ev.description) + "</div>");
     if (ev.member_notes) out.push('<div class="hub-ev-private"><b>🔒 Members only:</b> ' + esc(String(ev.member_notes)).replace(/\n/g, "<br>") + "</div>");
@@ -882,12 +882,12 @@
     var pay = safeHttpUrl(ev.ticket_payment_url) || (/zeffy\.com/i.test(ev.external_url || "") ? safeHttpUrl(ev.external_url) : "");
     var site = safeHttpUrl(ev.external_url);
     var meeting = safeHttpUrl(ev.meeting_url);
-    if (pay && !eventSignupClosed(ev)) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">🎟️ Buy tickets / pay ↗</a>');
+    if (pay && !window.kosParadeRsvp && !eventSignupClosed(ev)) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy tickets</a>');
     if (meeting) links.push('<a class="hub-ev-btn" href="' + esc(meeting) + '" target="_blank" rel="noopener noreferrer">💻 Join online ↗</a>');
     if (site && site !== pay) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">🔗 Event website ↗</a>');
     if (!paradeCard) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="event-signup.html?event=' + encodeURIComponent(ev.id || "") + '">📅 Event page</a>');
     out.push('<div class="hub-ev-links">' + links.join("") + "</div>");
-    if (paradeCard && window.kosParadeRsvp) out.push(window.kosParadeRsvp.slotHtml(ev, { signedIn: true }));
+    if (window.kosParadeRsvp) out.push(window.kosParadeRsvp.slotHtml(ev, { signedIn: true }));
     return '<div class="hub-ev-detail">' + out.join("") + "</div>";
   }
 
@@ -931,9 +931,9 @@
         ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
         : '<span class="app-date"><b>TBD</b><span></span></span>';
       var going = eventIsRsvpd(ev);
-      var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
       var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
-      var paradeCant = paradeCard && !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
+      var paradeCant = !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
+      var ikcCard = String(ev.source || "").toLowerCase() === "ikc";
       var closed = !going && eventSignupClosed(ev);
       // The row is a div (role=button) so the Calendar button can sit inside
       // it; a <button> cannot contain another button.
@@ -943,9 +943,9 @@
       return '<article class="hub-ev-card"><div role="button" tabindex="0" class="app-event-hit" data-app-event="' + esc(ev.id || "") + '">' +
         dateBlock +
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
-        '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
+        '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + (ikcCard ? " · Inter-Krewe Council" : "") + '</span>' +
         '</span><span class="app-event-acts"><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
-        (going ? (paradeCard ? "You're going" : "Already RSVP'd") : (paradeCant ? "Can't go" : (closed ? "Closed" : "RSVP"))) + "</span>" + calBtn + "</span></div>" +
+        (going ? "You're going" : (paradeCant ? "Can't go" : (closed ? "Closed" : "RSVP"))) + "</span>" + calBtn + "</span></div>" +
         eventShareHtml(ev) +
         hubEventDetailHtml(ev, going) + "</article>";
     }).join("");
@@ -1118,7 +1118,10 @@
       ev.rsvpd = isGoing;
     });
     if (isGoing) markRsvpd(id, info.status);
-    else clearRsvpd(id);
+    else {
+      if (!state.rsvpByEvent) state.rsvpByEvent = {};
+      state.rsvpByEvent[id] = st || "cancelled";
+    }
     renderHubParadeSeason(state.paradeSeason);
     paintRsvpChips();
     if (info.message && typeof showToast === "function") showToast(info.message);
@@ -1158,7 +1161,7 @@
     (rows || []).forEach(function (r) {
       if (!r || !r.event_id) return;
       var st = String(r.status || "").toLowerCase();
-      if (!ACTIVE_RSVP[st]) return;
+      if (!st) return;
       map[String(r.event_id)] = st;
     });
     state.rsvpByEvent = map;
@@ -1212,8 +1215,9 @@
     var id = String(row.id || "");
     var st = state.rsvpByEvent && id ? state.rsvpByEvent[id] : "";
     if (st) {
-      copy.rsvpd = true;
       copy.rsvp_status = st;
+      copy.parade_rsvp_status = copy.parade_rsvp_status || st;
+      if (ACTIVE_RSVP[st]) copy.rsvpd = true;
     }
     (state.paradeSeason || []).forEach(function (p) {
       if (!p) return;
@@ -1239,12 +1243,13 @@
       if (!row || !state.rsvpByEvent) return;
       var paradeStatus = state.rsvpByEvent[String(row.id)];
       if (paradeStatus) {
-        row.parade_rsvpd = true;
         row.parade_rsvp_status = row.parade_rsvp_status || paradeStatus;
+        row.parade_rsvpd = !!ACTIVE_RSVP[String(paradeStatus).toLowerCase()];
       }
       if (row.meeting && state.rsvpByEvent[String(row.meeting.id)]) {
-        row.meeting.rsvpd = true;
-        row.meeting.rsvp_status = row.meeting.rsvp_status || state.rsvpByEvent[String(row.meeting.id)];
+        var meetStatus = state.rsvpByEvent[String(row.meeting.id)];
+        row.meeting.rsvp_status = row.meeting.rsvp_status || meetStatus;
+        row.meeting.rsvpd = !!ACTIVE_RSVP[String(meetStatus).toLowerCase()];
       }
     });
   }
@@ -1642,7 +1647,7 @@
     var events = document.getElementById("hubEvents");
     events.innerHTML =
       '<section class="app-card"><div class="app-head"><span class="ic">📅</span><div><h2>Events and RSVPs</h2><small>Flyers, full details, addresses, and your RSVPs</small></div></div>' +
-      '<div class="app-body"><p>RSVP to krewe events, track attendance, and keep your calendar current.</p>' +
+      '<div class="app-body"><p>RSVP to every event, including ticketed events and Inter-Krewe Council dates. Choose Going or Can\'t go.</p>' +
       '<div id="hubMemberEventList"><p class="empty">Loading events…</p></div>' +
       '<p><a class="btn btn-primary" href="event-signup.html">Open event signup</a></p>' +
       '<p style="font-size:16px;color:var(--muted);margin-top:12px;">Attendance feeds Parade Ready and the Craic Cup.</p></div></section>' +
@@ -3512,14 +3517,14 @@
       var listWindow = "start_time.gte." + sinceIso + ",end_time.gte." + sinceIso;
       var evs = await client.from("events")
         .select(evSelect)
-        .eq("source", "krewe")
+        .in("source", ["krewe", "ikc"])
         .or(listWindow)
         .order("start_time", { ascending: true })
         .limit(80);
       if (evs.error) {
         evs = await client.from("events")
           .select("id,name,start_time,end_time,location,status,source")
-          .eq("source", "krewe")
+          .in("source", ["krewe", "ikc"])
           .or(listWindow)
           .order("start_time", { ascending: true })
           .limit(80);
@@ -3527,10 +3532,10 @@
       var list = (evs.data || []).filter(function (e) {
         var st = String(e.status || "published").toLowerCase();
         var src = String(e.source || "").toLowerCase();
-        return src === "krewe" && (st === "published" || st === "live") && eventStaysListed(e);
+        return (src === "krewe" || src === "ikc") && (st === "published" || st === "live") && eventStaysListed(e);
       });
       var lockedEvents = !!(feedLock && Array.isArray(feedLock.events));
-      if (!lockedEvents) state.hubEvents = list.slice(0, 12);
+      if (!lockedEvents) state.hubEvents = list.slice(0, 24);
       if (!lockedEvents) {
         var open = list.slice();
         var meId = (window.kosProfile || {}).member_id || null;
@@ -3539,7 +3544,7 @@
             var signed = await client.from("event_signups")
               .select("event_id,status")
               .eq("member_id", meId)
-              .in("status", ["registered", "confirmed", "attended", "waitlisted"]);
+              .in("status", ["registered", "confirmed", "attended", "waitlisted", "cancelled", "canceled"]);
             rememberSignups(signed.data || []);
             open = open.filter(function (e) { return !eventIsRsvpd(e); });
           } catch (signupErr) { /* keep unfiltered krewe list */ }
@@ -7873,8 +7878,8 @@
         ? ""
         : (closedDetail
           ? "Registration is closed because this event has already started."
-          : "RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.");
-      var paradeSlot = isParade && window.kosParadeRsvp ? window.kosParadeRsvp.slotHtml(ev, { signedIn: true }) : "";
+          : "Choose Going or Can't go below. Use the full signup form for guests, meals, or raffle tickets.");
+      var paradeSlot = window.kosParadeRsvp ? window.kosParadeRsvp.slotHtml(ev, { signedIn: true }) : "";
       scroll.innerHTML =
         '<article class="app-detail" id="appEventDetail">' +
         '<p class="app-detail-kicker">' + esc(String(ev.event_type || "event")) + "</p>" +
@@ -7889,8 +7894,10 @@
         eventShareHtml(ev) +
         "</article>";
       prepareShare(scroll);
-      if (isParade) mountParadeRsvps(scroll);
-      actions.innerHTML = isParade
+      if (paradeSlot) mountParadeRsvps(scroll);
+      actions.innerHTML = paradeSlot
+        ? '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'
+        : (isParade
         ? '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'
         : (going
         ? '<button type="button" class="app-rsvp is-going" id="appRsvpBtn" disabled>Already RSVP\'d</button>' +
@@ -7900,7 +7907,7 @@
           ? '<button type="button" class="app-rsvp" id="appRsvpBtn" disabled>Registration closed</button>' +
             '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'
           : '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
-            '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'));
+            '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>')));
       var rsvpBtn = document.getElementById("appRsvpBtn");
       var calBtn = document.getElementById("appCalBtn");
       var cancelBtn = document.getElementById("appCancelRsvp");

@@ -45,7 +45,51 @@
       ev.guests_count = Number(el.getAttribute("data-parade-count"));
     }
     if (ev.guest_payment_url == null) ev.guest_payment_url = el.getAttribute("data-parade-pay") || "";
+    if (!ev.event_type) ev.event_type = el.getAttribute("data-event-type") || "";
+    if (ev.source == null) ev.source = el.getAttribute("data-event-source") || "";
+    if (ev.ticket_payment_url == null) ev.ticket_payment_url = el.getAttribute("data-ticket-url") || "";
+    if (ev.ticket_price_cents == null && el.getAttribute("data-ticket-cents")) {
+      ev.ticket_price_cents = Number(el.getAttribute("data-ticket-cents"));
+    }
     return ev;
+  }
+
+  // Guest count and the Zeffy guest fee stay on Krewe parades. Other events,
+  // including IKC rows, use Going / Can't go without that fee block.
+  // A slot with no type and no source is an older parade card.
+  function paradeGuestUi(ev) {
+    if (!ev || ev.collect_guests === false) return false;
+    if (String(ev.source || "").toLowerCase() === "ikc") return false;
+    var type = String(ev.event_type || "").toLowerCase();
+    if (type && type !== "parade") return false;
+    return true;
+  }
+
+  function priceText(cents) {
+    var n = Number(cents);
+    if (!isFinite(n) || n <= 0) return "";
+    var dollars = n / 100;
+    if (Math.abs(dollars - Math.round(dollars)) < 0.001) return "$" + String(Math.round(dollars));
+    return "$" + dollars.toFixed(2);
+  }
+
+  function resolveTicketUrl(ev) {
+    var direct = safeHttp(ev && ev.ticket_payment_url);
+    if (direct) return direct;
+    var ext = String((ev && ev.external_url) || "");
+    if (/zeffy\.com/i.test(ext)) return safeHttp(ext);
+    var n = String((ev && ev.name) || "").toLowerCase();
+    var ball = n.indexOf("tartan ball") !== -1 && n.indexOf("basket") === -1 && n.indexOf("happy hour") === -1;
+    if (ball) return safeHttp(ev.external_url) || "http://www.tampabaytartanball.com/home.html";
+    return "";
+  }
+
+  function ticketInner(ev) {
+    var url = resolveTicketUrl(ev);
+    if (!url) return "";
+    var price = priceText(ev && ev.ticket_price_cents);
+    var label = "Buy tickets" + (price ? " (" + price + ")" : "");
+    return '<a class="btn kos-pr-tickets" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + "</a>";
   }
 
   function hasStarted(ev) {
@@ -97,26 +141,34 @@
     return safeHttp(ev && ev.guest_payment_url) || ZEFFY_GUEST_URL;
   }
 
-  function signInInner(eventId) {
-    return '<a class="btn btn-primary" href="' + esc(signInHref(eventId)) + '">Sign in to RSVP</a>';
+  function signInInner(eventId, ev) {
+    return '<div class="kos-pr-actions">' +
+      '<a class="btn btn-primary" href="' + esc(signInHref(eventId)) + '">Sign in to RSVP</a>' +
+      ticketInner(ev) +
+      "</div>";
   }
 
   function closedInner(ev) {
+    var parade = paradeGuestUi(ev);
     var line = hasStarted(ev)
-      ? "Registration is closed. This parade has already started."
+      ? (parade
+        ? "Registration is closed. This parade has already started."
+        : "Registration is closed. This event has already started.")
       : "Registration is closed.";
     var yours = "";
     if (going(ev)) yours = " Your RSVP: You're going.";
     else if (cantGo(ev)) yours = " Your RSVP: Can't go.";
-    return '<p class="kos-pr-closed">' + esc(line + yours) + "</p>";
+    return '<p class="kos-pr-closed">' + esc(line + yours) + "</p>" + ticketInner(ev);
   }
 
   function controlsInner(ev) {
     var onGoing = going(ev);
     var onCant = cantGo(ev);
-    var state = onGoing ? "You're going." : (onCant ? "Can't go." : "Tell the krewe if you can march.");
+    var parade = paradeGuestUi(ev);
+    var fresh = parade ? "Tell the krewe if you can march." : "Tell the krewe if you can come.";
+    var state = onGoing ? "You're going." : (onCant ? "Can't go." : fresh);
     var guests = "";
-    if (ev.collect_guests !== false && !onCant) {
+    if (parade && !onCant) {
       guests =
         '<div class="kos-pr-guests">' +
         '<label>Guests you\'re bringing' +
@@ -129,6 +181,7 @@
     return '<div class="kos-pr-actions">' +
       '<button type="button" class="btn btn-primary kos-pr-going" aria-pressed="' + (onGoing ? "true" : "false") + '">Going</button>' +
       '<button type="button" class="btn kos-pr-cant" aria-pressed="' + (onCant ? "true" : "false") + '">Can\'t go</button>' +
+      ticketInner(ev) +
       "</div>" +
       '<p class="kos-pr-state">' + esc(state) + "</p>" +
       guests +
@@ -141,8 +194,10 @@
     if (!id) return "";
     var signedIn = !!(options && options.signedIn);
     var closed = isClosed(ev);
-    var inner = closed ? closedInner(ev) : (signedIn ? controlsInner(ev) : signInInner(id));
+    var ticket = resolveTicketUrl(ev);
+    var inner = closed ? closedInner(ev) : (signedIn ? controlsInner(ev) : signInInner(id, ev));
     var count = ev.guests_count == null ? "" : String(guestCount(ev));
+    var cents = ev.ticket_price_cents == null || ev.ticket_price_cents === "" ? "" : String(ev.ticket_price_cents);
     return '<div class="kos-parade-rsvp" data-parade-id="' + esc(id) + '"' +
       ' data-parade-name="' + esc(ev.name || "") + '"' +
       ' data-parade-start="' + esc(ev.start_time || "") + '"' +
@@ -150,8 +205,12 @@
       ' data-parade-closes="' + esc(ev.registration_closes_at || "") + '"' +
       ' data-parade-status="' + esc(statusOf(ev)) + '"' +
       ' data-parade-count="' + esc(count) + '"' +
-      ' data-collect-guests="' + (ev.collect_guests === false ? "0" : "1") + '"' +
-      ' data-parade-pay="' + esc(safeHttp(ev.guest_payment_url) || "") + '">' +
+      ' data-event-type="' + esc(ev.event_type || "") + '"' +
+      ' data-event-source="' + esc(ev.source || "") + '"' +
+      ' data-collect-guests="' + (paradeGuestUi(ev) ? "1" : "0") + '"' +
+      ' data-parade-pay="' + esc(safeHttp(ev.guest_payment_url) || "") + '"' +
+      ' data-ticket-url="' + esc(ticket) + '"' +
+      ' data-ticket-cents="' + esc(cents) + '">' +
       inner + "</div>";
   }
 
@@ -168,13 +227,15 @@
     style.textContent = [
       ".kos-parade-rsvp{box-sizing:border-box;max-width:100%;margin:12px 0 4px;color:#23291f;}",
       ".kos-parade-rsvp *{box-sizing:border-box;}",
-      ".kos-parade-rsvp .kos-pr-actions{display:flex;flex-wrap:wrap;gap:8px;}",
+      ".kos-parade-rsvp .kos-pr-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}",
+      "#kcal-list .kos-parade-rsvp,#ikcRsvpList .kos-parade-rsvp{background:#fffdf8;color:#23291f;border-radius:12px;padding:10px 12px;}",
       ".kos-parade-rsvp .btn,.kos-parade-rsvp button,.kos-parade-rsvp a.btn{min-height:44px;}",
       ".kos-parade-rsvp button[aria-pressed='true']{outline:2px solid #14532d;outline-offset:1px;}",
       ".kos-parade-rsvp .kos-pr-state,.kos-parade-rsvp .kos-pr-fee,.kos-parade-rsvp .kos-pr-msg,.kos-parade-rsvp .kos-pr-closed{margin:8px 0 0;font-size:16px;line-height:1.45;overflow-wrap:anywhere;}",
       ".kos-parade-rsvp .kos-pr-guests label{display:flex;flex-direction:column;gap:6px;font-weight:700;margin:10px 0 0;max-width:100%;}",
       ".kos-parade-rsvp input{width:6.5rem;max-width:100%;min-height:44px;font-size:16px;padding:8px 10px;border:1px solid rgba(168,128,28,.55);border-radius:10px;background:#fff;}",
       ".kos-parade-rsvp .kos-pr-pay{display:inline-flex;align-items:center;min-height:44px;font-weight:700;}",
+      ".kos-parade-rsvp a.kos-pr-tickets{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid #8a6a12;background:#fffdf8;color:#14532d;font-weight:700;text-decoration:none;}",
       ".hub-event-row .kos-parade-rsvp,.hub-ev-detail .kos-parade-rsvp,.app-detail .kos-parade-rsvp{flex:1 1 100%;width:100%;}"
     ].join("");
     document.head.appendChild(style);
@@ -280,7 +341,9 @@
     var client = clientOf(options);
     var ev = eventFrom(el);
     if (isClosed(ev)) {
-      setMsg(el, "Registration is closed. This parade has already started.");
+      setMsg(el, paradeGuestUi(ev)
+        ? "Registration is closed. This parade has already started."
+        : "Registration is closed. This event has already started.");
       return;
     }
     if (!client || typeof client.rpc !== "function") {
@@ -291,7 +354,7 @@
       setMsg(el, "Your profile needs a first name, last name, and email before you can RSVP.");
       return;
     }
-    var guests = ev.collect_guests === false ? 0 : readCount(el);
+    var guests = paradeGuestUi(ev) ? readCount(el) : 0;
     var goingBtn = el.querySelector(".kos-pr-going");
     if (goingBtn) { goingBtn.disabled = true; goingBtn.textContent = "Saving..."; }
     client.rpc("rsvp_to_event", {
@@ -324,7 +387,9 @@
     var client = clientOf(options);
     var ev = eventFrom(el);
     if (isClosed(ev)) {
-      setMsg(el, "Registration is closed. This parade has already started.");
+      setMsg(el, paradeGuestUi(ev)
+        ? "Registration is closed. This parade has already started."
+        : "Registration is closed. This event has already started.");
       return;
     }
     if (!client || typeof client.from !== "function") {

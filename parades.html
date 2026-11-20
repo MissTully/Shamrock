@@ -403,6 +403,7 @@
           </tbody>
         </table>
       </div>
+      <div id="ikcRsvpList" style="margin-top:22px;"></div>
       <p class="season-key"><span class="swatch" aria-hidden="true"></span>Gold rows are parades the Krewe of Shamrock marches in. <a href="members.html?found=tampa-parades" style="text-decoration:none;font-size:19px;color:var(--green-700);opacity:.65;margin-left:4px;vertical-align:-1px;" aria-label="A lucky clover" title="A lucky clover">☘</a></p>
       <p style="text-align:center;margin-top:16px;font-family:var(--fancy);font-style:italic;color:var(--muted);">
         Dates come from the
@@ -594,7 +595,7 @@
   <script src="assets/kos-linkify.js?v=20261119links3"></script>
   <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
   <script src="assets/kos-share.js?v=20261119public1"></script>
-  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp1"></script>
+  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp2"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -874,6 +875,43 @@
       highlightIkcRows(ours);
     }
 
+    async function loadIkcRsvps() {
+      const box = document.getElementById("ikcRsvpList");
+      if (!box || !window.kosParadeRsvp) return;
+      let { data, error } = await supabase
+        .from("v_public_events")
+        .select("id, name, description, start_time, end_time, location, source, external_url, ticket_payment_url, ticket_price_cents, status, event_type, registration_closes_at, members_only")
+        .eq("source", "ikc")
+        .order("start_time", { ascending: true });
+      if (error || !data) return;
+      const rows = data.filter((ev) => {
+        const status = String(ev.status || "published").toLowerCase();
+        if (status !== "published" && status !== "live") return false;
+        if (window.kosCalendar && typeof window.kosCalendar.eventStaysListed === "function") {
+          return window.kosCalendar.eventStaysListed(ev);
+        }
+        return true;
+      }).slice(0, 8);
+      if (!rows.length) {
+        box.innerHTML = "";
+        return;
+      }
+      box.innerHTML = '<h3 style="font-family:var(--display);color:var(--green-800);margin:0 0 8px;">Member RSVP for Inter-Krewe Council events</h3>' +
+        '<p style="margin:0 0 12px;">These dates come from the Inter-Krewe Council calendar. Sign in, then choose Going or Can\'t go.</p>' +
+        rows.map((ev) => {
+          const when = ev.start_time ? dateLabel(ev) : "Date to be announced";
+          const host = ev.external_url
+            ? '<a href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">Details on the host krewe\'s page</a>'
+            : "";
+          return '<article class="ikc-rsvp-card" style="margin:0 0 14px;padding:12px 0;border-top:1px solid rgba(168,128,28,.35);">' +
+            "<h3>" + esc(ev.name || "Inter-Krewe Council event") + "</h3>" +
+            '<p class="ev-meta"><b>When:</b> ' + esc(when) + (ev.location ? " · " + esc(ev.location) : "") + "</p>" +
+            window.kosParadeRsvp.fallbackHtml(ev) +
+            (host ? "<p>" + host + "</p>" : "") +
+            "</article>";
+        }).join("");
+    }
+
     function mountParadeRsvp() {
       if (window.kosParadeRsvp && typeof window.kosParadeRsvp.mountAll === "function") {
         window.kosParadeRsvp.mountAll(document.getElementById("paradeStaticGrid") || document, {
@@ -884,7 +922,7 @@
     }
 
     orderMarchGrid();
-    loadParades().then(mountParadeRsvp, mountParadeRsvp);
+    loadParades().then(loadIkcRsvps, loadIkcRsvps).then(mountParadeRsvp, mountParadeRsvp);
   </script>
 </body>
 </html>

@@ -270,7 +270,7 @@ test.describe("public event share buttons", () => {
     await expect(page.locator("#featured-event")).toContainText("Sign in to RSVP");
 
     const card = page.locator("#eventPreviewStrip .ev-card", { hasText: "Morning Coffee" });
-    await expect(card).toContainText("Registration closed");
+    await expect(card).toContainText("Registration is closed");
     await expectPublicShareBar(shareBar(card), "started-social");
     await expectNoHorizontalOverflow(page);
 
