@@ -73,7 +73,8 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   assert.equal(html.includes(">Share on Facebook<"), false);
   assert.equal(html.includes("123 Hidden Lane"), false);
   assert.equal(html.includes("Gate code 4321"), false);
-  assert.match(html, /Parade details/);
+  assert.match(html, /Sign in to RSVP/);
+  assert.match(html, /\/members\.html\?next=%2Fevents%2Ffixture-santafest/);
   assert.match(html, /class="share-kicker">Parade</);
   assert.match(html, /href="\/parades\.html">Back to Parades</);
   assert.equal(html.includes("/event-signup.html?event=fixture-santafest"), false);

@@ -871,7 +871,10 @@
       var rc = new Date(ev.registration_closes_at);
       if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(rc.toLocaleDateString([], { month: "long", day: "numeric" })));
     }
-    facts.push("<b>Your RSVP:</b> " + (going ? "You're going ✅" : (eventSignupClosed(ev) ? "Registration is closed." : "Not yet. Tap RSVP above.")));
+    var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
+    var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
+    var paradeCant = paradeCard && !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
+    facts.push("<b>Your RSVP:</b> " + (going ? "You're going." : (paradeCant ? "Can't go." : (eventSignupClosed(ev) ? "Registration is closed." : (paradeCard ? "Not yet. Choose Going or Can't go below." : "Not yet. Tap RSVP above.")))));
     out.push('<div class="hub-ev-facts">' + facts.join("<br>") + "</div>");
     if (ev.description) out.push('<div class="hub-ev-desc">' + eventDescriptionHtml(ev.description) + "</div>");
     if (ev.member_notes) out.push('<div class="hub-ev-private"><b>🔒 Members only:</b> ' + esc(String(ev.member_notes)).replace(/\n/g, "<br>") + "</div>");
@@ -882,8 +885,9 @@
     if (pay && !eventSignupClosed(ev)) links.push('<a class="hub-ev-btn" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">🎟️ Buy tickets / pay ↗</a>');
     if (meeting) links.push('<a class="hub-ev-btn" href="' + esc(meeting) + '" target="_blank" rel="noopener noreferrer">💻 Join online ↗</a>');
     if (site && site !== pay) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="' + esc(site) + '" target="_blank" rel="noopener noreferrer">🔗 Event website ↗</a>');
-    links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="event-signup.html?event=' + encodeURIComponent(ev.id || "") + '">📅 Event page</a>');
+    if (!paradeCard) links.push('<a class="hub-ev-btn hub-ev-btn-alt" href="event-signup.html?event=' + encodeURIComponent(ev.id || "") + '">📅 Event page</a>');
     out.push('<div class="hub-ev-links">' + links.join("") + "</div>");
+    if (paradeCard && window.kosParadeRsvp) out.push(window.kosParadeRsvp.slotHtml(ev, { signedIn: true }));
     return '<div class="hub-ev-detail">' + out.join("") + "</div>";
   }
 
@@ -927,6 +931,9 @@
         ? '<span class="app-date"><b>' + esc(bits.month) + '</b><span>' + esc(bits.day) + '</span></span>'
         : '<span class="app-date"><b>TBD</b><span></span></span>';
       var going = eventIsRsvpd(ev);
+      var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
+      var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
+      var paradeCant = paradeCard && !going && (paradeStatus === "cancelled" || paradeStatus === "canceled");
       var closed = !going && eventSignupClosed(ev);
       // The row is a div (role=button) so the Calendar button can sit inside
       // it; a <button> cannot contain another button.
@@ -938,11 +945,12 @@
         '<span class="app-event-copy"><b>' + esc(ev.name || "Krewe event") + '</b>' +
         '<span class="muted" style="display:block;">' + esc(when) + (ev.members_only ? " · Members only" : "") + '</span>' +
         '</span><span class="app-event-acts"><span class="app-rsvp' + (going ? " is-going" : "") + '">' +
-        (going ? "Already RSVP'd" : (closed ? "Closed" : "RSVP")) + "</span>" + calBtn + "</span></div>" +
+        (going ? (paradeCard ? "You're going" : "Already RSVP'd") : (paradeCant ? "Can't go" : (closed ? "Closed" : "RSVP"))) + "</span>" + calBtn + "</span></div>" +
         eventShareHtml(ev) +
         hubEventDetailHtml(ev, going) + "</article>";
     }).join("");
     prepareShare(target);
+    mountParadeRsvps(target);
     target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         // Keep the click from also opening the event detail screen.
@@ -1034,12 +1042,16 @@
       ? '<p class="hub-parade-warn">Door Check-In for this parade will warn and stay blocked until you check in at the mandatory meeting. RSVP is still open.</p>'
       : "";
     var meetGoing = !!(meeting && (meeting.rsvpd || eventIsRsvpd(meeting)));
-    var paradeGoing = !!row.parade_rsvpd || eventIsRsvpd(row);
+    var paradeStatus = String(row.parade_rsvp_status || "").toLowerCase();
+    var paradeGoing = !!row.parade_rsvpd || !!ACTIVE_RSVP[paradeStatus] || eventIsRsvpd(row);
+    var paradeCant = !paradeGoing && (paradeStatus === "cancelled" || paradeStatus === "canceled");
     var btns = [];
     if (meeting) btns = btns.concat(rsvpActionButtons(meeting.id, meetGoing, "RSVP to meeting", meeting));
-    btns = btns.concat(rsvpActionButtons(row.id, paradeGoing, "RSVP to parade", row));
     if (meeting) btns.push(calendarBtn(meeting, "Add meeting to calendar"));
     btns.push(calendarBtn(row, "Add parade to calendar"));
+    var paradeSlot = window.kosParadeRsvp
+      ? window.kosParadeRsvp.slotHtml(row, { signedIn: true })
+      : rsvpActionButtons(row.id, paradeGoing, "RSVP to parade", row).join("");
     return '<div class="hub-event-row" data-parade-card="' + esc(row.id) + '">' +
       '<div style="flex:1;min-width:0;"><b>' + esc(row.name || "Parade") + "</b>" +
       '<div class="muted">' + esc(whenLabel(row.start_time)) + (eventListLabel(row) ? " · " + esc(eventListLabel(row)) : "") + (row.members_only ? " · Members only" : "") + "</div>" +
@@ -1049,11 +1061,12 @@
       '<div class="hub-parade-status">' +
       statusPill(meetGoing, "Meeting RSVP’d", meeting ? "Meeting not RSVP’d" : "No meeting linked") +
       statusPill(!!(meeting && meeting.checked_in), "Meeting checked in", meeting ? "Meeting not checked in" : "Meeting check-in n/a") +
-      statusPill(paradeGoing, "Parade RSVP’d", "Parade not RSVP’d") +
+      statusPill(paradeGoing, "Parade RSVP’d", paradeCant ? "Can't go" : "Parade not RSVP’d") +
       statusPill(eligible, "Eligible", "Not yet eligible") +
       statusPill(!!row.parade_checked_in, "Parade checked in", "Parade not checked in") +
       "</div>" +
       meetLine + warn +
+      paradeSlot +
       '<p class="hub-parade-msg" data-parade-msg="' + esc(row.id) + '"></p></div>' +
       '<div class="hub-appr-btns">' + btns.join("") + "</div>" +
       eventShareHtml(row) + "</div>";
@@ -1082,6 +1095,41 @@
         if (!ev) return;
         openCalendarChooser(ev);
       });
+    });
+    mountParadeRsvps(root);
+  }
+
+  function paradeRsvpSaved(info) {
+    if (!info || !info.eventId) return;
+    var id = String(info.eventId);
+    var st = String(info.status || "").toLowerCase();
+    var isGoing = !!ACTIVE_RSVP[st];
+    (state.paradeSeason || []).forEach(function (row) {
+      if (!row || String(row.id) !== id) return;
+      row.parade_rsvp_status = info.status;
+      row.parade_rsvpd = isGoing;
+      row.guests_count = info.guests || 0;
+    });
+    (state.hubEvents || []).forEach(function (ev) {
+      if (!ev || String(ev.id) !== id) return;
+      ev.parade_rsvp_status = info.status;
+      ev.rsvp_status = info.status;
+      ev.guests_count = info.guests || 0;
+      ev.rsvpd = isGoing;
+    });
+    if (isGoing) markRsvpd(id, info.status);
+    else clearRsvpd(id);
+    renderHubParadeSeason(state.paradeSeason);
+    paintRsvpChips();
+    if (info.message && typeof showToast === "function") showToast(info.message);
+  }
+
+  function mountParadeRsvps(root) {
+    if (!window.kosParadeRsvp || typeof window.kosParadeRsvp.mountAll !== "function") return;
+    window.kosParadeRsvp.mountAll(root || document, {
+      client: window.__kosSb,
+      publicPage: false,
+      onSaved: paradeRsvpSaved
     });
   }
 
@@ -7821,11 +7869,12 @@
       var more = (ev.id && !isParade)
         ? '<p><a class="app-detail-more" href="event-signup.html?event=' + encodeURIComponent(ev.id) + '">Full signup form</a></p>'
         : "";
-      var note = closedDetail
-        ? "Registration is closed because this event has already started."
-        : (isParade
-          ? "Parade RSVP stays on this screen."
+      var note = isParade
+        ? ""
+        : (closedDetail
+          ? "Registration is closed because this event has already started."
           : "RSVP here keeps you on this screen. Use the full signup form for guests, tickets, or meals.");
+      var paradeSlot = isParade && window.kosParadeRsvp ? window.kosParadeRsvp.slotHtml(ev, { signedIn: true }) : "";
       scroll.innerHTML =
         '<article class="app-detail" id="appEventDetail">' +
         '<p class="app-detail-kicker">' + esc(String(ev.event_type || "event")) + "</p>" +
@@ -7835,11 +7884,15 @@
         (desc ? "<p>" + linkifyPlain(desc) + "</p>" : "") +
         (safeHttpUrl(ev.external_url) ? '<p><a class="kos-url" href="' + esc(safeHttpUrl(ev.external_url)) + '" target="_blank" rel="noopener noreferrer">Event link</a></p>' : "") +
         more +
-        "<p>" + note + "</p>" +
+        (note ? "<p>" + note + "</p>" : "") +
+        paradeSlot +
         eventShareHtml(ev) +
         "</article>";
       prepareShare(scroll);
-      actions.innerHTML = going
+      if (isParade) mountParadeRsvps(scroll);
+      actions.innerHTML = isParade
+        ? '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'
+        : (going
         ? '<button type="button" class="app-rsvp is-going" id="appRsvpBtn" disabled>Already RSVP\'d</button>' +
           '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>' +
           '<button type="button" class="app-cal app-cancel" id="appCancelRsvp">Cancel RSVP</button>'
@@ -7847,7 +7900,7 @@
           ? '<button type="button" class="app-rsvp" id="appRsvpBtn" disabled>Registration closed</button>' +
             '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'
           : '<button type="button" class="app-rsvp" id="appRsvpBtn">RSVP</button>' +
-            '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>');
+            '<button type="button" class="app-cal" id="appCalBtn">Add to my calendar</button>'));
       var rsvpBtn = document.getElementById("appRsvpBtn");
       var calBtn = document.getElementById("appCalBtn");
       var cancelBtn = document.getElementById("appCancelRsvp");

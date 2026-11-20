@@ -1475,8 +1475,15 @@
     var _kosQs = new URLSearchParams(location.search);
     var _kosCk = _kosQs.get("checkin");
     if(_kosCk){ localStorage.setItem("kos_checkin", _kosCk); }
-    var _kosNx = _kosQs.get("next");
-    if(_kosNx && /^[a-z0-9-]+\.html$/.test(_kosNx)){
+    function _kosSafeNext(raw){
+      if(typeof raw !== "string" || raw.length > 200 || raw.indexOf("\\") !== -1 || raw.indexOf("//") !== -1) return "";
+      if(/^\/?parades\.html$/.test(raw)) return "/parades.html";
+      if(/^\/events\/[A-Za-z0-9-]+$/.test(raw)) return raw;
+      if(/^[a-z0-9-]+\.html$/.test(raw)) return raw;
+      return "";
+    }
+    var _kosNx = _kosSafeNext(_kosQs.get("next") || "");
+    if(_kosNx){
       localStorage.setItem("kos_next", JSON.stringify({ p:_kosNx, t:Date.now() }));
     }
     /* Volunteer page (and others) send members here to log hours after sign-in. */
@@ -4180,12 +4187,20 @@
       /* A members-only page sent this visitor to the door with ?next=; now that
          they're signed in, send them back there (the stash expires after 15 minutes). */
       try{
+        function kosSafeNextPath(raw){
+          if(typeof raw !== "string" || raw.length > 200 || raw.indexOf("\\") !== -1 || raw.indexOf("//") !== -1) return "";
+          if(/^\/?parades\.html$/.test(raw)) return "/parades.html";
+          if(/^\/events\/[A-Za-z0-9-]+$/.test(raw)) return raw;
+          if(/^[a-z0-9-]+\.html$/.test(raw)) return raw;
+          return "";
+        }
         var nxRaw = localStorage.getItem("kos_next");
         if(nxRaw){
           localStorage.removeItem("kos_next");
           var nx = JSON.parse(nxRaw);
-          if(nx && /^[a-z0-9-]+\.html$/.test(nx.p) && Date.now() - nx.t < 15*60*1000){
-            location.href = nx.p; return;
+          var nxDest = nx && kosSafeNextPath(nx.p);
+          if(nxDest && Date.now() - nx.t < 15*60*1000){
+            location.href = nxDest; return;
           }
         }
       }catch(e){}
@@ -4811,7 +4826,8 @@
 <script src="assets/kos-roles-access.js?v=20261120search3" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
 <script src="assets/kos-whos-coming.js?v=20261119whos1" defer></script>
-<script src="assets/members-desk.js?v=20261119links2" defer></script>
+<script src="assets/kos-parade-rsvp.js?v=20261120rsvp1" defer></script>
+<script src="assets/members-desk.js?v=20261120rsvp1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>

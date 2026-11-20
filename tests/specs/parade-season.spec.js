@@ -329,6 +329,7 @@ test("public signup action matches published events, not drafts, past dates, or 
       past: fn({ name: "Shamrock Book Club Night", source: "krewe", status: "published", event_type: "social", start_time: "2026-09-17T23:00:00Z", ticket_payment_url: "https://www.zeffy.com/en-US/ticketing/shamrock-book-club-night" }, now),
       draft: fn({ name: "Test", source: "krewe", status: "draft", event_type: "social", start_time: "2027-01-01T12:00:00Z", ticket_price_cents: 100 }, now),
       parade: fn({ name: "SantaFest", source: "krewe", status: "published", event_type: "parade", members_only: true, start_time: "2026-12-05T22:00:00Z" }, now),
+      startedParade: fn({ name: "SantaFest", source: "krewe", status: "published", event_type: "parade", start_time: "2026-09-30T21:00:00Z" }, now),
       tickets: fn({ name: "Tartan Ball", source: "krewe", status: "published", event_type: "fundraiser", start_time: "2026-10-24T22:00:00Z", ticket_payment_url: "https://www.zeffy.com/ball" }, now),
       closed: fn({ name: "Mini Golf and Lunch", source: "krewe", status: "published", event_type: "social", start_time: "2026-10-01T14:00:00Z", registration_closes_at: "2026-09-18T03:59:00Z" }, now),
       members: fn({ name: "Tartan Ball Basket-Making Happy Hour", source: "krewe", status: "published", event_type: "social", members_only: true, start_time: "2026-10-03T19:00:00Z" }, now),
@@ -338,6 +339,7 @@ test("public signup action matches published events, not drafts, past dates, or 
   expect(action.past).toBe("hide");
   expect(action.draft).toBe("hide");
   expect(action.parade).toBe("parade-members");
+  expect(action.startedParade).toBe("parade-closed");
   expect(action.tickets).toBe("tickets");
   expect(action.closed).toBe("closed");
   expect(action.members).toBe("members");
@@ -417,7 +419,7 @@ test("events stay listed through the next Eastern day, then drop off", async ({ 
   assertHealthy(expect, report, "listing window");
 });
 
-test("parade season shows Already RSVP'd instead of a fresh RSVP button", async ({ page }) => {
+test("parade season shows You're going and Can't go after an RSVP", async ({ page }) => {
   const report = watchPage(page);
   await unlockMemberHub(page);
   await page.locator('[data-hub-tab="events"]').click();
@@ -451,10 +453,10 @@ test("parade season shows Already RSVP'd instead of a fresh RSVP button", async 
   });
   const santyago = page.locator("#hubParadeSeasonList [data-parade-card='parade-1']");
   const santafest = page.locator("#hubParadeSeasonList [data-parade-card='parade-2']");
-  await expect(santyago).toContainText("Already RSVP'd");
-  await expect(santyago).toContainText("Cancel RSVP");
+  await expect(santyago).toContainText("You're going.");
+  await expect(santyago).toContainText("Can't go");
   await expect(santyago).toContainText("Parade RSVP’d");
-  await expect(santafest).toContainText("Already RSVP'd");
+  await expect(santafest).toContainText("You're going.");
   await expect(santafest).toContainText("Parade RSVP’d");
   await expect(santafest.locator("[data-hub-parade-rsvp]")).toHaveCount(0);
   await expect(page.locator("#hubParadeSeasonList [data-hub-parade-rsvp]")).toHaveCount(0);

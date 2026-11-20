@@ -367,21 +367,21 @@ function listLabel(ev) {
       : (membersOnly ? "Address shared with members after signup" : "");
     const action = (window.kosCalendar && window.kosCalendar.publicSignupAction)
       ? window.kosCalendar.publicSignupAction(ev) : "";
+    const paradeHref = (window.kosCalendar && window.kosCalendar.paradeSignInHref)
+      ? window.kosCalendar.paradeSignInHref(ev) : ("/events/" + encodeURIComponent(ev.id || ""));
     const rsvp = isIkc || action === "ikc"
       ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
-      : (action === "parade-members" || (membersOnly && String(ev.event_type || "").toLowerCase() === "parade")
-          ? `<a class="rsvp" href="members.html">Members only. March RSVP is in the Hub &#8594;</a>`
-          : (action === "parade"
-          ? `<a class="rsvp" href="parades.html">Parade details &#8594;</a>`
+      : (action === "parade" || action === "parade-members")
+          ? `<a class="rsvp" href="${esc(paradeHref)}">Sign in to RSVP &#8594;</a>`
           : (action === "members" || membersOnly
           ? `<a class="rsvp" href="members.html">Members only. Sign in for details and address &#8594;</a>`
-          : (action === "closed"
+          : (action === "closed" || action === "parade-closed"
           ? `<span class="rsvp">Registration closed</span>`
           : (action === "tickets-soon"
           ? `<span class="rsvp">Tickets coming soon</span>`
           : (pay || action === "tickets"
           ? `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets &#8594;</a>`
-          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`))))));
+          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`))));
     const card = document.createElement("div");
     const featuredHere = liveFeatured(ev);
     card.className = (isIkc ? "event-card ikc" : "event-card") + (featuredHere ? " is-featured" : "");
@@ -417,13 +417,13 @@ function listLabel(ev) {
     const pay = featuredEv.ticket_payment_url || "";
     const action = (window.kosCalendar && window.kosCalendar.publicSignupAction)
       ? window.kosCalendar.publicSignupAction(featuredEv) : "";
+    const paradeHref = (window.kosCalendar && window.kosCalendar.paradeSignInHref)
+      ? window.kosCalendar.paradeSignInHref(featuredEv) : ("/events/" + encodeURIComponent(featuredEv.id || ""));
     const rsvp = action === "parade" || action === "parade-members"
-      ? (action === "parade-members"
-        ? `<a class="rsvp" href="members.html">Members only. Sign in for details</a>`
-        : `<a class="rsvp" href="parades.html">Parade details</a>`)
+      ? `<a class="rsvp" href="${esc(paradeHref)}">Sign in to RSVP</a>`
       : (action === "members" || membersOnly
       ? `<a class="rsvp" href="members.html">Members only. Sign in for details</a>`
-      : (action === "closed"
+      : (action === "closed" || action === "parade-closed"
       ? `<span class="rsvp">Registration closed</span>`
       : (action === "tickets-soon"
       ? `<span class="rsvp">Tickets coming soon</span>`
