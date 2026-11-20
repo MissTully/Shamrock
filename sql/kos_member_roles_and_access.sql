@@ -846,11 +846,17 @@ security definer
 set search_path to 'public'
 as $$
 declare
-  v_q text := btrim(coalesce(p_q, ''));
+  v_q text := lower(btrim(coalesce(p_q, '')));
+  v_pat text;
 begin
+  -- Same body as sql/kos_member_search_any_name.sql. A blank query is still
+  -- the first 25 non-prospect members. A typed query searches every
+  -- non-merged member by first name, last name, or either full-name order.
+  v_q := btrim(regexp_replace(regexp_replace(v_q, '[,]+', ' ', 'g'), '\s+', ' ', 'g'));
   if not public.kos_can_open_roles() then
     raise exception 'You cannot open Member roles and access.';
   end if;
+  v_pat := '%' || replace(replace(replace(v_q, '\', '\\'), '%', '\%'), '_', '\_') || '%';
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'id', m.id,
@@ -865,15 +871,39 @@ begin
       select *
       from public.members m
       where m.merged_into is null
-        and coalesce(m.member_role, '') <> 'prospect'
-        and coalesce(m.membership_status, 'active') in ('active', 'pending-renewal', 'lapsed', 'inactive', 'pending-new')
         and (
-          v_q = ''
-          or (coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, '') || ' ' || coalesce(m.email, '') || ' ' || coalesce(m.officer_title, ''))
-             ilike '%' || v_q || '%'
+          (
+            v_q = ''
+            and coalesce(m.member_role, '') <> 'prospect'
+            and coalesce(m.membership_status, 'active') in ('active', 'pending-renewal', 'lapsed', 'inactive', 'pending-new')
+          )
+          or (
+            v_q <> ''
+            and (
+              lower(coalesce(m.first_name, '')) like v_pat escape '\'
+              or lower(coalesce(m.last_name, '')) like v_pat escape '\'
+              or lower(btrim(coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, ''))) like v_pat escape '\'
+              or lower(btrim(coalesce(m.last_name, '') || ' ' || coalesce(m.first_name, ''))) like v_pat escape '\'
+              or lower(coalesce(m.email, '')) like v_pat escape '\'
+              or lower(coalesce(m.officer_title, '')) like v_pat escape '\'
+              or (
+                position(' ' in v_q) > 0
+                and coalesce((
+                  select bool_and(
+                    lower(coalesce(m.first_name, '')) like
+                      ('%' || replace(replace(replace(tok, '\', '\\'), '%', '\%'), '_', '\_') || '%') escape '\'
+                    or lower(coalesce(m.last_name, '')) like
+                      ('%' || replace(replace(replace(tok, '\', '\\'), '%', '\%'), '_', '\_') || '%') escape '\'
+                  )
+                  from regexp_split_to_table(v_q, '\s+') as tok
+                  where tok <> ''
+                ), false)
+              )
+            )
+          )
         )
       order by m.last_name, m.first_name
-      limit 25
+      limit case when v_q = '' then 25 else null end
     ) m
   ), '[]'::jsonb);
 end;
