@@ -136,10 +136,11 @@ test("vendor apparel is links and photos, with Krewe Gear unchanged", async ({ p
   await page.goto("/store.html");
   await expect(page.locator("#shopGrid .product")).toHaveCount(1);
   await expect(page.locator("#shopGrid")).toContainText("$12.00");
-  const add = page.locator("#shopGrid button.add");
-  await expect(add).toHaveCount(1);
-  await expect(add).toHaveText("Add to Cart");
-  await expect(add).toHaveAttribute("data-add", "pin-1");
+  const card = page.locator("#shopGrid a.product");
+  await expect(card).toHaveCount(1);
+  await expect(card).toHaveAttribute("href", "https://www.zeffy.com/en-US/ticketing/kos-shop");
+  expect(await card.getAttribute("target")).toBeNull();
+  await expect(page.locator("#shopGrid button.add, #cartPanel, .cartbar, #navCartBtn")).toHaveCount(0);
 
   const vendorsSection = page.locator("#vendors");
   await expect(vendorsSection).toBeVisible();
@@ -147,6 +148,7 @@ test("vendor apparel is links and photos, with Krewe Gear unchanged", async ({ p
   await expect(vendorsSection).toContainText("Prices are on their site.");
   await expect(vendorsSection).not.toContainText("$");
   await expect(vendorsSection).not.toContainText("Add to Cart");
+  await expect(page.locator("body")).not.toContainText("Your Cart");
   await expect(vendorsSection).not.toContainText("Buy now");
   await expect(vendorsSection.locator("select")).toHaveCount(0);
   await expect(vendorsSection.locator("[data-add]")).toHaveCount(0);

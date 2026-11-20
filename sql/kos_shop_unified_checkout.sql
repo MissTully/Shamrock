@@ -1,6 +1,8 @@
--- NOT APPLIED. Review, then run in the Supabase SQL editor on oazwkwflgbthojvnclfc.
+-- APPLIED in production on Nov 12, 2026. Do not re-run this file over later shop SQL.
+-- Further shop database changes belong in sql/kos_shop_backfill.sql.
+-- Historical header below is kept so the applied script stays recognizable.
 -- Krewe of Shamrock: one shared Zeffy "KOS Shop" Online Store for multi-item checkout.
--- Safe to re-run.
+-- This copy was safe to re-run when it was applied. Leave it as history.
 --
 -- What this changes:
 --   * kos_runtime_flags.kos_shop_zeffy_url holds the public KOS Shop URL

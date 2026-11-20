@@ -7,7 +7,7 @@ const ROW = (name, meta, badge, buttons) =>
   `<div class="hub-shop-row"><div class="hub-shop-meta"><b>${name}</b><div class="muted">${meta}</div><div class="muted"><span class="hub-shop-badge ${badge}">${badge}</span></div></div><div class="hub-shop-actions">${buttons}</div><div class="qr-slot" data-qr-slot="x" style="flex-basis:100%;margin-top:8px"></div></div>`;
 
 const FOUR =
-  '<button class="btn" type="button">Edit</button><button class="btn btn-primary" type="button">▦ Shop QR</button><button class="btn" type="button">Mark awaiting Zeffy</button><button class="btn btn-danger" type="button">Delete</button>';
+  '<button class="btn" type="button">Edit</button><button class="btn btn-primary" type="button">▦ Shop QR</button><button class="btn btn-danger" type="button">Delete</button>';
 const FIVE =
   FOUR.replace(
     "</button><button class=\"btn btn-danger\"",
@@ -54,16 +54,19 @@ async function buttonsOutsideCard(page) {
 }
 
 test.describe("Shop Studio action buttons stay inside the card", () => {
-  test("desktop officer column keeps Edit, Shop QR, Zeffy, and Delete inside the row", async ({ page }) => {
+  test("desktop officer column keeps Edit, Shop QR, and Delete inside the row", async ({ page }) => {
     const report = watchPage(page);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await paintShop(page);
-    await expect(page.locator("#hubShopStudio .hub-shop-actions .btn")).toHaveCount(9);
+    await expect(page.locator("#hubShopStudio .hub-shop-actions .btn")).toHaveCount(7);
     expect(await buttonsOutsideCard(page)).toEqual([]);
     const script = await page.locator('script[src*="kos-shop-studio.js"]').getAttribute("src");
     const source = await page.evaluate(async (src) => (await fetch(src)).text(), script);
     expect(source).toContain('class="hub-shop-meta"');
     expect(source).not.toContain("flex:none");
+    expect(source).not.toContain("Mark awaiting Zeffy");
+    expect(source).not.toContain("Automation will create");
+    expect(source).toContain("https://www.zeffy.com/en-US/ticketing/kos-shop");
     assertHealthy(expect, report, "shop studio desktop layout");
   });
 
