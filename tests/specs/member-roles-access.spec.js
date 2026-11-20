@@ -199,7 +199,7 @@ test.describe("Member roles and access", () => {
           summary: "Added an extra grant.",
           actor_name: "Lisa Sugrue",
           actor_member_id: "lisa",
-          created_at: "2026-11-13T15:00:00-05:00",
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
           undone: false,
           hasNewer: false
         },
@@ -243,5 +243,153 @@ test.describe("Member roles and access", () => {
     await page.locator("#kosRolesConfirm").scrollIntoViewIfNeeded();
     await page.screenshot({ path: dir + "/mobile-confirm.png" });
     assertHealthy(expect, report, "screenshots");
+  });
+
+  test("search finds a later member by either name order and hides merged rows", async ({ page }) => {
+    const report = watchPage(page);
+    const people = [
+      member({ id: "heather", first_name: "Heather", last_name: "Bauder" })
+    ];
+    for (let i = 0; i < 24; i += 1) {
+      people.push(member({
+        id: "early-" + i,
+        first_name: "Pat",
+        last_name: "Early" + String(i).padStart(2, "0")
+      }));
+    }
+    people.push(member({ id: "anna", first_name: "Anna", last_name: "Peterson", email: "anna.peterson@example.test" }));
+    people.push(member({ id: "merged", first_name: "Pat", last_name: "Merged", merged_into: "anna" }));
+    await openRoles(page, model({ members: people, selectedId: "heather" }));
+    const results = page.locator("#kosRolesResults");
+    await expect(results).toContainText("Heather Bauder");
+    await expect(results).not.toContainText("Anna Peterson");
+    const search = page.locator("#kosRolesSearch");
+    await search.fill("Peterson Anna");
+    await expect(results).toContainText("Anna Peterson");
+    await expect(results).not.toContainText("anna.peterson@example.test");
+    await expect(results).not.toContainText("Pat Merged");
+    await search.fill("ann pet");
+    await expect(results).toContainText("Anna Peterson");
+    await search.fill("PETERSON");
+    await expect(results).toContainText("Anna Peterson");
+    await search.fill("anna peterson");
+    await expect(results).toContainText("Anna Peterson");
+    await search.fill("Merged");
+    await expect(results).toContainText("No matching member.");
+    assertHealthy(expect, report, "name search");
+  });
+
+  test("a typed name searches past the first roster page", async ({ page }) => {
+    const report = watchPage(page);
+    const firstPage = [
+      member({ id: "heather", first_name: "Heather", last_name: "Bauder", email: "heather@example.test" })
+    ];
+    for (let i = 0; i < 24; i += 1) {
+      firstPage.push(member({
+        id: "early-" + i,
+        first_name: "Pat",
+        last_name: "Early" + String(i).padStart(2, "0"),
+        email: "early" + i + "@example.test"
+      }));
+    }
+    const anna = member({
+      id: "13630601-e76d-4948-b758-8985643be69d",
+      first_name: "Anna",
+      last_name: "Peterson",
+      email: "anna.peterson@example.test",
+      membership_status: "active"
+    });
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        toolKeys: rules.toolsForTitles(["president"])
+      }
+    });
+    await page.waitForFunction(() => window.__kosSb);
+    await page.evaluate(({ firstPage, anna }) => {
+      const calls = [];
+      function query() {
+        const result = Promise.resolve({ data: [], error: null });
+        const b = {
+          select: function () { return b; },
+          eq: function () { return b; },
+          neq: function () { return b; },
+          in: function () { return b; },
+          is: function () { return b; },
+          order: function () { return b; },
+          limit: function () { return b; },
+          maybeSingle: function () { return result; },
+          single: function () { return result; },
+          then: function (resolve, reject) { return result.then(resolve, reject); }
+        };
+        return b;
+      }
+      const mock = {
+        from: function () { return query(); },
+        rpc: async function (name, args) {
+          if (name === "search_member_access") {
+            // Mimic the database function that is live today: one substring
+            // over "first last", capped to a page that does not include Anna
+            // until the query actually matches that string.
+            const q = String((args && args.p_q) || "").trim().toLowerCase();
+            calls.push(q);
+            if (!q) return { data: firstPage, error: null };
+            const blob = ("anna peterson " + String(anna.email || "")).toLowerCase();
+            if (blob.indexOf(q) !== -1) return { data: [anna], error: null };
+            return { data: [], error: null };
+          }
+          if (name === "get_member_access") {
+            return {
+              data: {
+                ok: true,
+                member: Object.assign({}, firstPage[0], { title_keys: [], committees: [] }),
+                tools: [],
+                viewer: {
+                  member_id: "heather",
+                  is_admin: true,
+                  can_change_any_title: true,
+                  can_change_chair_titles: true,
+                  grantable: []
+                }
+              },
+              error: null
+            };
+          }
+          if (name === "list_access_chair_requests" || name === "list_member_access_changes" || name === "list_my_hub_notices") {
+            return { data: [], error: null };
+          }
+          return { data: [], error: null };
+        }
+      };
+      window.__kosSearchCalls = calls;
+      Object.defineProperty(window, "__kosSb", {
+        configurable: true,
+        get: function () { return mock; },
+        set: function () {}
+      });
+      if (typeof window.__kosSetRolesAccess === "function") window.__kosSetRolesAccess(null);
+    }, { firstPage, anna });
+    await page.locator("[data-hub-tab='officer']").click();
+    await page.locator('[data-tool="tool:hubRolesAccess"]').click();
+    const results = page.locator("#kosRolesResults");
+    await expect(results).toContainText("Heather Bauder");
+    await expect(results).not.toContainText("Anna Peterson");
+    await page.locator("#kosRolesSearch").fill("Peterson");
+    await expect(results).toContainText("Anna Peterson");
+    await expect(results).not.toContainText("anna.peterson@example.test");
+    await page.locator("#kosRolesSearch").fill("Peterson Anna");
+    await expect(results).toContainText("Anna Peterson");
+    await page.locator("#kosRolesSearch").fill("ann pet");
+    await expect(results).toContainText("Anna Peterson");
+    await page.locator("#kosRolesSearch").fill("Anna");
+    await expect(results).toContainText("Anna Peterson");
+    const calls = await page.evaluate(() => window.__kosSearchCalls.slice());
+    expect(calls).toContain("peterson");
+    expect(calls).toContain("peterson anna");
+    expect(calls).toContain("ann");
+    expect(calls).toContain("pet");
+    expect(calls).toContain("ann pet");
+    expect(calls).toContain("anna");
+    assertHealthy(expect, report, "server name search");
   });
 });

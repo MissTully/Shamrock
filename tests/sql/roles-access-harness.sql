@@ -384,4 +384,85 @@ begin
   if to_regprocedure('public.kos_legacy_can_manage_shop()') is null then
     raise exception 'Legacy shop gate was not snapshotted';
   end if;
+
+  -- Name search. A blank query stays a 25-row preview. A typed name searches
+  -- every non-merged member, including someone past that preview, in either
+  -- name order. Merged rows stay hidden. A prospect is findable by name.
+  insert into public.members (id, first_name, last_name, email, member_role, membership_status)
+  select
+    ('70000000-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid,
+    'Pat',
+    'Early' || lpad(i::text, 2, '0'),
+    'early' || i || '@example.test',
+    'member',
+    'active'
+  from generate_series(1, 30) as s(i);
+
+  insert into public.members (id, first_name, last_name, email, member_role, membership_status)
+  values
+    ('13630601-e76d-4948-b758-8985643be69d', 'Anna', 'Peterson', 'anna@example.test', 'member', 'active'),
+    ('88888888-8888-8888-8888-888888888888', 'Pat', 'Merged', 'merged@example.test', 'member', 'active'),
+    ('99999999-9999-9999-9999-999999999999', 'Nina', 'Prospect', 'nina@example.test', 'prospect', 'prospect');
+
+  update public.members
+     set merged_into = '11111111-1111-1111-1111-111111111111'
+   where id = '88888888-8888-8888-8888-888888888888';
+
+  perform public.kos_test_as('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1');
+
+  if jsonb_array_length(public.search_member_access('')) > 25 then
+    raise exception 'Blank search should stay a 25 row preview';
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('')) elem
+    where elem->>'id' = '13630601-e76d-4948-b758-8985643be69d'
+  ) then
+    raise exception 'Blank search is only the first page and does not have to list Peterson';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('Peterson')) elem
+    where elem->>'id' = '13630601-e76d-4948-b758-8985643be69d'
+  ) then
+    raise exception 'Peterson should find Anna past the first page';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('anna peterson')) elem
+    where elem->>'id' = '13630601-e76d-4948-b758-8985643be69d'
+  ) then
+    raise exception 'Full name should find Anna';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('Peterson, Anna')) elem
+    where elem->>'id' = '13630601-e76d-4948-b758-8985643be69d'
+  ) then
+    raise exception 'Last-then-first should find Anna';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('ann pet')) elem
+    where elem->>'id' = '13630601-e76d-4948-b758-8985643be69d'
+  ) then
+    raise exception 'Partial tokens should find Anna';
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('Merged')) elem
+    where elem->>'id' = '88888888-8888-8888-8888-888888888888'
+  ) then
+    raise exception 'A merged member should not be found';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(public.search_member_access('Nina')) elem
+    where elem->>'id' = '99999999-9999-9999-9999-999999999999'
+  ) then
+    raise exception 'A non-merged prospect should be findable by name';
+  end if;
+  if jsonb_array_length(public.search_member_access('Pat')) <= 25 then
+    raise exception 'A typed query should not stop at the 25 row preview';
+  end if;
 end $$;

@@ -45,6 +45,13 @@
   var query = "";
   var message = "";
   var review = null;
+  var roster = [];
+  var serverHits = null;
+  var serverHitsQuery = "";
+  var searchTimer = null;
+  var searchSeq = 0;
+  var searchPending = false;
+  var searchFocused = false;
 
   function injectCss() {
     if (document.getElementById("kosRolesCss")) return;
@@ -121,12 +128,41 @@
     return card;
   }
 
+  function normalizeQuery(value) {
+    return String(value || "").toLowerCase().replace(/[,]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function memberMatchesQuery(member, q) {
+    if (!q) return true;
+    var first = String(member.first_name || "").toLowerCase().trim();
+    var last = String(member.last_name || "").toLowerCase().trim();
+    var full = (first + " " + last).trim();
+    var flipped = (last + " " + first).trim();
+    if (full.indexOf(q) !== -1 || flipped.indexOf(q) !== -1) return true;
+    if (first.indexOf(q) !== -1 || last.indexOf(q) !== -1) return true;
+    var extra = ((member.officer_title || "") + " " + (member.email || "")).toLowerCase();
+    if (extra.indexOf(q) !== -1) return true;
+    var tokens = q.split(" ").filter(Boolean);
+    if (tokens.length > 1) {
+      return tokens.every(function (token) {
+        return first.indexOf(token) !== -1 || last.indexOf(token) !== -1;
+      });
+    }
+    return false;
+  }
+
+  function searchSource() {
+    var q = normalizeQuery(query);
+    if (q && serverHits && serverHitsQuery === q) return serverHits;
+    if (roster.length) return roster;
+    return (model && model.members) || [];
+  }
+
   function filteredMembers() {
-    var q = query.trim().toLowerCase();
-    return (model.members || []).filter(function (member) {
-      if (!q) return true;
-      var hay = (personName(member) + " " + (member.officer_title || "") + " " + (member.email || "")).toLowerCase();
-      return hay.indexOf(q) !== -1;
+    var q = normalizeQuery(query);
+    return searchSource().filter(function (member) {
+      if (!member || member.merged_into) return false;
+      return memberMatchesQuery(member, q);
     }).slice(0, 12);
   }
 
@@ -160,7 +196,9 @@
       '<label class="muted" for="kosRolesSearch">Name</label>' +
       '<input id="kosRolesSearch" type="search" value="' + esc(query) + '" placeholder="Type a name" autocomplete="off" />' +
       '<ul class="hit" id="kosRolesResults">';
-    if (!hits.length) html += '<li class="muted">No matching member.</li>';
+    if (!hits.length) {
+      html += '<li class="muted">' + (searchPending && normalizeQuery(query) ? "Searching…" : "No matching member.") + "</li>";
+    }
     hits.forEach(function (member) {
       var on = member.id === model.selectedId ? " on" : "";
       var badge = statusLabel(member.membership_status);
@@ -379,17 +417,16 @@
     if (search) {
       search.addEventListener("input", function () {
         query = search.value;
+        searchFocused = true;
+        if (!fixture) searchPending = true;
         render();
-        var again = document.getElementById("kosRolesSearch");
-        if (again) {
-          again.focus();
-          var pos = again.value.length;
-          try { again.setSelectionRange(pos, pos); } catch (e) {}
-        }
+        scheduleServerSearch();
+        refocusSearch();
       });
     }
     root.querySelectorAll("[data-member]").forEach(function (btn) {
       btn.addEventListener("click", function () {
+        searchFocused = false;
         model.selectedId = btn.getAttribute("data-member");
         var next = selectedMember();
         draft = next ? blankDraft(next) : null;
@@ -674,6 +711,132 @@
     render();
   }
 
+  function refocusSearch() {
+    if (!searchFocused) return;
+    var again = document.getElementById("kosRolesSearch");
+    if (!again) return;
+    var active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement && active.id !== "kosRolesSearch") return;
+    again.focus();
+    var pos = again.value.length;
+    try { again.setSelectionRange(pos, pos); } catch (eFocus) {}
+  }
+
+  // The first RPC result is only a short roster preview. Typing must ask
+  // search_member_access again, or members past that page (Anna Peterson)
+  // stay hidden. The box still filters the latest result locally so either
+  // name order matches before and after the database function is updated.
+  function scheduleServerSearch() {
+    if (fixture) return;
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      searchTimer = null;
+      runServerSearch();
+    }, 200);
+  }
+
+  function rememberSearch(rows, requested) {
+    var sent = normalizeQuery(requested);
+    var list = Array.isArray(rows) ? rows : [];
+    if (!sent) {
+      roster = list.slice();
+      if (!normalizeQuery(query)) {
+        serverHits = null;
+        serverHitsQuery = "";
+      }
+      return;
+    }
+    if (sent === normalizeQuery(query)) {
+      serverHits = list.slice();
+      serverHitsQuery = sent;
+    }
+  }
+
+  function prepSearchRow(item) {
+    item.title_keys = item.title_keys || [];
+    item.committees = item.committees || [];
+    item.grants = item.grants || [];
+    return item;
+  }
+
+  async function fetchSearch(client, q) {
+    var res = await client.rpc("search_member_access", { p_q: q });
+    if (res.error) throw res.error;
+    var members = Array.isArray(res.data) ? res.data : [];
+    members.forEach(prepSearchRow);
+    return members;
+  }
+
+  function intersectTokenHits(lists, q) {
+    var counts = {};
+    var byId = {};
+    lists.forEach(function (list) {
+      var seen = {};
+      list.forEach(function (item) {
+        if (!item || item.id == null || seen[item.id]) return;
+        seen[item.id] = true;
+        counts[item.id] = (counts[item.id] || 0) + 1;
+        if (!byId[item.id]) byId[item.id] = item;
+      });
+    });
+    var need = lists.length;
+    return Object.keys(byId).filter(function (id) {
+      return counts[id] === need && !byId[id].merged_into && memberMatchesQuery(byId[id], q);
+    }).map(function (id) { return byId[id]; });
+  }
+
+  async function runServerSearch() {
+    if (fixture) return;
+    var client = clientOrNull();
+    var requested = query;
+    var seq = ++searchSeq;
+    if (!client) {
+      if (seq !== searchSeq) return;
+      searchPending = false;
+      if (model) render();
+      return;
+    }
+    try {
+      var qNorm = normalizeQuery(requested);
+      var members = await fetchSearch(client, String(requested || "").trim());
+      if (seq !== searchSeq) return;
+      var direct = members.filter(function (item) {
+        return memberMatchesQuery(item, qNorm);
+      });
+      // The database function currently loaded may only match one name order.
+      // When "Peterson Anna" comes back empty, ask for each name and keep
+      // members that match every word. After sql/kos_member_search_any_name.sql
+      // is applied, the first call already returns those members.
+      var tokens = qNorm.split(" ").filter(Boolean);
+      if (!direct.length && tokens.length > 1) {
+        var lists = [];
+        var t;
+        for (t = 0; t < tokens.length; t++) {
+          var part = await fetchSearch(client, tokens[t]);
+          if (seq !== searchSeq) return;
+          lists.push(part);
+        }
+        members = intersectTokenHits(lists, qNorm);
+      } else {
+        members = direct;
+      }
+      rememberSearch(members, requested);
+      searchPending = false;
+      if (model) {
+        render();
+        refocusSearch();
+      }
+    } catch (err) {
+      if (seq !== searchSeq) return;
+      searchPending = false;
+      if (model && normalizeQuery(query)) {
+        message = (err && err.message) || "Could not search members.";
+        render();
+        refocusSearch();
+      }
+    }
+  }
+
   async function loadLive(client, selectId) {
     paintShell();
     var root = document.getElementById("kosRolesRoot");
@@ -686,8 +849,9 @@
       render();
       return;
     }
+    var requested = query || "";
     try {
-      var search = await client.rpc("search_member_access", { p_q: query || "" });
+      var search = await client.rpc("search_member_access", { p_q: requested });
       if (search.error) throw search.error;
       var requests = await client.rpc("list_access_chair_requests");
       var changes = await client.rpc("list_member_access_changes", { p_limit: 20 });
@@ -726,6 +890,8 @@
       if (memberRow && !normalized.some(function (item) { return item.id === memberRow.id; })) {
         normalized.unshift(memberRow);
       }
+      if (!searchTimer) searchPending = false;
+      rememberSearch(normalized, requested);
       useModel({
         ready: true,
         sample: false,
@@ -747,6 +913,7 @@
         if (msg) msg.textContent = message;
       }
     } catch (err) {
+      searchPending = false;
       var missing = /could not find the function|schema cache|kos_member_roles/i.test(String(err && err.message || err));
       model = {
         ready: false,
@@ -788,10 +955,22 @@
 
   window.__kosSetRolesAccess = function (payload) {
     fixture = payload || null;
+    if (searchTimer) {
+      clearTimeout(searchTimer);
+      searchTimer = null;
+    }
+    searchPending = false;
+    searchSeq += 1;
     if (fixture) {
       query = fixture.query || "";
+      roster = [];
+      serverHits = null;
+      serverHitsQuery = "";
       useModel(fixture, false);
     } else {
+      roster = [];
+      serverHits = null;
+      serverHitsQuery = "";
       model = null;
       draft = null;
     }
