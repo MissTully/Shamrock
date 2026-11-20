@@ -92,6 +92,76 @@ async function shot(page, locator, name) {
   await locator.screenshot({ path: path.join(SHOTS, name) });
 }
 
+test("a passed registration deadline closes parade RSVP, and collect_guests false hides the guest count", async ({ page }) => {
+  const report = watchPage(page);
+  let select = "";
+  const closedId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const noGuestId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const future = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString();
+  const pastClose = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  await page.route("**/rest/v1/v_public_events**", (route) => {
+    const headers = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "GET, OPTIONS"
+    };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    select = new URL(route.request().url()).searchParams.get("select") || "";
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers,
+      body: JSON.stringify([
+        {
+          id: closedId,
+          name: "Deadline Parade",
+          description: "Signup already closed.",
+          event_type: "parade",
+          start_time: future,
+          end_time: future,
+          location: "Downtown Tampa, FL",
+          source: "krewe",
+          status: "published",
+          is_public: true,
+          registration_closes_at: pastClose,
+          collect_guests: true
+        },
+        {
+          id: noGuestId,
+          name: "Members Only March",
+          description: "No guests on this parade.",
+          event_type: "parade",
+          start_time: future,
+          end_time: future,
+          location: "Ybor City",
+          source: "krewe",
+          status: "published",
+          is_public: true,
+          collect_guests: false
+        }
+      ])
+    });
+  });
+  await page.goto("/parades.html");
+  expect(select).toContain("registration_closes_at");
+  expect(select).toContain("collect_guests");
+  const closed = page.locator("#parade-season .parade-card", {
+    has: page.getByRole("heading", { level: 3, name: "Deadline Parade" })
+  });
+  await expect(closed.locator(".kos-pr-closed")).toContainText("Registration is closed.");
+  await expect(closed.locator(".kos-pr-going")).toHaveCount(0);
+  await expect(closed.locator("a", { hasText: "Sign in to RSVP" })).toHaveCount(0);
+  const noGuests = page.locator("#parade-season .parade-card", {
+    has: page.getByRole("heading", { level: 3, name: "Members Only March" })
+  });
+  await showSignedInRsvp(page, noGuestId);
+  await expect(noGuests.locator(".kos-pr-going")).toHaveText("Going");
+  await expect(noGuests.locator(".kos-pr-cant")).toHaveText("Can't go");
+  await expect(noGuests.locator(".kos-pr-count")).toHaveCount(0);
+  await expect(noGuests).not.toContainText("$25");
+  assertHealthy(expect, report, "parade deadline and guest flag");
+});
+
 test("public parade card asks members to sign in and keeps contact details off the page", async ({ page }) => {
   const report = watchPage(page);
   await stubParades(page, [santaEvent()]);
@@ -178,7 +248,9 @@ test("hub parade cards and event cards offer Going and Can't go", async ({ page 
   }, {
     parades: [
       { id: "parade-santa", name: "SantaFest", event_type: "parade", start_time: future, location: "Downtown Tampa, FL", parade_rsvpd: false },
-      { id: "parade-old", name: "Started Parade", event_type: "parade", start_time: started, location: "Ybor City", parade_rsvpd: false }
+      { id: "parade-old", name: "Started Parade", event_type: "parade", start_time: started, location: "Ybor City", parade_rsvpd: false },
+      { id: "parade-closed", name: "Deadline Parade", event_type: "parade", start_time: future, location: "Ybor City", registration_closes_at: new Date(Date.now() - 86400000).toISOString(), collect_guests: true, parade_rsvpd: false },
+      { id: "parade-noguest", name: "No Guest Parade", event_type: "parade", start_time: future, location: "Ybor City", collect_guests: false, parade_rsvpd: false }
     ],
     events: [
       { id: "parade-santa", name: "SantaFest", event_type: "parade", start_time: future, location: "Downtown Tampa, FL", description: "Holiday parade." }
@@ -193,6 +265,13 @@ test("hub parade cards and event cards offer Going and Can't go", async ({ page 
   await expect(paradeCard.locator(".kos-pr-pay")).toHaveAttribute("href", ZEFFY);
   await expect(eventCard.locator(".kos-pr-going")).toHaveText("Going");
   await expect(page.locator("#hubParadeSeasonList [data-parade-card='parade-old']")).toContainText("Registration is closed. This parade has already started.");
+  const deadline = page.locator("#hubParadeSeasonList [data-parade-card='parade-closed']");
+  await expect(deadline).toContainText("Registration is closed.");
+  await expect(deadline.locator(".kos-pr-going")).toHaveCount(0);
+  const noGuest = page.locator("#hubParadeSeasonList [data-parade-card='parade-noguest']");
+  await expect(noGuest.locator(".kos-pr-going")).toHaveText("Going");
+  await expect(noGuest.locator(".kos-pr-count")).toHaveCount(0);
+  await expect(noGuest).not.toContainText("$25");
   await expect(paradeCard).not.toContainText("maeve@example.com");
   const text = await paradeCard.innerText();
   expect(text).not.toMatch(/[—–]/);

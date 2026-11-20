@@ -594,7 +594,7 @@
   <script src="assets/kos-linkify.js?v=20261119links3"></script>
   <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
   <script src="assets/kos-share.js?v=20261119public1"></script>
-  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp1"></script>
+  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp2"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -840,13 +840,13 @@
       const grid = document.getElementById("paradeStaticGrid");
       let { data, error } = await supabase
         .from("v_public_events")
-        .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only")
+        .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only, registration_closes_at, collect_guests")
         .eq("event_type", "parade")
         .order("start_time", { ascending: true });
       if (error) {
         ({ data, error } = await supabase
           .from("events")
-          .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only")
+          .select("id, name, description, start_time, end_time, location, source, external_url, flyer_url, status, is_featured, event_type, members_only, registration_closes_at, collect_guests")
           .eq("is_public", true)
           .eq("event_type", "parade")
           .order("start_time", { ascending: true }));

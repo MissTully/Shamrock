@@ -1445,6 +1445,8 @@
         member_address: e.member_address,
         members_only: e.members_only,
         notes: e.notes || "",
+        registration_closes_at: e.registration_closes_at || null,
+        collect_guests: e.collect_guests !== false,
         linked_meeting_id: e.linked_meeting_id,
         parade_rsvpd: !!paradeStatus,
         parade_checked_in: paradeStatus === "attended",
@@ -1466,6 +1468,25 @@
     });
   }
 
+  async function attachParadeRsvpFields(client, rows) {
+    var ids = (rows || []).map(function (row) { return row && row.id; }).filter(function (id) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""));
+    });
+    if (!client || !ids.length) return;
+    try {
+      var extra = await client.from("events").select("id,registration_closes_at,collect_guests").in("id", ids);
+      if (extra.error || !extra.data) return;
+      var byId = {};
+      extra.data.forEach(function (row) { if (row && row.id) byId[row.id] = row; });
+      rows.forEach(function (row) {
+        var found = row && byId[row.id];
+        if (!found) return;
+        row.registration_closes_at = found.registration_closes_at || null;
+        row.collect_guests = found.collect_guests !== false;
+      });
+    } catch (e) {}
+  }
+
   async function loadParadeSeason(client) {
     if (window.__kosParadeSeasonLocked) return;
     if (!client) return;
@@ -1473,6 +1494,7 @@
       var res = await client.rpc("member_parade_season");
       if (!res.error && res.data && res.data.ok) {
         var paradeRows = res.data.parades || [];
+        await attachParadeRsvpFields(client, paradeRows);
         applyLocalRsvp(paradeRows);
         renderHubParadeSeason(paradeRows);
         return;
@@ -1480,7 +1502,7 @@
     } catch (e) {}
     try {
       var evs = await client.from("events")
-        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes")
+        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes,registration_closes_at,collect_guests")
         .eq("source", "krewe")
         .order("start_time", { ascending: true })
         .limit(40);
@@ -3507,7 +3529,7 @@
       state.birthdaysReady = true;
     }
     try {
-      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,external_url,is_online,meeting_url,registration_closes_at";
+      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,external_url,is_online,meeting_url,registration_closes_at,collect_guests";
       var sinceIso = eventListSinceIso();
       var listWindow = "start_time.gte." + sinceIso + ",end_time.gte." + sinceIso;
       var evs = await client.from("events")

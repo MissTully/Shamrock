@@ -47,6 +47,8 @@ test("public select does not ask for member address or notes", () => {
   assert.equal(httpShare.PUBLIC_SELECT.includes("member_notes"), false);
   assert.equal(httpShare.PUBLIC_SELECT.includes("flyer_url"), true);
   assert.equal(httpShare.PUBLIC_SELECT.includes("name"), true);
+  assert.equal(httpShare.PUBLIC_SELECT.includes("registration_closes_at"), true);
+  assert.equal(httpShare.PUBLIC_SELECT.includes("collect_guests"), true);
 });
 
 test("SantaFest share page includes Open Graph and Twitter tags", async () => {
