@@ -181,7 +181,7 @@
       <p class="parade-lead">
         Full membership includes a place in every krewe parade of the season,
         including Children's Gasparilla and the Parade of Pirates.
-        March RSVP and staging stay in the Member Hub.
+        Members sign in to RSVP. Staging details stay in the Member Hub.
       </p>
       <div class="btns" style="margin:0 0 16px;justify-content:center;display:flex;flex-wrap:wrap;gap:10px;">
         <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
@@ -202,6 +202,9 @@
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://www.friendsoftamparec.org/santa-fest--tree-lighting.html" target="_blank" rel="noopener">Parade info →</a>
           </div>
+          <div class="kos-parade-rsvp" data-parade-id="6918ff19-f232-4ddf-83d7-82f0a141eb95" data-parade-name="SantaFest" data-parade-start="2026-12-05T18:00:00Z" data-parade-end="2026-12-05T22:00:00Z" data-public-rsvp="1">
+            <a class="btn btn-primary" href="/members.html?next=%2Fevents%2F6918ff19-f232-4ddf-83d7-82f0a141eb95">Sign in to RSVP</a>
+          </div>
         </article>
         <article class="parade-card" data-start="2027-01-23T15:30:00-05:00">
           <div class="parade-media">
@@ -215,6 +218,9 @@
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://gasparillapiratefest.com/childrens-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
+          </div>
+          <div class="kos-parade-rsvp" data-parade-id="752b7d19-1fc1-4b42-972a-b6866c64310c" data-parade-name="Children's Gasparilla" data-parade-start="2027-01-23T20:30:00Z" data-parade-end="2027-01-24T01:30:00Z" data-public-rsvp="1">
+            <a class="btn btn-primary" href="/members.html?next=%2Fevents%2F752b7d19-1fc1-4b42-972a-b6866c64310c">Sign in to RSVP</a>
           </div>
         </article>
         <article class="parade-card" data-start="2027-01-30T14:00:00-05:00">
@@ -230,6 +236,9 @@
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://gasparillapiratefest.com/pirate-fest-schedule-of-events/" target="_blank" rel="noopener">Parade info →</a>
           </div>
+          <div class="kos-parade-rsvp" data-parade-id="6322c871-7d41-4a3a-8e74-4bdd016a625f" data-parade-name="Gasparilla Parade of Pirates" data-parade-start="2027-01-30T19:00:00Z" data-parade-end="2027-01-31T01:00:00Z" data-public-rsvp="1">
+            <a class="btn btn-primary" href="/members.html?next=%2Fevents%2F6322c871-7d41-4a3a-8e74-4bdd016a625f">Sign in to RSVP</a>
+          </div>
         </article>
         <article class="parade-card" data-start="2027-02-13T19:00:00-05:00">
           <div class="parade-media">
@@ -244,6 +253,9 @@
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://krewesantyago.org/knight-parade" target="_blank" rel="noopener">Parade info →</a>
           </div>
+          <div class="kos-parade-rsvp" data-parade-id="9b871de6-df13-472d-97d5-4fcb09a48e28" data-parade-name="Sant'Yago Knight Parade" data-parade-start="2027-02-14T00:00:00Z" data-parade-end="2027-02-14T05:00:00Z" data-public-rsvp="1">
+            <a class="btn btn-primary" href="/members.html?next=%2Fevents%2F9b871de6-df13-472d-97d5-4fcb09a48e28">Sign in to RSVP</a>
+          </div>
         </article>
         <article class="parade-card" data-start="2027-03-13T14:00:00-05:00">
           <div class="parade-media">
@@ -257,6 +269,9 @@
             <a class="btn btn-primary" href="membership-application.html">☘ Join</a>
             <a class="btn" href="members.html">Member Login</a>
             <a href="https://tamparoughriders.org/stpats" target="_blank" rel="noopener">Parade info →</a>
+          </div>
+          <div class="kos-parade-rsvp" data-parade-id="ac9ebc0f-6bf6-4773-b84b-5c58fc8c0575" data-parade-name="St. Patrick's Day Parade" data-parade-start="2027-03-13T19:00:00Z" data-parade-end="2027-03-13T23:00:00Z" data-public-rsvp="1">
+            <a class="btn btn-primary" href="/members.html?next=%2Fevents%2Fac9ebc0f-6bf6-4773-b84b-5c58fc8c0575">Sign in to RSVP</a>
           </div>
         </article>
       </div>
@@ -579,6 +594,7 @@
   <script src="assets/kos-linkify.js?v=20261119links3"></script>
   <script src="assets/kos-parade-guests.js?v=20261116listday1" defer></script>
   <script src="assets/kos-share.js?v=20261119public1"></script>
+  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp1"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const SUPABASE_URL = "https://oazwkwflgbthojvnclfc.supabase.co";
@@ -698,6 +714,15 @@
     }
     window.__kosOrderMarchGrid = orderMarchGrid;
 
+    function paradeRsvpSlot(ev) {
+      if (window.kosParadeRsvp && typeof window.kosParadeRsvp.fallbackHtml === "function") {
+        return window.kosParadeRsvp.fallbackHtml(ev);
+      }
+      const id = String((ev && ev.id) || "");
+      return '<div class="kos-parade-rsvp" data-parade-id="' + esc(id) + '" data-public-rsvp="1">' +
+        '<a class="btn btn-primary" href="/members.html?next=' + encodeURIComponent("/events/" + id) + '">Sign in to RSVP</a></div>';
+    }
+
     function cardActions(ev) {
       const info = ev.external_url
         ? '<a href="' + esc(ev.external_url) + '" target="_blank" rel="noopener">Parade info →</a>'
@@ -706,6 +731,7 @@
         '<a class="btn btn-primary" href="membership-application.html">☘ Join</a>' +
         '<a class="btn" href="members.html">Member Login</a>' +
         info + "</div>" +
+        paradeRsvpSlot(ev) +
         paradeShareHtml(ev);
     }
 
@@ -785,7 +811,7 @@
       const d = ev.start_time ? new Date(ev.start_time) : null;
       const startAttr = ev.start_time ? ' data-start="' + esc(ev.start_time) + '"' : "";
       const endAttr = ev.end_time ? ' data-end="' + esc(ev.end_time) + '"' : "";
-      const blurb = ev.description || "March with Tampa's original kilted krewe. Members RSVP in the Member Hub.";
+      const blurb = ev.description || "March with Tampa's original kilted krewe. Members sign in to RSVP.";
       return '<article class="parade-card ev-card"' + startAttr + endAttr + ">" +
         cardMedia(ev) +
         '<div class="mo">' + esc(monthLabel(d, ev)) + "</div>" +
@@ -848,8 +874,17 @@
       highlightIkcRows(ours);
     }
 
+    function mountParadeRsvp() {
+      if (window.kosParadeRsvp && typeof window.kosParadeRsvp.mountAll === "function") {
+        window.kosParadeRsvp.mountAll(document.getElementById("paradeStaticGrid") || document, {
+          client: supabase,
+          publicPage: true
+        });
+      }
+    }
+
     orderMarchGrid();
-    loadParades();
+    loadParades().then(mountParadeRsvp, mountParadeRsvp);
   </script>
 </body>
 </html>

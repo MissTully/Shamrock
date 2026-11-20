@@ -499,13 +499,13 @@
       const membersOnlyFeat = !!event.members_only;
       const featAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
         ? window.kosCalendar.publicSignupAction(event) : "";
+      const paradeHref = (window.kosCalendar && window.kosCalendar.paradeSignInHref)
+        ? window.kosCalendar.paradeSignInHref(event) : ("/events/" + encodeURIComponent(event.id || ""));
       const ctaFeat = (featAction === "parade" || featAction === "parade-members")
-        ? (featAction === "parade-members"
-          ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-          : '<a class="btn btn-primary" href="parades.html">Parade details</a>')
+        ? '<a class="btn btn-primary" href="' + esc(paradeHref) + '">Sign in to RSVP</a>'
         : (featAction === "members" || membersOnlyFeat)
         ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-        : (featAction === "closed" || closedFeat)
+        : (featAction === "parade-closed" || featAction === "closed" || closedFeat)
         ? '<a class="btn" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">Registration closed</a>'
         : (featAction === "tickets-soon")
         ? '<span class="btn">Tickets coming soon</span>'

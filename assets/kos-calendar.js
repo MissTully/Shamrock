@@ -472,6 +472,14 @@
     if (!eventStaysListed(ev, now)) return "hide";
     if (String(ev.source || "").toLowerCase() === "ikc") return "ikc";
     if (String(ev.event_type || "").toLowerCase() === "parade") {
+      // Parades are member RSVPs, not rows on the public guest form.
+      // Signups close once the parade starts. The card stays listed
+      // through the end of the next Eastern day.
+      if (eventHasStarted(ev, now)) return "parade-closed";
+      if (ev.registration_closes_at) {
+        var paradeCloses = new Date(ev.registration_closes_at);
+        if (!isNaN(paradeCloses.getTime()) && now.getTime() >= paradeCloses.getTime()) return "parade-closed";
+      }
       return ev.members_only ? "parade-members" : "parade";
     }
     if (eventHasStarted(ev, now)) return "closed";
@@ -488,6 +496,13 @@
   function signupDropdownAction(action) {
     return action === "members" || action === "closed" || action === "tickets" ||
       action === "tickets-soon" || action === "rsvp";
+  }
+
+  // Public parade cards send members to the parade page, which asks them
+  // to sign in before RSVP. They do not join the anonymous guest form.
+  function paradeSignInHref(ev) {
+    var id = ev && ev.id ? String(ev.id).trim() : "";
+    return id ? "/events/" + encodeURIComponent(id) : "/parades.html";
   }
 
   // An event has ended once its end time has passed. With no end time, it
@@ -586,6 +601,7 @@
     ticketCheckoutUrl: ticketCheckoutUrl,
     publicSignupAction: publicSignupAction,
     signupDropdownAction: signupDropdownAction,
+    paradeSignInHref: paradeSignInHref,
     eventHasEnded: eventHasEnded,
     eventHasStarted: eventHasStarted,
     eventSignupClosed: eventSignupClosed,
