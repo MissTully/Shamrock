@@ -276,6 +276,10 @@ test.describe("Member roles and access", () => {
     await expect(results).toContainText("Anna Peterson");
     await search.fill("Merged");
     await expect(results).toContainText("No matching member.");
+    await search.fill("Anna");
+    await results.locator("[data-member='anna']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Anna Peterson");
+    await expect(page.locator("#kosRolesTitles")).toBeVisible();
     assertHealthy(expect, report, "name search");
   });
 
@@ -339,10 +343,15 @@ test.describe("Member roles and access", () => {
             return { data: [], error: null };
           }
           if (name === "get_member_access") {
+            const id = args && args.p_member_id;
+            const row = id === anna.id ? anna : firstPage[0];
             return {
               data: {
                 ok: true,
-                member: Object.assign({}, firstPage[0], { title_keys: [], committees: [] }),
+                member: Object.assign({}, row, {
+                  title_keys: id === anna.id ? ["chair_parade"] : [],
+                  committees: id === anna.id ? ["Parade"] : []
+                }),
                 tools: [],
                 viewer: {
                   member_id: "heather",
@@ -390,6 +399,11 @@ test.describe("Member roles and access", () => {
     expect(calls).toContain("pet");
     expect(calls).toContain("ann pet");
     expect(calls).toContain("anna");
+    await results.locator("[data-member='13630601-e76d-4948-b758-8985643be69d']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Anna Peterson");
+    await expect(page.locator("#kosRolesTitles")).toBeVisible();
+    await expect(page.locator('input[data-title="chair_parade"]')).toBeChecked();
+    await expect(page.locator("#kosRolesRoot")).toContainText("Committees: Parade");
     assertHealthy(expect, report, "server name search");
   });
 });

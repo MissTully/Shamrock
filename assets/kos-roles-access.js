@@ -50,6 +50,7 @@
   var serverHitsQuery = "";
   var searchTimer = null;
   var searchSeq = 0;
+  var detailSeq = 0;
   var searchPending = false;
   var searchFocused = false;
 
@@ -102,9 +103,25 @@
     };
   }
 
+  function findMember(id) {
+    if (!id) return null;
+    var pools = [];
+    if (model && model.members) pools.push(model.members);
+    if (serverHits) pools.push(serverHits);
+    if (roster.length) pools.push(roster);
+    var p, i, list;
+    for (p = 0; p < pools.length; p++) {
+      list = pools[p];
+      for (i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === id) return list[i];
+      }
+    }
+    return null;
+  }
+
   function selectedMember() {
     if (!model || !model.selectedId) return null;
-    return (model.members || []).filter(function (member) { return member.id === model.selectedId; })[0] || null;
+    return findMember(model.selectedId);
   }
 
   function viewer() {
@@ -427,12 +444,18 @@
     root.querySelectorAll("[data-member]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         searchFocused = false;
-        model.selectedId = btn.getAttribute("data-member");
+        var id = btn.getAttribute("data-member");
+        var hit = findMember(id);
+        model.selectedId = id;
+        if (hit && !(model.members || []).some(function (member) { return member.id === id; })) {
+          model.members = (model.members || []).concat([hit]);
+        }
         var next = selectedMember();
         draft = next ? blankDraft(next) : null;
         review = null;
         message = "";
         render();
+        if (!fixture) openMemberDetail(id);
       });
     });
     root.querySelectorAll("[data-title]").forEach(function (box) {
@@ -834,6 +857,57 @@
         render();
         refocusSearch();
       }
+    }
+  }
+
+  function grantsFromTools(tools) {
+    var grants = [];
+    (tools || []).forEach(function (tool) {
+      if (tool.grant && !tool.grant.expired) {
+        grants.push({
+          tool_key: tool.key,
+          ends_on: tool.grant.ends_at ? String(tool.grant.ends_at).slice(0, 10) : null,
+          endsAt: tool.grant.ends_at,
+          needsReview: !!tool.grant.needs_review,
+          needs_review: !!tool.grant.needs_review
+        });
+      }
+    });
+    return grants;
+  }
+
+  async function openMemberDetail(id) {
+    var client = clientOrNull();
+    if (!client || fixture || !id) return;
+    var seq = ++detailSeq;
+    try {
+      var detail = await client.rpc("get_member_access", { p_member_id: id });
+      if (seq !== detailSeq || !model || model.selectedId !== id) return;
+      if (detail.error) throw detail.error;
+      var memberRow = detail.data && detail.data.member;
+      if (!memberRow) return;
+      memberRow.title_keys = memberRow.title_keys || [];
+      memberRow.committees = memberRow.committees || [];
+      memberRow.grants = grantsFromTools(detail.data.tools);
+      var replaced = false;
+      model.members = (model.members || []).map(function (member) {
+        if (member.id !== id) return member;
+        replaced = true;
+        return memberRow;
+      });
+      if (!replaced) model.members = model.members.concat([memberRow]);
+      if (serverHits) {
+        serverHits = serverHits.map(function (member) {
+          return member.id === id ? memberRow : member;
+        });
+      }
+      draft = blankDraft(memberRow);
+      review = null;
+      render();
+    } catch (err) {
+      if (seq !== detailSeq || !model || model.selectedId !== id) return;
+      message = (err && err.message) || "Could not open that member.";
+      render();
     }
   }
 
