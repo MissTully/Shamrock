@@ -356,7 +356,13 @@ test.describe("Membership Applications", () => {
     await unlockMemberHub(page, {
       role: { officer: true, canReviewApplications: true, applications: masked }
     });
-    await page.evaluate(() => {
+    await openApplicationsTile(page);
+    // The Hub module assigns window.__kosSb when it finishes loading. On a
+    // slow runner that assignment lands after an earlier stub and the copy
+    // never records the reveal call.
+    await page.waitForFunction(() => !!(window.__kosSb && window.__kosSb.auth));
+    await page.evaluate((role) => {
+      if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
       function query() {
         const builder = {
           select: () => builder,
@@ -380,8 +386,7 @@ test.describe("Membership Applications", () => {
           return { data: { ok: true, ssn: "123456789" } };
         }
       };
-    });
-    await openApplicationsTile(page);
+    }, { officer: true, canReviewApplications: true, applications: masked });
     const nia = page.locator("#hubApplications [data-app-id='app-nia']");
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
     await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']")).toHaveText("Copied");
