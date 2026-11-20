@@ -344,6 +344,12 @@ test.describe("Member roles and access", () => {
           }
           if (name === "get_member_access") {
             const id = args && args.p_member_id;
+            if (id === anna.id) {
+              await new Promise(function (resolve) { window.__kosReleaseAnna = resolve; });
+            } else if (window.__kosFailNextDetail) {
+              window.__kosFailNextDetail = false;
+              return { data: null, error: { message: "Could not open that member." } };
+            }
             const row = id === anna.id ? anna : firstPage[0];
             return {
               data: {
@@ -401,9 +407,21 @@ test.describe("Member roles and access", () => {
     expect(calls).toContain("anna");
     await results.locator("[data-member='13630601-e76d-4948-b758-8985643be69d']").click();
     await expect(page.locator("#kosRolesMember")).toHaveText("Anna Peterson");
+    await expect(page.locator("#kosRolesOpening")).toBeVisible();
+    await expect(page.locator("#kosRolesReview")).toHaveCount(0);
+    await expect(page.locator("#kosRolesTitles")).toHaveCount(0);
+    await page.evaluate(() => window.__kosReleaseAnna());
     await expect(page.locator("#kosRolesTitles")).toBeVisible();
     await expect(page.locator('input[data-title="chair_parade"]')).toBeChecked();
     await expect(page.locator("#kosRolesRoot")).toContainText("Committees: Parade");
+    await page.locator("#kosRolesSearch").fill("");
+    await expect(results).toContainText("Pat Early00");
+    await page.evaluate(() => { window.__kosFailNextDetail = true; });
+    await results.locator("[data-member='early-0']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Pat Early00");
+    await expect(page.locator("#kosRolesRoot")).toContainText("Could not open that member.");
+    await expect(page.locator("#kosRolesReview")).toHaveCount(0);
+    await expect(page.locator("#kosRolesTitles")).toHaveCount(0);
     assertHealthy(expect, report, "server name search");
   });
 });
