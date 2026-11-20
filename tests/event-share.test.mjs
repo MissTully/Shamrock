@@ -173,9 +173,32 @@ test("an Inter-Krewe event links to the host site", () => {
   });
   assert.match(html, /href="https:\/\/example-krewe\.example\/rsvp"/);
   assert.match(html, /Details on the host krewe/);
+  assert.match(html, /Sign in to RSVP/);
+  assert.match(html, /\/members\.html\?next=%2Fevents%2F11111111-1111-4111-8111-111111111111/);
   assert.equal(html.includes("/event-signup.html?event="), false);
   assert.equal(html.includes('href="/parades.html"'), false);
-  assert.equal(html.includes('href="/members.html"'), false);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+});
+
+test("a ticketed event keeps member RSVP beside Buy tickets", () => {
+  const html = share.renderEventSharePage({
+    id: "b7fe09b4-cbff-4c86-8007-878b3836041c",
+    name: "Holly Jolly Light Up Party (Bar Crawl)",
+    source: "krewe",
+    status: "published",
+    is_public: true,
+    event_type: "social",
+    start_time: "2026-12-12T23:00:00.000Z",
+    location: "Tampa",
+    ticket_payment_url: "https://pci.jotform.com/form/262187545644061",
+    ticket_price_cents: 2500,
+    description: "Bar crawl."
+  });
+  assert.match(html, /Sign in to RSVP/);
+  assert.match(html, /Buy tickets \(\$25\)/);
+  assert.match(html, /https:\/\/pci\.jotform\.com\/form\/262187545644061/);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+  assert.equal(html.includes("—"), false);
 });
 
 test("the members group URL is one shared constant and stays off the public page", () => {

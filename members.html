@@ -3716,14 +3716,14 @@
           }
           detailBits.push('<div class="ce-detail">'+facts.join("<br>")+'</div>');
           if(ev.flyer_url) detailBits.push('<div class="ce-detail"><a href="'+E(ev.flyer_url)+'" target="_blank" rel="noopener">Open the event flyer ↗</a></div>');
-          const rsvpHref="event-signup.html?event="+encodeURIComponent(ev.id||"");
           const cupLabel=(window.kosCalendar && window.kosCalendar.eventListLabel) ? window.kosCalendar.eventListLabel(ev) : "";
           const cupClosed=cupSignupClosed(ev);
-          let btns=cupClosed
-            ? '<span class="ce-rsvp" aria-disabled="true">Registration closed'+(cupLabel?(" · "+E(cupLabel)):"")+'</span>'
-            : '<a class="ce-rsvp" href="'+rsvpHref+'">🍀 RSVP · +5 Clovers</a>';
-          if(!cupClosed && ev.ticket_payment_url) btns+='<a class="ce-reg" href="'+E(ev.ticket_payment_url)+'" target="_blank" rel="noopener">🎟️ Buy tickets / register ↗</a>';
-          else if(ev.external_url) btns+='<a class="ce-reg" href="'+E(ev.external_url)+'" target="_blank" rel="noopener">🔗 Event page ↗</a>';
+          let btns = (window.kosParadeRsvp && typeof window.kosParadeRsvp.slotHtml === "function")
+            ? window.kosParadeRsvp.slotHtml(ev, { signedIn: true })
+            : (cupClosed
+              ? '<span class="ce-rsvp" aria-disabled="true">Registration closed'+(cupLabel?(" · "+E(cupLabel)):"")+'</span>'
+              : '<a class="ce-rsvp" href="event-signup.html?event='+encodeURIComponent(ev.id||"")+'">RSVP</a>');
+          if(ev.external_url && String(ev.external_url)!==String(ev.ticket_payment_url||"")) btns+='<a class="ce-reg" href="'+E(ev.external_url)+'" target="_blank" rel="noopener">Event page</a>';
           return '<div class="cup-event"><div class="ce-top">'+
             cupDateChip(ev.start_time)+
             '<div style="flex:1;min-width:200px;">'+
@@ -3738,6 +3738,9 @@
       }
       html+='<div class="cup-remind" style="margin-top:14px;">🤝 <div><b>Cheering on the krewe family?</b> RSVP for +5 🍀, then attend another IKC krewe’s event and claim <b>+20 🍀</b>. Close this window and use <b>Claim Clovers</b> on the Craic Cup tab afterward - an officer will credit you.</div></div>';
       box.innerHTML=html;
+      if(window.kosParadeRsvp && typeof window.kosParadeRsvp.mountAll==="function"){
+        window.kosParadeRsvp.mountAll(box, { client: sb, publicPage: false });
+      }
     }
 
     async function renderHowto(){
@@ -4826,7 +4829,7 @@
 <script src="assets/kos-roles-access.js?v=20261120search3" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
 <script src="assets/kos-whos-coming.js?v=20261119whos1" defer></script>
-<script src="assets/kos-parade-rsvp.js?v=20261120rsvp1" defer></script>
+<script src="assets/kos-parade-rsvp.js?v=20261120rsvp2" defer></script>
 <script src="assets/members-desk.js?v=20261120rsvp1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
