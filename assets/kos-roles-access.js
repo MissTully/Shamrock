@@ -52,6 +52,8 @@
   var searchSeq = 0;
   var searchPending = false;
   var searchFocused = false;
+  var detailSeq = 0;
+  var detailPendingId = "";
 
   function injectCss() {
     if (document.getElementById("kosRolesCss")) return;
@@ -102,9 +104,25 @@
     };
   }
 
+  function findMember(id) {
+    if (!id) return null;
+    var pools = [];
+    if (model && model.members) pools.push(model.members);
+    if (serverHits) pools.push(serverHits);
+    if (roster.length) pools.push(roster);
+    var p, i, list;
+    for (p = 0; p < pools.length; p++) {
+      list = pools[p];
+      for (i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === id) return list[i];
+      }
+    }
+    return null;
+  }
+
   function selectedMember() {
     if (!model || !model.selectedId) return null;
-    return (model.members || []).filter(function (member) { return member.id === model.selectedId; })[0] || null;
+    return findMember(model.selectedId);
   }
 
   function viewer() {
@@ -396,7 +414,7 @@
     html += '<p class="msg" id="kosRolesMsg">' + esc(message) + "</p>";
     html += renderRequests();
     html += renderSearch();
-    if (member) {
+    if (member && draft) {
       html += '<h3 id="kosRolesMember">' + esc(personName(member)) + "</h3>";
       html += '<p class="muted">' + esc(member.officer_title || "No officer title");
       if ((member.committees || []).length) html += " · Committees: " + esc(member.committees.join(", "));
@@ -406,6 +424,11 @@
       html += '<div class="btns"><button class="btn btn-primary" type="button" id="kosRolesReview">Review changes</button></div>';
       html += renderHandover(member);
       html += renderReview(member);
+    } else if (member) {
+      html += '<h3 id="kosRolesMember">' + esc(personName(member)) + "</h3>";
+      if (detailPendingId === member.id) {
+        html += '<p class="muted" id="kosRolesOpening">Opening their titles and tools…</p>';
+      }
     }
     html += renderChanges();
     root.innerHTML = html;
@@ -427,12 +450,27 @@
     root.querySelectorAll("[data-member]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         searchFocused = false;
-        model.selectedId = btn.getAttribute("data-member");
+        var id = btn.getAttribute("data-member");
+        var hit = findMember(id);
+        model.selectedId = id;
+        if (hit && !(model.members || []).some(function (member) { return member.id === id; })) {
+          model.members = (model.members || []).concat([hit]);
+        }
         var next = selectedMember();
-        draft = next ? blankDraft(next) : null;
         review = null;
         message = "";
-        render();
+        if (fixture || (next && next.accessReady)) {
+          detailPendingId = "";
+          draft = next ? blankDraft(next) : null;
+          render();
+        } else {
+          // A search row has no titles or grants. Leave the form closed until
+          // get_member_access returns, so a save cannot clear their access.
+          draft = null;
+          detailPendingId = id;
+          render();
+          openMemberDetail(id);
+        }
       });
     });
     root.querySelectorAll("[data-title]").forEach(function (box) {
@@ -525,6 +563,11 @@
   }
 
   async function saveChange(member, btn) {
+    if (!fixture && (!draft || !member || !member.accessReady)) {
+      message = "Their titles and tools are still loading.";
+      render();
+      return;
+    }
     if (viewer().id === member.id) {
       message = "You cannot change your own title or tools.";
       render();
@@ -837,6 +880,70 @@
     }
   }
 
+  function grantsFromTools(tools) {
+    var grants = [];
+    (tools || []).forEach(function (tool) {
+      if (tool.grant && !tool.grant.expired) {
+        grants.push({
+          tool_key: tool.key,
+          ends_on: tool.grant.ends_at ? String(tool.grant.ends_at).slice(0, 10) : null,
+          endsAt: tool.grant.ends_at,
+          needsReview: !!tool.grant.needs_review,
+          needs_review: !!tool.grant.needs_review
+        });
+      }
+    });
+    return grants;
+  }
+
+  async function openMemberDetail(id) {
+    var client = clientOrNull();
+    if (!client || fixture || !id) {
+      if (detailPendingId === id) {
+        detailPendingId = "";
+        draft = null;
+        message = "Still connecting. Try again in a moment.";
+        if (model) render();
+      }
+      return;
+    }
+    var seq = ++detailSeq;
+    try {
+      var detail = await client.rpc("get_member_access", { p_member_id: id });
+      if (seq !== detailSeq || !model || model.selectedId !== id) return;
+      if (detail.error) throw detail.error;
+      var memberRow = detail.data && detail.data.member;
+      if (!memberRow) throw new Error("Could not open that member.");
+      memberRow.title_keys = memberRow.title_keys || [];
+      memberRow.committees = memberRow.committees || [];
+      memberRow.grants = grantsFromTools(detail.data.tools);
+      memberRow.accessReady = true;
+      var replaced = false;
+      model.members = (model.members || []).map(function (member) {
+        if (member.id !== id) return member;
+        replaced = true;
+        return memberRow;
+      });
+      if (!replaced) model.members = model.members.concat([memberRow]);
+      if (serverHits) {
+        serverHits = serverHits.map(function (member) {
+          return member.id === id ? memberRow : member;
+        });
+      }
+      if (detailPendingId === id) detailPendingId = "";
+      draft = blankDraft(memberRow);
+      review = null;
+      render();
+    } catch (err) {
+      if (seq !== detailSeq || !model || model.selectedId !== id) return;
+      if (detailPendingId === id) detailPendingId = "";
+      draft = null;
+      review = null;
+      message = (err && err.message) || "Could not open that member.";
+      render();
+    }
+  }
+
   async function loadLive(client, selectId) {
     paintShell();
     var root = document.getElementById("kosRolesRoot");
@@ -867,6 +974,7 @@
       if (memberRow) {
         memberRow.title_keys = memberRow.title_keys || [];
         memberRow.committees = memberRow.committees || [];
+        memberRow.accessReady = true;
         memberRow.grants = [];
         (detail.data.tools || []).forEach(function (tool) {
           if (tool.grant && !tool.grant.expired) {

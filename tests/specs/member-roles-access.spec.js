@@ -339,11 +339,22 @@ test.describe("Member roles and access", () => {
             return { data: [], error: null };
           }
           if (name === "get_member_access") {
+            const id = args && args.p_member_id;
+            if (id === anna.id) {
+              await new Promise(function (resolve) { window.__kosReleaseAnna = resolve; });
+            }
+            const row = id === anna.id ? anna : firstPage[0];
             return {
               data: {
                 ok: true,
-                member: Object.assign({}, firstPage[0], { title_keys: [], committees: [] }),
-                tools: [],
+                member: Object.assign({}, row, {
+                  title_keys: id === anna.id ? ["chair_parade"] : [],
+                  committees: id === anna.id ? ["Parade"] : (row.committees || [])
+                }),
+                tools: id === anna.id ? [{
+                  key: "payments",
+                  grant: { ends_at: "2027-06-30T04:00:00.000Z", expired: false, needs_review: false }
+                }] : [],
                 viewer: {
                   member_id: "heather",
                   is_admin: true,
@@ -390,6 +401,18 @@ test.describe("Member roles and access", () => {
     expect(calls).toContain("pet");
     expect(calls).toContain("ann pet");
     expect(calls).toContain("anna");
+    await results.locator("[data-member='13630601-e76d-4948-b758-8985643be69d']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Anna Peterson");
+    await expect(page.locator("#kosRolesOpening")).toContainText("Opening their titles and tools");
+    await expect(page.locator("#kosRolesReview")).toHaveCount(0);
+    await expect(page.locator("#kosRolesTitles")).toHaveCount(0);
+    await page.evaluate(() => window.__kosReleaseAnna());
+    await expect(page.locator("#kosRolesTitles")).toBeVisible();
+    await expect(page.locator('input[data-title="chair_parade"]')).toBeChecked();
+    await expect(page.locator('input[data-tool="payments"]')).toBeChecked();
+    await expect(page.locator("#kosRolesRoot")).toContainText("Committees: Parade");
+    await expect(page.locator("#kosRolesRoot")).toContainText("Extra grant");
+    await expect(page.locator("#kosRolesRoot")).not.toContainText("anna.peterson@example.test");
     assertHealthy(expect, report, "server name search");
   });
 });
