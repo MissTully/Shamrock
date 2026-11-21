@@ -178,6 +178,11 @@ test("an Inter-Krewe event links to the host site", () => {
   assert.equal(/<a class="kos-quiet-rsvp"/.test(html), false);
   assert.equal(html.includes(">RSVP<"), false);
   assert.equal(html.includes("/event-signup.html?event="), false);
+  assert.equal(html.includes("Share on my Facebook"), false);
+  assert.equal(html.includes("Copy link"), false);
+  assert.equal(html.includes('class="kos-share"'), false);
+  assert.equal(html.includes("kos-share-native"), false);
+  assert.equal(html.includes("Share in our Krewe group"), false);
   assert.equal(html.includes('href="/parades.html"'), false);
   assert.equal(html.includes("Share in our Krewe group"), false);
 });

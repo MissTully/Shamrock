@@ -288,6 +288,7 @@ function eventDescHtml(text) {
 }
 function shareBlock(ev) {
   if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+  if (String(ev.source || "").toLowerCase() === "ikc") return "";
   const st = String(ev.status || "published").toLowerCase();
   if (st !== "published" && st !== "live") return "";
   if (ev.is_public === false) return "";
