@@ -88,6 +88,8 @@ test("inferKind classifies dues, the background check, events, and shop", () => 
     description: "Krewe locker rental small",
     url: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small",
   }, CATALOG), "other");
+
+  assert.equal(inferKind({}, { description: "2026 dues" }, []), "dues");
 });
 
 test("a couple order is two Full ticket holders, each for $375", () => {
@@ -116,6 +118,35 @@ test("a couple order is two Full ticket holders, each for $375", () => {
   assert.equal(holders[1].email, "blair@example.com");
   assert.equal(holders[1].name, "Blair Kelly");
   assert.equal(holders[1].amount_cents, 37500);
+});
+
+test("a named attendee does not inherit the purchaser email, and one ticket is one holder", () => {
+  const named = collectTicketHolders({
+    items: [{
+      type: "ticket",
+      name: "Full Membership",
+      amount: 37500,
+      email: "alex@example.com",
+      attendee: { name: "Blair Kelly" },
+      buyer: { email: "alex@example.com", name: "Alex Kelly" },
+    }],
+  });
+  assert.equal(named.length, 1);
+  assert.equal(named[0].email, undefined);
+  assert.equal(named[0].name, "Blair Kelly");
+  assert.equal(named[0].amount_cents, 37500);
+
+  const buyerOnly = collectTicketHolders({
+    items: [{
+      type: "ticket",
+      name: "Full Membership",
+      amount: 37500,
+      buyer: { email: "alex@example.com", name: "Alex Kelly" },
+    }],
+  });
+  assert.equal(buyerOnly.length, 1);
+  assert.equal(buyerOnly[0].email, "alex@example.com");
+  assert.equal(buyerOnly[0].name, "Alex Kelly");
 });
 
 test("dues migration marks each holder once and is not a live update", () => {

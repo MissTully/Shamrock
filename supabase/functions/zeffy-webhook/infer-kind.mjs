@@ -231,7 +231,9 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = []) => 
 
   // Membership dues. Category, ticket or description text, then the catalog URL.
   // Full, Associate, Auxiliary, LOA, and Leave of absence are the dues products.
+  // "dues" on its own still counts, so "2026 dues" is dues without a category or URL.
   const duesText = /\bmembership\b/.test(classifyBlob)
+    || /\bdues\b/.test(classifyBlob)
     || /\bleave of absence\b/.test(classifyBlob)
     || /\bloa\b/.test(classifyBlob);
   if (/(membership|dues)/.test(category) || /(membership|dues)/.test(formType) || duesText) {
@@ -252,16 +254,20 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = []) => 
 };
 
 const peopleOnItem = (item) => {
-  const people = [];
-  for (const key of ["attendee", "guest", "holder", "contact", "buyer"]) {
-    const person = asObject(item[key]);
-    if (Object.keys(person).length) people.push(person);
-  }
+  const holders = [];
+  const push = (person) => {
+    const obj = asObject(person);
+    if (Object.keys(obj).length) holders.push(obj);
+  };
+  // The person the ticket is for. Buyer and contact are the purchaser, and
+  // they are a separate holder only when the ticket names nobody else.
+  for (const key of ["attendee", "guest", "holder"]) push(item[key]);
   for (const guest of asArray(item.attendees ?? item.guests ?? item.ticket_holders ?? item.ticketHolders)) {
-    const person = asObject(guest);
-    if (Object.keys(person).length) people.push(person);
+    push(guest);
   }
-  return people;
+  if (holders.length) return holders;
+  for (const key of ["contact", "buyer"]) push(item[key]);
+  return holders;
 };
 
 const perTicketCents = (item, payment, qty) => {
@@ -294,10 +300,13 @@ export const collectTicketHolders = (payment) => {
   const pushHolder = (person, item, cents, ticketName) => {
     const emails = [];
     collectEmails(person, emails);
-    collectEmails(item, emails);
+    const name = personName(person);
+    // A named attendee with no email must stay email-free. Copying the
+    // purchaser email from the item makes SQL match the buyer and skip the name.
+    if (!emails.length && !name) collectEmails(item, emails);
     holders.push({
       email: emails[0],
-      name: personName(person) || personName(item),
+      name: name || personName(item),
       ticket_name: ticketName,
       amount_cents: cents,
     });
