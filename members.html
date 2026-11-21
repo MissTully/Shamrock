@@ -1184,6 +1184,18 @@
   .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
   .hub-ev-section-title{ margin:18px 0 8px; font-family:var(--display); font-size:18px; letter-spacing:.04em; color:#e2c15a; }
   body.hub-desk .hub-ev-section-title{ color:#14532d; }
+  .hub-home-parades{ margin:8px 0 16px; }
+  .hub-home-parades h2, .hub-krewe-parade-title{
+    margin:0 0 8px; font-family:var(--display); font-size:22px; color:#14532d;
+  }
+  .hub-home-parade, .hub-krewe-parade{
+    background:#fffdf8; color:#23291f; border:1px solid rgba(168,128,28,.45);
+    border-radius:14px; padding:12px 14px; margin:10px 0;
+  }
+  .hub-home-parade h3, .hub-krewe-parade h3{
+    margin:0; font-family:var(--display); font-size:20px; color:#14532d;
+  }
+  .hub-home-parade p, .hub-krewe-parade p{ margin:4px 0 0; }
   .hub-ev-card{ margin:10px 0 16px; border-radius:18px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); overflow:hidden; }
   .hub-ev-card > .app-event-hit{ margin:0; border:0; border-radius:0; }
   .hub-ev-detail{ padding:4px 14px 14px; font-size:15px; line-height:1.45; }
@@ -3673,7 +3685,7 @@
       let s=d.toLocaleString([], {weekday:"short", month:"long", day:"numeric", hour:"numeric", minute:"2-digit"});
       if(ev.end_time){
         const e2=new Date(ev.end_time);
-        if(!isNaN(e2.getTime())) s+=" – "+e2.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+        if(!isNaN(e2.getTime())) s+=" to "+e2.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
       }
       return s;
     }
@@ -3693,7 +3705,7 @@
         : new Date(Date.now()-3*24*60*60*1000).toISOString();
       const cupWindow=`start_time.gte.${sinceIso},end_time.gte.${sinceIso}`;
       let evs = await sb.from("events")
-        .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
+        .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,guest_payment_url,collect_guests,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
         .or(cupWindow)
         .order("start_time",{ascending:true})
         .limit(60);
@@ -4843,12 +4855,12 @@
 <script src="assets/kos-roles-access.js?v=20261120search3" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
 <script src="assets/kos-whos-coming.js?v=20261119whos1" defer></script>
-<script src="assets/kos-parade-rsvp.js?v=20261120rsvp2" defer></script>
+<script src="assets/kos-parade-rsvp.js?v=20261121parade1" defer></script>
 <script src="assets/kos-photo-frame.js?v=20261121frame3" defer></script>
 <script src="assets/kos-video-frame.js?v=20261121vid1" defer></script>
 <script src="assets/kos-dues-season.js?v=20261121renew1" defer></script>
 <script src="assets/kos-renew.js?v=20261121renew1" defer></script>
-<script src="assets/members-desk.js?v=20261121renew1" defer></script>
+<script src="assets/members-desk.js?v=20261121parade2" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
