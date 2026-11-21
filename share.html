@@ -72,19 +72,25 @@
 .file-drop input[type=file]{ display:none; }
 .file-chosen{ font-size:14px; color:var(--green-700); margin-top:8px; font-style:italic; }
 .photo-preview{
+  --kos-photo-max-h:420px;
+  --kos-photo-max-w:440px;
   margin:0 0 18px;
+  margin-inline:0;
   border-radius:12px;
   overflow:hidden;
   border:1px solid rgba(168,128,28,.45);
   background:#f7f1e3;
   max-width:100%;
 }
+.photo-preview.kos-photo-frame{ margin-inline:0; }
 .photo-preview[hidden]{ display:none !important; }
 .photo-preview img{
   display:block;
   width:100%;
-  max-height:280px;
+  height:auto;
   object-fit:contain;
+  image-orientation:from-image;
+  background:#f7f1e3;
 }
 @media (max-width:680px){
   /* The tune button sits over the bottom of this form on a phone. */
@@ -92,7 +98,6 @@
 }
 @media (max-width:420px){
   .share-body{ padding:18px 14px 28px; }
-  .photo-preview img{ max-height:220px; }
   .type-tab{ padding:10px 14px; font-size:15px; }
   .file-drop{ padding:22px 12px; }
 }
@@ -278,7 +283,7 @@
               </div>
               <div class="file-chosen" id="filePhotoName"></div>
             </div>
-            <div class="photo-preview" id="photoPreviewWrap" hidden>
+            <div class="photo-preview kos-photo-frame" id="photoPreviewWrap" hidden>
               <img id="photoPreview" alt="Preview of the photo you chose" />
             </div>
             <div class="form-group">
@@ -458,6 +463,7 @@
   <p style="margin:8px 0 0;"><a href="mailto:secretary@kreweofshamrock.com" style="color:var(--gold-light);">Contact: secretary@kreweofshamrock.com</a></p>
 </footer>
 
+<script src="assets/kos-photo-frame.js?v=20261121frame3"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -548,21 +554,52 @@ function clearPhotoPreview() {
   if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
   photoPreviewUrl = '';
   if (photoPreviewImg) photoPreviewImg.removeAttribute('src');
-  if (photoPreviewWrap) photoPreviewWrap.hidden = true;
+  if (photoPreviewWrap) {
+    photoPreviewWrap.hidden = true;
+    photoPreviewWrap.classList.remove('is-fit');
+    photoPreviewWrap.style.removeProperty('--kos-photo-w');
+    photoPreviewWrap.style.removeProperty('--kos-photo-h');
+  }
+}
+let photoPreviewSeq = 0;
+let replacingPhotoFile = false;
+async function preparePhotoFile(file) {
+  if (!file || typeof window.kosNormalizePhotoFile !== 'function') return file;
+  try {
+    const next = await window.kosNormalizePhotoFile(file);
+    return next || file;
+  } catch (err) {
+    return file;
+  }
+}
+function showPhotoPreview(file) {
+  if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+  photoPreviewWrap.classList.remove('is-fit');
+  photoPreviewUrl = URL.createObjectURL(file);
+  photoPreviewImg.src = photoPreviewUrl;
+  photoPreviewWrap.hidden = false;
+  if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(photoPreviewWrap);
 }
 if (photoInput) {
-  photoInput.addEventListener('change', () => {
-    const f = photoInput.files && photoInput.files[0];
-    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
-    photoPreviewUrl = '';
+  photoInput.addEventListener('change', async () => {
+    if (replacingPhotoFile) return;
+    const seq = ++photoPreviewSeq;
+    let f = photoInput.files && photoInput.files[0];
     if (!f || !/^image\//.test(f.type || '')) {
-      if (photoPreviewImg) photoPreviewImg.removeAttribute('src');
-      if (photoPreviewWrap) photoPreviewWrap.hidden = true;
+      clearPhotoPreview();
       return;
     }
-    photoPreviewUrl = URL.createObjectURL(f);
-    photoPreviewImg.src = photoPreviewUrl;
-    photoPreviewWrap.hidden = false;
+    const ready = await preparePhotoFile(f);
+    if (seq !== photoPreviewSeq) return;
+    if (ready && ready !== f) {
+      const dt = new DataTransfer();
+      dt.items.add(ready);
+      replacingPhotoFile = true;
+      photoInput.files = dt.files;
+      replacingPhotoFile = false;
+      f = ready;
+    }
+    showPhotoPreview(f);
   });
 }
 
@@ -677,7 +714,8 @@ document.getElementById('formPhoto').addEventListener('submit', async (e) => {
   setLoading(btn, true, 'Submit for review');
   try {
     if (!(await gatePhotoVideo('msgPhoto'))) { setLoading(btn, false, 'Submit for review'); return; }
-    const url = await uploadFile('gallery-photos', file);
+    const uploadable = await preparePhotoFile(file);
+    const url = await uploadFile('gallery-photos', uploadable);
     const caption = document.getElementById('pCaption').value.trim();
     const base = {
       p_title: document.getElementById('pTitle').value.trim(),

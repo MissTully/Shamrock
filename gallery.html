@@ -16,18 +16,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/krewe.css?v=20261119mobile1" />
 <style>
-  /* Approved member photos sit above the curated mosaic, with an optional
-     caption under the picture. No section heading. */
+  /* Approved member photos sit above the curated mosaic. Each frame follows
+     the photo's own aspect ratio (portrait, landscape, or square) and a max
+     height, so a phone portrait is not cropped into a landscape tile.
+     The caption stays under the picture. No section heading. */
   .member-gallery{
+    --kos-photo-max-h:520px;
+    --kos-photo-max-w:460px;
     display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap:16px;
+    align-items:start;
+    justify-items:center;
     margin:0 0 42px;
+    min-width:0;
   }
   .member-gallery[hidden]{ display:none !important; }
   .member-gallery figure{
     margin:0;
     min-width:0;
+    max-width:100%;
     display:flex;
     flex-direction:column;
     background:var(--paper);
@@ -36,11 +44,17 @@
     box-shadow:var(--shadow-sm);
     border-bottom:4px solid var(--gold);
   }
-  .member-gallery a{ display:block; min-width:0; }
+  .member-gallery a{ display:block; min-width:0; line-height:0; }
+  /* Until the file loads, hold a portrait box so a captionless card does not
+     collapse and every photo below it is not treated as on screen. */
+  .member-gallery figure:not(.is-fit) a{ aspect-ratio:3 / 4; }
+  .member-gallery figure:not(.is-fit) img{ height:100%; }
   .member-gallery img{
     width:100%;
-    height:190px;
-    object-fit:cover;
+    height:auto;
+    object-fit:contain;
+    image-orientation:from-image;
+    background:#f3ead3;
   }
   .member-gallery figcaption{
     position:static;
@@ -63,13 +77,8 @@
     font-size:16px;
   }
   .member-gallery-status[hidden]{ display:none !important; }
-  @media (max-width:860px){
-    .member-gallery{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .member-gallery img{ height:168px; }
-  }
   @media (max-width:420px){
-    .member-gallery{ grid-template-columns:minmax(0, 1fr); gap:12px; margin-bottom:28px; }
-    .member-gallery img{ height:220px; }
+    .member-gallery{ gap:12px; margin-bottom:28px; }
     .member-gallery figcaption{ font-size:15px; padding:8px 12px 12px; }
   }
 </style>
@@ -200,6 +209,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
+  <script src="assets/kos-photo-frame.js?v=20261121frame3"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -241,9 +251,10 @@
           const caption = (r.caption || "").trim();
           const alt = caption || "Krewe of Shamrock photo";
           const capHtml = caption ? `<figcaption>${esc(caption)}</figcaption>` : "";
-          return `<figure><a href="${esc(r.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(r.url)}" alt="${esc(alt)}"></a>${capHtml}</figure>`;
+          return `<figure class="kos-photo-frame"><a href="${esc(r.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(r.url)}" alt="${esc(alt)}"></a>${capHtml}</figure>`;
         }).join("");
         grid.hidden = false;
+        if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(grid);
       } catch (e) {
         showStatus("Could not load member photos right now.");
       }
