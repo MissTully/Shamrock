@@ -47,6 +47,7 @@
   }
 
   function money(amount) {
+    if (amount == null || amount === "") return "";
     var n = Number(amount);
     if (!isFinite(n)) return "";
     if (Math.round(n) === n) return "$" + n;
@@ -92,8 +93,8 @@
     return state.members.filter(function (row) { return state.selected[row.id]; });
   }
 
-  function reminderBody(row, label) {
-    var who = row ? esc(row.first_name || "friend") : "friend";
+  function reminderBody(row, label, greet) {
+    var who = greet ? esc(greet) : "friend";
     var level = levelName(row && row.membership_level);
     var amount = money(row && row.amount);
     var url = row && row.zeffy_url ? String(row.zeffy_url) : "";
@@ -125,10 +126,12 @@
     });
     return order.map(function (key) {
       var group = groups[key];
+      var sample = group.rows[0] || null;
+      var greet = group.rows.length === 1 && sample ? (sample.first_name || "friend") : "";
       return {
         level: key,
         rows: group.rows,
-        html: reminderBody(group.rows.length === 1 ? group.rows[0] : null, label)
+        html: reminderBody(sample, label, greet)
       };
     });
   }
@@ -381,10 +384,9 @@
       var sent = 0;
       for (var i = 0; i < groups.length; i++) {
         var group = groups[i];
-        var sample = group.rows.length === 1 ? group.rows[0] : null;
         var res = await client.rpc("officer_send_member_email", {
           p_subject: "Krewe of Shamrock membership renewal (" + state.label + ")",
-          p_body_html: reminderBody(sample, state.label),
+          p_body_html: group.html,
           p_audience: "selected",
           p_member_ids: group.rows.map(function (row) { return row.id; })
         });

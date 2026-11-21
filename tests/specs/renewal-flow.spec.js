@@ -37,6 +37,16 @@ test("sample renewal preview shows one member, a couple, paid, the list, and a r
   await expect(reminder).toContainText("Pay Leave of absence dues on Zeffy");
   await expect(reminder.locator("#kosRenSend")).toBeVisible();
 
+  const grouped = await page.evaluate(() => window.kosRenewalReminderHtml([
+    { id: "a", first_name: "Rowan", last_name: "Blake", membership_level: "full", amount: 375, zeffy_url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" },
+    { id: "b", first_name: "Lane", last_name: "Moss", membership_level: "full", amount: 375, zeffy_url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" }
+  ], "2026-27"));
+  expect(grouped).toContain("$375");
+  expect(grouped).toContain("https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership");
+  expect(grouped).toContain("Pay Full dues on Zeffy");
+  expect(grouped).not.toContain("$0");
+  expect(grouped).toContain("Hi friend");
+
   const text = await page.locator("body").innerText();
   expect(text).not.toMatch(/[—–]/);
   assertHealthy(expect, report, "renewal preview");

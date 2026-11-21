@@ -59,6 +59,9 @@ test("renewal SQL is a file for the owner, not a live update", () => {
   assert.match(sql, /kos_dues_invoice_due_date/);
   assert.match(sql, /unpaid_season/);
   assert.match(sql, /kos_mark_renewal_paid/);
+  assert.match(sql, /v_partner_id uuid/);
+  assert.doesNotMatch(sql, /v_partner uuid;\n  v_partner jsonb/);
+  assert.doesNotMatch(sql, /lower\(btrim\(p\.first_name\)\) = lower\(v_first\)/);
   assert.match(sql, /make_date\(public\.kos_dues_season_year\(\), 6, 1\)/);
   assert.doesNotMatch(sql, /enqueue_email\([\s\S]{0,80}renew/i);
   assert.match(webhook, /membershipYearForPayment/);

@@ -112,7 +112,7 @@ create index if not exists members_partner_member_id_idx
   where partner_member_id is not null;
 
 comment on column public.members.partner_member_id is
-  'Another roster row for this member''s partner. Renew for both of us uses this link, or a unique name match, and never invents a second member.';
+  'Another roster row for this member''s partner. Renew for both of us follows this column, or a row that points back here. It does not match on names, so a member cannot point the link at someone else by editing their own profile.';
 
 drop policy if exists members_update_self on public.members;
 create policy members_update_self
@@ -190,22 +190,14 @@ set search_path to 'public'
 as $$
 declare
   v_link uuid;
-  v_first text;
-  v_last text;
-  v_self_first text;
-  v_self_last text;
   v_found uuid;
   v_count integer;
 begin
   if p_member is null then
     return null;
   end if;
-  select m.partner_member_id,
-         nullif(btrim(m.partner_first_name), ''),
-         nullif(btrim(m.partner_last_name), ''),
-         nullif(btrim(m.first_name), ''),
-         nullif(btrim(m.last_name), '')
-    into v_link, v_first, v_last, v_self_first, v_self_last
+  select m.partner_member_id
+    into v_link
     from public.members m
    where m.id = p_member
      and m.merged_into is null;
@@ -239,54 +231,12 @@ begin
     return v_found;
   end if;
 
-  if v_first is not null and v_last is not null then
-    select count(*)::integer into v_count
-      from public.members p
-     where p.id <> p_member
-       and p.merged_into is null
-       and coalesce(p.membership_status, '') in ('active', 'lapsed', 'pending-renewal')
-       and lower(btrim(p.first_name)) = lower(v_first)
-       and lower(btrim(p.last_name)) = lower(v_last);
-    if v_count = 1 then
-      select p.id into v_found
-        from public.members p
-       where p.id <> p_member
-         and p.merged_into is null
-         and coalesce(p.membership_status, '') in ('active', 'lapsed', 'pending-renewal')
-         and lower(btrim(p.first_name)) = lower(v_first)
-         and lower(btrim(p.last_name)) = lower(v_last)
-       limit 1;
-      return v_found;
-    end if;
-  end if;
-
-  if v_self_first is not null and v_self_last is not null then
-    select count(*)::integer into v_count
-      from public.members p
-     where p.id <> p_member
-       and p.merged_into is null
-       and coalesce(p.membership_status, '') in ('active', 'lapsed', 'pending-renewal')
-       and lower(btrim(coalesce(p.partner_first_name, ''))) = lower(v_self_first)
-       and lower(btrim(coalesce(p.partner_last_name, ''))) = lower(v_self_last);
-    if v_count = 1 then
-      select p.id into v_found
-        from public.members p
-       where p.id <> p_member
-         and p.merged_into is null
-         and coalesce(p.membership_status, '') in ('active', 'lapsed', 'pending-renewal')
-         and lower(btrim(coalesce(p.partner_first_name, ''))) = lower(v_self_first)
-         and lower(btrim(coalesce(p.partner_last_name, ''))) = lower(v_self_last)
-       limit 1;
-      return v_found;
-    end if;
-  end if;
-
   return null;
 end;
 $$;
 
 comment on function public.kos_linked_partner_id(uuid) is
-  'The other roster row for a partner: partner_member_id, a unique reverse link, or one unique name match. Ambiguous names return null. Not a client API.';
+  'The other roster row for a partner, using partner_member_id in either direction. Names are not matched, so a member cannot attach this link by editing their own name. Not a client API.';
 
 revoke all on function public.kos_linked_partner_id(uuid) from public, anon, authenticated;
 
@@ -1265,7 +1215,7 @@ declare
   v_year integer := public.kos_dues_season_year();
   v_paid boolean := false;
   v_paid_date date;
-  v_partner uuid;
+  v_partner_id uuid;
   v_partner jsonb := null;
   v_levels jsonb;
   v_exempt boolean := false;
@@ -1301,8 +1251,8 @@ begin
       and public.kos_is_elected_officer_title(v_member.officer_title)
     );
 
-  v_partner := public.kos_linked_partner_id(v_id);
-  if v_partner is not null then
+  v_partner_id := public.kos_linked_partner_id(v_id);
+  if v_partner_id is not null then
     select jsonb_build_object(
       'member_id', p.id,
       'first_name', p.first_name,
@@ -1317,7 +1267,7 @@ begin
     )
       into v_partner
       from public.members p
-     where p.id = v_partner;
+     where p.id = v_partner_id;
   end if;
 
   select coalesce(jsonb_agg(jsonb_build_object(
