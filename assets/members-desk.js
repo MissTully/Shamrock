@@ -5835,6 +5835,8 @@
         var preview = "";
         if (q.url && q.type === "photo") {
           preview = '<div class="hub-media-preview kos-photo-frame"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
+        } else if (q.url && window.kosVideoFrameHtml) {
+          preview = window.kosVideoFrameHtml(q.url, "hub-media-preview");
         } else if (q.url) {
           preview = '<div class="muted" style="margin-top:4px;"><a href="' + esc(q.url) + '" target="_blank" rel="noopener">Open / preview video</a></div>';
         }
