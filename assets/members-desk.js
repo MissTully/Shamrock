@@ -829,6 +829,20 @@
     return bits.join("");
   }
 
+  // Krewe events are announced in Tampa time, not the browser's zone.
+  function easternStamp(iso, options) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var opts = { timeZone: "America/New_York" };
+    var key;
+    for (key in (options || {})) opts[key] = options[key];
+    return d.toLocaleString("en-US", opts);
+  }
+
+  function easternDay(iso) {
+    return easternStamp(iso, { year: "numeric", month: "2-digit", day: "2-digit" });
+  }
+
   // Full detail block under each Hub event row: flyer, description, times,
   // place, ticket and event links, members-only notes, RSVP status.
   function hubEventDetailHtml(ev, going) {
@@ -847,13 +861,13 @@
     if (ev.start_time) {
       var s0 = new Date(ev.start_time);
       if (!isNaN(s0.getTime())) {
-        var w = s0.toLocaleString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+        var w = easternStamp(ev.start_time, { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
         if (ev.end_time) {
           var e0 = new Date(ev.end_time);
           if (!isNaN(e0.getTime())) {
-            w += (e0.toDateString() === s0.toDateString())
-              ? " to " + e0.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-              : " to " + e0.toLocaleString([], { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+            w += (easternDay(ev.end_time) === easternDay(ev.start_time))
+              ? " to " + easternStamp(ev.end_time, { hour: "numeric", minute: "2-digit" })
+              : " to " + easternStamp(ev.end_time, { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
           }
         }
         facts.push("<b>When:</b> " + esc(w));
@@ -869,7 +883,7 @@
     if (tix) facts.push("<b>Tickets:</b> " + esc(tix));
     if (ev.registration_closes_at) {
       var rc = new Date(ev.registration_closes_at);
-      if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(rc.toLocaleDateString([], { month: "long", day: "numeric" })));
+      if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(easternStamp(ev.registration_closes_at, { month: "long", day: "numeric" })));
     }
     var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
     var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
@@ -907,7 +921,7 @@
       var when = "";
       if (ev.start_time) {
         var d = new Date(ev.start_time);
-        when = isNaN(d.getTime()) ? String(ev.start_time) : d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        when = isNaN(d.getTime()) ? String(ev.start_time) : easternStamp(ev.start_time, { dateStyle: "medium", timeStyle: "short" });
       } else {
         when = "Date to be announced";
       }
@@ -1008,7 +1022,7 @@
   function whenLabel(value) {
     if (!value) return "Date to be announced";
     var d = new Date(value);
-    return isNaN(d.getTime()) ? String(value) : d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    return isNaN(d.getTime()) ? String(value) : easternStamp(value, { dateStyle: "medium", timeStyle: "short" });
   }
 
   function statusPill(ok, yesText, noText) {
@@ -2684,10 +2698,10 @@
     var d = new Date(iso);
     if (isNaN(d.getTime())) return null;
     return {
-      month: d.toLocaleDateString([], { month: "short" }).toUpperCase(),
-      day: String(d.getDate()),
-      line: d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · " +
-        d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+      month: easternStamp(iso, { month: "short" }).toUpperCase(),
+      day: easternStamp(iso, { day: "numeric" }),
+      line: easternStamp(iso, { weekday: "short", month: "short", day: "numeric" }) + " · " +
+        easternStamp(iso, { hour: "numeric", minute: "2-digit" })
     };
   }
 
