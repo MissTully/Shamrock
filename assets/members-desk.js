@@ -1166,12 +1166,111 @@
     });
   }
 
+  function stampParadeFields(row) {
+    if (!row) return row;
+    var match = null;
+    (state.hubEvents || []).forEach(function (ev) {
+      if (ev && String(ev.id) === String(row.id)) match = ev;
+    });
+    if (!match) return row;
+    if (!row.guest_payment_url && match.guest_payment_url) row.guest_payment_url = match.guest_payment_url;
+    if (!row.event_type && match.event_type) row.event_type = match.event_type;
+    if (!row.source && match.source) row.source = match.source;
+    if (row.collect_guests == null && match.collect_guests != null) row.collect_guests = match.collect_guests;
+    if (!row.registration_closes_at && match.registration_closes_at) row.registration_closes_at = match.registration_closes_at;
+    if (!row.end_time && match.end_time) row.end_time = match.end_time;
+    if (!row.ticket_payment_url && match.ticket_payment_url) row.ticket_payment_url = match.ticket_payment_url;
+    if (row.ticket_price_cents == null && match.ticket_price_cents != null) row.ticket_price_cents = match.ticket_price_cents;
+    return row;
+  }
+
+  function isKreweParadeEvent(ev) {
+    if (!ev || ev.collect_guests === false) return false;
+    if (String(ev.source || "").toLowerCase() === "ikc") return false;
+    var type = String(ev.event_type || "").toLowerCase();
+    if (type === "parade" || type === "march") return true;
+    if (type) return false;
+    if (ev.parade_rsvpd != null || ev.parade_rsvp_status != null || ev.eligible != null) return true;
+    return isParadeLike(ev);
+  }
+
+  function paradeRsvpSlot(ev) {
+    if (!ev || !window.kosParadeRsvp || typeof window.kosParadeRsvp.slotHtml !== "function") return "";
+    return window.kosParadeRsvp.slotHtml(ev, { signedIn: true });
+  }
+
+  function homeParadeRows() {
+    var rows = [];
+    var seen = {};
+    function add(ev) {
+      if (!ev || !ev.id || seen[String(ev.id)] || !isKreweParadeEvent(ev)) return;
+      seen[String(ev.id)] = 1;
+      rows.push(ev);
+    }
+    (state.paradeSeason || []).forEach(add);
+    (state.hubEvents || []).forEach(function (ev) {
+      if (eventStaysListed(ev)) add(ev);
+    });
+    return rows;
+  }
+
+  function paradeRsvpCardHtml(row, kind) {
+    var slot = paradeRsvpSlot(row);
+    var where = row.location ? " · " + esc(row.location) : "";
+    return '<article class="' + kind + '" data-parade-card="' + esc(row.id) + '">' +
+      "<h3>" + esc(row.name || "Parade") + "</h3>" +
+      '<p class="muted">' + esc(whenLabel(row.start_time)) + where + "</p>" +
+      slot + "</article>";
+  }
+
+  function paintKreweParadeList(rows) {
+    var host = document.getElementById("hubKreweParadeList");
+    if (!host) return;
+    var list = (rows || []).filter(isKreweParadeEvent);
+    host.innerHTML = list.length
+      ? '<h3 class="hub-krewe-parade-title">Parade RSVPs</h3>' + list.map(function (row) {
+        return paradeRsvpCardHtml(row, "hub-krewe-parade");
+      }).join("")
+      : "";
+    if (list.length) mountParadeRsvps(host);
+  }
+
+  function paintHomeParadeList() {
+    var existing = document.getElementById("hubHomeParadeList");
+    if (document.body.classList.contains("hub-app")) {
+      if (existing) existing.remove();
+      return;
+    }
+    var top = document.getElementById("hubHomeTop");
+    if (!top) return;
+    var rows = homeParadeRows();
+    if (!rows.length) {
+      if (existing) existing.remove();
+      return;
+    }
+    var host = existing;
+    if (!host) {
+      host = document.createElement("section");
+      host.id = "hubHomeParadeList";
+      host.className = "hub-home-parades";
+      host.setAttribute("aria-label", "Krewe parades");
+      var hours = document.getElementById("hubHomeHoursSlot") || document.getElementById("hubHoursCard");
+      if (hours && hours.parentNode === top) top.insertBefore(host, hours);
+      else top.appendChild(host);
+    }
+    host.innerHTML = "<h2>Krewe parades</h2>" + rows.map(function (row) {
+      return paradeRsvpCardHtml(row, "hub-home-parade");
+    }).join("");
+    mountParadeRsvps(host);
+  }
+
   function renderHubParadeSeason(list) {
     if (feedLock && Array.isArray(feedLock.parades)) list = feedLock.parades;
     var rows = (list || []).filter(function (row) {
       if (feedLock && Array.isArray(feedLock.parades)) return true;
       return eventStaysListed(row);
     });
+    rows.forEach(stampParadeFields);
     state.paradeSeason = rows;
     var html = rows.length
       ? rows.map(paradeSeasonCardHtml).join("")
@@ -1181,6 +1280,8 @@
       wireParadeSeasonList(target, rows);
       prepareShare(target);
     });
+    paintKreweParadeList(rows);
+    paintHomeParadeList();
   }
   window.__kosRenderParadeSeason = renderHubParadeSeason;
 
@@ -1474,6 +1575,8 @@
         id: e.id,
         name: e.name,
         description: e.description,
+        event_type: e.event_type || "parade",
+        source: e.source || "krewe",
         start_time: e.start_time,
         end_time: e.end_time,
         location: e.location,
@@ -1481,6 +1584,12 @@
         members_only: e.members_only,
         notes: e.notes || "",
         linked_meeting_id: e.linked_meeting_id,
+        guest_payment_url: e.guest_payment_url || "",
+        collect_guests: e.collect_guests,
+        registration_closes_at: e.registration_closes_at || "",
+        external_url: e.external_url || "",
+        ticket_payment_url: e.ticket_payment_url || "",
+        ticket_price_cents: e.ticket_price_cents,
         parade_rsvpd: !!paradeStatus,
         parade_checked_in: paradeStatus === "attended",
         parade_rsvp_status: paradeStatus || null,
@@ -1515,7 +1624,7 @@
     } catch (e) {}
     try {
       var evs = await client.from("events")
-        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes")
+        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes,guest_payment_url,collect_guests,registration_closes_at,external_url,ticket_payment_url,ticket_price_cents")
         .eq("source", "krewe")
         .order("start_time", { ascending: true })
         .limit(40);
@@ -1670,6 +1779,7 @@
       '<section class="app-card"><div class="app-head"><span class="ic">☘</span><div><h2>My Krewe</h2><small>Profile and member directory</small></div></div>' +
       '<div class="app-body">' +
       '<div id="hubMyParadeGuests"></div>' +
+      '<div id="hubKreweParadeList"></div>' +
       '<div class="hub-profile" id="hubProfileCard"><h3>Your profile</h3><p class="empty">Loading…</p></div>' +
       "</div></div></section>";
     ensureMyParadeGuests();
@@ -2760,7 +2870,8 @@
         (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
         '</div><button type="button" class="app-rsvp' + (goingNext ? " is-going" : "") + '" data-app-event="' + esc(ev.id || "") + '">' +
         (goingNext ? "Already RSVP'd" : (closedNext ? "Closed" : "RSVP")) + "</button>" +
-        eventShareHtml(ev) + "</article>";
+        eventShareHtml(ev) + "</article>" +
+        (isKreweParadeEvent(ev) ? paradeRsvpSlot(ev) : "");
     }
     return '<div id="appDash">' +
       tartanDeadlineHtml("appTartanDeadline") +
@@ -3132,6 +3243,8 @@
     }
     placeHomeHours(hoursCard);
     prepareShare(top);
+    paintHomeParadeList();
+    mountParadeRsvps(top);
 
     renderProfileCard();
     ensureMyParadeGuests();
@@ -3550,7 +3663,7 @@
       state.birthdaysReady = true;
     }
     try {
-      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,external_url,is_online,meeting_url,registration_closes_at";
+      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,guest_payment_url,collect_guests,external_url,is_online,meeting_url,registration_closes_at";
       var sinceIso = eventListSinceIso();
       var listWindow = "start_time.gte." + sinceIso + ",end_time.gte." + sinceIso;
       var evs = await client.from("events")
