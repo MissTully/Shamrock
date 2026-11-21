@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renewal preview · sample members</title>
+  <link rel="stylesheet" href="../assets/krewe.css?v=20261121renew1" />
+  <style>
+    body { background:#f4efe2; margin:0; }
+    .preview-wrap { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+    .preview-wrap h1 { font-family:Georgia, serif; color:#14532d; font-size:1.6rem; margin:0 0 6px; }
+    .preview-note { color:#5c5648; margin:0 0 18px; }
+    .shot { margin:0 0 28px; }
+    .shot > h2 { font-size:14px; letter-spacing:.06em; text-transform:uppercase; color:#8a6a12; margin:0 0 8px; }
+    .phone { max-width:420px; }
+    .desk { background:#fffdf6; border:1px solid rgba(168,128,28,.35); border-radius:16px; padding:8px; }
+  </style>
+</head>
+<body>
+  <main class="preview-wrap">
+    <h1>Renewal preview</h1>
+    <p class="preview-note">Sample members only. These names are not the live roster.</p>
+    <section class="shot" id="shot-single">
+      <h2>Member, one person</h2>
+      <div class="phone" id="card-single"></div>
+    </section>
+    <section class="shot" id="shot-couple">
+      <h2>Member, linked partner</h2>
+      <div class="phone" id="card-couple"></div>
+    </section>
+    <section class="shot" id="shot-paid">
+      <h2>Member, already paid</h2>
+      <div class="phone" id="card-paid"></div>
+    </section>
+    <section class="shot" id="shot-list">
+      <h2>Officer Desk renewals</h2>
+      <div class="desk" id="card-list"></div>
+    </section>
+    <section class="shot" id="shot-reminder">
+      <h2>Reminder preview</h2>
+      <div class="desk" id="card-reminder"></div>
+    </section>
+  </main>
+  <script src="../assets/kos-dues-season.js?v=20261121renew1"></script>
+  <script src="../assets/kos-renew.js?v=20261121renew1"></script>
+  <script src="../assets/kos-renewals.js?v=20261121renew1"></script>
+  <script>
+    var year = window.kosDuesSeason.duesSeasonYear(new Date());
+    var label = window.kosDuesSeason.seasonLabel(year);
+    var levels = window.kosRenew.seeded;
+    function card(paid, level, partner) {
+      return {
+        paid: paid,
+        year: year,
+        season_label: label,
+        membership_level: level,
+        partner: partner,
+        levels: levels,
+        holdNavigation: true,
+        preview: true,
+        treasurer_email: "treasurer@kreweofshamrock.com"
+      };
+    }
+    window.kosRenew.mount(document.getElementById("card-single"), card(false, "full", null));
+    window.kosRenew.mount(document.getElementById("card-couple"), card(false, "full", {
+      first_name: "Sage",
+      last_name: "Harper",
+      paid: false
+    }));
+    window.kosRenew.mount(document.getElementById("card-paid"), card(true, "full", null));
+
+    var rows = [
+      { id: "sample-rowan", first_name: "Rowan", last_name: "Blake", email: "rowan.blake@example.com", membership_status: "active", membership_level: "full", partner_name: "", last_paid_year: 2025, amount: 375, zeffy_url: levels[0].zeffy_url },
+      { id: "sample-quinn", first_name: "Quinn", last_name: "Harper", email: "quinn.harper@example.com", membership_status: "lapsed", membership_level: "loa", partner_name: "Sage Harper", last_paid_year: 2024, amount: 100, zeffy_url: levels[3].zeffy_url },
+      { id: "sample-lane", first_name: "Lane", last_name: "Moss", email: "lane.moss@example.com", membership_status: "pending-renewal", membership_level: "associate", partner_name: "", last_paid_year: null, amount: 450, zeffy_url: levels[1].zeffy_url }
+    ];
+    window.kosRenewalsPreview(document.getElementById("card-list"), {
+      year: year,
+      season_label: label,
+      members: rows,
+      showPreview: false
+    });
+    window.kosRenewalsPreview(document.getElementById("card-reminder"), {
+      year: year,
+      season_label: label,
+      members: rows,
+      selected: { "sample-rowan": true, "sample-quinn": true },
+      showPreview: true,
+      confirmed: false
+    });
+  </script>
+</body>
+</html>

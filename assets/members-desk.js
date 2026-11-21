@@ -744,8 +744,6 @@
     phone: svgIcon('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18.2h2"/>')
   };
   var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "My Krewe", fun: "Craic Cup", officer: "Officer" };
-  var DUES_FULL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-  var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
 
   function tabButton(id, label, icon, extra) {
     return '<button type="button" role="tab" data-hub-tab="' + id + '" aria-selected="false">' +
@@ -2577,6 +2575,7 @@
     body.innerHTML = html;
     sheet.hidden = false;
   }
+  window.kosOpenHubSheet = openSheet;
 
   var toastTimer = null;
   function showToast(text) {
@@ -2631,12 +2630,17 @@
   }
 
   function openPayDues() {
+    if (window.kosRenew && typeof window.kosRenew.open === "function") {
+      window.kosRenew.open({
+        paid: !!(state.parade && state.parade.dues_paid),
+        membership_level: (state.parade && state.parade.membership_level) || (window.kosProfile && window.kosProfile.membership_level),
+        parade: state.parade || null
+      });
+      return;
+    }
     openSheet(
-      '<div class="app-dues"><h2 id="appSheetTitle">Pay dues</h2>' +
-      "<p>These links are membership dues. They are not the join application fee ($50 single or $75 couple).</p>" +
-      "<p>Dues are collected on Zeffy. Choose the membership you are paying.</p>" +
-      '<p><a class="btn btn-primary" href="' + DUES_FULL_URL + '" target="_blank" rel="noopener noreferrer">Pay full krewe dues</a></p>' +
-      '<p><a class="btn" href="' + DUES_LOA_URL + '" target="_blank" rel="noopener noreferrer">Pay leave of absence</a></p></div>'
+      '<div class="app-dues"><h2 id="appSheetTitle">Renew my membership</h2>' +
+      "<p>Membership renewal is still loading. Refresh the page and try again.</p></div>"
     );
   }
 
@@ -2767,7 +2771,7 @@
       '<div class="app-tiles" aria-label="Member shortcuts">' +
       appTile("card", "Member Card", APP_ICO.card) +
       appTile("events", "RSVP", APP_ICO.cal) +
-      (profileDuesExempt() ? "" : appTile("dues", "Pay Dues", APP_ICO.dues)) +
+      (profileDuesExempt() ? "" : appTile("dues", "Renew", APP_ICO.dues)) +
       appTile("chat", "Chat", APP_ICO.chat) +
       appTile("carpool", "Carpool", APP_ICO.car) +
       appTile("volunteer", "Volunteer", APP_ICO.heart) +
@@ -2866,7 +2870,7 @@
     if (go === "faq") { openMemberFaq(""); return; }
     if (go === "directory") { openDirectoryFromHome(); return; }
     if (go === "card") { appNavApi.openCard(); return; }
-    if (go === "dues") { openPayDues(); return; }
+    if (go === "dues" || go === "renew") { openPayDues(); return; }
     if (go === "email") {
       if (typeof window.kosOpenEmailMembers === "function") window.kosOpenEmailMembers();
       else showToast("Email members is still loading. Please try again in a moment.");
@@ -3087,6 +3091,7 @@
       quickTile("directory", "trinity", "My Krewe", "Your member directory: faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, rides, and your locker.") +
+      (profileDuesExempt() ? "" : quickTile("renew", "shamrock", "Renew my membership", "Pick your level for this June through May season and pay on Zeffy.")) +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
       quickTile("share", "triskele", "Share your media", "Upload photos and videos for the public site (an officer approves them), plus artwork, poems, and recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
@@ -3150,6 +3155,7 @@
         else if (go === "docs") revealDocsCard();
         else if (go === "events") gotoHubTabFromHome("events", "events");
         else if (go === "desk") gotoHubTabFromHome("parade", "desk");
+        else if (go === "renew") openPayDues();
         else if (go === "share") revealShareGroup();
         else if (go === "faq") openMemberFaq("");
         else if (go === "fun") gotoHubTabFromHome("fun", "fun");
@@ -9885,6 +9891,7 @@
     "hubAllKrewe",
     "hubEmailMembers",
     "hubSendInvoices",
+    "hubRenewals",
     "hubDuesWaivers"
   ];
 
@@ -9909,6 +9916,7 @@
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
     hubEmailMembers: { title: "Email members", desc: "Choose audience, including event prospects, then write, preview, and send", icon: "✉️", section: "Email & invoices" },
     hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
+    hubRenewals: { title: "Renewals", desc: "Who still owes this season. Mark cash or check, or send a reminder.", icon: "☘", section: "Email & invoices" },
     hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
   };
 
@@ -9936,7 +9944,7 @@
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
     "Gear": { icon: "🔑", sub: "Locker inventory, the reservation list, and who has paid." },
     "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, and the online payments ledger." },
-    "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, and record dues waivers." },
+    "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, see who still needs to renew, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
     "More tools": { icon: "☘", sub: "Everything else on the desk." }
   };
@@ -9975,6 +9983,7 @@
     panel.appendChild(card);
     return card;
   }
+  window.kosEnsureOfficerToolCard = ensureOfficerToolCard;
 
   function officerReportDefs() {
     var list = window.REPORTS;
@@ -10016,6 +10025,7 @@
     hubAllKrewe: "all_krewe",
     hubEmailMembers: "email_members",
     hubSendInvoices: "send_invoices",
+    hubRenewals: "renewals",
     hubDuesWaivers: "dues_waivers"
   };
 
@@ -10054,10 +10064,17 @@
     };
   }
 
+  function renewalsAllowed() {
+    if (hasToolKey("renewals")) return true;
+    if (typeof window.kosCanManageRenewals === "function") return !!window.kosCanManageRenewals();
+    return false;
+  }
+
   function toolOrderFromKeys() {
     publishReportAccess();
     return OFFICER_TOOL_ORDER.filter(function (id) {
       if (id === "hubChairDesk") return false;
+      if (id === "hubRenewals") return renewalsAllowed();
       if (id === "hubReports") {
         var access = window.kosReportAccess || {};
         return !!(access.all || access.events || access.merch || access.parades || access.members || access.finance);
@@ -10156,7 +10173,9 @@
       if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
       else toolOrder.push("hubEventOutreach");
     }
-    return placeWhosComing(placeRolesAccess(toolOrder));
+    toolOrder = placeWhosComing(placeRolesAccess(toolOrder));
+    if (!renewalsAllowed()) toolOrder = toolOrder.filter(function (id) { return id !== "hubRenewals"; });
+    return toolOrder;
   }
 
   function ensureOfficerDeskChrome() {
@@ -10297,6 +10316,9 @@
       }
       if (id === "hubParadeSecurity") paintParadeSecurityShell();
       if (id === "hubWhosComing") openWhosComing();
+      if (id === "hubRenewals" && typeof window.kosLoadRenewals === "function") {
+        try { window.kosLoadRenewals(); } catch (eRen) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }

@@ -343,3 +343,34 @@ export const collectTicketHolders = (payment) => {
   }
   return holders;
 };
+
+/**
+ * June-May dues season, labeled by the start year.
+ * krewe_volunteer_season_year returns the ending year (June 2026 -> 2027).
+ * Dues year is one less, so November 2026 and January 2027 both stay 2026.
+ * Matches assets/kos-dues-season.js and public.kos_dues_season_year.
+ */
+export const duesSeasonYear = (date = new Date()) => {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  });
+  const map = {};
+  for (const part of fmt.formatToParts(date)) {
+    if (part.type !== "literal") map[part.type] = Number(part.value);
+  }
+  return map.month >= 6 ? map.year : map.year - 1;
+};
+
+/** Explicit payload year wins. Otherwise the current dues season. */
+export const membershipYearForPayment = (metadata = {}, payment = {}, now = new Date()) => {
+  const meta = asObject(metadata);
+  const pay = asObject(payment);
+  const explicit = numberValue(
+    meta.membership_year ?? meta.membershipYear ?? pay.membership_year,
+  );
+  if (explicit !== undefined) return Math.round(explicit);
+  return duesSeasonYear(now);
+};

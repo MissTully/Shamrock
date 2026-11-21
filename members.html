@@ -2593,8 +2593,17 @@
 
 
     /* ================= PARADE READY ================= */
-    const SEASON = new Date().getFullYear();
-    // Bylaws volunteer season is Jun-May; season_year is the ending calendar year (e.g. Jun 2026-may 2027 → 2027).
+    // Bylaws volunteer season is Jun-May; season_year is the ending calendar year (e.g. Jun 2026-May 2027 → 2027).
+    // Dues and waivers use the start year of that same window (Jun 2026-May 2027 → 2026).
+    function duesSeasonNow(){
+      if(window.kosDuesSeason){
+        const year = window.kosDuesSeason.duesSeasonYear(new Date());
+        return { year: year, label: window.kosDuesSeason.seasonLabel(year) };
+      }
+      const d = new Date();
+      const year = (d.getMonth() + 1) >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+      return { year: year, label: year + "-" + String(year + 1).slice(-2) };
+    }
     function kreweVolunteerSeasonYear(d = new Date()){
       const mo = d.getMonth() + 1;
       return mo >= 6 ? d.getFullYear() + 1 : d.getFullYear();
@@ -2631,24 +2640,13 @@
         ? [me.waiver_signed, me.meeting_attended, mediaOk]
         : [me.dues_paid, me.waiver_signed, me.meeting_attended, mediaOk];
       const ready = gates.every(Boolean);
-      const DUES_LEVELS = {
-        full: { amount: 375, label: "Full", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" },
-        associate: { amount: 450, label: "Associate", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership" },
-        auxiliary: { amount: 200, label: "Auxiliary", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership" },
-        loa: { amount: 100, label: "LOA", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2" }
-      };
-      const levelKey = String((me && me.membership_level) || (window.kosProfile && window.kosProfile.membership_level) || "full").toLowerCase();
-      const duesLevel = DUES_LEVELS[levelKey] || DUES_LEVELS.full;
-      const LOA_PAY_URL = DUES_LEVELS.loa.url;
+      const season = duesSeasonNow();
       const gate = (ok, label, hint) =>
         `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok||!hint?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
-      const duesGate = (ok) => ok
-        ? `<div class="pr-gate ok" id="prDuesGate"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} membership dues paid</span></div>`
-        : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} membership dues</span>
-            <a class="pr-pay" href="${duesLevel.url}" target="_blank" rel="noopener">☘ Pay member dues</a>
-            <div class="pr-pay-alt">Membership dues ($${duesLevel.amount} ${duesLevel.label}).${duesLevel === DUES_LEVELS.loa ? "" : ` On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>`}
-            · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
-          </div>`;
+      const duesGate = (ok) => (ok
+        ? `<div class="pr-gate ok" id="prDuesGate"><span class="pr-mark">✅</span><span class="pr-label">${season.label} season dues paid</span></div>`
+        : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${season.label} season dues</span></div>`)
+        + `<div id="prRenewMount"></div>`;
       const duesHtml = duesExempt
         ? `<div class="pr-gate ok" id="prDuesExempt"><span class="pr-mark">✅</span><span class="pr-label">Membership dues</span> <span class="pr-hint">· officers and board are not invoiced for dues</span></div>`
         : duesGate(!!me.dues_paid);
@@ -2668,6 +2666,13 @@
         + `</div>`
         + `<div id="waiverBlock" style="margin-top:4px;"></div>`
         + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
+      if(!duesExempt && window.kosRenew){
+        window.kosRenew.mount(document.getElementById("prRenewMount"), {
+          paid: !!me.dues_paid,
+          membership_level: me.membership_level,
+          parade: me
+        });
+      }
     }
     window.__kosPreviewParadeReady = function(me, mediaOk){
       window.__kosParadePreviewLock = true;
@@ -2681,7 +2686,7 @@
         const { data } = await supabase.from("waivers")
           .select("signed_name,signed_at,season_year")
           .eq("member_id", me.member_id)
-          .eq("season_year", SEASON)
+          .eq("season_year", duesSeasonNow().year)
           .order("signed_at", { ascending: false })
           .limit(1);
         rec = (data && data[0]) || null;
@@ -2706,10 +2711,10 @@
       const nm = esc(kosLegalName());
       return `<div class="pr-waiver">
         <p style="font-size:14px;color:var(--muted);margin:0 0 8px;"><b>Read before you sign.</b> Scroll the waiver language, then type your name.</p>
-        ${waiverReadBlock(SEASON)}
+        ${waiverReadBlock(duesSeasonNow().label)}
         <label for="wvName">Type your full legal name to sign</label>
         <input id="wvName" value="${nm}" />
-        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${SEASON} waiver</button>
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${duesSeasonNow().label} waiver</button>
         <div class="msg" id="wvMsg"></div>
       </div>`;
     }
@@ -2717,16 +2722,16 @@
       const when = rec && rec.signed_at ? new Date(rec.signed_at).toLocaleString() : "on file";
       const who = rec && rec.signed_name ? esc(rec.signed_name) : "your name";
       return `<div class="pr-waiver" style="margin-top:12px;">
-        <p style="margin:0 0 8px;font-size:14px;color:var(--green-800);"><b>Your ${SEASON} liability waiver is signed</b></p>
+        <p style="margin:0 0 8px;font-size:14px;color:var(--green-800);"><b>Your ${duesSeasonNow().label} liability waiver is signed</b></p>
         <p style="margin:0 0 8px;font-size:16px;color:var(--muted);">Signed as <b>${who}</b> · ${when}</p>
-        ${waiverReadBlock(SEASON)}
+        ${waiverReadBlock(duesSeasonNow().label)}
         <p style="margin:0;font-size:15px;color:var(--muted);">Need a different season or a correction? Contact <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</p>
       </div>`;
     }
     window.kosSignWaiver = async function(){
       const nm = (document.getElementById("wvName").value||"").trim();
       if(nm.length < 2){ show("wvMsg","Please type your full name to sign.","error"); return; }
-      const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:SEASON, signed_name:nm });
+      const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:duesSeasonNow().year, signed_name:nm });
       if(error){ show("wvMsg","Could not record your signature. "+(error.message||""),"error"); return; }
       loadParadeReady();
     };
@@ -4841,7 +4846,9 @@
 <script src="assets/kos-parade-rsvp.js?v=20261120rsvp2" defer></script>
 <script src="assets/kos-photo-frame.js?v=20261121frame3" defer></script>
 <script src="assets/kos-video-frame.js?v=20261121vid1" defer></script>
-<script src="assets/members-desk.js?v=20261121vid1" defer></script>
+<script src="assets/kos-dues-season.js?v=20261121renew1" defer></script>
+<script src="assets/kos-renew.js?v=20261121renew1" defer></script>
+<script src="assets/members-desk.js?v=20261121renew1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
@@ -4850,7 +4857,8 @@
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
   <script src="assets/kos-reports.js?v=20261114roles1" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
-  <script src="assets/kos-email-invoices.js?v=20261105memail3" defer></script>
+  <script src="assets/kos-email-invoices.js?v=20261121renew1" defer></script>
+  <script src="assets/kos-renewals.js?v=20261121renew1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20260930wav1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20260930rep1" defer></script>
 <script src="assets/kos-lockers.js?v=20261105lockerexist1" defer></script>

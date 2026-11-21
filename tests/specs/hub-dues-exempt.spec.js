@@ -27,7 +27,7 @@ async function openPhone(page, profile) {
 test.describe("Dues checklist exemption", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("a regular member sees Pay dues on the phone and on Parade Ready", async ({ page }) => {
+  test("a regular member sees Renew on the phone and on Parade Ready", async ({ page }) => {
     const report = watchPage(page);
     await openPhone(page, {
       first_name: "Maeve",
@@ -38,8 +38,13 @@ test.describe("Dues checklist exemption", () => {
     });
     const dues = page.locator('.app-tile[data-app-go="dues"]');
     await expect(dues).toBeVisible();
-    await expect(dues).toContainText("Pay Dues");
+    await expect(dues).toContainText("Renew");
     await expect(page.locator("#hubDuesCheck")).toHaveCount(0);
+    await dues.click();
+    await expect(page.locator("#appSheet")).toBeVisible();
+    await expect(page.locator("#appSheet")).toContainText("Renew my membership");
+    await expect(page.locator("#appSheet")).toContainText("$375");
+    await page.locator("#appSheetClose").click();
     await page.evaluate(() => {
       window.__kosPreviewParadeReady({
         member_id: "m-maeve",
@@ -50,9 +55,12 @@ test.describe("Dues checklist exemption", () => {
     });
     await page.locator("[data-hub-tab='parade']").click();
     const status = page.locator("#prStatus");
-    await expect(status.locator(".pr-pay")).toContainText("Pay member dues");
-    await expect(status).toContainText("Membership dues ($375 Full)");
-    await expect(status).not.toContainText("join application fee");
+    await expect(status.locator(".pr-pay")).toHaveCount(0);
+    await expect(status.locator("#prRenewMount")).toContainText("Renew my membership");
+    await expect(status.locator("#prRenewMount")).toContainText("$375");
+    await expect(status.locator("#prRenewMount")).toContainText("Leave of absence");
+    await expect(status.locator("#prRenewMount")).toContainText("treasurer@kreweofshamrock.com");
+    await expect(status).toContainText("not the join application fee");
     assertHealthy(expect, report, "member dues checklist");
   });
 

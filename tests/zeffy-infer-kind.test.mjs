@@ -179,6 +179,7 @@ test("dues migration marks each holder once and is not a live update", () => {
   assert.match(webhook, /ticket_holders: ticketHolders/);
   assert.match(webhook, /inferKind\(metadata, payment, duesUrls\)/);
   assert.match(webhook, /kos_dues_catalog/);
-  assert.match(parade, /Membership dues \(\$\$\{duesLevel\.amount\} \$\{duesLevel\.label\}\)/);
+  assert.match(parade, /prRenewMount/);
+  assert.match(parade, /Renew my membership|kosRenew\.mount/);
   assert.doesNotMatch(parade, /not the join application fee/);
 });
