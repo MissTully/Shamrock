@@ -2631,15 +2631,22 @@
         ? [me.waiver_signed, me.meeting_attended, mediaOk]
         : [me.dues_paid, me.waiver_signed, me.meeting_attended, mediaOk];
       const ready = gates.every(Boolean);
-      const DUES_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-      const LOA_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+      const DUES_LEVELS = {
+        full: { amount: 375, label: "Full", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership" },
+        associate: { amount: 450, label: "Associate", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership" },
+        auxiliary: { amount: 200, label: "Auxiliary", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership" },
+        loa: { amount: 100, label: "LOA", url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2" }
+      };
+      const levelKey = String((me && me.membership_level) || (window.kosProfile && window.kosProfile.membership_level) || "full").toLowerCase();
+      const duesLevel = DUES_LEVELS[levelKey] || DUES_LEVELS.full;
+      const LOA_PAY_URL = DUES_LEVELS.loa.url;
       const gate = (ok, label, hint) =>
         `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok||!hint?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
       const duesGate = (ok) => ok
         ? `<div class="pr-gate ok" id="prDuesGate"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} membership dues paid</span></div>`
         : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} membership dues</span>
-            <a class="pr-pay" href="${DUES_PAY_URL}" target="_blank" rel="noopener">☘ Pay member dues</a>
-            <div class="pr-pay-alt">This is membership dues, not the join application fee ($50 single or $75 couple). On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>
+            <a class="pr-pay" href="${duesLevel.url}" target="_blank" rel="noopener">☘ Pay member dues</a>
+            <div class="pr-pay-alt">Membership dues ($${duesLevel.amount} ${duesLevel.label}).${duesLevel === DUES_LEVELS.loa ? "" : ` On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>`}
             · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
           </div>`;
       const duesHtml = duesExempt
