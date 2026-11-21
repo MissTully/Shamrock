@@ -1,6 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { collectTicketHolders, inferKind } from "./infer-kind.mjs";
 
 type JsonObject = Record<string, unknown>;
+
+// Shop / store before ticketing. Classification lives in infer-kind.mjs.
+// Seeded 2026 catalog URLs, used only when kos_dues_catalog cannot be read.
+// Live zeffy_url values win when the read succeeds.
+const SEEDED_DUES_CATALOG_URLS = [
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership",
+];
 
 const json = (body: JsonObject, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -79,91 +90,37 @@ const resolveAmountCents = (payment: JsonObject): number | undefined => {
   return Math.round(amount);
 };
 
-const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
-  const explicit = text(metadata.kind, metadata.product_kind, payment.product_kind)?.toLowerCase();
-  if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
-    return explicit;
+const loadDuesCatalogUrls = async (
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<string[]> => {
+  try {
+    const response = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/kos_dues_catalog?select=zeffy_url&active=eq.true`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          accept: "application/json",
+        },
+      },
+    );
+    if (!response.ok) {
+      console.error("kos_dues_catalog read failed", response.status);
+      return [];
+    }
+    const rows = await response.json();
+    if (!Array.isArray(rows)) return [];
+    const urls: string[] = [];
+    for (const row of rows) {
+      const url = text(asObject(row).zeffy_url);
+      if (url && !urls.includes(url)) urls.push(url);
+    }
+    return urls;
+  } catch (err) {
+    console.error("kos_dues_catalog read error", err);
+    return [];
   }
-  const description = [
-    payment.campaign,
-    payment.campaignName,
-    payment.campaign_name,
-    payment.campaign_title,
-    payment.campaignTitle,
-    payment.form_name,
-    payment.formName,
-    payment.product,
-    payment.productName,
-    payment.product_name,
-    payment.description,
-    payment.title,
-    payment.name,
-    payment.rate_title,
-    metadata.campaign_title,
-    metadata.campaign_name,
-    metadata.title,
-  ].filter(Boolean).join(" ").toLowerCase();
-  const linkBlob = [
-    payment.url,
-    payment.campaign_url,
-    payment.campaignUrl,
-    payment.share_url,
-    payment.public_url,
-    payment.publicUrl,
-    metadata.url,
-    metadata.campaign_url,
-  ].filter(Boolean).join(" ").toLowerCase();
-  // Locker rentals stay product_kind "other". payments has no locker kind.
-  // kos_claim_locker_from_payment matches the campaign text and the Zeffy URL.
-  if (
-    /\blocker/.test(description) ||
-    /\blocker/.test(linkBlob) ||
-    /krewe-locker-rental-(small|large)/.test(`${description} ${linkBlob}`)
-  ) {
-    return "other";
-  }
-
-  // Shared KOS Shop Online Store, plus legacy Shop Studio ticketing campaigns
-  // whose slug ends in "-shop". Classify as store before the ticketing check
-  // below files them as events. SQL in kos_shop_unified_checkout.sql is a backstop.
-  const shopBlob = `${description} ${linkBlob} ${String(payment.campaign_slug ?? metadata.campaign_slug ?? "")}`.toLowerCase();
-  // Shared KOS Shop: match slug kos-shop or campaign name "KOS Shop" so a
-  // /ticketing/ vs /online-store/ path cannot mis-file the payment as an event.
-  if (/\bkos-shop\b/.test(shopBlob) || /\bkos shop\b/.test(shopBlob)) {
-    return "store";
-  }
-  // Legacy per-item ticketing campaigns, e.g. /ticketing/krewe-of-shamrock-mug-shop.
-  if (
-    /\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) ||
-    /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())
-  ) {
-    return "store";
-  }
-
-  const campaignType = text(
-    payment.campaign_type,
-    payment.campaignType,
-    payment.campaign_category,
-    payment.campaignCategory,
-    metadata.campaign_type,
-    metadata.campaign_category,
-  )?.toLowerCase() ?? "";
-  // Shop / store before ticketing. The KOS Shop URL lives under /ticketing/.
-  if (/(shop|store|merch)/.test(campaignType)) return "store";
-  if (/(ticket|ticketing|event)/.test(campaignType)) return "event";
-  if (/(donation|donate)/.test(campaignType)) return "donation";
-  if (/(membership|dues)/.test(campaignType)) return "dues";
-  if (/\b(dues|membership)\b/.test(description)) return "dues";
-  if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
-  if (/\bdonation|donor|gift\b/.test(description)) return "donation";
-  if (/\bevent|ticket|ticketing|admission|gala|ball|parade|golf|lunch|book club\b/.test(description)) {
-    return "event";
-  }
-  if (/\b(store|merch|merchandise|shirt|tee|hat|kilt|apparel)\b/.test(description)) return "store";
-  // Ticket line items imply an event purchase.
-  const items = asArray(payment.items);
-  if (items.some((it) => text(asObject(it).type)?.toLowerCase() === "ticket")) return "event";
-  return "other";
 };
 
 /** Prefer real contact objects; Zeffy often sets payment.contact to a UUID string. */
@@ -382,6 +339,9 @@ Deno.serve(async (req: Request) => {
   const membershipYear = numberValue(
     metadata.membership_year ?? metadata.membershipYear ?? payment.membership_year,
   );
+  const catalogUrls = await loadDuesCatalogUrls(supabaseUrl, serviceRoleKey);
+  const duesUrls = catalogUrls.length ? catalogUrls : SEEDED_DUES_CATALOG_URLS;
+  const ticketHolders = collectTicketHolders(payment);
 
   const payload: JsonObject = {
     provider: "zeffy",
@@ -415,7 +375,8 @@ Deno.serve(async (req: Request) => {
       metadata.campaign_url,
     ),
     description,
-    product_kind: inferKind(metadata, payment),
+    product_kind: inferKind(metadata, payment, duesUrls),
+    ticket_holders: ticketHolders,
     ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
     // An id-only webhook has no items or phone. Keep the API payment on data
     // so shop receipts and chair emails can read the same shape as a normal event.

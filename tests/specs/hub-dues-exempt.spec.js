@@ -51,7 +51,8 @@ test.describe("Dues checklist exemption", () => {
     await page.locator("[data-hub-tab='parade']").click();
     const status = page.locator("#prStatus");
     await expect(status.locator(".pr-pay")).toContainText("Pay member dues");
-    await expect(status).toContainText("not the join application fee");
+    await expect(status).toContainText("Membership dues ($375 Full)");
+    await expect(status).not.toContainText("join application fee");
     assertHealthy(expect, report, "member dues checklist");
   });
 

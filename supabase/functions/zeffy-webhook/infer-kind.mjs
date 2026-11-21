@@ -1,0 +1,331 @@
+/**
+ * Pure Zeffy classification and ticket-holder parsing.
+ * Imported by the webhook and by tests/zeffy-infer-kind.test.mjs.
+ * Amounts follow the webhook rule: integer `amount` is cents.
+ */
+
+const asObject = (value) =>
+  value && typeof value === "object" && !Array.isArray(value) ? value : {};
+
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const text = (...values) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return undefined;
+};
+
+const numberValue = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  if (value && typeof value === "object") {
+    return numberValue(value.value ?? value.amount);
+  }
+  return undefined;
+};
+
+export const resolveAmountCents = (payment) => {
+  const explicit = numberValue(
+    payment.amountCents ?? payment.amount_cents ?? payment.amount_in_cents,
+  );
+  if (explicit !== undefined) return Math.round(explicit);
+
+  const amount = numberValue(payment.amount);
+  if (amount === undefined) return undefined;
+  if (!Number.isInteger(amount)) return Math.round(amount * 100);
+  return Math.round(amount);
+};
+
+const joinedLower = (values) =>
+  values
+    .map((value) => (typeof value === "string" ? value.trim().toLowerCase() : ""))
+    .filter(Boolean)
+    .join(" ");
+
+const emailish = (value) => {
+  const s = text(value);
+  if (!s || !s.includes("@")) return undefined;
+  return s.toLowerCase();
+};
+
+const pushEmail = (out, value) => {
+  const email = emailish(value);
+  if (email && !out.includes(email)) out.push(email);
+};
+
+const collectEmails = (obj, out) => {
+  if (!obj || typeof obj !== "object") return;
+  pushEmail(out, obj.email);
+  pushEmail(out, obj.emailAddress);
+  pushEmail(out, obj.email_address);
+  pushEmail(out, obj.payer_email);
+  pushEmail(out, obj.payerEmail);
+  for (const q of asArray(obj.questions ?? obj.buyer_questions ?? obj.answers)) {
+    const qo = asObject(q);
+    const label = text(qo.question, qo.label, qo.name, qo.title)?.toLowerCase() ?? "";
+    const answer = text(qo.answer, qo.value, qo.response);
+    if (answer && (label.includes("email") || answer.includes("@"))) pushEmail(out, answer);
+  }
+};
+
+const personName = (obj) => {
+  const source = asObject(obj);
+  const direct = text(
+    source.name,
+    source.fullName,
+    source.full_name,
+    [source.first_name ?? source.firstName, source.last_name ?? source.lastName]
+      .filter(Boolean)
+      .join(" "),
+  );
+  if (direct) return direct;
+  for (const q of asArray(source.questions ?? source.buyer_questions ?? source.answers)) {
+    const qo = asObject(q);
+    const label = text(qo.question, qo.label, qo.name, qo.title)?.toLowerCase() ?? "";
+    const answer = text(qo.answer, qo.value, qo.response);
+    if (answer && label.includes("name") && !/user.?name|email/.test(label)) return answer;
+  }
+  return undefined;
+};
+
+/** Last path slug of a Zeffy campaign URL, or a bare slug. */
+export const campaignKey = (value) => {
+  const raw = String(value || "").trim().toLowerCase().split(/[?#]/)[0];
+  if (!raw) return "";
+  const match = raw.match(/\/(?:ticketing|donation|membership|online-store|embed|form)\/([a-z0-9-]+)/);
+  if (match) return match[1].replace(/\/+$/, "");
+  if (/^[a-z0-9-]+$/.test(raw)) return raw;
+  return "";
+};
+
+export const urlMatchesCatalog = (linkBlob, duesCatalogUrls) => {
+  const keys = new Set();
+  for (const part of String(linkBlob || "").split(/\s+/)) {
+    const key = campaignKey(part);
+    if (key) keys.add(key);
+  }
+  return (duesCatalogUrls || []).some((url) => {
+    const key = campaignKey(url);
+    return !!key && keys.has(key);
+  });
+};
+
+const ticketNameOf = (item) =>
+  text(
+    item.name,
+    item.title,
+    item.ticket_name,
+    item.ticketName,
+    item.product_name,
+    item.productName,
+    item.rate_title,
+    item.label,
+  );
+
+/**
+ * Classify a Zeffy payment.
+ * Order: explicit kind, locker, shop, background check, dues, then ticketing
+ * as an event. Background check is before the membership category because
+ * that $75 payment is also category membership. Dues is before ticketing
+ * because every membership form is a Zeffy ticketing form.
+ *
+ * duesCatalogUrls are the live kos_dues_catalog.zeffy_url values.
+ */
+export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = []) => {
+  const meta = asObject(metadata);
+  const pay = asObject(payment);
+  const explicit = text(meta.kind, meta.product_kind, pay.product_kind)?.toLowerCase();
+  if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
+    return explicit;
+  }
+
+  const description = [
+    pay.campaign,
+    pay.campaignName,
+    pay.campaign_name,
+    pay.campaign_title,
+    pay.campaignTitle,
+    pay.form_name,
+    pay.formName,
+    pay.product,
+    pay.productName,
+    pay.product_name,
+    pay.description,
+    pay.title,
+    pay.name,
+    pay.rate_title,
+    meta.campaign_title,
+    meta.campaign_name,
+    meta.title,
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  const linkBlob = [
+    pay.url,
+    pay.campaign_url,
+    pay.campaignUrl,
+    pay.share_url,
+    pay.public_url,
+    pay.publicUrl,
+    meta.url,
+    meta.campaign_url,
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  const items = asArray(pay.items).map(asObject);
+  const ticketNames = items.map(ticketNameOf).filter(Boolean).join(" ").toLowerCase();
+  const classifyBlob = `${description} ${ticketNames}`.trim();
+
+  // Locker rentals stay product_kind "other". payments has no locker kind.
+  // kos_claim_locker_from_payment matches the campaign text and the Zeffy URL.
+  if (
+    /\blocker/.test(description) ||
+    /\blocker/.test(linkBlob) ||
+    /krewe-locker-rental-(small|large)/.test(`${description} ${linkBlob}`)
+  ) {
+    return "other";
+  }
+
+  // Shared KOS Shop Online Store, plus legacy Shop Studio ticketing campaigns
+  // whose slug ends in "-shop". Classify as store before the ticketing check
+  // below files them as events. SQL in kos_shop_unified_checkout.sql is a backstop.
+  const shopBlob = `${description} ${linkBlob} ${String(pay.campaign_slug ?? meta.campaign_slug ?? "")}`.toLowerCase();
+  // Shared KOS Shop: match slug kos-shop or campaign name "KOS Shop" so a
+  // /ticketing/ vs /online-store/ path cannot mis-file the payment as an event.
+  if (/\bkos-shop\b/.test(shopBlob) || /\bkos shop\b/.test(shopBlob)) {
+    return "store";
+  }
+  // Legacy per-item ticketing campaigns, e.g. /ticketing/krewe-of-shamrock-mug-shop.
+  if (
+    /\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) ||
+    /-shop\b/.test(String(pay.campaign_slug ?? meta.campaign_slug ?? "").toLowerCase())
+  ) {
+    return "store";
+  }
+
+  const formType = joinedLower([
+    pay.form_type,
+    pay.formType,
+    pay.campaign_type,
+    pay.campaignType,
+    meta.form_type,
+    meta.campaign_type,
+  ]);
+  const category = joinedLower([
+    pay.category,
+    pay.campaign_category,
+    pay.campaignCategory,
+    meta.category,
+    meta.campaign_category,
+  ]);
+  const kindBlob = `${formType} ${category}`;
+
+  // Shop / store before ticketing. The KOS Shop URL lives under /ticketing/.
+  if (/(shop|store|merch)/.test(kindBlob)) return "store";
+
+  // The $75 background check is a ticketing form with category membership.
+  // Name wins over that category, or it would be filed as dues.
+  if (classifyBlob.includes("background check")) return "other";
+
+  // Membership dues. Category, ticket or description text, then the catalog URL.
+  // Full, Associate, Auxiliary, LOA, and Leave of absence are the dues products.
+  const duesText = /\bmembership\b/.test(classifyBlob)
+    || /\bleave of absence\b/.test(classifyBlob)
+    || /\bloa\b/.test(classifyBlob);
+  if (/(membership|dues)/.test(category) || /(membership|dues)/.test(formType) || duesText) {
+    return "dues";
+  }
+  if (urlMatchesCatalog(`${linkBlob} ${description}`, duesCatalogUrls)) return "dues";
+
+  if (/(ticket|ticketing|event)/.test(kindBlob)) return "event";
+  if (/(donation|donate)/.test(kindBlob)) return "donation";
+  if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
+  if (/\bdonation|donor|gift\b/.test(description)) return "donation";
+  if (/\bevent|ticket|ticketing|admission|gala|ball|parade|golf|lunch|book club\b/.test(description)) {
+    return "event";
+  }
+  if (/\b(store|merch|merchandise|shirt|tee|hat|kilt|apparel)\b/.test(description)) return "store";
+  if (items.some((it) => text(it.type)?.toLowerCase() === "ticket")) return "event";
+  return "other";
+};
+
+const peopleOnItem = (item) => {
+  const people = [];
+  for (const key of ["attendee", "guest", "holder", "contact", "buyer"]) {
+    const person = asObject(item[key]);
+    if (Object.keys(person).length) people.push(person);
+  }
+  for (const guest of asArray(item.attendees ?? item.guests ?? item.ticket_holders ?? item.ticketHolders)) {
+    const person = asObject(guest);
+    if (Object.keys(person).length) people.push(person);
+  }
+  return people;
+};
+
+const perTicketCents = (item, payment, qty) => {
+  const line = resolveAmountCents(item);
+  if (line === undefined) return undefined;
+  if (qty <= 1) return line;
+  const order = resolveAmountCents(payment);
+  if (order !== undefined && Math.abs(order - line) <= 1) return Math.round(line / qty);
+  if (order !== undefined && Math.abs(order - line * qty) <= qty) return line;
+  return Math.round(line / qty);
+};
+
+/**
+ * One entry per dues or event ticket: email, name, ticket name, and cents.
+ * A couple order is two Full tickets, not one $750 payer.
+ */
+export const collectTicketHolders = (payment) => {
+  const pay = asObject(payment);
+  const items = asArray(pay.items).map(asObject).filter((item) => {
+    const kind = text(item.type)?.toLowerCase();
+    return !kind || kind === "ticket";
+  });
+  const loose = [];
+  for (const guest of asArray(pay.guests ?? pay.attendees ?? pay.ticket_holders ?? pay.ticketHolders)) {
+    const person = asObject(guest);
+    if (Object.keys(person).length) loose.push(person);
+  }
+
+  const holders = [];
+  const pushHolder = (person, item, cents, ticketName) => {
+    const emails = [];
+    collectEmails(person, emails);
+    collectEmails(item, emails);
+    holders.push({
+      email: emails[0],
+      name: personName(person) || personName(item),
+      ticket_name: ticketName,
+      amount_cents: cents,
+    });
+  };
+
+  items.forEach((item, index) => {
+    const nested = peopleOnItem(item);
+    let people = nested;
+    if (!people.length && items.length === 1 && loose.length) people = loose.slice();
+    else if (!people.length && loose[index]) people = [loose[index]];
+    const qty = Math.max(1, Math.round(numberValue(item.quantity) ?? 1));
+    const slots = Math.max(qty, people.length, 1);
+    const cents = perTicketCents(item, pay, qty);
+    const ticketName = ticketNameOf(item);
+    for (let i = 0; i < slots; i++) pushHolder(people[i] || {}, item, cents, ticketName);
+  });
+
+  if (!holders.length) {
+    for (const person of loose) {
+      const emails = [];
+      collectEmails(person, emails);
+      holders.push({
+        email: emails[0],
+        name: personName(person),
+        ticket_name: text(person.ticket_name, person.ticketName, person.ticket),
+        amount_cents: resolveAmountCents(person),
+      });
+    }
+  }
+  return holders;
+};
