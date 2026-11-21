@@ -313,6 +313,51 @@ test("member hub lists show the parade RSVP widget and the Zeffy pay button", as
   assertHealthy(expect, report, "hub parade pay button on every list");
 });
 
+test("a krewe parade with guest count off still offers Going and Can't go", async ({ page }) => {
+  const report = watchPage(page);
+  const pirates = {
+    id: "parade-pirates",
+    name: "Gasparilla Parade of Pirates",
+    event_type: "parade",
+    source: "krewe",
+    start_time: "2027-01-30T19:00:00Z",
+    end_time: "2027-01-30T23:00:00Z",
+    location: "Bayshore Boulevard, Tampa",
+    status: "published",
+    collect_guests: false
+  };
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await unlockMemberHub(page);
+  await page.evaluate((row) => {
+    window.__kosHubSetFeed({
+      profile: { first_name: "Sample", last_name: "Member", email: "sample.member@example.com", member_id: "member-sample" },
+      parades: [row],
+      events: [row]
+    });
+  }, pirates);
+
+  async function expectMarchRsvp(card) {
+    await expect(card).toContainText("Gasparilla Parade of Pirates");
+    await expect(card.locator(".kos-pr-going")).toHaveText("Going");
+    await expect(card.locator(".kos-pr-cant")).toHaveText("Can't go");
+    await expect(card.locator(".kos-pr-pay")).toHaveCount(0);
+    await expect(card.locator(".kos-pr-count")).toHaveCount(0);
+    await expect(card).not.toContainText("$25 per guest");
+    expect(await card.innerText()).not.toMatch(/[—–]/);
+  }
+
+  await expectMarchRsvp(page.locator("#hubHomeParadeList [data-parade-card='parade-pirates']"));
+  await page.locator('[data-hub-tab="krewe"]').click();
+  await expectMarchRsvp(page.locator("#hubKreweParadeList [data-parade-card='parade-pirates']"));
+  await page.locator('[data-hub-tab="events"]').click();
+  await expectMarchRsvp(page.locator("#hubMemberEventList .hub-ev-card", { hasText: "Gasparilla Parade of Pirates" }));
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('[data-hub-tab="hub"]').click();
+  await expectMarchRsvp(page.locator("#appNextUp"));
+  assertHealthy(expect, report, "parade without guest count");
+});
+
 test("public event signup does not show the member Zeffy guest fee button", async ({ page }) => {
   const report = watchPage(page);
   await stubParades(page, [santaEvent()]);

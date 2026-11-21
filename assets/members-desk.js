@@ -1185,7 +1185,7 @@
   }
 
   function isKreweParadeEvent(ev) {
-    if (!ev || ev.collect_guests === false) return false;
+    if (!ev) return false;
     if (String(ev.source || "").toLowerCase() === "ikc") return false;
     var type = String(ev.event_type || "").toLowerCase();
     if (type === "parade" || type === "march") return true;
