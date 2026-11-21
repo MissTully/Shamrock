@@ -254,6 +254,9 @@ h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
 .event-card .type{ font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--green-700); font-weight:700; font-family:var(--display); }
 .event-card h3{ margin:6px 0; color:var(--green-800); font-size:21px; }
 .event-card .meta{ color:var(--muted); font-size:17px; margin-bottom:14px; font-family:var(--fancy); font-style:italic; }
+a.kos-quiet-rsvp{ display:inline-flex; align-items:center; min-height:44px; padding:0 2px; color:var(--green-700); font-weight:600; font-size:16px; text-decoration:underline; text-underline-offset:3px; background:none; border:0; }
+a.kos-quiet-rsvp:hover{ color:var(--gold-deep); }
+.kos-rsvp-closed{ display:inline-flex; align-items:center; min-height:44px; color:var(--ink); font-size:16px; }
 .event-card a.rsvp{ font-family:var(--display); font-weight:600; text-decoration:none; color:var(--green-700); }
 .event-card a.rsvp:hover{ color:var(--gold-deep); }
 /* Events synced from the Inter-Krewe Council calendar render in purple so

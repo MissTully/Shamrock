@@ -903,15 +903,7 @@
     if (root && window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(root);
   }
 
-  function renderHubMemberEvents(list) {
-    var target = document.getElementById("hubMemberEventList");
-    if (!target) return;
-    var rows = list || [];
-    if (!rows.length) {
-      target.innerHTML = '<p class="empty">No upcoming Shamrock events just now. Check the public calendar for IKC listings.</p>';
-      return;
-    }
-    target.innerHTML = rows.map(function (ev) {
+  function hubEventCardHtml(ev) {
       var when = "";
       if (ev.start_time) {
         var d = new Date(ev.start_time);
@@ -948,7 +940,27 @@
         (going ? "You're going" : (paradeCant ? "Can't go" : (closed ? "Closed" : "RSVP"))) + "</span>" + calBtn + "</span></div>" +
         eventShareHtml(ev) +
         hubEventDetailHtml(ev, going) + "</article>";
-    }).join("");
+  }
+
+  function renderHubMemberEvents(list) {
+    var target = document.getElementById("hubMemberEventList");
+    if (!target) return;
+    var rows = list || [];
+    var krewe = [];
+    var ikc = [];
+    rows.forEach(function (ev) {
+      if (String(ev.source || "").toLowerCase() === "ikc") ikc.push(ev);
+      else krewe.push(ev);
+    });
+    function section(title, items, empty) {
+      var cards = items.length
+        ? items.map(hubEventCardHtml).join("")
+        : '<p class="empty">' + empty + "</p>";
+      return '<h3 class="hub-ev-section-title">' + title + "</h3>" + cards;
+    }
+    target.innerHTML =
+      section("Krewe of Shamrock Events", krewe, "No upcoming Krewe of Shamrock events just now.") +
+      section("IKC Events", ikc, "No upcoming Inter-Krewe Council events just now.");
     prepareShare(target);
     mountParadeRsvps(target);
     target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
@@ -1647,7 +1659,7 @@
     var events = document.getElementById("hubEvents");
     events.innerHTML =
       '<section class="app-card"><div class="app-head"><span class="ic">📅</span><div><h2>Events and RSVPs</h2><small>Flyers, full details, addresses, and your RSVPs</small></div></div>' +
-      '<div class="app-body"><p>RSVP to every event, including ticketed events and Inter-Krewe Council dates. Choose Going or Can\'t go.</p>' +
+      '<div class="app-body"><p>Krewe of Shamrock events and Inter-Krewe Council events are listed separately. Choose Going or Can\'t go on each card. Buy tickets stays beside RSVP when an event has tickets.</p>' +
       '<div id="hubMemberEventList"><p class="empty">Loading events…</p></div>' +
       '<p><a class="btn btn-primary" href="event-signup.html">Open event signup</a></p>' +
       '<p style="font-size:16px;color:var(--muted);margin-top:12px;">Attendance feeds Parade Ready and the Craic Cup.</p></div></section>' +

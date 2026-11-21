@@ -64,5 +64,36 @@
     "is_public": true,
     "start_time": "2020-01-01T18:00:00.000Z",
     "location": "Tampa"
+  },
+  "b7fe09b4-cbff-4c86-8007-878b3836041c": {
+    "id": "b7fe09b4-cbff-4c86-8007-878b3836041c",
+    "name": "Holly Jolly Light Up Party (Bar Crawl)",
+    "description": "Four venues, drink specials, and a holiday bar crawl through Seminole Heights.",
+    "event_type": "social",
+    "start_time": "2026-12-12T23:00:00.000Z",
+    "end_time": "2026-12-13T04:00:00.000Z",
+    "location": "Starts at Barrio Tacos, 1822 E 7th Ave, Tampa, FL 33605",
+    "status": "published",
+    "is_public": true,
+    "source": "krewe",
+    "members_only": false,
+    "ticket_payment_url": "https://pci.jotform.com/form/262187545644061",
+    "ticket_price_cents": 2500,
+    "ticket_label": "Bar Crawl Ticket",
+    "flyer_url": "https://oazwkwflgbthojvnclfc.supabase.co/storage/v1/object/public/event-flyers/1795213861016-holly-jolly-light-up-party.jpg"
+  },
+  "28a9251b-abb8-4750-bbcf-39d8e530c8af": {
+    "id": "28a9251b-abb8-4750-bbcf-39d8e530c8af",
+    "name": "Fill the Float Toy Drive",
+    "description": "Inter-Krewe Council toy drive.",
+    "event_type": "social",
+    "start_time": "2026-11-28T21:00:00.000Z",
+    "end_time": "2026-11-30T01:00:00.000Z",
+    "location": "Showmen's Bar & Grill, 10902 South U.S. Highway 41, Ruskin, FL 33570",
+    "status": "published",
+    "is_public": true,
+    "source": "ikc",
+    "members_only": false,
+    "external_url": "https://tockify.com/inter.krewe/detail/1635/1795899600000"
   }
 }

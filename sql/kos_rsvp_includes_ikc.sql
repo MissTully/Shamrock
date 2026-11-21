@@ -358,7 +358,7 @@ begin
       )
   ) order by e.start_time asc nulls last), '[]'::jsonb)
     into v_events
-  from public.events e
+  from public.events e;
 
   if p_event_id is null then
     return jsonb_build_object(
@@ -380,7 +380,7 @@ begin
   )
     into v_event
   from public.events e
-  where e.id = p_event_id
+  where e.id = p_event_id;
 
   if v_event is null then
     return jsonb_build_object(
