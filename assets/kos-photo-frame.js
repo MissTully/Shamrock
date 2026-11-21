@@ -14,6 +14,8 @@
     ".photo-preview{--kos-photo-max-h:420px;--kos-photo-max-w:440px;}",
     "@media (max-width:420px){.member-gallery{--kos-photo-max-h:480px;}.photo-preview{--kos-photo-max-h:360px;}}",
     ".kos-photo-frame > a{display:block;line-height:0;min-width:0;}",
+    ".kos-photo-frame:not(.is-fit) > a,.kos-photo-frame:not(.is-fit) > img{display:block;width:100%;aspect-ratio:3/4;background:#f4efe3;}",
+    ".kos-photo-frame:not(.is-fit) img{width:100%;height:100%;object-fit:contain;}",
     ".kos-photo-frame img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain;image-orientation:from-image;background:#f4efe3;}"
   ].join("");
 

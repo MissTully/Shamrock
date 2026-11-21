@@ -96,6 +96,63 @@ test("member photo frames follow each image, including EXIF portrait", async ({ 
   }
 });
 
+test("unloaded photos keep a frame so later ones can stay lazy", async ({ page }) => {
+  const pending = [];
+  let imageHits = 0;
+  const rows = [];
+  for (let i = 0; i < 8; i++) {
+    rows.push({
+      title: "Photo " + i,
+      url: "http://127.0.0.1:4173/tests/fixtures/gallery-" + (i % 2 ? "wide" : "exif-portrait") + ".jpg?n=" + i,
+      caption: i === 0 ? "" : "Caption " + i,
+      created_at: "2026-11-19T22:0" + i + ":04Z"
+    });
+  }
+  await page.route("**/rest/v1/content_items*", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(rows)
+  }));
+  await page.route("**/tests/fixtures/gallery-*", async (route) => {
+    imageHits += 1;
+    await new Promise((resolve) => pending.push(resolve));
+    await route.continue();
+  });
+  try {
+    await page.setViewportSize({ width: 390, height: 640 });
+    await page.goto("/gallery.html");
+    await page.locator("#memberGallery figure").nth(1).waitFor();
+    await page.waitForTimeout(400);
+    const box = await page.evaluate(() => {
+      const viewH = window.innerHeight;
+      return Array.from(document.querySelectorAll("#memberGallery figure")).map((fig) => {
+        const img = fig.querySelector("img");
+        const link = fig.querySelector("a");
+        return {
+          h: Math.round(fig.getBoundingClientRect().height),
+          linkH: Math.round(link.getBoundingClientRect().height),
+          top: Math.round(fig.getBoundingClientRect().top),
+          lazy: img.getAttribute("loading"),
+          fitted: fig.classList.contains("is-fit"),
+          cap: !!fig.querySelector("figcaption"),
+          viewH
+        };
+      });
+    });
+    expect(box.length).toBe(8);
+    expect(box[0].cap).toBe(false);
+    for (const frame of box) {
+      expect(frame.fitted).toBe(false);
+      expect(frame.lazy).toBe("lazy");
+      expect(frame.linkH).toBeGreaterThan(200);
+    }
+    expect(box[box.length - 1].top).toBeGreaterThan(box[0].viewH + 1200);
+    expect(imageHits).toBeLessThan(box.length);
+  } finally {
+    pending.splice(0).forEach((release) => release());
+  }
+});
+
 test("officer approval thumbnail uses the same frame", async ({ page }) => {
   await page.goto("/gallery.html");
   await page.evaluate((src) => {

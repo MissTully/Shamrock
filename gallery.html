@@ -45,6 +45,10 @@
     border-bottom:4px solid var(--gold);
   }
   .member-gallery a{ display:block; min-width:0; line-height:0; }
+  /* Until the file loads, hold a portrait box so a captionless card does not
+     collapse and every photo below it is not treated as on screen. */
+  .member-gallery figure:not(.is-fit) a{ aspect-ratio:3 / 4; }
+  .member-gallery figure:not(.is-fit) img{ height:100%; }
   .member-gallery img{
     width:100%;
     height:auto;
@@ -205,7 +209,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
-  <script src="assets/kos-photo-frame.js?v=20261121frame2"></script>
+  <script src="assets/kos-photo-frame.js?v=20261121frame3"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
