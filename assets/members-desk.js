@@ -157,8 +157,9 @@
     ".hub-appr .muted{color:var(--muted);font-size:15px;}",
     ".hub-appr-main{flex:1 1 220px;min-width:0;}",
     ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
-    ".hub-media-preview{margin-top:8px;max-width:min(100%,280px);}",
-    ".hub-media-preview img{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid rgba(168,128,28,.35);}",
+    ".hub-media-preview{margin-top:8px;max-width:100%;--kos-photo-max-h:280px;--kos-photo-max-w:220px;}",
+    ".hub-media-preview.kos-photo-frame{margin-inline:0;}",
+    ".hub-media-preview img{display:block;width:100%;height:auto;object-fit:contain;image-orientation:from-image;border-radius:8px;border:1px solid rgba(168,128,28,.35);background:#f6f1e4;}",
     ".hub-media-cap-label{display:block;margin:8px 0 4px;font-size:14px;font-weight:600;color:var(--green-800);}",
     ".hub-media-caption{width:100%;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.45);border-radius:8px;font:inherit;font-size:16px;background:#fff;}",
     ".hub-appr-h{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:18px;}",
@@ -5833,7 +5834,7 @@
         var kind = (q.type === "video") ? "Video" : "Photo";
         var preview = "";
         if (q.url && q.type === "photo") {
-          preview = '<div class="hub-media-preview"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
+          preview = '<div class="hub-media-preview kos-photo-frame"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
         } else if (q.url) {
           preview = '<div class="muted" style="margin-top:4px;"><a href="' + esc(q.url) + '" target="_blank" rel="noopener">Open / preview video</a></div>';
         }
@@ -5911,6 +5912,7 @@
     }
     if (mediaLog.length) html += mediaLogHtml(mediaLog);
     body.innerHTML = html;
+    if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(body);
     body.querySelectorAll("[data-hours-approve]").forEach(function (b) {
       b.addEventListener("click", function () {
         applyHourDecision(client, b.getAttribute("data-hours-approve"), true, b);
