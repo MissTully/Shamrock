@@ -267,7 +267,8 @@ test.describe("public event share buttons", () => {
     const featured = shareBar(page.locator("#featured-event"));
     await featured.scrollIntoViewIfNeeded();
     await expectPublicShareBar(featured, SANTA_ID);
-    await expect(page.locator("#featured-event")).toContainText("Sign in to RSVP");
+    await expect(page.locator("#featured-event a.kos-quiet-rsvp")).toHaveAttribute("href", "/event-signup.html?event=" + SANTA_ID + "#rsvpForm");
+    await expect(page.locator("#featured-event")).not.toContainText("Sign in to RSVP");
 
     const card = page.locator("#eventPreviewStrip .ev-card", { hasText: "Morning Coffee" });
     await expect(card).toContainText("Registration is closed");

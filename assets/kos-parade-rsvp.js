@@ -1,8 +1,8 @@
-/* Member RSVP for parades.
-   Parades stay out of the public guest form. A signed-in member chooses
-   Going or Can't go here. Going reuses rsvp_to_event (event_signups, guest
-   headcount, Clovers). Can't go writes the same row with status cancelled,
-   which Officer Desk already lists outside the headcount.
+/* Member RSVP for the Hub.
+   Public pages use the quiet guest link on event-signup.html instead of
+   Going / Can't go. In the Hub, Going reuses rsvp_to_event (event_signups,
+   guest headcount, Clovers). Can't go writes the same row with status
+   cancelled, which Officer Desk already lists outside the headcount.
    Public pages never print a member phone, email, or street address. */
 (function (root, factory) {
   var api = factory();
@@ -117,7 +117,7 @@
 
   function statusOf(ev) {
     var st = String((ev && (ev.parade_rsvp_status || ev.rsvp_status)) || "").toLowerCase();
-    if (!st && ev && ev.parade_rsvpd) st = "registered";
+    if (!st && ev && (ev.parade_rsvpd || ev.rsvpd)) st = "registered";
     return st;
   }
 
@@ -198,7 +198,8 @@
     var inner = closed ? closedInner(ev) : (signedIn ? controlsInner(ev) : signInInner(id, ev));
     var count = ev.guests_count == null ? "" : String(guestCount(ev));
     var cents = ev.ticket_price_cents == null || ev.ticket_price_cents === "" ? "" : String(ev.ticket_price_cents);
-    return '<div class="kos-parade-rsvp" data-parade-id="' + esc(id) + '"' +
+    var hubClass = signedIn ? " kos-pr-hub" : "";
+    return '<div class="kos-parade-rsvp' + hubClass + '" data-parade-id="' + esc(id) + '"' +
       ' data-parade-name="' + esc(ev.name || "") + '"' +
       ' data-parade-start="' + esc(ev.start_time || "") + '"' +
       ' data-parade-end="' + esc(ev.end_time || "") + '"' +
@@ -236,7 +237,8 @@
       ".kos-parade-rsvp input{width:6.5rem;max-width:100%;min-height:44px;font-size:16px;padding:8px 10px;border:1px solid rgba(168,128,28,.55);border-radius:10px;background:#fff;}",
       ".kos-parade-rsvp .kos-pr-pay{display:inline-flex;align-items:center;min-height:44px;font-weight:700;}",
       ".kos-parade-rsvp a.kos-pr-tickets{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid #8a6a12;background:#fffdf8;color:#14532d;font-weight:700;text-decoration:none;}",
-      ".hub-event-row .kos-parade-rsvp,.hub-ev-detail .kos-parade-rsvp,.app-detail .kos-parade-rsvp{flex:1 1 100%;width:100%;}"
+      ".hub-event-row .kos-parade-rsvp,.hub-ev-detail .kos-parade-rsvp,.app-detail .kos-parade-rsvp{flex:1 1 100%;width:100%;}",
+      ".kos-pr-hub .kos-pr-actions .btn,.kos-pr-hub .kos-pr-actions button,.kos-pr-hub .kos-pr-actions a.btn,.kos-pr-hub a.kos-pr-tickets{width:auto;flex:0 0 auto;min-height:44px;padding:8px 14px;font-size:15px;}"
     ].join("");
     document.head.appendChild(style);
     cssReady = true;

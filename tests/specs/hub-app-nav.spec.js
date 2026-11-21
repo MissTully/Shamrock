@@ -56,8 +56,8 @@ async function eventDetail(page) {
   await expect(detail).toBeVisible();
   await expect(page.locator("#appBack")).toBeVisible();
   await expect(page.locator("#appBack")).toContainText("Back");
-  await expect(page.locator("#appRsvpBtn")).toBeVisible();
   await expect(page.locator("#appCalBtn")).toBeVisible();
+  await expect(detail.locator(".kos-pr-going, .kos-pr-closed, #appRsvpBtn").first()).toBeVisible();
   await expect(page.locator("#hubTabs")).toBeVisible();
   return detail;
 }
@@ -143,9 +143,13 @@ test.describe("Member Hub app navigation", () => {
     await expect(detail).toContainText("Higgins Hall");
     await expect(detail).toContainText("Bring a basket and a friend.");
     await expect(page.locator('#hubTabs [data-hub-tab="hub"]')).toHaveAttribute("aria-current", "page");
-    const rsvpBox = await page.locator("#appRsvpBtn").boundingBox();
+    const going = detail.locator(".kos-pr-going");
+    if (await going.count()) {
+      expect((await going.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    } else {
+      await expect(detail.locator(".kos-pr-closed")).toBeVisible();
+    }
     const calBox = await page.locator("#appCalBtn").boundingBox();
-    expect(rsvpBox.height).toBeGreaterThanOrEqual(44);
     expect(calBox.height).toBeGreaterThanOrEqual(44);
     const backBox = await page.locator("#appBack").boundingBox();
     expect(backBox.height).toBeGreaterThanOrEqual(44);
@@ -182,13 +186,11 @@ test.describe("Member Hub app navigation", () => {
     }, Object.assign({}, NEXT, { rsvpd: true }));
     await page.locator('[data-hub-tab="events"]').click();
     const hit = page.locator('#hubMemberEventList [data-app-event="evt-basket"]');
-    await expect(hit).toContainText("Already RSVP'd");
+    await expect(hit).toContainText("You're going");
     await expect(hit.locator(".app-rsvp")).toHaveClass(/is-going/);
     await hit.locator(".app-event-copy").click();
     await eventDetail(page);
-    await expect(page.locator("#appRsvpBtn")).toBeDisabled();
-    await expect(page.locator("#appRsvpBtn")).toHaveText("Already RSVP'd");
-    await expect(page.locator("#appCancelRsvp")).toHaveText("Cancel RSVP");
+    await expect(page.locator("#appEventDetail")).toContainText("You're going");
     await expect(page.locator("#appCalBtn")).toHaveText("Add to my calendar");
     assertHealthy(expect, report, "already rsvpd detail");
   });

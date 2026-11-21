@@ -829,6 +829,20 @@
     return bits.join("");
   }
 
+  // Krewe events are announced in Tampa time, not the browser's zone.
+  function easternStamp(iso, options) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var opts = { timeZone: "America/New_York" };
+    var key;
+    for (key in (options || {})) opts[key] = options[key];
+    return d.toLocaleString("en-US", opts);
+  }
+
+  function easternDay(iso) {
+    return easternStamp(iso, { year: "numeric", month: "2-digit", day: "2-digit" });
+  }
+
   // Full detail block under each Hub event row: flyer, description, times,
   // place, ticket and event links, members-only notes, RSVP status.
   function hubEventDetailHtml(ev, going) {
@@ -847,13 +861,13 @@
     if (ev.start_time) {
       var s0 = new Date(ev.start_time);
       if (!isNaN(s0.getTime())) {
-        var w = s0.toLocaleString([], { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+        var w = easternStamp(ev.start_time, { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
         if (ev.end_time) {
           var e0 = new Date(ev.end_time);
           if (!isNaN(e0.getTime())) {
-            w += (e0.toDateString() === s0.toDateString())
-              ? " to " + e0.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-              : " to " + e0.toLocaleString([], { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+            w += (easternDay(ev.end_time) === easternDay(ev.start_time))
+              ? " to " + easternStamp(ev.end_time, { hour: "numeric", minute: "2-digit" })
+              : " to " + easternStamp(ev.end_time, { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
           }
         }
         facts.push("<b>When:</b> " + esc(w));
@@ -869,7 +883,7 @@
     if (tix) facts.push("<b>Tickets:</b> " + esc(tix));
     if (ev.registration_closes_at) {
       var rc = new Date(ev.registration_closes_at);
-      if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(rc.toLocaleDateString([], { month: "long", day: "numeric" })));
+      if (!isNaN(rc.getTime())) facts.push("<b>Registration closes:</b> " + esc(easternStamp(ev.registration_closes_at, { month: "long", day: "numeric" })));
     }
     var paradeCard = String(ev.event_type || "").toLowerCase() === "parade";
     var paradeStatus = String(ev.parade_rsvp_status || ev.rsvp_status || "").toLowerCase();
@@ -903,19 +917,11 @@
     if (root && window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(root);
   }
 
-  function renderHubMemberEvents(list) {
-    var target = document.getElementById("hubMemberEventList");
-    if (!target) return;
-    var rows = list || [];
-    if (!rows.length) {
-      target.innerHTML = '<p class="empty">No upcoming Shamrock events just now. Check the public calendar for IKC listings.</p>';
-      return;
-    }
-    target.innerHTML = rows.map(function (ev) {
+  function hubEventCardHtml(ev) {
       var when = "";
       if (ev.start_time) {
         var d = new Date(ev.start_time);
-        when = isNaN(d.getTime()) ? String(ev.start_time) : d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        when = isNaN(d.getTime()) ? String(ev.start_time) : easternStamp(ev.start_time, { dateStyle: "medium", timeStyle: "short" });
       } else {
         when = "Date to be announced";
       }
@@ -948,7 +954,27 @@
         (going ? "You're going" : (paradeCant ? "Can't go" : (closed ? "Closed" : "RSVP"))) + "</span>" + calBtn + "</span></div>" +
         eventShareHtml(ev) +
         hubEventDetailHtml(ev, going) + "</article>";
-    }).join("");
+  }
+
+  function renderHubMemberEvents(list) {
+    var target = document.getElementById("hubMemberEventList");
+    if (!target) return;
+    var rows = list || [];
+    var krewe = [];
+    var ikc = [];
+    rows.forEach(function (ev) {
+      if (String(ev.source || "").toLowerCase() === "ikc") ikc.push(ev);
+      else krewe.push(ev);
+    });
+    function section(title, items, empty) {
+      var cards = items.length
+        ? items.map(hubEventCardHtml).join("")
+        : '<p class="empty">' + empty + "</p>";
+      return '<h3 class="hub-ev-section-title">' + title + "</h3>" + cards;
+    }
+    target.innerHTML =
+      section("Krewe of Shamrock Events", krewe, "No upcoming Krewe of Shamrock events just now.") +
+      section("IKC Events", ikc, "No upcoming Inter-Krewe Council events just now.");
     prepareShare(target);
     mountParadeRsvps(target);
     target.querySelectorAll("[data-app-cal]").forEach(function (btn) {
@@ -996,7 +1022,7 @@
   function whenLabel(value) {
     if (!value) return "Date to be announced";
     var d = new Date(value);
-    return isNaN(d.getTime()) ? String(value) : d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    return isNaN(d.getTime()) ? String(value) : easternStamp(value, { dateStyle: "medium", timeStyle: "short" });
   }
 
   function statusPill(ok, yesText, noText) {
@@ -1647,7 +1673,7 @@
     var events = document.getElementById("hubEvents");
     events.innerHTML =
       '<section class="app-card"><div class="app-head"><span class="ic">📅</span><div><h2>Events and RSVPs</h2><small>Flyers, full details, addresses, and your RSVPs</small></div></div>' +
-      '<div class="app-body"><p>RSVP to every event, including ticketed events and Inter-Krewe Council dates. Choose Going or Can\'t go.</p>' +
+      '<div class="app-body"><p>Krewe of Shamrock events and Inter-Krewe Council events are listed separately. Choose Going or Can\'t go on each card. Buy tickets stays beside RSVP when an event has tickets.</p>' +
       '<div id="hubMemberEventList"><p class="empty">Loading events…</p></div>' +
       '<p><a class="btn btn-primary" href="event-signup.html">Open event signup</a></p>' +
       '<p style="font-size:16px;color:var(--muted);margin-top:12px;">Attendance feeds Parade Ready and the Craic Cup.</p></div></section>' +
@@ -2672,10 +2698,10 @@
     var d = new Date(iso);
     if (isNaN(d.getTime())) return null;
     return {
-      month: d.toLocaleDateString([], { month: "short" }).toUpperCase(),
-      day: String(d.getDate()),
-      line: d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · " +
-        d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+      month: easternStamp(iso, { month: "short" }).toUpperCase(),
+      day: easternStamp(iso, { day: "numeric" }),
+      line: easternStamp(iso, { weekday: "short", month: "short", day: "numeric" }) + " · " +
+        easternStamp(iso, { hour: "numeric", minute: "2-digit" })
     };
   }
 

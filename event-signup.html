@@ -205,6 +205,13 @@
         <input id="email" type="email" required autocomplete="email" />
         <div class="hint">We'll use this to confirm your spot and send event reminders.</div>
 
+        <label for="phone">Phone</label>
+        <input id="phone" type="tel" autocomplete="tel" inputmode="tel" />
+        <div class="hint">Optional. Officers use this when they need to reach a guest.</div>
+
+        <p id="memberHubHint" hidden class="hint"></p>
+        <p id="paradeGuestHint" hidden class="hint">Parade guest fees are paid in the Member Hub. This form saves your name, email, phone, and how many guests you are bringing.</p>
+
         <div class="row" id="guestsRow">
           <div>
             <label for="guests">Guests you're bringing</label>
@@ -362,7 +369,6 @@
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
   <script src="assets/kos-calendar.js?v=20261116flyer1"></script>
-  <script src="assets/kos-parade-rsvp.js?v=20261120rsvp2"></script>
   <script src="assets/kos-share.js?v=20261119links2"></script>
   <script src="assets/kos-linkify.js?v=20261119links3"></script>
 
@@ -395,6 +401,7 @@
     }
     function shareBlock(ev) {
       if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+      if (String(ev.source || "").toLowerCase() === "ikc") return "";
       const st = String(ev.status || "published").toLowerCase();
       if (st !== "published" && st !== "live") return "";
       if (ev.is_public === false) return "";
@@ -445,14 +452,15 @@
     }
 
     function memberRsvpHtml(ev) {
-      if (!ev || !ev.id || !window.kosParadeRsvp || typeof window.kosParadeRsvp.fallbackHtml !== "function") return "";
-      return window.kosParadeRsvp.fallbackHtml(ev);
+      if (!window.kosCalendar || typeof window.kosCalendar.publicRsvpHtml !== "function") return "";
+      return window.kosCalendar.publicRsvpHtml(ev);
     }
-
-    function mountMemberRsvp(root) {
-      if (window.kosParadeRsvp && typeof window.kosParadeRsvp.mountAll === "function") {
-        window.kosParadeRsvp.mountAll(root || document, { client: supabase, publicPage: true });
-      }
+    function ticketButtonHtml(ev) {
+      const pay = ticketCheckoutUrlFor(ev);
+      if (!pay) return "";
+      const cents = Number(ev && ev.ticket_price_cents);
+      const price = cents > 0 ? ((cents % 100 === 0) ? " ($" + (cents / 100) + ")" : " ($" + (cents / 100).toFixed(2) + ")") : "";
+      return '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy tickets' + price + "</a>";
     }
 
     function membersOnlyLabel() {
@@ -509,7 +517,7 @@
       sub.textContent = officerPinned ? "Highlighted on the public site" : "Full details for our next public Krewe event";
       const closedFeat = isRegistrationClosed(event);
       const membersOnlyFeat = !!event.members_only;
-      const ctaFeat = memberRsvpHtml(event) +
+      const ctaFeat = ticketButtonHtml(event) + memberRsvpHtml(event) +
         (String(event.source || "").toLowerCase() === "ikc" && event.external_url
           ? '<a class="btn" href="' + esc(event.external_url) + '" target="_blank" rel="noopener noreferrer">Details on the host krewe\'s page</a>'
           : "");
@@ -525,7 +533,6 @@
         '<a class="btn" href="#event-previews">Browse all upcoming</a></div>' +
         shareBlock(event) + '</div>';
       bindFlyerFallback(content);
-      mountMemberRsvp(content);
       if (window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(content);
     }
 
@@ -563,7 +570,7 @@
         }
         const closedPrev = isRegistrationClosed(ev);
         const membersOnlyPrev = !!ev.members_only;
-        const cta = memberRsvpHtml(ev) +
+        const cta = ticketButtonHtml(ev) + memberRsvpHtml(ev) +
           (String(ev.source || "").toLowerCase() === "ikc" && ev.external_url
             ? '<a class="btn" href="' + esc(ev.external_url) + '" target="_blank" rel="noopener noreferrer">Details on the host krewe\'s page</a>'
             : "");
@@ -584,7 +591,6 @@
           '</div>' + shareBlock(ev) + '</div></article>';
       }).join("");
 
-      mountMemberRsvp(strip);
       if (window.kosShare && typeof window.kosShare.prepare === "function") window.kosShare.prepare(strip);
       strip.querySelectorAll("[data-preview-event]").forEach((a) => {
         a.addEventListener("click", () => {
@@ -624,7 +630,7 @@
       }
       eventSelect.innerHTML = '<option value="">Select an event…</option>';
       // Month grids below are Krewe-only. Dates to Remember keeps IKC.
-      // Every listed event offers member RSVP. Ticket links sit beside it.
+      // Krewe events use the guest form. Ticket links sit beside the quiet RSVP.
       const ours = data.filter((ev)=> ev.source !== "ikc");
       let rafflePrices = {};
       try {
@@ -668,6 +674,7 @@
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc}${ev.members_only ? " · Members only" : ""})`;
         if (ev.members_only) opt.dataset.membersOnly = "1";
+        if (ev.event_type) opt.dataset.eventType = String(ev.event_type).toLowerCase();
         const redirect = ticketCheckoutUrl(ev);
         if (redirect) {
           opt.dataset.redirect = redirect;
@@ -784,6 +791,19 @@
           mealSelect.value = "";
         }
       }
+      function paintParadeHint(opt) {
+        const hint = document.getElementById("paradeGuestHint");
+        if (!hint) return;
+        hint.hidden = !(opt && opt.dataset.eventType === "parade");
+      }
+      function paintMemberHint() {
+        const hint = document.getElementById("memberHubHint");
+        if (!hint || hint.dataset.signedIn !== "1") return;
+        const id = eventSelect.value;
+        const hub = id ? ("members.html#events/" + encodeURIComponent(id)) : "members.html#events";
+        hint.hidden = false;
+        hint.innerHTML = 'You\'re signed in. <a href="' + hub + '">RSVP in the Member Hub</a>. This form uses the email on your member record.';
+      }
       function paintTicketAside(opt) {
         const aside = document.getElementById("ticketAside");
         if (!aside) return;
@@ -811,6 +831,8 @@
         btn.disabled = false;
         syncCollectFields();
         paintTicketAside(opt);
+        paintParadeHint(opt);
+        paintMemberHint();
         if (opt && opt.dataset.membersOnly === "1") {
           haveTicketWrap.style.display = "none";
           haveTicketBox.checked = false;
@@ -899,6 +921,7 @@
         }
       }
       syncSignupButton();
+      recognizeMember();
       const dropdownActions = { members: 1, closed: 1, tickets: 1, "tickets-soon": 1, rsvp: 1 };
       const signupEvents = (ours || []).filter((ev) => {
         if (window.kosCalendar && window.kosCalendar.publicSignupAction && window.kosCalendar.signupDropdownAction) {
@@ -1112,7 +1135,6 @@
         } else {
           listEl.innerHTML = dated.map((ev)=> row(ev, formatWhen(ev))).join("") +
             undated.map((ev)=> row(ev, undatedWhen(ev))).join("");
-          mountMemberRsvp(listEl);
         }
       }
     }
@@ -1167,7 +1189,8 @@
       const mealChoice = (mealEl && mealWrapEl && mealWrapEl.style.display !== "none")
         ? (mealEl.value || "").trim() || null
         : null;
-      const { data, error } = await supabase.rpc("rsvp_to_event", {
+      const phone = (document.getElementById("phone").value || "").trim();
+      const payload = {
         p_event_id: eventSelect.value,
         p_first_name: document.getElementById("firstName").value.trim(),
         p_last_name: document.getElementById("lastName").value.trim(),
@@ -1181,7 +1204,14 @@
         p_ticket_type: ticketLabel,
         p_payment_status: payStatus,
         p_meal_choice: mealChoice
-      });
+      };
+      if (phone) payload.p_phone = phone;
+      let { data, error } = await supabase.rpc("rsvp_to_event", payload);
+      if (error && phone && /p_phone|schema cache|Could not find the function/i.test(error.message || "")) {
+        delete payload.p_phone;
+        payload.p_note = [note, "Phone: " + phone].filter(Boolean).join(". ");
+        ({ data, error } = await supabase.rpc("rsvp_to_event", payload));
+      }
       if (error) {
         btn.disabled = false; resync();
         showMessage("Something went wrong submitting your RSVP. Please try again.", "error");
@@ -1244,6 +1274,28 @@
         }
       }
     });
+
+    async function recognizeMember() {
+      const hint = document.getElementById("memberHubHint");
+      try {
+        const sessionRes = await supabase.auth.getSession();
+        const session = sessionRes && sessionRes.data && sessionRes.data.session;
+        if (!session) return;
+        const out = await supabase.rpc("get_my_krewe_profile");
+        const profile = out && out.data;
+        if (!profile || !profile.email) return;
+        const first = document.getElementById("firstName");
+        const last = document.getElementById("lastName");
+        const email = document.getElementById("email");
+        const phone = document.getElementById("phone");
+        if (first && !first.value && profile.first_name) first.value = profile.first_name;
+        if (last && !last.value && profile.last_name) last.value = profile.last_name;
+        if (email && !email.value) email.value = profile.email;
+        if (phone && !phone.value && profile.phone) phone.value = profile.phone;
+        if (hint) hint.dataset.signedIn = "1";
+        if (typeof window.__kosSyncSignup === "function") window.__kosSyncSignup();
+      } catch (_) {}
+    }
 
     loadEvents();
   </script>

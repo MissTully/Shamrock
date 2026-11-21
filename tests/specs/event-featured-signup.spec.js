@@ -88,7 +88,8 @@ test("events page keeps a skeleton until featured data arrives, then shows the p
   await expect(img).toBeVisible();
   await expect(img).toHaveAttribute("src", /\/render\/image\/public\/event-flyers\/santafest\.png\?width=900&height=1800&resize=contain&quality=60&format=webp/);
   await expect(img).toHaveAttribute("data-full", santaFlyer);
-  await expect(page.locator("#featured-event")).toContainText("Sign in to RSVP");
+  await expect(page.locator("#featured-event a.kos-quiet-rsvp")).toHaveAttribute("href", "/event-signup.html?event=6918ff19-f232-4ddf-83d7-82f0a141eb95#rsvpForm");
+  await expect(page.locator("#featured-event")).not.toContainText("Sign in to RSVP");
   const order = await page.evaluate(() => {
     const featured = document.getElementById("featured-event").getBoundingClientRect().top;
     const previews = document.getElementById("event-previews").getBoundingClientRect().top;

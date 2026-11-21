@@ -472,9 +472,8 @@
     if (!eventStaysListed(ev, now)) return "hide";
     if (String(ev.source || "").toLowerCase() === "ikc") return "ikc";
     if (String(ev.event_type || "").toLowerCase() === "parade") {
-      // Parades are member RSVPs, not rows on the public guest form.
-      // Signups close once the parade starts. The card stays listed
-      // through the end of the next Eastern day.
+      // Parades stay on the public guest form. Signups close once the
+      // parade starts. The card stays listed through the next Eastern day.
       if (eventHasStarted(ev, now)) return "parade-closed";
       if (ev.registration_closes_at) {
         var paradeCloses = new Date(ev.registration_closes_at);
@@ -495,7 +494,20 @@
 
   function signupDropdownAction(action) {
     return action === "members" || action === "closed" || action === "tickets" ||
-      action === "tickets-soon" || action === "rsvp";
+      action === "tickets-soon" || action === "rsvp" ||
+      action === "parade" || action === "parade-members" || action === "parade-closed";
+  }
+
+  // Quiet public RSVP. Guests use the existing event signup form. Members
+  // who are already signed in are recognized on that form and pointed to the Hub.
+  // Inter-Krewe Council events have no public RSVP. A started event shows
+  // the closed line and no signup link.
+  function publicRsvpHtml(ev, now) {
+    if (!ev || !ev.id) return "";
+    if (String(ev.source || "").toLowerCase() === "ikc") return "";
+    if (eventSignupClosed(ev, now)) return '<span class="kos-rsvp-closed">Registration is closed.</span>';
+    var href = "/event-signup.html?event=" + encodeURIComponent(String(ev.id).trim()) + "#rsvpForm";
+    return '<a class="kos-quiet-rsvp" href="' + href + '">RSVP</a>';
   }
 
   // Public parade cards send members to the parade page, which asks them
@@ -601,6 +613,7 @@
     ticketCheckoutUrl: ticketCheckoutUrl,
     publicSignupAction: publicSignupAction,
     signupDropdownAction: signupDropdownAction,
+    publicRsvpHtml: publicRsvpHtml,
     paradeSignInHref: paradeSignInHref,
     eventHasEnded: eventHasEnded,
     eventHasStarted: eventHasStarted,
