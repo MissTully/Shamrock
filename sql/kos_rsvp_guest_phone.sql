@@ -3,15 +3,19 @@
 -- The owner applies it in the Supabase SQL editor on project
 -- oazwkwflgbthojvnclfc after review. Safe to re-run.
 --
--- Adds a 14-argument rsvp_to_event that accepts p_phone.
--- The existing 13-argument function stays, so current clients keep working
--- until this file is applied. A call that sends p_phone uses this overload.
+-- Replaces the 13-argument rsvp_to_event with one that accepts p_phone.
+-- The old function is dropped here. Leaving both would make a call that
+-- omits p_phone ambiguous, which breaks Member Hub Going and any public
+-- signup that does not send a phone.
+-- Until this file is applied, the public form retries without p_phone.
 --
 -- A new prospect row stores the phone. An existing member keeps the phone
 -- already on file; a blank phone is filled from this RSVP.
 -- Who's coming reads members.phone, so the number shows up there after apply.
 -- Until then, the public form retries without p_phone and stores
 -- "Phone: …" on the signup note.
+
+drop function if exists public.rsvp_to_event(uuid, text, text, text, integer, text, numeric, text, integer, text, text, text, text);
 
 create or replace function public.rsvp_to_event(
   p_event_id uuid,
