@@ -62,7 +62,7 @@ test.describe("Member Hub phone app shell", () => {
     await expect(page.locator("#appNextUp")).toContainText("Higgins Hall");
     await expect(page.locator("#appNextUp .app-rsvp")).toHaveAttribute("data-app-event", "evt-basket");
 
-    const labels = ["Member Card", "RSVP", "Pay Dues", "Chat", "Carpool", "Volunteer", "Shop", "Photos"];
+    const labels = ["Member Card", "RSVP", "Renew", "Chat", "Carpool", "Volunteer", "Shop", "Photos"];
     for (const label of labels) {
       await expect(page.locator(".app-tile", { hasText: label })).toBeVisible();
     }
@@ -118,9 +118,7 @@ test.describe("Member Hub phone app shell", () => {
     const sheet = page.locator("#appSheet");
 
     await page.locator('.app-tile[data-app-go="dues"]').click();
-    await expect(sheet.locator('a[href*="krewe-of-shamrock-membership"]')).toHaveCount(2);
-    await expect(sheet.locator('a[href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"]')).toBeVisible();
-    await expect(sheet.locator('a[href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2"]')).toBeVisible();
+    await expect(sheet).toContainText(/paid for the 20\d\d-\d\d season/);
     await page.locator("#appSheetClose").click();
 
     await page.locator('.app-tile[data-app-go="events"]').click();

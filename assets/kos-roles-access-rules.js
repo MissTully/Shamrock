@@ -41,6 +41,7 @@
     { key: "lockers", label: "Locker rentals", section: "Gear" },
     { key: "payments", label: "Dues and Payments", section: "Money", sensitive: true },
     { key: "send_invoices", label: "Send invoices", section: "Email and invoices", sensitive: true },
+    { key: "renewals", label: "Renewals", section: "Email and invoices", sensitive: true },
     { key: "dues_waivers", label: "Dues waivers", section: "Email and invoices", sensitive: true },
     { key: "email_members", label: "Email members", section: "Email and invoices" },
     { key: "all_krewe", label: "All Krewe Messages", section: "Email and invoices" },
@@ -53,12 +54,12 @@
   ];
 
   var TITLES = [
-    { key: "president", label: "President", kind: "officer", tools: uniq(FULL.concat(MONEY, ["applications", "reports.finance"])) },
+    { key: "president", label: "President", kind: "officer", tools: uniq(FULL.concat(MONEY, ["applications", "reports.finance", "renewals"])) },
     { key: "vice_president", label: "Vice President", kind: "officer", tools: FULL.slice() },
     { key: "secretary", label: "Secretary", kind: "officer", tools: uniq(FULL.concat(MONEY, ["applications"])) },
-    { key: "treasurer", label: "Treasurer", kind: "officer", tools: uniq(FULL.concat(MONEY, ["reports.finance"])) },
+    { key: "treasurer", label: "Treasurer", kind: "officer", tools: uniq(FULL.concat(MONEY, ["reports.finance", "renewals"])) },
     { key: "board_member", label: "Board Member", kind: "board", tools: FULL.slice() },
-    { key: "chair_membership", label: "Committee Chair of Membership", kind: "chair", committee: "Membership", tools: uniq(FULL.concat(MONEY, ["applications"])) },
+    { key: "chair_membership", label: "Committee Chair of Membership", kind: "chair", committee: "Membership", tools: uniq(FULL.concat(MONEY, ["applications", "renewals"])) },
     { key: "chair_bylaws", label: "Committee Chair of Bylaws and Rules", kind: "chair", committee: "Bylaws and Rules", tools: FULL.slice() },
     { key: "chair_float", label: "Committee Chair of Float", kind: "chair", committee: "Float", tools: FULL.slice() },
     { key: "chair_parade", label: "Committee Chair of Parade", kind: "chair", committee: "Parade", tools: FULL.slice() },

@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { collectTicketHolders, inferKind } from "./infer-kind.mjs";
+import { collectTicketHolders, inferKind, membershipYearForPayment } from "./infer-kind.mjs";
 
 type JsonObject = Record<string, unknown>;
 
@@ -336,9 +336,7 @@ Deno.serve(async (req: Request) => {
     ? ticketItems.length
     : Math.max(1, Math.round(numberValue(payment.quantity) ?? 1));
 
-  const membershipYear = numberValue(
-    metadata.membership_year ?? metadata.membershipYear ?? payment.membership_year,
-  );
+  const membershipYear = membershipYearForPayment(metadata, payment, new Date());
   const catalogUrls = await loadDuesCatalogUrls(supabaseUrl, serviceRoleKey);
   const duesUrls = catalogUrls.length ? catalogUrls : SEEDED_DUES_CATALOG_URLS;
   const ticketHolders = collectTicketHolders(payment);
@@ -377,7 +375,7 @@ Deno.serve(async (req: Request) => {
     description,
     product_kind: inferKind(metadata, payment, duesUrls),
     ticket_holders: ticketHolders,
-    ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
+    membership_year: membershipYear,
     // An id-only webhook has no items or phone. Keep the API payment on data
     // so shop receipts and chair emails can read the same shape as a normal event.
     raw: loadedFromApi

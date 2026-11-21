@@ -1,6 +1,17 @@
 // Officer desk Send invoices (Phase 2): catalog quotes, level changes,
 // preview counts, and kos_create_level_invoices plus outbound email.
 const { test, expect } = require("@playwright/test");
+const season = require("../../assets/kos-dues-season.js");
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+function formatDue(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return iso || "";
+  return MONTHS[Number(m[2]) - 1] + " " + Number(m[3]) + ", " + m[1];
+}
+const SEASON_YEAR = String(season.duesSeasonYear(new Date()));
+const DUE_FRESH = formatDue(season.noticeDueDate(null, new Date()));
+const DUE_ON_FILE = formatDue(season.noticeDueDate(SEASON_YEAR + "-06-30", new Date()));
 
 const ADA = "11111111-1111-4111-8111-111111111111";
 const BEA = "22222222-2222-4222-8222-222222222222";
@@ -142,7 +153,8 @@ async function mountInvoices(page) {
     ada: ADA, bea: BEA, cal: CAL, dee: DEE, eve: EVE, finn: FINN, gina: GINA,
     fullUrl: FULL_URL, loaUrl: LOA_URL
   });
-  await page.addScriptTag({ url: "/assets/kos-email-invoices.js?v=20260930inv1" });
+  await page.addScriptTag({ url: "/assets/kos-dues-season.js?v=20261121renew1" });
+  await page.addScriptTag({ url: "/assets/kos-email-invoices.js?v=20261121renew1" });
   await expect(page.locator("#hubSendInvoices")).toBeVisible({ timeout: 8000 });
 }
 
@@ -150,7 +162,7 @@ test("Send invoices quotes the catalog, changes level, and previews skips", asyn
   await mountInvoices(page);
   const card = page.locator("#hubSendInvoices");
 
-  await expect(card.locator("#hubInvYear")).toHaveValue("2026");
+  await expect(card.locator("#hubInvYear")).toHaveValue(SEASON_YEAR);
   await expect(card.locator("#hubInvExclude")).toBeChecked();
   await expect(card.locator("#hubInvCatalog")).toContainText("Full · $375.00");
   await expect(card.locator("#hubInvCatalog")).toContainText("Associate · $450.00");
@@ -230,7 +242,7 @@ test("Create invoices calls the level RPC and does not email paid or elected off
   const calls = await page.evaluate(() => window.__kosInvoiceCalls);
   const created = calls.filter((c) => c.name === "kos_create_level_invoices");
   expect(created).toHaveLength(1);
-  expect(created[0].args.p_year).toBe(2026);
+  expect(created[0].args.p_year).toBe(Number(SEASON_YEAR));
   expect(created[0].args.p_exclude_elected_officers).toBe(true);
   expect(created[0].args.p_member_ids.sort()).toEqual([BEA, CAL, DEE, FINN].sort());
 
@@ -244,15 +256,15 @@ test("Create invoices calls the level RPC and does not email paid or elected off
   const beaMail = emails.find((c) => c.args.p_member_ids.includes(BEA));
   const finnMail = emails.find((c) => c.args.p_member_ids.includes(FINN));
   expect(beaMail.args.p_audience).toBe("selected");
-  expect(beaMail.args.p_subject).toBe("Krewe of Shamrock dues invoice (2026)");
+  expect(beaMail.args.p_subject).toBe("Krewe of Shamrock dues invoice (" + SEASON_YEAR + ")");
   expect(beaMail.args.p_body_html).toContain("Associate");
   expect(beaMail.args.p_body_html).toContain("$450.00");
-  expect(beaMail.args.p_body_html).toContain("June 30, 2026");
+  expect(beaMail.args.p_body_html).toContain(DUE_ON_FILE);
   expect(beaMail.args.p_body_html).toContain("treasurer@kreweofshamrock.com");
   expect(beaMail.args.p_body_html).not.toContain("zeffy.com");
   expect(finnMail.args.p_body_html).toContain("Full");
   expect(finnMail.args.p_body_html).toContain("$375.00");
-  expect(finnMail.args.p_body_html).toContain("June 30, 2026");
+  expect(finnMail.args.p_body_html).toContain(DUE_FRESH);
   expect(finnMail.args.p_body_html).toContain(FULL_URL);
   expect(finnMail.args.p_body_html).not.toContain(LOA_URL);
 
