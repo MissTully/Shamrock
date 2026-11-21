@@ -205,7 +205,7 @@
     <span class="label" id="kreweMusicLabel">Tap for a tune ☘</span>
   </div>
   <script src="assets/krewe.js?v=20261119mobile1" defer></script>
-  <script src="assets/kos-photo-frame.js?v=20261121frame1"></script>
+  <script src="assets/kos-photo-frame.js?v=20261121frame2"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
     const supabase = createClient("https://oazwkwflgbthojvnclfc.supabase.co","sb_publishable_aMCyVxkiolMuBt9_R990CA_xQmXLaaS");
@@ -247,7 +247,7 @@
           const caption = (r.caption || "").trim();
           const alt = caption || "Krewe of Shamrock photo";
           const capHtml = caption ? `<figcaption>${esc(caption)}</figcaption>` : "";
-          return `<figure class="kos-photo-frame"><a href="${esc(r.url)}" target="_blank" rel="noopener"><img src="${esc(r.url)}" alt="${esc(alt)}"></a>${capHtml}</figure>`;
+          return `<figure class="kos-photo-frame"><a href="${esc(r.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(r.url)}" alt="${esc(alt)}"></a>${capHtml}</figure>`;
         }).join("");
         grid.hidden = false;
         if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(grid);

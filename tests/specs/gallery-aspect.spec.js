@@ -6,6 +6,7 @@ const path = require("path");
 const WIDE = "/tests/fixtures/gallery-wide.jpg";
 const EXIF = "/tests/fixtures/gallery-exif-portrait.jpg";
 const EXIF_FILE = path.join(__dirname, "../fixtures/gallery-exif-portrait.jpg");
+const EXIF_180 = path.join(__dirname, "../fixtures/gallery-exif-180.jpg");
 
 function photoRows() {
   const origin = "http://127.0.0.1:4173";
@@ -74,6 +75,8 @@ test("member photo frames follow each image, including EXIF portrait", async ({ 
     const landscape = box.frames.find((f) => f.nw > f.nh);
     expect(portrait, "oriented portrait at " + width).toBeTruthy();
     expect(landscape, "landscape at " + width).toBeTruthy();
+    const loading = await page.locator("#memberGallery img").first().getAttribute("loading");
+    expect(loading, "lazy at " + width).toBe("lazy");
     for (const frame of box.frames) {
       expect(frame.fitted).toBe(true);
       expect(frame.fit).toBe("contain");
@@ -170,4 +173,37 @@ test("share form turns a sideways phone JPEG upright before upload", async ({ pa
   expect(info.ph).toBeGreaterThan(info.pw);
   expect(info.fit).toBe("contain");
   expect(Math.abs(info.pw / info.ph - info.w / info.h)).toBeLessThan(0.08);
+});
+
+test("share form keeps a 180 degree phone JPEG upright", async ({ page }) => {
+  await page.goto("/share.html?type=photo");
+  await page.evaluate(() => {
+    const gate = document.getElementById("gate");
+    if (gate) gate.style.display = "none";
+    const main = document.getElementById("mainContent");
+    if (main) main.style.display = "block";
+  });
+  await page.locator("#filePhoto").setInputFiles(EXIF_180);
+  await page.locator("#photoPreviewWrap.is-fit img").waitFor();
+  const info = await page.evaluate(async () => {
+    const file = document.getElementById("filePhoto").files[0];
+    const orient = window.kosReadJpegOrientation(await file.arrayBuffer());
+    const bmp = await createImageBitmap(file, { imageOrientation: "none" });
+    const canvas = document.createElement("canvas");
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(bmp, 0, 0);
+    const top = ctx.getImageData(Math.floor(bmp.width / 2), 2, 1, 1).data;
+    const bottom = ctx.getImageData(Math.floor(bmp.width / 2), bmp.height - 3, 1, 1).data;
+    bmp.close();
+    return {
+      orient,
+      top: [top[0], top[1], top[2]],
+      bottom: [bottom[0], bottom[1], bottom[2]]
+    };
+  });
+  expect(info.orient).toBe(1);
+  expect(info.top[2]).toBeGreaterThan(info.top[0] + 40);
+  expect(info.bottom[0]).toBeGreaterThan(info.bottom[2] + 40);
 });

@@ -92,27 +92,6 @@
     return { orientation: orientation || 1, width: width, height: height };
   }
 
-  function canvasSize(width, height, orientation) {
-    if (orientation >= 5 && orientation <= 8) return { w: height, h: width };
-    return { w: width, h: height };
-  }
-
-  function drawOriented(ctx, bitmap, orientation) {
-    var w = bitmap.width;
-    var h = bitmap.height;
-    switch (orientation) {
-      case 2: ctx.setTransform(-1, 0, 0, 1, w, 0); break;
-      case 3: ctx.setTransform(-1, 0, 0, -1, w, h); break;
-      case 4: ctx.setTransform(1, 0, 0, -1, 0, h); break;
-      case 5: ctx.setTransform(0, 1, 1, 0, 0, 0); break;
-      case 6: ctx.setTransform(0, 1, -1, 0, h, 0); break;
-      case 7: ctx.setTransform(0, -1, -1, 0, h, w); break;
-      case 8: ctx.setTransform(0, -1, 1, 0, 0, w); break;
-      default: ctx.setTransform(1, 0, 0, 1, 0, 0); break;
-    }
-    ctx.drawImage(bitmap, 0, 0);
-  }
-
   function jpegName(file) {
     var name = (file && file.name) || "photo.jpg";
     if (/\.jpe?g$/i.test(name)) return name;
@@ -130,21 +109,20 @@
     var blob = new Blob([buffer], { type: "image/jpeg" });
     var bitmap = null;
     try {
+      // createImageBitmap applies EXIF even when imageOrientation is "none"
+      // in current Chrome. A second manual turn flips orientation 3 upside
+      // down and strips the tag. Draw the oriented bitmap once.
       try {
-        bitmap = await createImageBitmap(blob, { imageOrientation: "none" });
+        bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" });
       } catch (e1) {
         bitmap = await createImageBitmap(blob);
       }
-      var already = bitmap.width === info.height && bitmap.height === info.width && info.width !== info.height;
-      var orientation = already ? 1 : info.orientation;
-      var size = already ? { w: bitmap.width, h: bitmap.height } : canvasSize(bitmap.width, bitmap.height, orientation);
       var canvas = document.createElement("canvas");
-      canvas.width = size.w;
-      canvas.height = size.h;
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
       var ctx = canvas.getContext("2d");
       if (!ctx) return file;
-      if (already) ctx.drawImage(bitmap, 0, 0);
-      else drawOriented(ctx, bitmap, orientation);
+      ctx.drawImage(bitmap, 0, 0);
       var out = await new Promise(function (resolve) {
         canvas.toBlob(resolve, "image/jpeg", 0.92);
       });
@@ -180,7 +158,6 @@
     img.dataset.kosFitBound = "1";
     img.addEventListener("load", function () { applyFit(frame, img); });
     if (img.complete && img.naturalWidth) applyFit(frame, img);
-    else if (img.decode) img.decode().then(function () { applyFit(frame, img); }).catch(function () {});
   }
 
   function kosFitPhotoFrames(root) {
