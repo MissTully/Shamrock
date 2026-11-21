@@ -147,6 +147,19 @@ test("a named attendee does not inherit the purchaser email, and one ticket is o
   assert.equal(buyerOnly.length, 1);
   assert.equal(buyerOnly[0].email, "alex@example.com");
   assert.equal(buyerOnly[0].name, "Alex Kelly");
+
+  const contactAndBuyer = collectTicketHolders({
+    items: [{
+      type: "ticket",
+      name: "Full Membership",
+      amount: 37500,
+      contact: { email: "blair@example.com", name: "Blair Kelly" },
+      buyer: { email: "alex@example.com", name: "Alex Kelly" },
+    }],
+  });
+  assert.equal(contactAndBuyer.length, 1);
+  assert.equal(contactAndBuyer[0].email, "alex@example.com");
+  assert.equal(contactAndBuyer[0].name, "Alex Kelly");
 });
 
 test("dues migration marks each holder once and is not a live update", () => {

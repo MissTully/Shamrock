@@ -266,7 +266,12 @@ const peopleOnItem = (item) => {
     push(guest);
   }
   if (holders.length) return holders;
-  for (const key of ["contact", "buyer"]) push(item[key]);
+  // No attendee. One purchaser stands for the ticket. Buyer wins over contact
+  // so a ticket that lists both does not mark two members.
+  const buyer = asObject(item.buyer);
+  const contact = asObject(item.contact);
+  if (Object.keys(buyer).length) holders.push(buyer);
+  else if (Object.keys(contact).length) holders.push(contact);
   return holders;
 };
 
