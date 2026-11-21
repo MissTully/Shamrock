@@ -155,7 +155,12 @@
     "@media (max-width:520px){.hub-prof-grid{grid-template-columns:1fr;}}",
     ".hub-appr{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;border:1px solid rgba(168,128,28,.3);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fffdf4;flex-wrap:wrap;}",
     ".hub-appr .muted{color:var(--muted);font-size:15px;}",
+    ".hub-appr-main{flex:1 1 220px;min-width:0;}",
     ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
+    ".hub-media-preview{margin-top:8px;max-width:min(100%,280px);}",
+    ".hub-media-preview img{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid rgba(168,128,28,.35);}",
+    ".hub-media-cap-label{display:block;margin:8px 0 4px;font-size:14px;font-weight:600;color:var(--green-800);}",
+    ".hub-media-caption{width:100%;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.45);border-radius:8px;font:inherit;font-size:16px;background:#fff;}",
     ".hub-appr-h{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:18px;}",
     ".hub-claim{margin-top:0;}",
     ".hub-claim label{display:block;font-size:15px;color:var(--muted);margin:10px 0 3px;}",
@@ -5535,12 +5540,35 @@
     });
   }
 
+  function rpcMissesCaption(err) {
+    var msg = String((err && err.message) || err || "");
+    return /schema cache|could not find the function|PGRST202/i.test(msg);
+  }
+
   async function decideApproval(client, fn, args, btn) {
     if (btn) btn.disabled = true;
     try {
       var res = await client.rpc(fn, args);
       if (res.error) throw res.error;
     } catch (e) {
+      var captionPending = fn === "approve_content_item" && args && Object.prototype.hasOwnProperty.call(args, "p_caption");
+      if (captionPending && rpcMissesCaption(e)) {
+        if (args.p_caption) {
+          alert("The caption could not be saved. Apply the gallery caption update in Supabase, then approve again.");
+          if (btn) btn.disabled = false;
+          return;
+        }
+        try {
+          var again = { p_id: args.p_id };
+          if (args.p_note) again.p_note = args.p_note;
+          var res2 = await client.rpc(fn, again);
+          if (res2.error) throw res2.error;
+        } catch (e2) {
+          alert("Couldn't complete that: " + ((e2 && e2.message) || e2));
+        }
+        loadApprovals(client);
+        return;
+      }
       alert("Couldn't complete that: " + ((e && e.message) || e));
     }
     loadApprovals(client);
@@ -5805,15 +5833,22 @@
         var kind = (q.type === "video") ? "Video" : "Photo";
         var preview = "";
         if (q.url && q.type === "photo") {
-          preview = '<div style="margin-top:6px;"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="" style="max-width:140px;max-height:100px;border-radius:8px;object-fit:cover;border:1px solid rgba(168,128,28,.35);" /></a></div>';
+          preview = '<div class="hub-media-preview"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
         } else if (q.url) {
           preview = '<div class="muted" style="margin-top:4px;"><a href="' + esc(q.url) + '" target="_blank" rel="noopener">Open / preview video</a></div>';
         }
+        var captionField = "";
+        if (q.type !== "video") {
+          var capId = "mediaCap-" + String(q.id || "").replace(/[^a-zA-Z0-9_-]/g, "");
+          captionField = '<label class="hub-media-cap-label" for="' + esc(capId) + '">Caption on the gallery</label>' +
+            '<input class="hub-media-caption" id="' + esc(capId) + '" data-media-caption="' + esc(q.id) + '" type="text" maxlength="240" value="' + esc(q.caption || "") + '" placeholder="Optional. Shown under the photo." />';
+        }
         html += '<div class="hub-appr">' +
-          '<div><b>' + esc(q.submitter_name || "Member") + '</b> <span class="muted">' + esc(kind) + (when ? (" · " + esc(when) + " UTC") : "") + '</span>' +
+          '<div class="hub-appr-main"><b>' + esc(q.submitter_name || "Member") + '</b> <span class="muted">' + esc(kind) + (when ? (" · " + esc(when) + " UTC") : "") + '</span>' +
           '<div class="muted"><b>' + esc(q.title || "(untitled)") + '</b></div>' +
-          (q.notes ? '<div class="muted">' + esc(q.notes) + '</div>' : "") +
+          (q.notes ? '<div class="muted">Notes: ' + esc(q.notes) + '</div>' : "") +
           preview +
+          captionField +
           '</div><div class="hub-appr-btns">' +
           '<button class="btn btn-primary" data-media-approve="' + esc(q.id) + '">Approve</button>' +
           '<button class="btn" data-media-deny="' + esc(q.id) + '">Deny</button>' +
@@ -5889,7 +5924,11 @@
     });
     body.querySelectorAll("[data-media-approve]").forEach(function (b) {
       b.addEventListener("click", function () {
-        decideApproval(client, "approve_content_item", { p_id: b.getAttribute("data-media-approve") }, b);
+        var id = b.getAttribute("data-media-approve");
+        var cap = body.querySelector('[data-media-caption="' + id + '"]');
+        var args = { p_id: id };
+        if (cap) args.p_caption = cap.value.trim();
+        decideApproval(client, "approve_content_item", args, b);
       });
     });
     body.querySelectorAll("[data-media-deny]").forEach(function (b) {
