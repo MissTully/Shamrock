@@ -2779,6 +2779,7 @@
       window.kosRenew.open({
         paid: !!(state.parade && state.parade.dues_paid),
         membership_level: (state.parade && state.parade.membership_level) || (window.kosProfile && window.kosProfile.membership_level),
+        membership_status: state.membershipStatus || (state.parade && state.parade.membership_status) || (window.kosProfile && window.kosProfile.membership_status),
         parade: state.parade || null
       });
       return;
@@ -4069,7 +4070,7 @@
     var facts = [];
     if (p.officer_title) facts.push("🎖 " + esc(p.officer_title));
     else if (p.member_role) facts.push("Role: " + esc(p.member_role));
-    if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(p.membership_status || state.membershipStatus));
+    if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(shownMembershipStatus(p.membership_status || state.membershipStatus)));
     if (p.phone) facts.push('📞 <a href="tel:' + esc(String(p.phone).replace(/[^0-9+]/g, "")) + '" style="color:inherit;">' + esc(p.phone) + "</a>");
     if (p.hometown) facts.push("🏠 " + esc(p.hometown));
     if (p.street_address || p.city) {
@@ -4429,7 +4430,6 @@
     approved: "active",
     declined: "declined",
     archived: "archived",
-    renewal: "pending-renewal",
     prospect: "prospect"
   };
 
@@ -4499,7 +4499,6 @@
       approved: countStatus(rows, "active"),
       declined: countStatus(rows, "declined"),
       archived: countStatus(rows, "archived"),
-      renewal: countStatus(rows, "pending-renewal"),
       prospect: countStatus(rows, "prospect")
     };
     state.applicationCount = state.applicationCounts["new"];
@@ -4512,7 +4511,7 @@
       return;
     }
     var asked = state.applicationBucket || "new";
-    if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "renewal" && asked !== "prospect" && data.bucket === "new") {
+    if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "prospect" && data.bucket === "new") {
       state.applicationRows = [];
       state.applicationLoadError = asked === "board"
         ? "This pipeline needs the database update in sql/kos_membership_pipeline_dashboard.sql."
@@ -4582,6 +4581,11 @@
     return '<p class="hub-pipe-meta hub-pipe-phone">Phone: <a href="tel:' + esc(href) + '">' + esc(raw) + "</a></p>";
   }
 
+  function shownMembershipStatus(status) {
+    if (status === "pending-renewal") return "Pending dues";
+    return status || "";
+  }
+
   function applicationStatusLabel(status) {
     if (status === "pending-new") return "New interest";
     if (status === "background-check") return "Background check fee pending";
@@ -4591,7 +4595,7 @@
     if (status === "active") return "Member";
     if (status === "declined") return "Declined";
     if (status === "archived") return "Withdrawn";
-    if (status === "pending-renewal") return "Renewal";
+    if (status === "pending-renewal") return "Pending dues";
     if (status === "prospect") return "Event prospect";
     return "New interest";
   }
@@ -4705,7 +4709,6 @@
     var status = row && row.membership_status || "";
     if (status === "pending-new") return "new";
     if (status === "prospect") return "prospect";
-    if (status === "pending-renewal") return "renewal";
     if (status === "declined") return "declined";
     if (status === "archived") return "archived";
     if (status === "active") return "active";
@@ -4915,7 +4918,7 @@
   }
 
   function applicationOpenStatus(status) {
-    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
+    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "prospect";
   }
 
   function fixtureActor() {
@@ -4951,10 +4954,7 @@
     openOfficerTool("tool:hubApplications", false);
   }
 
-  function applicationFlashFor(action, from) {
-    if (action === "approve" && from === "pending-renewal") {
-      return "Renewed. They are active again and keep their current Member Hub login. No email was sent.";
-    }
+  function applicationFlashFor(action) {
     if (action === "approve") {
       return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership. The note includes the training video.";
     }
@@ -5209,6 +5209,11 @@
         if (btn) btn.disabled = false;
         return;
       }
+      if (action === "start_background_check" && !applicationFullIdsReady(row)) {
+        if (btn) btn.disabled = false;
+        alert("The full application is not in yet. Start the background check after they submit it.");
+        return;
+      }
       var from = row.membership_status;
       var actor = fixtureActor();
       var recent = state.applicationRecent || [];
@@ -5234,7 +5239,7 @@
           var partnerFrom = other.membership_status;
           var move = false;
           if (action === "dues_pending" && (partnerFrom === "bg_in_process" || partnerFrom === "dues-pending")) move = true;
-          if (action === "start_background_check" && partnerFrom === "bg_paid") move = true;
+          if (action === "start_background_check" && partnerFrom === "bg_paid" && applicationFullIdsReady(other)) move = true;
           if (action === "background_check" && (partnerFrom === "pending-new" || partnerFrom === "prospect")) move = true;
           if (action === "approve" && partnerFrom === "dues-pending") move = true;
           if ((action === "decline" || action === "archive") && partnerFrom !== "active") move = true;
@@ -5260,7 +5265,7 @@
       }
       state.applicationRows = applicationsFixture.slice();
       syncApplicationFixtureCounts();
-      state.applicationFlash = applicationFlashFor(action, from);
+      state.applicationFlash = applicationFlashFor(action);
       renderHome();
       renderApplicationsFromState();
       openOfficerTool("tool:hubApplications", false);
@@ -5381,9 +5386,13 @@
     }).join("");
   }
 
-  function buildJoiningPacketPreview(draft) {
+  function buildJoiningPacketPreview(draft, asLevel) {
     var name = "Nia";
+    var auxiliary = asLevel === "auxiliary";
     var locked = joiningPacketLockedBlocks();
+    var feeBlock = auxiliary
+      ? "<p>You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.</p>"
+      : "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>" + joiningPacketLevelHtml(locked.fees);
     var html = "<p>" + joiningPacketPlain(draft.greeting, name) + "</p>"
       + "<p>" + joiningPacketPlain(draft.intro, name) + "</p>"
       + "<h2>" + joiningPacketPlain(draft.finish_heading, name) + "</h2>"
@@ -5391,9 +5400,7 @@
       + joiningPacketButton(JOINING_PACKET_SAMPLE_URL, "Finish your application")
       + "<p>" + joiningPacketPlain(draft.finish_after, name) + "</p>"
       + "<h2>" + joiningPacketPlain(draft.fee_heading, name) + "</h2>"
-      + "<p>You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.</p>"
-      + "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>"
-      + joiningPacketLevelHtml(locked.fees)
+      + feeBlock
       + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
       + "<p>" + joiningPacketPlain(draft.dues_intro, name) + "</p>"
       + "<p>" + joiningPacketPlain(draft.closing, name) + "</p>"
@@ -5429,7 +5436,7 @@
 
   function renderJoiningPacketEditor(card) {
     var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
-    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === JSON.stringify(draft));
+    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === joiningPacketFingerprint(draft));
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
       "<small>Edit the joining packet letter. Send joining packet uses the saved draft.</small></div></div>" +
       '<div class="app-body hub-packet-editor" id="hubPacketEditor">';
@@ -5439,8 +5446,15 @@
     if (state.joiningPacketError) {
       html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
     }
+    var previewAs = state.joiningPacketPreviewAs === "auxiliary" ? "auxiliary" : "standard";
     html += "<h3>Edit joining packet email</h3>" +
-      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>' +
+      '<label for="hubPacketPreviewAs">Preview as</label>' +
+      '<select id="hubPacketPreviewAs">' +
+      '<option value="standard"' + (previewAs === "standard" ? " selected" : "") + ">Standard</option>" +
+      '<option value="auxiliary"' + (previewAs === "auxiliary" ? " selected" : "") + ">Auxiliary</option>" +
+      "</select>" +
+      '<p class="hub-packet-hint">Auxiliary shows the sentence that the $200 dues include the background check, with no fee intro and no fee buttons.</p>';
     JOINING_PACKET_FIELDS.forEach(function (field) {
       var value = draft[field.key] == null ? "" : String(draft[field.key]);
       if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
@@ -5476,6 +5490,15 @@
         var box = document.getElementById("hubPacketPreview");
         if (box) box.hidden = true;
       });
+    });
+    var previewAsSelect = document.getElementById("hubPacketPreviewAs");
+    if (previewAsSelect) previewAsSelect.addEventListener("change", function () {
+      state.joiningPacketPreviewAs = previewAsSelect.value === "auxiliary" ? "auxiliary" : "standard";
+      state.joiningPacketPreview = null;
+      var save = document.getElementById("hubPacketSave");
+      if (save) save.disabled = true;
+      var box = document.getElementById("hubPacketPreview");
+      if (box) box.hidden = true;
     });
     var previewBtn = document.getElementById("hubPacketPreviewBtn");
     if (previewBtn) previewBtn.addEventListener("click", function () { previewJoiningPacket(); });
@@ -5519,10 +5542,18 @@
     } catch (e) {}
   }
 
+  function joiningPacketPreviewAs() {
+    return state.joiningPacketPreviewAs === "auxiliary" ? "auxiliary" : "standard";
+  }
+
+  function joiningPacketFingerprint(draft) {
+    return JSON.stringify({ draft: draft, as: joiningPacketPreviewAs() });
+  }
+
   async function previewJoiningPacket() {
     var draft = readJoiningPacketForm();
     var problem = joiningPacketProblem(draft);
-    var local, client, res, payload, message;
+    var local, client, res, payload, message, template;
     state.joiningPacketMessage = "";
     if (problem) {
       state.joiningPacketError = problem;
@@ -5530,11 +5561,13 @@
       renderApplicationsFromState();
       return;
     }
-    local = buildJoiningPacketPreview(draft);
+    local = buildJoiningPacketPreview(draft, joiningPacketPreviewAs());
     client = window.__kosSb;
     if (!applicationsFixture && client && typeof client.rpc === "function") {
       try {
-        res = await client.rpc("preview_joining_packet_email", { p_template: draft });
+        template = joiningPacketClone(draft);
+        if (joiningPacketPreviewAs() === "auxiliary") template.membership_level = "auxiliary";
+        res = await client.rpc("preview_joining_packet_email", { p_template: template });
         if (res && res.error) throw res.error;
         payload = (res && res.data) || {};
         if (payload.ok === false) throw new Error(payload.message || "Could not preview that letter.");
@@ -5552,7 +5585,7 @@
         }
       }
     }
-    local.fingerprint = JSON.stringify(draft);
+    local.fingerprint = joiningPacketFingerprint(draft);
     state.joiningPacketPreview = local;
     state.joiningPacketError = "";
     renderApplicationsFromState();
@@ -5562,7 +5595,7 @@
     var draft = readJoiningPacketForm();
     var problem = joiningPacketProblem(draft);
     var client, res, payload, message;
-    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== JSON.stringify(draft)) {
+    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== joiningPacketFingerprint(draft)) {
       state.joiningPacketError = problem || "Preview the letter before you save.";
       state.joiningPacketPreview = null;
       renderApplicationsFromState();
@@ -5594,7 +5627,7 @@
       state.joiningPacketDirty = false;
       state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically.";
       state.joiningPacketError = "";
-      state.joiningPacketPreview.fingerprint = JSON.stringify(state.joiningPacketDraft);
+      state.joiningPacketPreview.fingerprint = joiningPacketFingerprint(state.joiningPacketDraft);
     } catch (e) {
       message = (e && e.message) || "Could not save the draft template.";
       if (/function|schema cache|PGRST202|Could not find/i.test(message)) {
@@ -5646,7 +5679,13 @@
 
   function applicationRowsForView() {
     var bucket = state.applicationBucket || "board";
-    var rows = state.applicationRows || [];
+    if (bucket === "renewal") {
+      state.applicationBucket = "board";
+      bucket = "board";
+    }
+    var rows = (state.applicationRows || []).filter(function (r) {
+      return r && r.membership_status !== "pending-renewal";
+    });
     if (bucket === "board") {
       return rows.filter(function (r) {
         var s = r && r.membership_status;
@@ -5751,8 +5790,18 @@
     return card.primary;
   }
 
+  function applicationFullIdsReady(row) {
+    if (!row || row.has_ssn !== true || row.has_dl !== true) return false;
+    var fee = String(row.application_fee_type || row.fee_type || "").toLowerCase();
+    var partnerName = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+    var couple = fee === "dual" || fee === "couple" || !!partnerName;
+    if (couple && (row.has_partner_ssn !== true || row.has_partner_dl !== true)) return false;
+    return true;
+  }
+
   function applicationPrimaryButton(card, stage) {
-    var id = esc(applicationActionRow(card, stage).id);
+    var row = applicationActionRow(card, stage);
+    var id = esc(row.id);
     if (stage === "new" || stage === "prospect") {
       return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Called, send background check email</button>';
     }
@@ -5760,6 +5809,10 @@
       return '<button type="button" class="btn btn-primary" data-app-resend="' + id + '">Send background check email again</button>';
     }
     if (stage === "bg_paid") {
+      if (!applicationFullIdsReady(row)) {
+        return '<button type="button" class="btn btn-primary" data-app-start="' + id + '" disabled>Start background check</button>' +
+          '<p class="hub-pipe-meta" data-app-start-wait>Waiting for the full application</p>';
+      }
       return '<button type="button" class="btn btn-primary" data-app-start="' + id + '">Start background check</button>';
     }
     if (stage === "bg_process") {
@@ -5767,9 +5820,6 @@
     }
     if (stage === "induction") {
       return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (voted in at general meeting)</button>';
-    }
-    if (stage === "renewal") {
-      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve renewal</button>';
     }
     return "";
   }
@@ -5975,6 +6025,7 @@
       renderJoiningPacketEditor(card);
       return;
     }
+    applicationRowsForView();
     var bucket = state.applicationBucket || "board";
     var rows = applicationRowsForView();
     var cards = applicationCards(rows);
@@ -5998,7 +6049,6 @@
       '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
       filterBtn("board", "Pipeline") +
       filterBtn("prospect", "Event prospects") +
-      filterBtn("renewal", "Renewals") +
       filterBtn("declined", "Declined") +
       filterBtn("archived", "Archived") +
       "</div>";
@@ -6046,9 +6096,7 @@
     } else if (!cards.length) {
       html += '<p class="empty">' + (bucket === "prospect"
         ? "No event prospects in this list."
-        : bucket === "renewal"
-          ? "No pending renewals."
-          : "No applications in this list.") + "</p>";
+        : "No applications in this list.") + "</p>";
     } else {
       html += '<div class="hub-pipe-cards">';
       cards.forEach(function (item) { html += applicationCardHtml(item, applicationCardStage(item)); });
@@ -6120,18 +6168,15 @@
         var bodyText = document.getElementById("hubAppConfirmBody");
         var fields = document.getElementById("hubInductionFields");
         var yes = document.getElementById("hubAppConfirmYes");
-        var renewal = row.membership_status === "pending-renewal";
-        var unpaid = renewal ? "" : applicationUnpaidDuesNames(row);
-        if (title) title.textContent = renewal ? "Approve renewal" : "Approve membership (voted in at general meeting)";
+        var unpaid = applicationUnpaidDuesNames(row);
+        if (title) title.textContent = "Approve membership (voted in at general meeting)";
         if (bodyText) {
-          bodyText.textContent = renewal
-            ? "Make " + (applicationPersonName(row) || "this member") + " active again? No email is sent. They keep their current Member Hub login."
-            : "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video."
-              + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve after the vote." : "");
+          bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video."
+            + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve after the vote." : "");
         }
         if (fields) fields.hidden = true;
         if (yes) {
-          yes.textContent = renewal ? "Approve renewal" : "Approve membership";
+          yes.textContent = "Approve membership";
           yes.disabled = false;
         }
         confirmBox.dataset.mode = "approve";
@@ -6180,7 +6225,10 @@
     });
     body.querySelectorAll("[data-app-start]").forEach(function (btn) {
       btn.addEventListener("click", function () {
+        if (btn.disabled) return;
         var id = btn.getAttribute("data-app-start");
+        var startRow = applicationRowById(id);
+        if (startRow && !applicationFullIdsReady(startRow)) return;
         if (!confirm("Start the background check? The card moves to Background check in process. Copy the driver's license and Social Security number from the card into the background check site. No email is sent.")) return;
         decideApplication(window.__kosSb || null, "start_background_check", id, noteFor(id), btn);
       });
@@ -9778,7 +9826,7 @@
           "<td>" + (r.email ? '<a href="mailto:' + cAttr(r.email) + '">' + esc(r.email) + "</a>" : "-") + "</td>" +
           "<td>" + (r.phone ? '<a href="tel:' + cAttr(String(r.phone).replace(/[^0-9+]/g, "")) + '">' + esc(r.phone) + "</a>" : "-") + "</td>" +
           "<td>" + esc((r.committee_interests || []).join(", ") || "-") + "</td>" +
-          "<td>" + esc(r.membership_status || "") + "</td></tr>";
+          "<td>" + esc(shownMembershipStatus(r.membership_status)) + "</td></tr>";
       }).join("") + "</tbody></table></div>";
   }
 
@@ -9911,7 +9959,7 @@
   function outreachRosterLabel(row) {
     if (!row || !row.on_roster) return "Not on roster";
     if (row.membership_status === "prospect") return "Prospect";
-    return "On roster · " + (row.membership_status || "member");
+    return "On roster · " + (shownMembershipStatus(row.membership_status) || "member");
   }
 
   function outreachSourceHtml(row) {

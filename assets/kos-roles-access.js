@@ -186,7 +186,7 @@
 
   function statusLabel(status) {
     if (!status || status === "active") return "";
-    if (status === "pending-renewal") return "Pending renewal";
+    if (status === "pending-renewal") return "Pending dues";
     if (status === "lapsed") return "Lapsed";
     if (status === "inactive") return "Inactive";
     return status;

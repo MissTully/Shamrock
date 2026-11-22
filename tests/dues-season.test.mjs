@@ -52,7 +52,8 @@ test("invoice due date is 30 days out and replaces a past date", () => {
 });
 
 test("renewal SQL is a file for the owner, not a live update", () => {
-  assert.match(sql, /NOT APPLIED/);
+  assert.match(sql, /Applied in production \(Nov 2026\)/);
+  assert.match(sql, /Do not run this against the live project/);
   assert.match(sql, /oazwkwflgbthojvnclfc/);
   assert.match(sql, /krewe_volunteer_season_year/);
   assert.match(sql, /kos_dues_season_year/);

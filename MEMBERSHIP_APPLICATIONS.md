@@ -8,10 +8,11 @@ The live journey is:
 2. Interest email. `submit_membership_application` emails the Membership Chair and the President. An Associate interest adds "Interested in: Associate membership".
 3. Called, send background check email. That letter has the full-application link and the background check fee ($50 individual or $75 couple). It does not include a dues pay link. Auxiliary applicants are told their $200 dues include the background check, and that letter does not also show the $50 or $75 pay buttons.
 4. Fee paid (the Zeffy alert moves the row to Background check fee paid), or **Auxiliary: fee included** for an Auxiliary row still waiting on that fee. The Auxiliary button sends no email.
-5. Start background check and Copy IDs. Copy puts the driver's license or Social Security number on the clipboard. The card stays masked. No email is sent.
+5. Start background check and Copy IDs. The button stays off, with "Waiting for the full application", until the applicant's Social Security number and driver's license are on file. A couple also needs both numbers for the partner. Copy puts a number on the clipboard. The card stays masked. No email is sent.
 6. Proceed with induction, send dues link. One dues block per person. A couple with the same Zeffy link is told to add one ticket per person.
 7. Approve membership after the vote. Only a dues-pending approval sends the welcome letter, including the training video.
-8. Renewals approve with no email. The member becomes active and keeps the Member Hub login they already have.
+
+Returning members are not approved here. Dues payment moves a lapsed or pending dues member back to active. See docs/membership-process.md.
 
 Decline and Archive keep the record on file.
 
@@ -31,10 +32,10 @@ The Membership Chair does not need a new grant. Lisa Sugrue already has the Memb
 
 ## What Approve and Decline do
 
-Pending application means `membership_status = 'pending-new'` (the join form). Renewals (`pending-renewal`) and event RSVP prospects (`prospect`) are separate filters.
+Pending application means `membership_status = 'pending-new'` (the join form). Event RSVP prospects (`prospect`) are a separate filter. `pending-renewal` is pending dues for a returning member. Those people do not appear in Membership Applications, and approve of that status changes nothing.
 
 - **Approve membership (voted in at general meeting)** is the induction-stage button (`dues-pending`). It sets `membership_status` to `active`. `member_role` becomes `member` when it is blank or `prospect`. An existing officer, board, or captain role is left alone. `join_date` is filled only when it is null. The join form already stamps `join_date` from the column default, so a normal new application keeps the date it was submitted. That approval queues the welcome email through `enqueue_email` / `outbound_emails`. It tells them to open the Member Hub, tap **Create or reset your password**, and use the email on the application. Signing up with that email is what links their login (`handle_new_user` matches the roster by email). The letter includes the training video `https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR`. If dues are still unpaid for the applicant or the linked partner, the confirm dialog says so and does not block the vote.
-- **Approve renewal** is the Renewals button (`pending-renewal`). It sets the member active and sends no email. They keep their current Member Hub login. The confirm dialog says that.
+- Approving a `pending-renewal` row returns: "Renewals are automatic when dues are paid. For cash or check, use Officer desk, Renewals, Mark renewed." Decline and archive of an old pending-renewal row still work.
 - **Decline** sets `membership_status` to `declined`. **Archive** sets `archived`. An optional note is stored with the decision. Members rows are never deleted.
 
 Each decision records the actor auth uid, display name, email, timestamp, from/to status, and note in `membership_application_actions`. Only reviewers can read that table. The browser cannot write it directly.
@@ -71,11 +72,10 @@ Join-form applications move through these `membership_status` values. Officers d
 |---|---|---|
 | New interest | `pending-new` | Interest submitted on the join form. No Social Security number or driver's license number yet. |
 | Background check fee pending | `background-check` | Chair clicked **Called, send background check email**. The fee link and the full application are in that letter. |
-| Background check fee paid | `bg_paid` | Zeffy marked the fee paid, or the chair used **Auxiliary: fee included**. |
+| Background check fee paid | `bg_paid` | Zeffy marked the fee paid, or the chair used **Auxiliary: fee included**. **Start background check** stays off until the full application IDs are in. |
 | Background check in process | `bg_in_process` | Chair clicked **Start background check** and can Copy IDs. |
 | Induction pending | `dues-pending` | Chair clicked **Proceed with induction, send dues link**. The dues link and the meeting invitation are out. |
 | Member | `active` | **Approve membership (voted in at general meeting)**. The welcome letter goes out from this step only. |
-| Renewal | `pending-renewal` | Its own list. **Approve renewal** makes them active and sends no email. |
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 
@@ -83,13 +83,13 @@ Join-form applications move through these `membership_status` values. Officers d
 
 From New interest through Background check in process, the card has a **Membership level** select: Full Krewe $375, Associate $450, Auxiliary $200, Leave of absence $100. It is hidden from Induction pending onward. The induction preview uses the chosen level, one dues block per person.
 
-Reviewers can change the joining packet wording from Membership Applications. The button is **Edit joining packet email**. It shows the current subject, greeting, and explanatory paragraphs. Preview uses the sample name Nia and a placeholder token, and it does not send email. **Save draft template** writes one row, id `draft`, in `kos_joining_packet_template`. The background check email reads that draft for the subject and those paragraphs. The finish-application button (a new 21-day token) and the background check pay buttons (`background_check_payments`) are not free-text fields. Payment web addresses are rejected if someone pastes them into the letter. The preview also shows the Auxiliary fee sentence used when the level is auxiliary.
+Reviewers can change the joining packet wording from Membership Applications. The button is **Edit joining packet email**. It shows the current subject, greeting, and explanatory paragraphs. **Preview as** is Standard or Auxiliary. Standard shows the fee intro and the $50 and $75 pay buttons. Auxiliary shows "You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee." and does not show that fee intro or those pay buttons. Preview uses the sample name Nia and a placeholder token, and it does not send email. **Save draft template** writes one row, id `draft`, in `kos_joining_packet_template`. The background check email reads that draft for the subject and those paragraphs. The finish-application button (a new 21-day token) and the background check pay buttons (`background_check_payments`) are not free-text fields. Payment web addresses are rejected if someone pastes them into the letter. `preview_joining_packet_email` reads `membership_level` before the template check strips it, then passes it to the real email builder.
 
 Prospect email can be paused. The switch is `kos_runtime_flags` key `membership_prospect_emails`. `enabled` false means do not email the prospect. **Called, send background check email** still changes the stage. Do not turn that pause on from these files. Background check payment links live on a different key, `background_check_payments`. Dues notes and Zeffy links live on `kos_dues_catalog` (`explainer` and `zeffy_url`). The dues link is sent at induction, not in this letter.
 
 When a full application is on file, each driver's license and Social Security number on the card stays masked (last 4). A Copy button sits beside that line for reviewers who can already open the number. Copy uses `reveal_membership_application_id` and puts the full value on the clipboard. The card stays masked. The number is not emailed. Each copy is the same audited open as before (last 4 only in the history note).
 
-Renewals (`pending-renewal`) and event prospects (`prospect`) stay in their own lists.
+Event prospects (`prospect`) stay in their own list. Pending dues (`pending-renewal`) is not a Membership Applications list.
 
 ## Fees
 
@@ -104,7 +104,7 @@ Officers and board members (`member_role` or `member_roles` / `officer_title` of
 
 ## Background check numbers
 
-The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses **Called, send background check email**. That emails the secure link. The applicant opens the token link and completes the full application. The chair starts the check with **Start background check** after the fee is paid, or after **Auxiliary: fee included**. The dues link is the later induction email, not this step.
+The join form does not collect a Social Security number or a driver's license number. After the call, the Membership Chair uses **Called, send background check email**. That emails the secure link. The applicant opens the token link and completes the full application. The chair starts the check with **Start background check** after the fee is paid, or after **Auxiliary: fee included**, and only after the full application is in. A single applicant needs `has_ssn` and `has_dl`. A couple (`application_fee_type` dual, or a partner name on the row) also needs `has_partner_ssn` and `has_partner_dl`. The database checks `membership_application_ids` for the same slots. If any are missing, the action returns "The full application is not in yet. Start the background check after they submit it." and changes nothing. A linked partner moves only when that partner row passes the same check. The dues link is the later induction email, not this step.
 
 The full application asks for the driver's license number above the Social Security number, with date of birth beside those fields. There is no driver's license state field. Applicant 1 date of birth is always required. Applicant 2 date of birth is required only when a partner is being entered (fee type `dual`). A couple enters the license, the Social Security number, and the date of birth for each person. The form says: "The board uses date of birth, SSN, and driver's license for the background check. Your information is held confidentially."
 
@@ -137,11 +137,13 @@ Do not set `membership_prospect_emails` to enabled. Melissa applies the SQL in t
 
 Until the staged file is applied, the join page still saves the name and address through the older function.
 
-After the pipeline dashboard and the couple Join file are already applied, run these training fixes in order. Each file is safe to run again. None of them sends email by being applied. None of them has been applied to the live project from this change.
+Applied in production (Nov 2026). These four files are already on the live project. Each is safe to run again. None of them sends email by being applied.
 
-1. `sql/kos_renewal_approve_no_welcome.sql` replaces `_apply_membership_application_decision`. Only a dues-pending approval queues the welcome letter. A pending-renewal approval does not.
+1. `sql/kos_renewal_approve_no_welcome.sql` replaced `_apply_membership_application_decision`. Only a dues-pending approval queues the welcome letter. `sql/kos_v6_renewal_lapse.sql` replaces that function again and refuses a pending-renewal approval.
 2. `sql/kos_join_level_interest.sql` replaces `submit_membership_application` (same arguments, plus trailing `p_membership_level`) and adds `set_application_membership_level`.
 3. `sql/kos_induction_letter_couple_note.sql` replaces `kos_induction_letter_html`. A shared Zeffy URL for two or more unpaid people adds one ticket note.
 4. `sql/kos_auxiliary_fee_included.sql` adds `kos_mark_background_fee_included` and replaces `kos_prospect_background_check_email_html` and `send_membership_full_application`. It does not change `kos_dues_catalog`.
 
-Rollback for each file is to put back the previous function from `sql/kos_membership_pipeline_dashboard.sql` or `sql/kos_join_couple_interest.sql`, and to drop `set_application_membership_level` and `kos_mark_background_fee_included` if you are undoing those steps. Do not drop the action check while `level_set` or `background_check_fee_included` rows exist.
+`sql/kos_v6_renewal_lapse.sql` is not applied yet. Apply it only after Melissa approves, in the same release as the Hub that calls the new lapse functions. The header of that file has the rollback.
+
+Rollback for each applied file is to put back the previous function from `sql/kos_membership_pipeline_dashboard.sql` or `sql/kos_join_couple_interest.sql`, and to drop `set_application_membership_level` and `kos_mark_background_fee_included` if you are undoing those steps. Do not drop the action check while `level_set` or `background_check_fee_included` rows exist.

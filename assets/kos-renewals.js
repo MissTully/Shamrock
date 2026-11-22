@@ -1,6 +1,7 @@
 /* Officer Desk: Renewals. Membership Chair, Treasurer, President, and site admins.
    Lists members with no paid dues row for the current June-May season.
    Cash and check are marked here. Reminders use the existing officer email queue.
+   Lapse and reactivation stay hidden until sql/kos_v6_renewal_lapse.sql is applied.
    No reminder cron. */
 (function () {
   var LEVELS = {
@@ -12,8 +13,9 @@
   var STATUS = {
     active: "Active",
     lapsed: "Lapsed",
-    "pending-renewal": "Pending renewal"
+    "pending-renewal": "Pending dues"
   };
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -63,6 +65,24 @@
     return [row.first_name, row.last_name].filter(Boolean).join(" ").trim() || "Member";
   }
 
+  function dateOnly(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ""));
+    return match ? match[1] + "-" + match[2] + "-" + match[3] : "";
+  }
+
+  function formatLongDate(value) {
+    var iso = dateOnly(value);
+    if (!iso) return "";
+    var parts = iso.split("-");
+    return MONTHS[Number(parts[1]) - 1] + " " + Number(parts[2]) + ", " + parts[0];
+  }
+
+  function rpcMissing(err) {
+    var msg = String((err && (err.message || err.details || err)) || "");
+    var code = err && err.code ? String(err.code) : "";
+    return code === "PGRST202" || /PGRST202|schema cache|does not exist|Could not find the function/i.test(msg);
+  }
+
   var state = {
     year: null,
     label: "",
@@ -75,7 +95,16 @@
     msgKind: "",
     showPreview: false,
     confirmed: false,
-    previewOnly: false
+    previewOnly: false,
+    mailMode: "reminder",
+    lapseTools: false,
+    lapseOn: "",
+    canLapseToday: false,
+    editingLapse: false,
+    showLapse: false,
+    lapseChecked: false,
+    lapseCandidates: [],
+    exemptionsMissing: 0
   };
 
   function filtered() {
@@ -91,6 +120,10 @@
 
   function selectedRows() {
     return state.members.filter(function (row) { return state.selected[row.id]; });
+  }
+
+  function selectedLapsed() {
+    return selectedRows().filter(function (row) { return row.membership_status === "lapsed"; });
   }
 
   function reminderBody(row, label, greet) {
@@ -113,7 +146,23 @@
     return html;
   }
 
-  function groupsOf(rows, label) {
+  function reactivationBody(row, label, greet) {
+    var who = greet ? esc(greet) : "friend";
+    var level = levelName(row && row.membership_level);
+    var url = row && row.zeffy_url ? String(row.zeffy_url) : "";
+    var html = "<p>Hi " + who + ",</p>" +
+      "<p>Your Krewe of Shamrock membership lapsed for the " + esc(label) + " season. Pay your " + esc(level) + " dues on Zeffy to reactivate. Once your payment comes in you are active again.</p>";
+    if (url) {
+      html += '<p><a href="' + esc(url) + '">Pay ' + esc(level) + " dues on Zeffy</a></p>";
+    } else {
+      html += "<p>A Zeffy link for this level is not set up yet. Email treasurer@kreweofshamrock.com and we'll help you pay. Please don't send card numbers by email.</p>";
+    }
+    html += "<p>Questions: treasurer@kreweofshamrock.com</p>" +
+      "<p>Slainte,<br>Krewe of Shamrock</p>";
+    return html;
+  }
+
+  function groupsOf(rows, label, bodyFn) {
     var groups = {};
     var order = [];
     rows.forEach(function (row) {
@@ -131,16 +180,18 @@
       return {
         level: key,
         rows: group.rows,
-        html: reminderBody(sample, label, greet)
+        html: bodyFn(sample, label, greet)
       };
     });
   }
 
   function previewHtml(rows) {
+    var bodyFn = state.mailMode === "reactivation" ? reactivationBody : reminderBody;
+    var noun = state.mailMode === "reactivation" ? "reactivation link" : "reminder";
     if (!rows.length) {
-      return '<p class="kos-ren-note">Select at least one member to preview a reminder.</p>';
+      return '<p class="kos-ren-note">Select at least one member to preview a ' + noun + ".</p>";
     }
-    var groups = groupsOf(rows, state.label);
+    var groups = groupsOf(rows, state.label, bodyFn);
     var blocks = groups.map(function (group) {
       var names = group.rows.map(fullName).join(", ");
       return '<article class="kos-ren-mail">' +
@@ -149,9 +200,48 @@
         '</p><p class="kos-ren-mail-to">' + esc(names) + '</p>' +
         '<div class="kos-ren-mail-body">' + group.html + '</div></article>';
     }).join("");
-    return '<p class="kos-ren-count">This reminder would go to <b>' + rows.length + '</b> ' +
+    return '<p class="kos-ren-count">This ' + noun + ' would go to <b>' + rows.length + '</b> ' +
       (rows.length === 1 ? "member" : "members") + '. Each level gets the Zeffy link for that level. Nothing sends until you confirm.</p>' +
       blocks;
+  }
+
+  function lapsePreviewHtml() {
+    var rows = state.lapseCandidates || [];
+    var list = rows.length
+      ? "<ul class=\"kos-ren-lapse-list\">" + rows.map(function (row) {
+        return "<li><b>" + esc(fullName(row)) + "</b> · " + esc(levelName(row.membership_level)) +
+          (row.email ? " · " + esc(row.email) : "") + "</li>";
+      }).join("") + "</ul>"
+      : '<p class="kos-ren-note">No one would lapse.</p>';
+    var missing = Number(state.exemptionsMissing) || 0;
+    var warn = missing
+      ? '<p class="kos-ren-warn" data-ren-exempt-warn>' + missing + " elected officer" + (missing === 1 ? "" : "s") +
+        " have no applied elected officer waiver for this season. " +
+        '<button type="button" class="btn" id="kosRenWaivers">Open Dues waivers</button></p>'
+      : "";
+    return '<p class="kos-ren-count"><b>' + rows.length + '</b> ' +
+      (rows.length === 1 ? "member would lapse." : "members would lapse.") + "</p>" +
+      list + warn +
+      '<label class="kos-ren-confirm"><input type="checkbox" id="kosRenLapseCheck"' +
+      (state.lapseChecked ? " checked" : "") + " />" +
+      "<span>I have checked this list</span></label>" +
+      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenLapseConfirm">Mark lapsed</button></div>';
+  }
+
+  function lapseControls() {
+    if (!state.lapseTools) return "";
+    var when = formatLongDate(state.lapseOn);
+    var edit = state.editingLapse
+      ? '<label class="kos-ren-lapse-edit">Lapse date<input id="kosRenLapseInput" type="date" value="' + esc(dateOnly(state.lapseOn)) + '" /></label>' +
+        '<button type="button" class="btn" id="kosRenLapseSave">Save lapse date</button>'
+      : "Lapse date: <b data-ren-lapse-date>" + esc(when || "Not set") + "</b> " +
+        '<button type="button" class="btn" id="kosRenLapseEdit">Edit</button>';
+    var mark = state.canLapseToday
+      ? '<button type="button" class="btn" id="kosRenLapse">Mark lapsed</button>'
+      : '<button type="button" class="btn" id="kosRenLapse" disabled>Available on ' + esc(when || "the lapse date") + "</button>";
+    return '<p class="kos-ren-lapse" id="kosRenLapseLine">' + edit + "</p>" +
+      '<div class="kos-ren-actions">' + mark +
+      '<button type="button" class="btn" id="kosRenReactivate">Send reactivation link</button></div>';
   }
 
   function rowHtml(row) {
@@ -182,22 +272,26 @@
     var list = rows.length
       ? rows.map(rowHtml).join("")
       : '<p class="empty">No one in this filter is waiting on dues.</p>';
+    var previewRows = state.mailMode === "reactivation" ? selectedLapsed() : selectedRows();
+    var sendLabel = state.mailMode === "reactivation" ? "Send reactivation link" : "Send reminder";
     var preview = state.showPreview ? '<div class="kos-ren-preview" id="kosRenPreview">' +
-      previewHtml(selectedRows()) +
+      previewHtml(previewRows) +
       '<label class="kos-ren-confirm"><input type="checkbox" id="kosRenConfirm"' +
       (state.confirmed ? " checked" : "") + ' />' +
       '<span>I have read this preview and the recipient count.</span></label>' +
-      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenSend">Send reminder</button></div></div>' : "";
+      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenSend">' + sendLabel + "</button></div></div>" : "";
+    var lapsePreview = state.showLapse ? '<div class="kos-ren-preview" id="kosRenLapsePreview">' + lapsePreviewHtml() + "</div>" : "";
     root.innerHTML = shell(
       '<p class="kos-ren-note">The ' + esc(state.label || "current") +
-      ' season is June through May. This list is active, lapsed, and pending-renewal members with no paid dues row for that season. Elected officers and board are left off, same as the member hub. Marking cash or check records the dues row and sets lapsed or pending-renewal members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
+      ' season is June through May. This list is active, lapsed, and pending dues members with no paid dues row for that season. Elected officers and board are left off, same as the member hub. Marking cash or check records the dues row and sets lapsed or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
+      lapseControls() +
       '<div class="kos-ren-filters">' +
       '<label>Search<input id="kosRenSearch" type="search" value="' + esc(state.q) + '" placeholder="Name or email" /></label>' +
       '<label>Status<select id="kosRenStatus">' +
       option("all", "All statuses", state.status) +
       option("active", "Active", state.status) +
       option("lapsed", "Lapsed", state.status) +
-      option("pending-renewal", "Pending renewal", state.status) +
+      option("pending-renewal", "Pending dues", state.status) +
       '</select></label>' +
       '<label>Level<select id="kosRenLevel">' +
       option("all", "All levels", state.level) +
@@ -215,6 +309,7 @@
       '<button type="button" class="btn btn-primary" id="kosRenPreviewBtn">Preview reminder</button></div>' +
       '<div class="kos-ren-list">' + list + '</div>' +
       preview +
+      lapsePreview +
       '<p class="kos-ren-msg' + (state.msgKind === "err" ? " is-err" : "") + '" id="kosRenMsg" role="status">' +
       esc(state.msg) + '</p>'
     );
@@ -261,13 +356,16 @@
       state.selected = {};
       state.showPreview = false;
       state.confirmed = false;
+      state.showLapse = false;
       paint(root);
     });
     var csv = root.querySelector("#kosRenCsv");
     if (csv) csv.addEventListener("click", downloadCsv);
     var previewBtn = root.querySelector("#kosRenPreviewBtn");
     if (previewBtn) previewBtn.addEventListener("click", function () {
+      state.mailMode = "reminder";
       state.showPreview = true;
+      state.showLapse = false;
       state.msg = "";
       paint(root);
       var panel = root.querySelector("#kosRenPreview");
@@ -280,6 +378,25 @@
     root.querySelectorAll("[data-ren-mark]").forEach(function (btn) {
       btn.addEventListener("click", function () { markPaid(root, btn); });
     });
+    var edit = root.querySelector("#kosRenLapseEdit");
+    if (edit) edit.addEventListener("click", function () { state.editingLapse = true; paint(root); });
+    var saveDate = root.querySelector("#kosRenLapseSave");
+    if (saveDate) saveDate.addEventListener("click", function () { saveLapseDate(root, saveDate); });
+    var lapse = root.querySelector("#kosRenLapse");
+    if (lapse) lapse.addEventListener("click", function () { openLapsePreview(root); });
+    var lapseCheck = root.querySelector("#kosRenLapseCheck");
+    if (lapseCheck) lapseCheck.addEventListener("change", function () { state.lapseChecked = !!lapseCheck.checked; });
+    var lapseGo = root.querySelector("#kosRenLapseConfirm");
+    if (lapseGo) lapseGo.addEventListener("click", function () { confirmLapse(root, lapseGo); });
+    var reactivate = root.querySelector("#kosRenReactivate");
+    if (reactivate) reactivate.addEventListener("click", function () { openReactivation(root); });
+    var waivers = root.querySelector("#kosRenWaivers");
+    if (waivers) waivers.addEventListener("click", openWaivers);
+  }
+
+  function openWaivers() {
+    var tile = document.querySelector('[data-tool="tool:hubDuesWaivers"]');
+    if (tile) tile.click();
   }
 
   function csvCell(value) {
@@ -307,6 +424,158 @@
     a.click();
   }
 
+  function applyLapsePayload(data) {
+    if (!data) return;
+    state.lapseOn = data.lapse_on || state.lapseOn;
+    if (data.can_lapse_today != null) state.canLapseToday = !!data.can_lapse_today;
+    if (data.exemptions_missing != null) state.exemptionsMissing = Number(data.exemptions_missing) || 0;
+    if (Array.isArray(data.members)) state.lapseCandidates = data.members;
+  }
+
+  async function saveLapseDate(root, btn) {
+    var input = root.querySelector("#kosRenLapseInput");
+    var next = input ? dateOnly(input.value) : "";
+    if (!next) {
+      state.msg = "Choose a lapse date.";
+      state.msgKind = "err";
+      paint(root);
+      return;
+    }
+    if (state.previewOnly) {
+      state.lapseOn = next;
+      state.editingLapse = false;
+      state.canLapseToday = next <= new Date().toISOString().slice(0, 10);
+      state.msg = "Lapse date saved.";
+      state.msgKind = "";
+      paint(root);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      var client = window.__kosSb;
+      if (!client) throw new Error("Still connecting.");
+      var res = await client.rpc("kos_set_lapse_date", { p_year: state.year, p_date: next });
+      if (res.error) {
+        if (rpcMissing(res.error)) {
+          state.lapseTools = false;
+          state.msg = "";
+          paint(root);
+          return;
+        }
+        throw res.error;
+      }
+      var data = res.data || {};
+      if (data.ok === false) throw new Error(data.message || "Could not save the lapse date.");
+      applyLapsePayload(data);
+      state.lapseOn = data.lapse_on || next;
+      state.editingLapse = false;
+      state.msg = data.message || "Lapse date saved.";
+      state.msgKind = "";
+    } catch (e) {
+      state.msg = (e && e.message) || "Could not save the lapse date.";
+      state.msgKind = "err";
+    }
+    paint(root);
+  }
+
+  async function openLapsePreview(root) {
+    if (!state.canLapseToday) return;
+    state.showLapse = true;
+    state.showPreview = false;
+    state.lapseChecked = false;
+    state.msg = "";
+    if (!state.previewOnly) {
+      try {
+        var client = window.__kosSb;
+        if (!client) throw new Error("Still connecting.");
+        var res = await client.rpc("kos_lapse_candidates", { p_year: state.year });
+        if (res.error) {
+          if (rpcMissing(res.error)) {
+            state.lapseTools = false;
+            state.showLapse = false;
+            paint(root);
+            return;
+          }
+          throw res.error;
+        }
+        var data = res.data || {};
+        if (data.ok === false) throw new Error(data.message || "Could not load the lapse list.");
+        applyLapsePayload(data);
+      } catch (e) {
+        state.msg = (e && e.message) || "Could not load the lapse list.";
+        state.msgKind = "err";
+        state.showLapse = false;
+      }
+    }
+    paint(root);
+    var panel = root.querySelector("#kosRenLapsePreview");
+    if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: "nearest" });
+  }
+
+  async function confirmLapse(root, btn) {
+    var rows = state.lapseCandidates || [];
+    if (!state.lapseChecked) {
+      state.msg = "Check the box after you review the list.";
+      state.msgKind = "err";
+      paint(root);
+      return;
+    }
+    var ask = "Mark " + rows.length + " " + (rows.length === 1 ? "member" : "members") + " lapsed? No email is sent.";
+    if (!state.previewOnly && !window.confirm(ask)) return;
+    if (state.previewOnly) {
+      var ids = {};
+      rows.forEach(function (row) { ids[row.id] = true; });
+      state.members.forEach(function (row) {
+        if (ids[row.id]) row.membership_status = "lapsed";
+      });
+      state.showLapse = false;
+      state.lapseChecked = false;
+      state.msg = rows.length + " marked lapsed. No email was sent.";
+      state.msgKind = "";
+      paint(root);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      var client = window.__kosSb;
+      if (!client) throw new Error("Still connecting.");
+      var res = await client.rpc("kos_mark_lapsed", {
+        p_member_ids: rows.map(function (row) { return row.id; }),
+        p_note: null
+      });
+      if (res.error) throw res.error;
+      var data = res.data || {};
+      if (data.ok === false) throw new Error(data.message || "Could not mark those members lapsed.");
+      state.msg = data.message || "Marked lapsed. No email was sent.";
+      state.msgKind = "";
+      state.showLapse = false;
+      state.lapseChecked = false;
+      await load(root);
+    } catch (e) {
+      state.msg = (e && e.message) || "Could not mark those members lapsed.";
+      state.msgKind = "err";
+      paint(root);
+    }
+  }
+
+  function openReactivation(root) {
+    var rows = selectedLapsed();
+    if (!rows.length) {
+      state.msg = "Select at least one lapsed member.";
+      state.msgKind = "err";
+      paint(root);
+      return;
+    }
+    state.mailMode = "reactivation";
+    state.showPreview = true;
+    state.showLapse = false;
+    state.confirmed = false;
+    state.msg = "";
+    paint(root);
+    var panel = root.querySelector("#kosRenPreview");
+    if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: "nearest" });
+  }
+
   async function markPaid(root, btn) {
     var id = btn.getAttribute("data-ren-mark");
     var row = state.members.filter(function (item) { return item.id === id; })[0];
@@ -315,7 +584,7 @@
     var method = methodEl ? methodEl.value : "check";
     var methodLabel = method === "cash" ? "cash" : "check";
     var ask = "Mark " + fullName(row) + " paid by " + methodLabel + " for the " + state.label +
-      " season? This records a paid dues row. If they are lapsed or waiting on renewal, their status becomes active. No email is sent.";
+      " season? This records a paid dues row. If they are lapsed or pending dues, their status becomes active. No email is sent.";
     if (!state.previewOnly && !window.confirm(ask)) return;
     if (state.previewOnly) {
       row.membership_status = "active";
@@ -351,9 +620,9 @@
   }
 
   async function sendReminders(root, btn) {
-    var rows = selectedRows();
+    var rows = state.mailMode === "reactivation" ? selectedLapsed() : selectedRows();
     if (!rows.length) {
-      state.msg = "Select at least one member.";
+      state.msg = state.mailMode === "reactivation" ? "Select at least one lapsed member." : "Select at least one member.";
       state.msgKind = "err";
       paint(root);
       return;
@@ -364,7 +633,8 @@
       paint(root);
       return;
     }
-    var ask = "Send this renewal reminder to " + rows.length + " " +
+    var noun = state.mailMode === "reactivation" ? "reactivation link" : "renewal reminder";
+    var ask = "Send this " + noun + " to " + rows.length + " " +
       (rows.length === 1 ? "member" : "members") + "?";
     if (!state.previewOnly && !window.confirm(ask)) return;
     if (state.previewOnly) {
@@ -374,39 +644,96 @@
       return;
     }
     btn.disabled = true;
-    state.msg = "Queuing the reminder...";
+    state.msg = "Queuing the " + noun + "...";
     state.msgKind = "";
     paint(root);
     try {
       var client = window.__kosSb;
       if (!client) throw new Error("Still connecting.");
-      var groups = groupsOf(rows, state.label);
+      var bodyFn = state.mailMode === "reactivation" ? reactivationBody : reminderBody;
+      var groups = groupsOf(rows, state.label, bodyFn);
       var sent = 0;
+      var queued = [];
+      var held = false;
+      var subject = state.mailMode === "reactivation"
+        ? "Krewe of Shamrock membership reactivation (" + state.label + ")"
+        : "Krewe of Shamrock membership renewal (" + state.label + ")";
       for (var i = 0; i < groups.length; i++) {
         var group = groups[i];
+        var withEmail = group.rows.filter(function (row) {
+          return row.email && String(row.email).indexOf("@") > 0;
+        });
+        if (!withEmail.length) continue;
         var res = await client.rpc("officer_send_member_email", {
-          p_subject: "Krewe of Shamrock membership renewal (" + state.label + ")",
+          p_subject: subject,
           p_body_html: group.html,
           p_audience: "selected",
-          p_member_ids: group.rows.map(function (row) { return row.id; })
+          p_member_ids: withEmail.map(function (row) { return row.id; })
         });
         if (res.error) throw res.error;
-        if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not queue the reminder.");
-        sent += (res.data && res.data.recipient_count != null) ? Number(res.data.recipient_count) : group.rows.length;
+        if (res.data && res.data.ok === false) throw new Error(res.data.message || "Could not queue the email.");
+        sent += (res.data && res.data.recipient_count != null) ? Number(res.data.recipient_count) : withEmail.length;
+        if (res.data && Number(res.data.skipped_opt_out || 0) > 0) held = true;
+        else queued = queued.concat(withEmail.map(function (row) { return row.id; }));
       }
-      state.msg = "Queued the reminder for " + sent + " member" + (sent === 1 ? "" : "s") + ".";
+      state.msg = "Queued the " + noun + " for " + sent + " member" + (sent === 1 ? "" : "s") + ".";
+      if (state.mailMode === "reactivation" && queued.length) {
+        var started = await client.rpc("kos_start_reactivation", { p_member_ids: queued });
+        if (started.error) {
+          if (!rpcMissing(started.error)) throw started.error;
+        } else if (started.data && started.data.ok === false) {
+          throw new Error(started.data.message || "Could not set pending dues.");
+        } else if (started.data && started.data.message) {
+          state.msg += " " + started.data.message;
+        }
+      }
+      if (held) {
+        state.msg += " Some addresses were skipped, so those people were not moved to pending dues.";
+      }
       state.msgKind = "";
       state.confirmed = false;
       state.showPreview = false;
       state.selected = {};
+      state.mailMode = "reminder";
+      await load(root);
+      return;
     } catch (e) {
-      state.msg = (e && e.message) || "Could not queue the reminder.";
+      state.msg = (e && e.message) || "Could not queue the email.";
       state.msgKind = "err";
     }
     paint(root);
   }
 
+  function applyFixture(payload) {
+    payload = payload || {};
+    state.previewOnly = true;
+    state.year = payload.year;
+    state.label = payload.season_label || seasonLabel(payload.year);
+    state.members = payload.members || [];
+    state.q = payload.q || "";
+    state.status = payload.status || "all";
+    state.level = payload.level || "all";
+    state.selected = payload.selected || {};
+    state.showPreview = !!payload.showPreview;
+    state.confirmed = !!payload.confirmed;
+    state.msg = payload.msg || "";
+    state.mailMode = payload.mailMode || "reminder";
+    state.lapseTools = payload.lapseTools !== false;
+    state.lapseOn = payload.lapseOn || payload.lapse_on || "";
+    state.canLapseToday = payload.canLapseToday != null ? !!payload.canLapseToday : !!payload.can_lapse_today;
+    state.editingLapse = !!payload.editingLapse;
+    state.showLapse = !!payload.showLapse;
+    state.lapseChecked = !!payload.lapseChecked;
+    state.lapseCandidates = payload.lapseCandidates || payload.candidates || [];
+    state.exemptionsMissing = Number(payload.exemptionsMissing != null ? payload.exemptionsMissing : payload.exemptions_missing) || 0;
+  }
+
   async function load(root) {
+    if (window.__kosRenewalsFixture) {
+      applyFixture(window.__kosRenewalsFixture);
+      paint(root);
+      return;
+    }
     if (state.previewOnly) {
       paint(root);
       return;
@@ -425,6 +752,22 @@
       state.year = data.year;
       state.label = data.season_label || seasonLabel(data.year);
       state.members = data.members || [];
+      state.lapseTools = false;
+      try {
+        var lapse = await client.rpc("kos_get_lapse_date", { p_year: state.year });
+        if (lapse.error) {
+          if (!rpcMissing(lapse.error)) throw lapse.error;
+        } else if (lapse.data && lapse.data.ok !== false) {
+          state.lapseTools = true;
+          applyLapsePayload(lapse.data);
+        }
+      } catch (lapseErr) {
+        if (!rpcMissing(lapseErr)) {
+          state.msg = (lapseErr && lapseErr.message) || "Could not load the lapse date.";
+          state.msgKind = "err";
+        }
+        state.lapseTools = false;
+      }
       paint(root);
     } catch (e) {
       var missing = /function|does not exist|schema cache/i.test((e && e.message) || "");
@@ -446,29 +789,24 @@
   }
 
   function renderPreview(el, payload) {
-    state.previewOnly = true;
-    state.year = payload.year;
-    state.label = payload.season_label || seasonLabel(payload.year);
-    state.members = payload.members || [];
-    state.q = payload.q || "";
-    state.status = payload.status || "all";
-    state.level = payload.level || "all";
-    state.selected = payload.selected || {};
-    state.showPreview = !!payload.showPreview;
-    state.confirmed = !!payload.confirmed;
-    state.msg = payload.msg || "";
+    window.__kosRenewalsFixture = null;
+    applyFixture(payload || {});
     paint(el);
   }
 
   window.kosRenewalsPreview = renderPreview;
   window.kosRenewalReminderHtml = function (rows, label) {
     state.label = label;
+    state.mailMode = "reminder";
     return previewHtml(rows);
   };
 
   var css = document.createElement("style");
   css.textContent =
     ".kos-ren-note{font-size:15px;line-height:1.45;color:#5c5648;margin:0 0 12px;}" +
+    ".kos-ren-lapse{font-size:15px;line-height:1.45;margin:0 0 8px;}" +
+    ".kos-ren-lapse-edit{display:inline-grid;gap:4px;margin-right:8px;font-size:13px;color:#5c5648;}" +
+    ".kos-ren-lapse-edit input{min-height:44px;border-radius:12px;border:1px solid rgba(168,128,28,.4);padding:8px 10px;font:inherit;}" +
     ".kos-ren-filters{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:10px;}" +
     ".kos-ren-filters label{font-size:13px;color:#5c5648;display:grid;gap:4px;}" +
     ".kos-ren-filters input,.kos-ren-filters select,.kos-ren-mark select{width:100%;box-sizing:border-box;min-height:44px;border-radius:12px;border:1px solid rgba(168,128,28,.4);padding:8px 10px;font:inherit;background:#fff;}" +
@@ -484,6 +822,8 @@
     ".kos-ren-mark .btn{white-space:nowrap;}" +
     ".kos-ren-mark select{min-width:7rem;}" +
     ".kos-ren-preview{margin-top:8px;padding:12px;background:#f6efdd;border-radius:14px;}" +
+    ".kos-ren-lapse-list{margin:0 0 10px;padding-left:18px;}" +
+    ".kos-ren-warn{background:#fff6e8;border:1px solid rgba(168,128,28,.45);border-radius:12px;padding:10px 12px;}" +
     ".kos-ren-mail{background:#fff;border:1px solid rgba(20,83,45,.2);border-radius:12px;padding:12px;margin:0 0 10px;}" +
     ".kos-ren-mail-to{margin:0 0 6px;font-size:14px;color:#5c5648;}" +
     ".kos-ren-mail-body{font-size:15px;line-height:1.45;}" +
