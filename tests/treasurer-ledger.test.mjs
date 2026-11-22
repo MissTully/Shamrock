@@ -75,6 +75,10 @@ test("guard patches raise when the live string is missing", () => {
   assert.match(patch, /has_tool\(''send_invoices''\)/);
   assert.match(patch, /if not public\.is_krewe_officer\(\) then/);
   assert.doesNotMatch(functionBody(sql, "kos_record_dues_receipt"), /kos_request_dues_waiver/);
+  const welcome = sql.slice(sql.indexOf("$patch_welcome$"));
+  assert.match(welcome, /raise exception 'Welcome copy patch: % is missing\.'/);
+  assert.match(welcome, /raise exception 'Welcome copy patch: expected sentence is missing in %\.'/);
+  assert.match(welcome, /final ratification by the Board of Directors/);
 });
 
 test("season owing uses kos_renewal_rows and not a role check", () => {

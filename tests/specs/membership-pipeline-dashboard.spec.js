@@ -205,7 +205,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
 
   await tool.locator("[data-app-approve='app-drew']").click();
   await expect(tool.locator("#hubAppConfirm")).toBeVisible();
-  await expect(tool.locator("#hubAppConfirmTitle")).toContainText("Approve membership (voted in at general meeting)");
+  await expect(tool.locator("#hubAppConfirmTitle")).toContainText("Approve membership (subject to Board ratification)");
   await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
   await artifactShot(tool.locator("#hubAppConfirm"), "/opt/cursor/artifacts/membership-approve-confirm.png");
   await page.evaluate(() => {

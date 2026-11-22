@@ -3,6 +3,7 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
+const { unlockMemberHub } = require("./helpers");
 
 const V7 = path.join(__dirname, "../../previews/v7");
 fs.mkdirSync(V7, { recursive: true });
@@ -516,4 +517,41 @@ test("fundraising summary includes cash and check dues", async ({ page }) => {
   await expect(out.locator("#hubReportCashCheck")).toContainText("$750.00");
   await expect(out.locator("#hubReportCashCheck")).toContainText("cash and check dues");
   await page.locator("#hubReports").screenshot({ path: shot("11-fundraising-cash-check.png"), animations: "disabled" });
+});
+
+test("approve membership says Board ratification", async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 1200 });
+  await unlockMemberHub(page, {
+    role: {
+      officer: false,
+      canReviewApplications: true,
+      applications: [{
+        id: "app-jane",
+        first_name: "Jane",
+        last_name: "Sample",
+        email: "jane.sample@example.com",
+        phone: "555-0100",
+        membership_status: "dues-pending",
+        membership_level: "full",
+        application_fee_type: "single",
+        dues_paid: true,
+        created_at: "2026-11-01T15:00:00.000Z"
+      }]
+    }
+  });
+  await page.locator("[data-hub-tab='officer']").click();
+  const tile = page.locator('[data-tool="tool:hubApplications"]');
+  await expect(tile).toBeVisible();
+  await tile.click();
+  const tool = page.locator("#hubApplications");
+  await expect(tool).toContainText("Approval is subject to final ratification by the Board of Directors.");
+  await expect(tool.locator("[data-app-approve='app-jane']")).toHaveText("Approve membership (subject to Board ratification)");
+  await expect(tool).not.toContainText("general meeting");
+  await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important} .app-card{overflow:visible !important}" });
+  await page.evaluate(() => {
+    document.querySelectorAll(".hub-pipe-col").forEach((col) => {
+      if (!col.querySelector("[data-app-approve]")) col.style.display = "none";
+    });
+  });
+  await tool.screenshot({ path: shot("12-approve-ratification.png"), animations: "disabled" });
 });

@@ -190,7 +190,7 @@ test.describe("Membership Applications", () => {
 
     await tool.locator("[data-app-approve='app-riley']").click();
     await expect(tool.locator("#hubAppConfirm")).toBeVisible();
-    await expect(tool.locator("#hubAppConfirmBody")).toContainText("voted them in at a general meeting");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("final ratification by the Board of Directors");
     await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
     await tool.locator("#hubAppConfirmYes").click();
     await expect(tool).toContainText("Approved.");
@@ -815,8 +815,8 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-approve='app-jane']").click();
     const body = tool.locator("#hubAppConfirmBody");
     await expect(body).toContainText("Dues are not paid yet for: Jane Sample and John Sample.");
-    await expect(body).toContainText("You can still approve after the vote.");
-    await expect(body).toContainText("voted them in at a general meeting");
+    await expect(body).toContainText("You can still approve.");
+    await expect(body).toContainText("final ratification by the Board of Directors");
     await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await tool.locator("#hubAppConfirm").screenshot({

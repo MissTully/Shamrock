@@ -1653,3 +1653,28 @@ begin
   end loop;
 end
 $patch_guards$;
+
+-- Welcome letter. The live decision function already says the Krewe voted
+-- the member in at a general meeting. Bylaws say final ratification is by
+-- the Board of Directors. This replaces that one sentence. It does not
+-- replace the rest of the function.
+do $patch_welcome$
+declare
+  v_sig text := 'public._apply_membership_application_decision(uuid,text,text)';
+  v_old text := 'Welcome. The Krewe voted you in at a general meeting, and you are on the roster.';
+  v_new text := 'Welcome. Your membership is approved, subject to final ratification by the Board of Directors, and you are on the roster.';
+  v_def text;
+begin
+  if to_regprocedure(v_sig) is null then
+    raise exception 'Welcome copy patch: % is missing.', v_sig;
+  end if;
+  v_def := pg_get_functiondef(v_sig::regprocedure);
+  if position(v_new in v_def) > 0 then
+    return;
+  end if;
+  if position(v_old in v_def) = 0 then
+    raise exception 'Welcome copy patch: expected sentence is missing in %.', v_sig;
+  end if;
+  execute replace(v_def, v_old, v_new);
+end
+$patch_welcome$;
