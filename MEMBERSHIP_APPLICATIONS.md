@@ -10,7 +10,7 @@ The live journey is:
 4. Fee paid (the Zeffy alert moves the row to Background check fee paid), or **Auxiliary: fee included** for an Auxiliary row still waiting on that fee. The Auxiliary button sends no email.
 5. Start background check and Copy IDs. The button stays off, with "Waiting for the full application", until the applicant's Social Security number and driver's license are on file. A couple also needs both numbers for the partner. Copy puts a number on the clipboard. The card stays masked. No email is sent.
 6. Proceed with induction, send dues link. One dues block per person. A couple with the same Zeffy link is told to add one ticket per person.
-7. Approve membership after the vote. Only a dues-pending approval sends the welcome letter, including the training video.
+7. Approve membership. Approval is subject to final ratification by the Board of Directors. Only a dues-pending approval sends the welcome letter, including the training video.
 
 Returning members are not approved here. Dues payment moves a lapsed or pending dues member back to active. See docs/membership-process.md.
 
@@ -34,7 +34,7 @@ The Membership Chair does not need a new grant. Lisa Sugrue already has the Memb
 
 Pending application means `membership_status = 'pending-new'` (the join form). Event RSVP prospects (`prospect`) are a separate filter. `pending-renewal` is pending dues for a returning member. Those people do not appear in Membership Applications, and approve of that status changes nothing.
 
-- **Approve membership (voted in at general meeting)** is the induction-stage button (`dues-pending`). It sets `membership_status` to `active`. `member_role` becomes `member` when it is blank or `prospect`. An existing officer, board, or captain role is left alone. `join_date` is filled only when it is null. The join form already stamps `join_date` from the column default, so a normal new application keeps the date it was submitted. That approval queues the welcome email through `enqueue_email` / `outbound_emails`. It tells them to open the Member Hub, tap **Create or reset your password**, and use the email on the application. Signing up with that email is what links their login (`handle_new_user` matches the roster by email). The letter includes the training video `https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR`. If dues are still unpaid for the applicant or the linked partner, the confirm dialog says so and does not block the vote.
+- **Approve membership (subject to Board ratification)** is the induction-stage button (`dues-pending`). It sets `membership_status` to `active`. `member_role` becomes `member` when it is blank or `prospect`. An existing officer, board, or captain role is left alone. `join_date` is filled only when it is null. The join form already stamps `join_date` from the column default, so a normal new application keeps the date it was submitted. That approval queues the welcome email through `enqueue_email` / `outbound_emails`. It tells them to open the Member Hub, tap **Create or reset your password**, and use the email on the application. Signing up with that email is what links their login (`handle_new_user` matches the roster by email). The letter includes the training video `https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR`. The letter says approval is subject to final ratification by the Board of Directors. If dues are still unpaid for the applicant or the linked partner, the confirm dialog says so and does not block approval.
 - Approving a `pending-renewal` row returns: "Renewals are automatic when dues are paid. For cash or check, use Officer desk, Renewals, Mark renewed." Decline and archive of an old pending-renewal row still work.
 - **Decline** sets `membership_status` to `declined`. **Archive** sets `archived`. An optional note is stored with the decision. Members rows are never deleted.
 
@@ -75,7 +75,7 @@ Join-form applications move through these `membership_status` values. Officers d
 | Background check fee paid | `bg_paid` | Zeffy marked the fee paid, or the chair used **Auxiliary: fee included**. **Start background check** stays off until the full application IDs are in. |
 | Background check in process | `bg_in_process` | Chair clicked **Start background check** and can Copy IDs. |
 | Induction pending | `dues-pending` | Chair clicked **Proceed with induction, send dues link**. The dues link and the meeting invitation are out. |
-| Member | `active` | **Approve membership (voted in at general meeting)**. The welcome letter goes out from this step only. |
+| Member | `active` | **Approve membership (subject to Board ratification)**. The welcome letter goes out from this step only. Approval is subject to final ratification by the Board of Directors. |
 | Declined | `declined` | Record stays. Off the new list. |
 | Archived | `archived` | Record stays. Off the new list. |
 

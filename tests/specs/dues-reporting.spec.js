@@ -189,7 +189,7 @@ test("season totals exclude waivers and the payments ledger", async ({ page }) =
   await expect(page.locator("#hubPayAging button")).toHaveCount(0);
   await expect(page.locator("#hubPayPanel_season")).toContainText("does not send email");
 
-  await page.getByRole("tab", { name: "Cash ledger" }).click();
+  await page.getByRole("tab", { name: "Ledger", exact: true }).click();
   await expect(page.locator("#hubPayPanel_ledger")).toBeVisible();
   await expect(page.locator("#hubPayPanel_ledger")).toContainText("Cal Pitt");
   await expect(page.locator("#hubPayPanel_ledger")).toContainText("Guest Donor");
@@ -252,6 +252,11 @@ test("CSV downloads include dues fields and respect the ledger date range", asyn
   await mountReporting(page);
   await shown(page);
   await page.getByRole("tab", { name: "Export" }).click();
+  await expect(page.locator("#hubPayFrom")).toHaveValue("2026-06-01");
+  await expect(page.locator("#hubPayTo")).toHaveValue("2027-05-31");
+  await expect(page.locator("#hubPayLedgerCount")).toHaveText("0 payments in this range.");
+  await page.locator("#hubPayFrom").fill("2026-01-01");
+  await page.locator("#hubPayTo").fill("2026-12-31");
   await expect(page.locator("#hubPayLedgerCount")).toHaveText("1 payment in this range.");
 
   await page.locator("#hubPayDuesCsv").click();

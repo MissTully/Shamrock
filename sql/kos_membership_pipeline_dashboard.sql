@@ -20,7 +20,7 @@
 --   bg_paid            Background check fee paid. Chair starts the check.
 --   bg_in_process      Background check in process.
 --   dues-pending       Induction pending. Dues link and meeting invite are out.
---   active             Member. Voted in at a general meeting.
+--   active             Member. Approval is subject to final ratification by the Board of Directors.
 -- The dues invoice is created when the chair sends the induction email,
 -- not when the full application is saved.
 -- A Zeffy background check payment is product_kind background_check.
@@ -1391,7 +1391,7 @@ begin
     v_subject := 'Welcome to the Krewe of Shamrock';
     v_html :=
       '<p>Dear ' || public.kos_html_text(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-      || '<p>Welcome. The Krewe voted you in at a general meeting, and you are on the roster.</p>'
+      || '<p>Welcome. Your membership is approved, subject to final ratification by the Board of Directors, and you are on the roster.</p>'
       || '<p>To use the Member Hub, create your login with the same email you put on the application ('
       || public.kos_html_text(coalesce(rec.email, '')) || '):</p>'
       || '<ol>'

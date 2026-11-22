@@ -131,7 +131,12 @@
     }).join("");
     target.innerHTML =
       '<div class="hub-report-totals"><div class="hub-report-chip"><b>' + dollars(report.total_cents) +
-      '</b><span>total received in this period</span></div></div>' +
+      '</b><span>total received in this period</span></div>' +
+      (report.cash_check_cents != null
+        ? '<div class="hub-report-chip" id="hubReportCashCheck"><b>' + dollars(report.cash_check_cents) +
+          '</b><span>cash and check dues</span></div>'
+        : "") +
+      "</div>" +
       '<div class="hub-report-tablewrap"><table class="hub-report-table"><thead><tr>' +
       '<th>Category</th><th style="text-align:right;">Received</th><th style="text-align:right;">Payments</th>' +
       '</tr></thead><tbody>' + (cats || '<tr><td colspan="3">No payments in this period.</td></tr>') + '</tbody></table></div>' +

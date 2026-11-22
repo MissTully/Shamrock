@@ -13,7 +13,7 @@ Sample names in tests and screenshots are not real members.
 5. When the fee is paid, or you use **Auxiliary: fee included**, the card moves to Background check fee paid.
 6. **Start background check** stays off until the full application is in. The helper text is "Waiting for the full application". A single applicant needs a Social Security number and a driver's license on file. A couple also needs both for the partner. Then the button turns on. Copy uses the last 4 on the card. The full number goes to the clipboard only when you copy it. No email is sent.
 7. When the check is clean, **Proceed with induction, send dues link**. That is `dues-pending`. This status is only for new applicants.
-8. After the Krewe votes them in at a general meeting, **Approve membership**. That is the only approval that sends the welcome letter, with the Member Hub login steps and the training video.
+8. **Approve membership (subject to Board ratification)**. Approval is subject to final ratification by the Board of Directors. That is the only approval that sends the welcome letter, with the Member Hub login steps and the training video.
 
 Decline and Withdraw keep the record. Nothing is deleted.
 
@@ -26,9 +26,9 @@ Membership Applications has no Renewals tab and no Approve renewal button. A per
 The cycle is:
 
 1. **Active.** They are on the roster.
-2. **Lapsed.** After the lapse date, Renewals can mark someone lapsed when they are still active, not exempt, and have no paid or applied-waiver dues row for the season. People who joined on or after June 1 of this season are skipped. No email is sent by Mark lapsed.
-3. **Pending dues.** The status value is `pending-renewal`. The Hub label is Pending dues. This is a lapsed member who was sent a reactivation link, or who picked a level on their own Renew card. An unpaid dues row is on file. Their payment has not come in yet.
-4. **Active again.** A Zeffy dues payment does this. Cash or check does it when you use Renewals, **Mark renewed**. No renewal email is sent for the cash or check mark.
+2. **Delinquent.** Dues are due June 1. On July 1, Renewals can mark someone delinquent when they are still active, not exempt, and have no paid or applied-waiver dues row for the season. The status value stays `lapsed`. The Hub label is Delinquent. People who joined on or after June 1 of this season are skipped. No email is sent by Mark delinquent.
+3. **Pending dues.** The status value is `pending-renewal`. The Hub label is Pending dues. This is a delinquent member who was sent a reactivation link, or who picked a level on their own Renew card. An unpaid dues row is on file. Their payment has not come in yet.
+4. **Active again.** A Zeffy dues payment does this. Cash or check does it when you use Renewals, **Record cash or check**. No renewal email is sent for the cash or check entry.
 
 Do not put a returning member in `dues-pending`. That status is the new-applicant induction step.
 
@@ -41,11 +41,13 @@ Do not put a returning member in `dues-pending`. That status is the new-applican
 
 An elected Treasurer is never a lapse candidate.
 
-### Lapse date
+### Delinquent and inactive dates
 
-Renewals shows a **Lapse date** line. The confirmed default, when nobody has saved one, is August 1 of the season year (the year that starts in June). That date lives in `kos_default_lapse_date`. Officers who can open Renewals can use **Edit** to save a different date for the year.
+Dues are due June 1. Unpaid on July 1 is delinquent. After July 16 the member can be marked inactive and must reapply.
 
-**Mark lapsed** stays off until that date. The button then reads "Available on DATE". On or after the date it opens a preview with the count and the names. If elected officers are missing an applied elected-officer waiver, the preview shows that count and **Open Dues waivers**. Check "I have checked this list", then confirm. People who no longer qualify are skipped.
+Renewals shows **Delinquent on** and **Inactive after**. The defaults, when nobody has saved a year, are July 1 (`kos_default_delinquent_on`) and July 16 (`kos_default_inactive_on`). Officers who can open Renewals can use **Edit** to save a different date for that year.
+
+**Mark delinquent** stays off until July 1. **Mark inactive** stays off until July 16. Each button then reads "Available on DATE". On or after the date it opens a preview with the count and the names. If elected officers are missing an applied elected-officer waiver, the delinquent preview shows that count and **Open Dues waivers**. Check "I have checked this list", then confirm. People who no longer qualify are skipped. Mark inactive does not send email. Those members must submit a new application.
 
 ### Reactivation
 
@@ -55,10 +57,10 @@ On the member side, a delinquent Renew card says dues are past due and names the
 
 ### Cash or check
 
-Renewals, **Mark renewed**, records the paid dues row. If they were lapsed or pending dues, they become active. No email is sent.
+Renewals, **Record cash or check**, records the paid dues row. If they were delinquent or pending dues, they become active. No email is sent.
 
 ## What ships together
 
-The Hub calls `kos_lapse_candidates`, `kos_mark_lapsed`, `kos_start_reactivation`, `kos_get_lapse_date`, and `kos_set_lapse_date`. Those live in `sql/kos_v6_renewal_lapse.sql`. That file is not applied until Melissa approves it, and it should go out in the same release as this Hub. If the functions are missing, Renewals hides the lapse date, Mark lapsed, and Send reactivation link, and the rest of Renewals still works.
+The Hub calls the v6 renewal functions in `sql/kos_v6_renewal_lapse.sql`. That file is already applied on main. Dues are due June 1, delinquent is July 1, and inactive is after July 16. If those functions are missing, Renewals hides the date controls, Mark delinquent, Mark inactive, and Send reactivation link, and the rest of Renewals still works.
 
 Treasurer stays in the Renewals access check, with the Membership Chair, the President, and site admins. Treasurer does not gain Membership Applications.
