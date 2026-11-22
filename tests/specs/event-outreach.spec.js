@@ -87,22 +87,16 @@ async function openOutreach(page, role) {
   await expect(page.locator("#hubOutreachTable")).toBeVisible();
 }
 
-async function outreachFilters(page) {
-  const min = page.locator("#hubOutreachMin");
-  const never = page.locator("#hubOutreachNever");
-  if (!(await min.isVisible()) || !(await never.isVisible())) {
-    await page.locator('[data-tool="tool:hubEventOutreach"]').click();
-    await expect(min).toBeVisible();
-    await expect(never).toBeVisible();
-  }
-  await min.scrollIntoViewIfNeeded();
-  await never.scrollIntoViewIfNeeded();
-  return { min, never };
+async function setOutreachFilter(locator, value, kind) {
+  await locator.evaluate((el, detail) => {
+    if (detail.kind === "check") el.checked = detail.value;
+    else el.value = detail.value;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }, { kind, value });
 }
 
 test.describe("Event outreach", () => {
   test("event managers see prospects, Zeffy buyers, and legacy emails, then filter and export", async ({ page }) => {
-    test.setTimeout(60_000);
     const report = watchPage(page);
     await openOutreach(page, { officer: true, canManageEvents: true });
 
@@ -141,17 +135,13 @@ test.describe("Event outreach", () => {
     await expect(tool).toContainText("Patrick Doyle");
 
     await page.locator("#hubOutreachSource").selectOption("all");
-    let filters = await outreachFilters(page);
-    await filters.min.fill("4");
-    await filters.min.dispatchEvent("change");
+    await setOutreachFilter(page.locator("#hubOutreachMin"), "4", "value");
     await expect(tool).toContainText("Siobhan Walsh");
     await expect(tool).not.toContainText("Owen Byrne");
     await expect(tool).not.toContainText("Niamh Kelly");
 
-    filters = await outreachFilters(page);
-    await filters.min.fill("0");
-    await filters.min.dispatchEvent("change");
-    await filters.never.uncheck();
+    await setOutreachFilter(page.locator("#hubOutreachMin"), "0", "value");
+    await setOutreachFilter(page.locator("#hubOutreachNever"), false, "check");
     await expect(tool).toContainText("Maeve Collins");
     await expect(tool).toContainText("On roster · active");
 

@@ -2,6 +2,15 @@
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
+async function artifactShot(locator, file) {
+  try {
+    await locator.screenshot({ path: file, animations: "disabled", timeout: 4000 });
+  } catch (err) {
+    // These files are local preview shots. A missing folder or a dialog that
+    // is off screen must not fail the checks above.
+  }
+}
+
 const PIPELINE = [
   {
     id: "app-nia",
@@ -163,10 +172,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
 
   const couple = tool.locator("[data-app-id='app-alex']");
   await expect(couple).toBeVisible();
-  await couple.screenshot({
-    path: "/opt/cursor/artifacts/join-dashboard-couple-card.png",
-    animations: "disabled"
-  });
+  await artifactShot(couple, "/opt/cursor/artifacts/join-dashboard-couple-card.png");
   await page.evaluate(() => {
     document.querySelectorAll(".krewe-music, .krewe-nav").forEach((el) => { el.style.display = "none"; });
     const pipe = document.querySelector("#hubApplications .hub-pipeline");
@@ -181,10 +187,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
     if (pipe) pipe.style.width = (full + 40) + "px";
     if (card) card.style.width = (full + 80) + "px";
   });
-  await tool.screenshot({
-    path: "/opt/cursor/artifacts/membership-dashboard-desktop.png",
-    animations: "disabled"
-  });
+  await artifactShot(tool, "/opt/cursor/artifacts/membership-dashboard-desktop.png");
 
   await tool.locator("[data-app-dues='app-riley']").click();
   await expect(tool.locator("#hubAppConfirm")).toBeVisible();
@@ -194,10 +197,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   await tool.locator("#hubInductionPlace").fill("Krewe hall");
   await expect(tool.locator("#hubInductionPreview")).toContainText("why you want to join the Krewe");
   await expect(tool.locator("#hubInductionPreview")).toContainText("Pay dues on Zeffy");
-  await tool.locator("#hubAppConfirm").screenshot({
-    path: "/opt/cursor/artifacts/membership-induction-confirm.png",
-    animations: "disabled"
-  });
+  await artifactShot(tool.locator("#hubAppConfirm"), "/opt/cursor/artifacts/membership-induction-confirm.png");
   await page.evaluate(() => {
     const box = document.getElementById("hubAppConfirm");
     if (box) box.hidden = true;
@@ -207,10 +207,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   await expect(tool.locator("#hubAppConfirm")).toBeVisible();
   await expect(tool.locator("#hubAppConfirmTitle")).toContainText("Approve membership (voted in at general meeting)");
   await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
-  await tool.locator("#hubAppConfirm").screenshot({
-    path: "/opt/cursor/artifacts/membership-approve-confirm.png",
-    animations: "disabled"
-  });
+  await artifactShot(tool.locator("#hubAppConfirm"), "/opt/cursor/artifacts/membership-approve-confirm.png");
   await page.evaluate(() => {
     const box = document.getElementById("hubAppConfirm");
     if (box) box.hidden = true;
@@ -224,10 +221,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   const phoneCol = tool.locator("#hubPipe-new");
   await phoneCol.scrollIntoViewIfNeeded();
   await expect(phoneCol).toBeVisible();
-  await phoneCol.screenshot({
-    path: "/opt/cursor/artifacts/membership-dashboard-phone.png",
-    animations: "disabled"
-  });
+  await artifactShot(phoneCol, "/opt/cursor/artifacts/membership-dashboard-phone.png");
   assertHealthy(expect, report, "pipeline dashboard");
 });
 
