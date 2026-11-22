@@ -17,6 +17,9 @@
 .join-as label{align-items:center;display:flex;font-size:18px;gap:12px;margin:10px 0;}
 .join-as input{height:22px;width:22px;}
 #partnerFields[hidden]{display:none !important;}
+.join-level{margin:0 0 16px;padding:12px 14px;background:#f6efdc;border:1px solid rgba(20,83,45,.35);border-radius:12px;color:var(--green-800);line-height:1.45;}
+.join-level[hidden]{display:none !important;}
+.join-level a{display:inline-block;margin-top:6px;color:var(--green-800);font-weight:700;}
 @media (max-width:680px){
   .join-lead{padding:16px 16px 0;font-size:16px;}
   .krewe-form .row{ flex-direction:column; gap:0; }
@@ -121,6 +124,10 @@
           </div>
         </div>
 
+        <p id="applyLevel" class="join-level" hidden>
+          Applying for: Associate membership ($450, one year, two parades of your choice)
+          <a href="membership-application.html" id="clearLevel">Change to Full membership</a>
+        </p>
         <fieldset class="join-as">
           <legend>Applying as</legend>
           <label for="applySingle"><input id="applySingle" type="radio" name="applyAs" value="single" required checked /> Single</label>
@@ -197,7 +204,30 @@
     const partnerFields = document.getElementById("partnerFields");
     const partnerFirst = document.getElementById("partnerFirst");
     const partnerLast = document.getElementById("partnerLast");
+    const levelLine = document.getElementById("applyLevel");
     const submitLabel = "☘ Submit interest";
+    let membershipLevel = null;
+    function readMembershipLevel() {
+      const params = new URLSearchParams(window.location.search);
+      return (params.get("level") || "").trim().toLowerCase() === "associate" ? "associate" : null;
+    }
+    function syncLevelLine() {
+      if (levelLine) levelLine.hidden = membershipLevel !== "associate";
+    }
+    membershipLevel = readMembershipLevel();
+    syncLevelLine();
+    const clearLevel = document.getElementById("clearLevel");
+    if (clearLevel) {
+      clearLevel.addEventListener("click", (event) => {
+        event.preventDefault();
+        membershipLevel = null;
+        const url = new URL(window.location.href);
+        url.searchParams.delete("level");
+        const next = url.pathname + url.search + url.hash;
+        window.history.replaceState(null, "", next);
+        syncLevelLine();
+      });
+    }
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
     function applyingAsCouple() {
       return document.getElementById("applyCouple").checked;
@@ -241,7 +271,8 @@
         p_partner_first: couple ? partnerFirst.value.trim() : null,
         p_partner_last: couple ? partnerLast.value.trim() : null,
         p_partner_email: couple ? (document.getElementById("partnerEmail").value.trim() || null) : null,
-        p_partner_phone: couple ? (document.getElementById("partnerPhone").value.trim() || null) : null
+        p_partner_phone: couple ? (document.getElementById("partnerPhone").value.trim() || null) : null,
+        p_membership_level: membershipLevel
       };
       const result = await supabase.rpc("submit_membership_application", interest);
       btn.disabled = false; btn.textContent = submitLabel;

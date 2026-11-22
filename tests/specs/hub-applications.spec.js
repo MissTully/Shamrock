@@ -1,7 +1,12 @@
 // Membership Applications officer tool. Role fixtures drive the Hub offline
 // so this does not write to the live database.
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+
+const PREVIEW = path.join(__dirname, "../../docs/preview/membership-training-fixes");
+fs.mkdirSync(PREVIEW, { recursive: true });
 
 const APPLICATIONS = [
   {
@@ -629,5 +634,377 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-bucket='renewal']").click();
     await expect(tool.locator("[data-app-save-note='app-rowan']")).toHaveText("Save note");
     assertHealthy(expect, report, "save record note");
+  });
+
+  test("renewal approval uses its own button and sends no welcome flash", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "pending-renewal",
+            membership_level: "full",
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            dues_paid: true,
+            created_at: "2026-11-03T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await expect(tool.locator("[data-app-approve='app-nia']")).toHaveText("Approve membership (voted in at general meeting)");
+    await tool.locator("[data-app-approve='app-nia']").click();
+    await expect(tool.locator("#hubAppConfirmTitle")).toHaveText("Approve membership (voted in at general meeting)");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
+    await expect(tool.locator("#hubAppConfirmBody")).not.toContainText("Dues are not paid yet");
+    await tool.locator("#hubAppConfirmNo").click();
+
+    await tool.locator("[data-app-bucket='renewal']").click();
+    await expect(tool.locator("[data-app-approve='app-john']")).toHaveText("Approve renewal");
+    await tool.locator("[data-app-approve='app-john']").click();
+    await expect(tool.locator("#hubAppConfirmTitle")).toHaveText("Approve renewal");
+    await expect(tool.locator("#hubAppConfirmBody")).toHaveText("Make John Sample active again? No email is sent. They keep their current Member Hub login.");
+    await expect(tool.locator("#hubAppConfirmYes")).toHaveText("Approve renewal");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.locator("#hubAppConfirm").screenshot({
+      path: path.join(PREVIEW, "01-renewal-approve-dialog.png"),
+      animations: "disabled"
+    });
+    await tool.locator("#hubAppConfirmYes").click();
+    await expect(tool.locator("#hubAppFlash")).toHaveText("Renewed. They are active again and keep their current Member Hub login. No email was sent.");
+    await expect(tool.locator("[data-app-id='app-john']")).toHaveCount(0);
+    await tool.locator("[data-app-bucket='board']").click();
+    await expect(tool.locator("[data-app-id='app-john']")).toHaveAttribute("data-app-status", "active");
+    await expect(tool.locator("[data-app-approve='app-nia']")).toHaveText("Approve membership (voted in at general meeting)");
+    assertHealthy(expect, report, "renewal approve");
+  });
+
+  test("induction approve warns when dues are unpaid and does not block", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-john",
+            partner_first_name: "John",
+            partner_last_name: "Sample",
+            dues_paid: false,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-jane",
+            dues_paid: false,
+            created_at: "2026-11-01T16:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            dues_paid: true,
+            created_at: "2026-11-04T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("[data-app-approve='app-jane']").click();
+    const body = tool.locator("#hubAppConfirmBody");
+    await expect(body).toContainText("Dues are not paid yet for: Jane Sample and John Sample.");
+    await expect(body).toContainText("You can still approve after the vote.");
+    await expect(body).toContainText("voted them in at a general meeting");
+    await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.locator("#hubAppConfirm").screenshot({
+      path: path.join(PREVIEW, "04-approve-unpaid-warning.png"),
+      animations: "disabled"
+    });
+    await tool.locator("#hubAppConfirmNo").click();
+    await tool.locator("[data-app-approve='app-nia']").click();
+    await expect(tool.locator("#hubAppConfirmBody")).not.toContainText("Dues are not paid yet");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
+    await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
+    assertHealthy(expect, report, "unpaid dues warning");
+  });
+
+  test("couple induction preview shows one dues block per person", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-john",
+            partner_first_name: "John",
+            partner_last_name: "Sample",
+            dues_paid: false,
+            background_check_paid: true,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-jane",
+            dues_paid: false,
+            background_check_paid: true,
+            created_at: "2026-11-01T16:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("[data-app-dues='app-jane']").click();
+    await tool.locator("#hubInductionWhen").fill("Tuesday, January 6, 2026 at 7:00 PM");
+    await tool.locator("#hubInductionPlace").fill("Krewe hall");
+    const preview = tool.locator("#hubInductionPreview");
+    await expect(preview).toContainText("Full Krewe");
+    await expect(preview).toContainText("Jane Sample");
+    await expect(preview).toContainText("John Sample");
+    const html = await preview.innerHTML();
+    expect(html.match(/\$375\.00/g)).toHaveLength(2);
+    expect(html.match(/Pay dues on Zeffy/g)).toHaveLength(2);
+    expect(html).toContain("On Zeffy, add one ticket for each person and put each person's name and email on their own ticket.");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.locator("#hubAppConfirm").screenshot({
+      path: path.join(PREVIEW, "05-couple-induction-preview.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "couple induction preview");
+  });
+
+  test("membership level select is hidden from induction and prices the preview", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            phone: "813-555-0140",
+            membership_status: "pending-new",
+            membership_level: "full",
+            application_fee_type: "single",
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "single",
+            background_check_paid: true,
+            dues_paid: false,
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            dues_paid: true,
+            created_at: "2026-11-03T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    const jane = tool.locator("[data-app-id='app-jane']");
+    await expect(jane.locator("[data-app-level]")).toBeVisible();
+    await expect(jane.locator("label[for='hubLevel-app-jane']")).toHaveText("Membership level");
+    await expect(jane.locator("[data-app-level] option")).toHaveText([
+      "Full Krewe, $375",
+      "Associate, $450",
+      "Auxiliary, $200",
+      "Leave of absence, $100"
+    ]);
+    await expect(tool.locator("[data-app-id='app-john'] [data-app-level]")).toBeVisible();
+    await expect(tool.locator("[data-app-id='app-nia'] [data-app-level]")).toHaveCount(0);
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await jane.screenshot({
+      path: path.join(PREVIEW, "03-level-picker.png"),
+      animations: "disabled"
+    });
+    await tool.locator("[data-app-id='app-john'] [data-app-level]").selectOption("associate");
+    await tool.locator("[data-app-dues='app-john']").click();
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Associate");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("$450.00");
+    await tool.locator("#hubAppConfirmNo").click();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await tool.locator("[data-app-bucket='board']").click();
+    const phoneCard = tool.locator("[data-app-id='app-jane']");
+    await expect(phoneCard.locator("[data-app-level]")).toBeVisible();
+    await phoneCard.screenshot({
+      path: path.join(PREVIEW, "03-level-picker-phone.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "membership level picker");
+  });
+
+  test("auxiliary fee included is only on an auxiliary fee-pending card", async ({ page }) => {
+    const report = watchPage(page);
+    let confirmMessage = "";
+    page.on("dialog", (dialog) => {
+      confirmMessage = dialog.message();
+      dialog.accept();
+    });
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "background-check",
+            membership_level: "auxiliary",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "background-check",
+            membership_level: "full",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "bg_paid",
+            membership_level: "auxiliary",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-03T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    const jane = tool.locator("[data-app-id='app-jane']");
+    await expect(jane.locator("[data-app-aux-fee]")).toHaveText("Auxiliary: fee included");
+    await expect(jane).toContainText("Not paid yet");
+    await expect(tool.locator("[data-app-id='app-john'] [data-app-aux-fee]")).toHaveCount(0);
+    await expect(tool.locator("[data-app-id='app-nia'] [data-app-aux-fee]")).toHaveCount(0);
+    await expect(tool.locator("[data-app-id='app-nia']")).toContainText("Included with Auxiliary");
+    await expect(tool.locator("[data-app-start='app-nia']")).toHaveText("Start background check");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await jane.screenshot({
+      path: path.join(PREVIEW, "06-auxiliary-fee-included.png"),
+      animations: "disabled"
+    });
+    await jane.locator("[data-app-aux-fee]").click();
+    expect(confirmMessage).toBe("Auxiliary dues ($200) include the background check fee. Move Jane Sample to Background check fee paid without a fee payment? No email is sent.");
+    await expect(tool.locator("[data-app-id='app-jane']")).toHaveAttribute("data-app-status", "bg_paid");
+    await expect(tool.locator("[data-app-id='app-jane']")).toContainText("Included with Auxiliary");
+    await expect(tool.locator("[data-app-start='app-jane']")).toHaveText("Start background check");
+    await expect(tool.locator("[data-app-aux-fee='app-jane']")).toHaveCount(0);
+    await expect(tool.locator("#hubAppFlash")).toContainText("No email was sent.");
+    assertHealthy(expect, report, "auxiliary fee included");
+  });
+
+  test("joining packet preview shows the auxiliary background check line", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [{
+          id: "app-nia",
+          first_name: "Nia",
+          last_name: "Test",
+          email: "nia.test@example.com",
+          membership_status: "pending-new",
+          membership_level: "auxiliary",
+          created_at: "2026-11-01T15:00:00.000Z"
+        }]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("#hubEditJoiningPacket").click();
+    await tool.locator("#hubPacketPreviewBtn").click();
+    const preview = tool.locator("#hubPacketPreview");
+    await expect(preview).toContainText("You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.");
+    await expect(preview).toContainText("Nia");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await preview.screenshot({
+      path: path.join(PREVIEW, "07-bg-email-auxiliary.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "auxiliary background email preview");
   });
 });

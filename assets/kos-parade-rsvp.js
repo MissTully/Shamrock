@@ -51,6 +51,12 @@
     if (ev.ticket_price_cents == null && el.getAttribute("data-ticket-cents")) {
       ev.ticket_price_cents = Number(el.getAttribute("data-ticket-cents"));
     }
+    if (ev.guest_fee_cents == null && el.getAttribute("data-guest-fee-cents")) {
+      ev.guest_fee_cents = Number(el.getAttribute("data-guest-fee-cents"));
+    }
+    if (ev.guest_fee_family_cents == null && el.getAttribute("data-guest-fee-family-cents")) {
+      ev.guest_fee_family_cents = Number(el.getAttribute("data-guest-fee-family-cents"));
+    }
     return ev;
   }
 
@@ -71,6 +77,12 @@
     var dollars = n / 100;
     if (Math.abs(dollars - Math.round(dollars)) < 0.001) return "$" + String(Math.round(dollars));
     return "$" + dollars.toFixed(2);
+  }
+
+  function guestFeeCopy(ev) {
+    var adult = priceText(ev && ev.guest_fee_cents) || "$25";
+    var family = priceText(ev && ev.guest_fee_family_cents) || "$10";
+    return "Guests are " + adult + " per guest. Immediate family or under 12 are " + family + ". Guest fees are paid on Zeffy.";
   }
 
   function resolveTicketUrl(ev) {
@@ -174,7 +186,7 @@
         '<label>Guests you\'re bringing' +
         '<input class="kos-pr-count" type="number" min="0" max="20" inputmode="numeric" value="' + guestCount(ev) + '" aria-label="Guests you are bringing">' +
         "</label>" +
-        '<p class="kos-pr-fee">' + esc(FEE_COPY) + "</p>" +
+        '<p class="kos-pr-fee">' + esc(guestFeeCopy(ev)) + "</p>" +
         '<a class="kos-pr-pay" href="' + esc(payUrl(ev)) + '" target="_blank" rel="noopener noreferrer">Pay guest fees on Zeffy</a>' +
         "</div>";
     }
@@ -211,7 +223,9 @@
       ' data-collect-guests="' + (paradeGuestUi(ev) ? "1" : "0") + '"' +
       ' data-parade-pay="' + esc(safeHttp(ev.guest_payment_url) || "") + '"' +
       ' data-ticket-url="' + esc(ticket) + '"' +
-      ' data-ticket-cents="' + esc(cents) + '">' +
+      ' data-ticket-cents="' + esc(cents) + '"' +
+      ' data-guest-fee-cents="' + esc(ev.guest_fee_cents == null || ev.guest_fee_cents === "" ? "" : String(ev.guest_fee_cents)) + '"' +
+      ' data-guest-fee-family-cents="' + esc(ev.guest_fee_family_cents == null || ev.guest_fee_family_cents === "" ? "" : String(ev.guest_fee_family_cents)) + '">' +
       inner + "</div>";
   }
 
