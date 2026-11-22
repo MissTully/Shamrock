@@ -30,7 +30,9 @@ test("join interest form: required fields block an empty submit", async ({ page 
   await expect(lead).toContainText("full application comes later by email from the Membership Chair");
   await expect(lead).toContainText("does not ask for a Social Security number");
   await expect(lead).toContainText("driver's license");
-  await expect(page.locator("#appFeeBox, #duesFeeBox, #feeTypeField, #partnerFields, #joinNextSteps")).toHaveCount(0);
+  await expect(page.locator("#applySingle")).toBeChecked();
+  await expect(page.locator("#partnerFields")).toBeHidden();
+  await expect(page.locator("#appFeeBox, #duesFeeBox, #joinNextSteps")).toHaveCount(0);
   await expect(page.locator('a[href*="zeffy.com"]')).toHaveCount(0);
   await expect(page.locator("#appSsn, #partnerSsn")).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Membership at a Glance");
@@ -74,12 +76,70 @@ test("join interest submit posts name, email, phone, and address only", async ({
   expect(body.p_state).toBe("FL");
   expect(body.p_zip).toBe("33602");
   expect(body.p_notes).toBe("Heard about the krewe at a parade.");
-  expect(body).not.toHaveProperty("p_fee_type");
-  expect(body).not.toHaveProperty("p_partner_first");
+  expect(body.p_fee_type).toBe("single");
+  expect(body.p_partner_first).toBeNull();
+  expect(body.p_partner_last).toBeNull();
+  expect(body.p_partner_email).toBeNull();
+  expect(body.p_partner_phone).toBeNull();
   expect(body).not.toHaveProperty("p_ssn");
   expect(body).not.toHaveProperty("p_partner_ssn");
   await expect(page.locator("#message")).toContainText("Something went wrong sending your interest");
   assertHealthy(expect, report, "join interest submit");
+});
+
+test("couple Join form asks for a partner and stays short", async ({ page }) => {
+  const report = watchPage(page);
+  const fs = require("fs");
+  const path = require("path");
+  let body = null;
+  await page.route("**/rest/v1/rpc/submit_membership_application", async (route) => {
+    body = route.request().postDataJSON();
+    await route.abort();
+  });
+  await page.goto("/membership-application.html");
+  await page.locator("#applyCouple").check();
+  await expect(page.locator("#partnerFields")).toBeVisible();
+  await page.fill("#firstName", "Alex");
+  await page.fill("#lastName", "Quinn");
+  await page.fill("#email", "alex.quinn@example.com");
+  await page.fill("#phone", "813-555-0148");
+  await page.fill("#street", "12 River Street");
+  await page.fill("#city", "Tampa");
+  await page.fill("#state", "FL");
+  await page.fill("#zip", "33602");
+  await page.locator("#submitBtn").click();
+  expect(body, "a couple without a partner name must not submit").toBeNull();
+
+  await page.fill("#partnerFirst", "Jordan");
+  await page.fill("#partnerLast", "Quinn");
+  await page.fill("#partnerEmail", "jordan.quinn@example.com");
+  await page.fill("#partnerPhone", "813-555-0199");
+  await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+  await page.locator(".form-card").screenshot({
+    path: "/opt/cursor/artifacts/join-form-couple-desktop.png",
+    animations: "disabled"
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(".form-card").screenshot({
+    path: "/opt/cursor/artifacts/join-form-couple-phone.png",
+    animations: "disabled"
+  });
+  await page.locator("#submitBtn").click();
+  await expect.poll(() => body).not.toBeNull();
+  expect(body.p_fee_type).toBe("couple");
+  expect(body.p_partner_first).toBe("Jordan");
+  expect(body.p_partner_last).toBe("Quinn");
+  expect(body.p_partner_email).toBe("jordan.quinn@example.com");
+  expect(body.p_partner_phone).toBe("813-555-0199");
+  expect(body).not.toHaveProperty("p_ssn");
+  const sql = fs.readFileSync(path.join(__dirname, "../../sql/kos_join_couple_interest.sql"), "utf8");
+  expect(sql).toContain("Applying as:");
+  expect(sql).toContain("partner_member_id");
+  expect(sql).toContain("Please use the $75 couple fee");
+  expect(sql).toContain("Please use the $50 individual fee");
+  expect(sql).not.toContain("Pay Full Krewe dues");
+  expect(sql).not.toContain("—");
+  assertHealthy(expect, report, "couple join form");
 });
 
 test("full application is token gated and checks driver's license above SSN", async ({ page }) => {

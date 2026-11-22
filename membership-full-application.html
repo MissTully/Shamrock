@@ -293,7 +293,9 @@
       feeType = String((info && info.fee_type) || "").toLowerCase() === "dual" ? "dual" : "single";
       const dual = feeType === "dual";
       const first = (info && info.applicant_first) ? String(info.applicant_first) : "";
-      const partner = (info && info.partner_first) ? String(info.partner_first) : "";
+      const partner = (info && info.partner_name)
+        ? String(info.partner_name)
+        : [info && info.partner_first, info && info.partner_last].filter(Boolean).join(" ");
       document.getElementById("fullGreeting").textContent = first
         ? "Hello " + first + ". This is the background-check form."
         : "Background-check form";

@@ -5570,8 +5570,8 @@
 
   function applicationFeeHint(row) {
     var t = String(row.application_fee_type || row.fee_type || "").toLowerCase();
-    if (t === "dual" || t === "couple") return "Background check fee: $75 couple. This is not membership dues.";
-    if (t === "single") return "Background check fee: $50 individual. This is not membership dues.";
+    if (t === "dual" || t === "couple") return "Applying as: Couple. Background check fee: $75 couple. This is not membership dues.";
+    if (t === "single") return "Applying as: Single. Background check fee: $50 individual. This is not membership dues.";
     return "Background check fee: $50 individual or $75 couple. This is not membership dues.";
   }
 

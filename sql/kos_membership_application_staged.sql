@@ -778,7 +778,7 @@ begin
     v_html := public.kos_prospect_background_check_email_html(
       coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
       v_url,
-      null::jsonb
+      jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))
     );
   elsif to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
     v_html := public.kos_prospect_background_check_email_html(
@@ -896,7 +896,14 @@ begin
     'already_submitted', v_link.used_at is not null,
     'fee_type', rec.application_fee_type,
     'applicant_first', rec.first_name,
-    'partner_first', case when rec.application_fee_type = 'dual' then rec.partner_first_name else null end
+    'partner_first', case when rec.application_fee_type = 'dual' then rec.partner_first_name else null end,
+    'partner_last', case when rec.application_fee_type = 'dual' then rec.partner_last_name else null end,
+    'partner_name', case
+      when rec.application_fee_type = 'dual' then nullif(btrim(
+        coalesce(rec.partner_first_name, '') || ' ' || coalesce(rec.partner_last_name, '')
+      ), '')
+      else null
+    end
   );
 end;
 $$;

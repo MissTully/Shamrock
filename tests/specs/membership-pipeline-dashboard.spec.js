@@ -148,6 +148,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Sam Patel");
   await expect(tool.locator("[data-app-id='app-sam']")).toContainText("Full application not submitted yet");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Alex Quinn and Jordan Quinn");
+  await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Applying as: Couple");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Background check paid $75 couple, Oct 31");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Dues not paid");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Start background check");
@@ -163,7 +164,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   const couple = tool.locator("[data-app-id='app-alex']");
   await expect(couple).toBeVisible();
   await couple.screenshot({
-    path: "/opt/cursor/artifacts/membership-couple-bg-paid.png",
+    path: "/opt/cursor/artifacts/join-dashboard-couple-card.png",
     animations: "disabled"
   });
   await page.evaluate(() => {
@@ -318,6 +319,18 @@ test("journey email samples use fictional names", async ({ page }) => {
   await expect(page.locator("body")).not.toContainText("—");
   await page.screenshot({
     path: "/opt/cursor/artifacts/welcome-email-preview.png",
+    fullPage: true
+  });
+
+  await page.goto("/previews/membership-interest-chair-email.html");
+  await expect(page.locator("#emailBody")).toContainText("Applying as:");
+  await expect(page.locator("#emailBody")).toContainText("Couple");
+  await expect(page.locator("#emailBody")).toContainText("Jordan Quinn");
+  await expect(page.locator("#emailBody a[href='tel:8135550148']")).toHaveText("813-555-0148");
+  await expect(page.locator("#emailBody a[href='tel:8135550199']")).toHaveText("813-555-0199");
+  await expect(page.locator("body")).not.toContainText("—");
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/join-interest-chair-email.png",
     fullPage: true
   });
 });

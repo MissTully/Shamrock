@@ -1811,13 +1811,23 @@ declare
   v_dues_intro text;
   v_closing text;
   v_signoff text;
+  v_apply text;
 begin
   if v_app !~ '^https://www\.kreweofshamrock\.com/membership-full-application\.html\?token=[0-9a-f]{64}$' then
     v_app := '';
   end if;
 
-  v_tpl := coalesce(p_template, '{}'::jsonb);
-  if p_template is null and to_regprocedure('public.kos_joining_packet_email_copy()') is not null then
+  v_apply := lower(btrim(coalesce(p_template->>'fee_type', '')));
+  if v_apply in ('couple', 'dual') then
+    v_apply := 'dual';
+  elsif v_apply = 'single' then
+    v_apply := 'single';
+  else
+    v_apply := '';
+  end if;
+  v_tpl := coalesce(p_template, '{}'::jsonb) - 'fee_type';
+  if (p_template is null or v_tpl = '{}'::jsonb)
+     and to_regprocedure('public.kos_joining_packet_email_copy()') is not null then
     v_tpl := public.kos_joining_packet_email_copy();
   end if;
 
@@ -1864,6 +1874,11 @@ begin
     || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">'
     || public.kos_joining_packet_fill(v_fee_heading, v_name) || '</h2>'
     || '<p>' || public.kos_joining_packet_fill(v_fee_intro, v_name) || '</p>';
+  if v_apply = 'dual' then
+    v_html := v_html || '<p><strong>You are applying as a couple. Please use the $75 couple fee.</strong> The $50 link is there for a single applicant.</p>';
+  elsif v_apply = 'single' then
+    v_html := v_html || '<p><strong>You are applying as a single applicant. Please use the $50 individual fee.</strong> The $75 link is there for a couple.</p>';
+  end if;
 
   for v_key, v_label, v_fallback_amount, v_fallback_explainer, v_button in
     select item_key, item_label, item_amount, item_explainer, item_button
@@ -1892,6 +1907,11 @@ begin
       else '$' || trim(to_char(v_amount, 'FM999990.00'))
     end;
     v_html := v_html
+      || case
+           when (v_apply = 'dual' and v_key = 'couple') or (v_apply = 'single' and v_key = 'individual')
+             then '<p style="margin:12px 0 4px;font-weight:700;color:#14532d;">Your fee</p>'
+           else ''
+         end
       || '<h3 style="margin:16px 0 6px;font-size:17px;color:#14532d;">'
       || public.kos_email_plain(v_label) || ', ' || v_money || '</h3>'
       || '<p style="margin:0 0 8px;">' || public.kos_email_plain(v_explainer) || '</p>';
@@ -2262,6 +2282,18 @@ comment on function public.list_membership_applications(text) is
 -- Interest email. Phone is a large tap-to-call link for the Membership Chair.
 -- Replaces the copy that told the chair to invoice dues at the full application.
 -- ---------------------------------------------------------------------------
+alter table public.members add column if not exists partner_email text;
+alter table public.members add column if not exists partner_phone text;
+
+comment on column public.members.partner_email is
+  'Optional email for the second applicant on a couple interest form. Not a login.';
+comment on column public.members.partner_phone is
+  'Optional phone for the second applicant on a couple interest form.';
+
+drop function if exists public.submit_membership_application(
+  text, text, text, text, text, text, text, text, text, text, text, text, text, text
+);
+
 create or replace function public.submit_membership_application(
   p_first_name text,
   p_last_name text,
@@ -2276,7 +2308,9 @@ create or replace function public.submit_membership_application(
   p_partner_first text default null,
   p_partner_last text default null,
   p_ssn text default null,
-  p_partner_ssn text default null
+  p_partner_ssn text default null,
+  p_partner_email text default null,
+  p_partner_phone text default null
 )
 returns jsonb
 language plpgsql
@@ -2296,6 +2330,9 @@ declare
   v_fee text := lower(coalesce(nullif(btrim(p_fee_type), ''), ''));
   v_partner_first text := nullif(left(trim(coalesce(p_partner_first, '')), 80), '');
   v_partner_last text := nullif(left(trim(coalesce(p_partner_last, '')), 80), '');
+  v_partner_email text := nullif(left(lower(trim(coalesce(p_partner_email, ''))), 120), '');
+  v_partner_phone text := nullif(left(trim(coalesce(p_partner_phone, '')), 40), '');
+  v_partner_id uuid;
   v_id uuid;
   v_status text;
   v_is_new boolean := false;
@@ -2328,9 +2365,17 @@ begin
   if v_fee = 'dual' and (v_partner_first is null or v_partner_last is null) then
     return jsonb_build_object('ok', false, 'message', 'Enter the second applicant''s first and last name.');
   end if;
+  if v_partner_email is not null and position('@' in v_partner_email) = 0 then
+    return jsonb_build_object('ok', false, 'message', 'Enter a valid email for your partner, or leave that field blank.');
+  end if;
+  if v_fee = 'dual' and v_partner_email is not null and v_partner_email = v_email then
+    return jsonb_build_object('ok', false, 'message', 'Use a different email for your partner, or leave that field blank.');
+  end if;
   if v_fee <> 'dual' then
     v_partner_first := null;
     v_partner_last := null;
+    v_partner_email := null;
+    v_partner_phone := null;
   end if;
 
   select count(*) into v_recent
@@ -2354,12 +2399,14 @@ begin
       first_name, last_name, email, phone, notes,
       street_address, city, state, zip,
       member_role, membership_status,
-      application_fee_type, partner_first_name, partner_last_name
+      application_fee_type, partner_first_name, partner_last_name,
+      partner_email, partner_phone
     ) values (
       v_first, v_last, v_email, v_phone, v_notes,
       v_street, v_city, v_state, v_zip,
       'prospect', 'pending-new',
-      nullif(v_fee, ''), v_partner_first, v_partner_last
+      nullif(v_fee, ''), v_partner_first, v_partner_last,
+      v_partner_email, v_partner_phone
     ) returning id into v_id;
     v_is_new := true;
     v_status := 'pending-new';
@@ -2388,8 +2435,100 @@ begin
         when v_open and v_fee = 'single' then null
         else partner_last_name
       end,
+      partner_email = case
+        when v_open and v_fee = 'dual' then v_partner_email
+        when v_open and v_fee = 'single' then null
+        else partner_email
+      end,
+      partner_phone = case
+        when v_open and v_fee = 'dual' then v_partner_phone
+        when v_open and v_fee = 'single' then null
+        else partner_phone
+      end,
       updated_at = now()
     where id = v_id;
+  end if;
+
+  if v_fee = 'dual' and (v_is_new or v_open) then
+    v_partner_id := null;
+    if v_partner_email is not null then
+      select m.id into v_partner_id
+        from public.members m
+       where m.merged_into is null
+         and m.id <> v_id
+         and lower(btrim(coalesce(m.email, ''))) = v_partner_email
+       order by m.created_at
+       limit 1;
+    end if;
+    if v_partner_id is null then
+      select m.id into v_partner_id
+        from public.members m
+       where m.merged_into is null
+         and m.id <> v_id
+         and lower(btrim(coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, '')))
+             = lower(v_partner_first || ' ' || v_partner_last)
+         and m.membership_status in (
+           'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+         )
+       order by m.created_at
+       limit 1;
+    end if;
+    if v_partner_id is null then
+      begin
+        insert into public.members (
+          first_name, last_name, email, phone,
+          street_address, city, state, zip,
+          member_role, membership_status,
+          application_fee_type, partner_first_name, partner_last_name
+        ) values (
+          v_partner_first, v_partner_last, v_partner_email, v_partner_phone,
+          v_street, v_city, v_state, v_zip,
+          'prospect', 'pending-new',
+          'dual', v_first, v_last
+        ) returning id into v_partner_id;
+      exception
+        when not_null_violation then
+          v_partner_id := null;
+      end;
+    else
+      update public.members
+         set phone = coalesce(v_partner_phone, phone),
+             application_fee_type = case
+               when membership_status in (
+                 'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+               ) then 'dual'
+               else application_fee_type
+             end,
+             partner_first_name = case
+               when membership_status in (
+                 'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+               ) then v_first
+               else partner_first_name
+             end,
+             partner_last_name = case
+               when membership_status in (
+                 'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+               ) then v_last
+               else partner_last_name
+             end,
+             updated_at = now()
+       where id = v_partner_id
+         and merged_into is null;
+    end if;
+    if v_partner_id is not null then
+      update public.members
+         set partner_member_id = v_partner_id,
+             updated_at = now()
+       where id = v_id
+         and merged_into is null
+         and (partner_member_id is null or partner_member_id = v_partner_id);
+      update public.members
+         set partner_member_id = v_id,
+             updated_at = now()
+       where id = v_partner_id
+         and merged_into is null
+         and (partner_member_id is null or partner_member_id = v_id);
+    end if;
   end if;
 
   v_addr := v_street || ', ' || v_city || ', ' || v_state || ' ' || v_zip;
@@ -2413,10 +2552,26 @@ begin
              || v_tel || '">' || public.kos_email_plain(v_phone) || '</a></p>'
            else '<p>No phone number was given.</p>'
          end
+      || '<p><strong>Applying as:</strong> '
+      || case when v_fee = 'dual' then 'Couple' when v_fee = 'single' then 'Single' else 'Not chosen' end
+      || '</p>'
       || case
-           when v_fee = 'dual' then '<p>Second applicant: '
+           when v_fee = 'dual' then
+             '<p><strong>Partner:</strong> '
              || public.kos_email_plain(coalesce(v_partner_first, '')) || ' '
              || public.kos_email_plain(coalesce(v_partner_last, '')) || '</p>'
+             || case
+                  when v_partner_email is not null then '<p>Partner email: '
+                    || public.kos_email_plain(v_partner_email) || '</p>'
+                  else ''
+                end
+             || case
+                  when v_partner_phone is not null then
+                    '<p style="font-size:20px;margin:12px 0;"><strong>Partner phone: </strong><a href="tel:'
+                    || regexp_replace(v_partner_phone, '[^0-9+]', '', 'g') || '">'
+                    || public.kos_email_plain(v_partner_phone) || '</a></p>'
+                  else ''
+                end
            else ''
          end
       || '<p>' || public.kos_email_plain(v_fee_line) || '</p>'
@@ -2449,5 +2604,5 @@ end;
 $$;
 
 grant execute on function public.submit_membership_application(
-  text, text, text, text, text, text, text, text, text, text, text, text, text, text
+  text, text, text, text, text, text, text, text, text, text, text, text, text, text, text, text
 ) to anon, authenticated;
