@@ -1261,16 +1261,40 @@
       slot + "</article>";
   }
 
-  function paintKreweParadeList(rows) {
+  // Parade RSVP lives on the Parade tab (the season card). My Krewe only
+  // points there. The same kosParadeRsvp widget is mounted on that card.
+  function kreweParadeJumpHtml() {
+    return '<p class="hub-krewe-parade-jump"><button type="button" class="hub-krewe-parade-link" data-hub-open-parade-rsvp>Parade RSVPs are in Parades</button></p>';
+  }
+
+  function openParadeRsvpSection() {
+    // Open the Parade tab at its root. showTab skips the hub router, so the
+    // My Krewe tab would not switch back. openTab restores a saved drill
+    // such as Carpool, and on a phone that drill hides the parade RSVP card.
+    if (appNavApi && typeof appNavApi.showParadeRoot === "function") appNavApi.showParadeRoot();
+    else if (appNavApi && typeof appNavApi.openTab === "function") appNavApi.openTab("parade");
+    else showTab("parade", { skipScroll: true });
+    var card = document.getElementById("hubParadeSeasonCard");
+    if (card && typeof card.scrollIntoView === "function") {
+      try { card.scrollIntoView({ block: "start", behavior: "auto" }); } catch (err) {}
+    }
+  }
+
+  function wireKreweParadeJump(host) {
+    if (!host || host.getAttribute("data-wired") === "1") return;
+    host.setAttribute("data-wired", "1");
+    host.addEventListener("click", function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest("[data-hub-open-parade-rsvp]") : null;
+      if (!btn || !host.contains(btn)) return;
+      openParadeRsvpSection();
+    });
+  }
+
+  function paintKreweParadeList() {
     var host = document.getElementById("hubKreweParadeList");
     if (!host) return;
-    var list = (rows || []).filter(isKreweParadeEvent);
-    host.innerHTML = list.length
-      ? '<h3 class="hub-krewe-parade-title">Parade RSVPs</h3>' + list.map(function (row) {
-        return paradeRsvpCardHtml(row, "hub-krewe-parade");
-      }).join("")
-      : "";
-    if (list.length) mountParadeRsvps(host);
+    host.innerHTML = kreweParadeJumpHtml();
+    wireKreweParadeJump(host);
   }
 
   function paintHomeParadeList() {
@@ -1318,7 +1342,7 @@
       wireParadeSeasonList(target, rows);
       prepareShare(target);
     });
-    paintKreweParadeList(rows);
+    paintKreweParadeList();
     paintHomeParadeList();
   }
   window.__kosRenderParadeSeason = renderHubParadeSeason;
@@ -1817,9 +1841,10 @@
       '<section class="app-card"><div class="app-head"><span class="ic">☘</span><div><h2>My Krewe</h2><small>Profile and member directory</small></div></div>' +
       '<div class="app-body">' +
       '<div id="hubMyParadeGuests"></div>' +
-      '<div id="hubKreweParadeList"></div>' +
+      '<div id="hubKreweParadeList">' + kreweParadeJumpHtml() + "</div>" +
       '<div class="hub-profile" id="hubProfileCard"><h3>Your profile</h3><p class="empty">Loading…</p></div>' +
       "</div></div></section>";
+    wireKreweParadeJump(document.getElementById("hubKreweParadeList"));
     ensureMyParadeGuests();
 
     var events = document.getElementById("hubEvents");
@@ -6433,6 +6458,16 @@
     return "Logged in the Hub";
   }
 
+  var hourNoteDrafts = {};
+
+  function rememberHourNoteDrafts(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll("textarea[data-hours-note]").forEach(function (el) {
+      var id = String(el.id || "").replace(/^hubHoursNote-/, "");
+      if (id) hourNoteDrafts[id] = el.value || "";
+    });
+  }
+
   function renderHourApprovalsHtml(rows) {
     if (!rows || !rows.length) return "";
     var html = '<h3 class="hub-appr-h">Volunteer hours</h3>';
@@ -6447,7 +6482,7 @@
         '<div class="muted">' + esc(bits.join(" · ")) + "</div>" +
         (q.notes ? '<div class="muted">' + esc(q.notes) + "</div>" : "") +
         '<label class="muted" style="display:block;margin-top:8px;" for="hubHoursNote-' + esc(q.id) + '">Optional note</label>' +
-        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision"></textarea>' +
+        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision">' + esc(hourNoteDrafts[String(q.id)] || "") + "</textarea>" +
         '</div><div class="hub-appr-btns">' +
         '<button type="button" class="btn btn-primary" data-hours-approve="' + esc(q.id) + '">Approve</button>' +
         '<button type="button" class="btn" data-hours-decline="' + esc(q.id) + '">Decline</button>' +
@@ -6597,6 +6632,7 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
+    rememberHourNoteDrafts(card);
     var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
       '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
