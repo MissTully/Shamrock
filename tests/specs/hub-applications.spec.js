@@ -422,7 +422,7 @@ test.describe("Membership Applications", () => {
         };
         return builder;
       }
-      window.__kosSb = {
+      const stub = {
         from: () => query(),
         rpc: async (name, args) => {
           window.__revealArgs = args;
@@ -431,6 +431,13 @@ test.describe("Membership Applications", () => {
           return { data: { ok: true, ssn: "123456789" } };
         }
       };
+      // A later Hub load used to replace this stub, so the copy succeeded
+      // from a different client and __revealArgs stayed empty.
+      Object.defineProperty(window, "__kosSb", {
+        configurable: true,
+        get: function () { return stub; },
+        set: function () {}
+      });
     }, { officer: true, canReviewApplications: true, applications: masked });
     const nia = page.locator("#hubApplications [data-app-id='app-nia']");
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();

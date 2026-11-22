@@ -354,7 +354,7 @@ begin
     v_html := public.kos_prospect_background_check_email_html(
       coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
       v_url,
-      null::jsonb
+      jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))
     );
   else
     v_html := public.kos_prospect_background_check_email_html(

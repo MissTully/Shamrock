@@ -12,10 +12,16 @@
 <link rel="stylesheet" href="assets/krewe.css?v=20261119mobile1" />
 <style>
 .join-lead{margin:0;padding:20px 28px 0;text-align:center;color:var(--green-800);font-size:17px;line-height:1.55;}
+.join-as{border:1px solid rgba(20,83,45,.35);border-radius:12px;margin:4px 0 16px;padding:10px 14px 12px;}
+.join-as legend{color:var(--green-800);font-weight:700;padding:0 6px;}
+.join-as label{align-items:center;display:flex;font-size:18px;gap:12px;margin:10px 0;}
+.join-as input{height:22px;width:22px;}
+#partnerFields[hidden]{display:none !important;}
 @media (max-width:680px){
   .join-lead{padding:16px 16px 0;font-size:16px;}
   .krewe-form .row{ flex-direction:column; gap:0; }
   form.krewe-form{ padding:20px 16px 24px; }
+  .join-as label{font-size:17px;min-height:44px;}
 }
 </style>
 </head>
@@ -115,6 +121,28 @@
           </div>
         </div>
 
+        <fieldset class="join-as">
+          <legend>Applying as</legend>
+          <label for="applySingle"><input id="applySingle" type="radio" name="applyAs" value="single" required checked /> Single</label>
+          <label for="applyCouple"><input id="applyCouple" type="radio" name="applyAs" value="couple" /> Couple</label>
+        </fieldset>
+        <div id="partnerFields" hidden>
+          <div class="row">
+            <div>
+              <label for="partnerFirst">Partner first name</label>
+              <input id="partnerFirst" type="text" autocomplete="off" />
+            </div>
+            <div>
+              <label for="partnerLast">Partner last name</label>
+              <input id="partnerLast" type="text" autocomplete="off" />
+            </div>
+          </div>
+          <label for="partnerEmail">Partner email <span class="hint">(optional)</span></label>
+          <input id="partnerEmail" type="email" autocomplete="off" />
+          <label for="partnerPhone">Partner phone <span class="hint">(optional)</span></label>
+          <input id="partnerPhone" type="tel" autocomplete="off" />
+        </div>
+
         <label for="notes">A short note <span class="hint">(optional)</span></label>
         <textarea id="notes" placeholder="Why you'd like to join, or how you heard about us."></textarea>
 
@@ -166,12 +194,38 @@
     const form = document.getElementById("appForm");
     const btn = document.getElementById("submitBtn");
     const message = document.getElementById("message");
+    const partnerFields = document.getElementById("partnerFields");
+    const partnerFirst = document.getElementById("partnerFirst");
+    const partnerLast = document.getElementById("partnerLast");
     const submitLabel = "☘ Submit interest";
     function showMessage(text, kind) { message.textContent = text; message.className = "msg " + kind; }
+    function applyingAsCouple() {
+      return document.getElementById("applyCouple").checked;
+    }
+    function syncPartnerFields() {
+      const couple = applyingAsCouple();
+      partnerFields.hidden = !couple;
+      partnerFirst.required = couple;
+      partnerLast.required = couple;
+      if (!couple) {
+        partnerFirst.value = "";
+        partnerLast.value = "";
+        document.getElementById("partnerEmail").value = "";
+        document.getElementById("partnerPhone").value = "";
+      }
+    }
+    document.getElementById("applySingle").addEventListener("change", syncPartnerFields);
+    document.getElementById("applyCouple").addEventListener("change", syncPartnerFields);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       message.className = "msg";
+      const couple = applyingAsCouple();
+      if (couple && (!partnerFirst.value.trim() || !partnerLast.value.trim())) {
+        showMessage("Enter your partner's first and last name.", "error");
+        partnerFirst.focus();
+        return;
+      }
       btn.disabled = true; btn.textContent = "Submitting…";
       const interest = {
         p_first_name: document.getElementById("firstName").value.trim(),
@@ -182,7 +236,12 @@
         p_city: document.getElementById("city").value.trim(),
         p_state: document.getElementById("state").value.trim(),
         p_zip: document.getElementById("zip").value.trim(),
-        p_notes: document.getElementById("notes").value.trim() || null
+        p_notes: document.getElementById("notes").value.trim() || null,
+        p_fee_type: couple ? "couple" : "single",
+        p_partner_first: couple ? partnerFirst.value.trim() : null,
+        p_partner_last: couple ? partnerLast.value.trim() : null,
+        p_partner_email: couple ? (document.getElementById("partnerEmail").value.trim() || null) : null,
+        p_partner_phone: couple ? (document.getElementById("partnerPhone").value.trim() || null) : null
       };
       const result = await supabase.rpc("submit_membership_application", interest);
       btn.disabled = false; btn.textContent = submitLabel;

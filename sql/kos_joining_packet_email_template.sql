@@ -318,16 +318,25 @@ declare
   v_dues_intro text;
   v_closing text;
   v_signoff text;
+  v_apply text;
   v_btn_style text := 'display:inline-block;background:#14532d;color:#ffffff;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700;';
 begin
   if v_app !~ '^https://www\.kreweofshamrock\.com/membership-full-application\.html\?token=[0-9a-f]{64}$' then
     v_app := '';
   end if;
 
-  if p_template is null then
+  v_apply := lower(btrim(coalesce(p_template->>'fee_type', '')));
+  if v_apply in ('couple', 'dual') then
+    v_apply := 'dual';
+  elsif v_apply = 'single' then
+    v_apply := 'single';
+  else
+    v_apply := '';
+  end if;
+  if p_template is null or (coalesce(p_template, '{}'::jsonb) - 'fee_type') = '{}'::jsonb then
     v_tpl := public.kos_joining_packet_email_copy();
   else
-    v_tpl := v_defaults || p_template;
+    v_tpl := v_defaults || (p_template - 'fee_type');
   end if;
   v_greeting := coalesce(nullif(btrim(v_tpl->>'greeting'), ''), v_defaults->>'greeting');
   v_intro := coalesce(nullif(btrim(v_tpl->>'intro'), ''), v_defaults->>'intro');
@@ -372,6 +381,11 @@ begin
     || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">'
     || public.kos_joining_packet_fill(v_fee_heading, v_name) || '</h2>'
     || '<p>' || public.kos_joining_packet_fill(v_fee_intro, v_name) || '</p>';
+  if v_apply = 'dual' then
+    v_html := v_html || '<p><strong>You are applying as a couple. Please use the $75 couple fee.</strong> The $50 link is there for a single applicant.</p>';
+  elsif v_apply = 'single' then
+    v_html := v_html || '<p><strong>You are applying as a single applicant. Please use the $50 individual fee.</strong> The $75 link is there for a couple.</p>';
+  end if;
 
   for v_key, v_label, v_fallback_amount, v_fallback_explainer, v_button in
     select item_key, item_label, item_amount, item_explainer, item_button
@@ -400,6 +414,11 @@ begin
       else '$' || trim(to_char(v_amount, 'FM999990.00'))
     end;
     v_html := v_html
+      || case
+           when (v_apply = 'dual' and v_key = 'couple') or (v_apply = 'single' and v_key = 'individual')
+             then '<p style="margin:12px 0 4px;font-weight:700;color:#14532d;">Your fee</p>'
+           else ''
+         end
       || '<h3 style="margin:16px 0 6px;font-size:17px;color:#14532d;">'
       || public.kos_email_plain(v_label) || ', ' || v_money || '</h3>'
       || '<p style="margin:0 0 8px;">' || public.kos_email_plain(v_explainer) || '</p>';
@@ -663,7 +682,7 @@ begin
   v_html := public.kos_prospect_background_check_email_html(
     coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
     v_url,
-    null::jsonb
+    jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))
   );
   v_subject := coalesce(nullif(btrim(public.kos_joining_packet_email_subject()), ''), v_subject);
 

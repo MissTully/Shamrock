@@ -4791,6 +4791,35 @@
     return label + ": " + (kind === "dl" ? "••••" : "•••-••-") + last;
   }
 
+  function applicationLinkedShowsOwn(row, kind) {
+    if (!row) return false;
+    if (kind === "dob") return !!formatApplicationDob(row.birthday);
+    if (kind === "dl") return !!(applicationTail4(row.dl_last4) || row.has_dl);
+    return !!(applicationTail4(row.ssn_last4) || row.has_ssn);
+  }
+
+  function applicationCoupleIdHtml(row, partner) {
+    var html = applicationIdMarkup(row, "applicant", "dl")
+      + applicationIdMarkup(row, "applicant", "ssn")
+      + applicationDobMarkup(row, "applicant");
+    if (partner && applicationLinkedShowsOwn(partner, "dl")) {
+      html += applicationIdMarkup(partner, "applicant", "dl");
+    } else {
+      html += applicationIdMarkup(row, "partner", "dl");
+    }
+    if (partner && applicationLinkedShowsOwn(partner, "ssn")) {
+      html += applicationIdMarkup(partner, "applicant", "ssn");
+    } else {
+      html += applicationIdMarkup(row, "partner", "ssn");
+    }
+    if (partner && applicationLinkedShowsOwn(partner, "dob")) {
+      html += applicationDobMarkup(partner, "applicant");
+    } else {
+      html += applicationDobMarkup(row, "partner");
+    }
+    return html;
+  }
+
   function applicationIdMarkup(row, which, kind) {
     var line = applicationIdLine(row, which, kind);
     if (!line || !state.canReviewApplications) return "";
@@ -5574,8 +5603,8 @@
 
   function applicationFeeHint(row) {
     var t = String(row.application_fee_type || row.fee_type || "").toLowerCase();
-    if (t === "dual" || t === "couple") return "Background check fee: $75 couple. This is not membership dues.";
-    if (t === "single") return "Background check fee: $50 individual. This is not membership dues.";
+    if (t === "dual" || t === "couple") return "Applying as: Couple. Background check fee: $75 couple. This is not membership dues.";
+    if (t === "single") return "Applying as: Single. Background check fee: $50 individual. This is not membership dues.";
     return "Background check fee: $50 individual or $75 couple. This is not membership dues.";
   }
 
@@ -5643,18 +5672,7 @@
     html += "<div>" + applicationBgChip(card) + applicationDuesChip(card) + "</div>";
     html += applicationJourneyLine(card);
     html += '<p class="hub-pipe-meta" data-app-packet>' + esc(applicationPacketLine(row)) + "</p>";
-    html += applicationIdMarkup(row, "applicant", "dl");
-    html += applicationIdMarkup(row, "applicant", "ssn");
-    html += applicationDobMarkup(row, "applicant");
-    if (partner) {
-      html += applicationIdMarkup(partner, "applicant", "dl");
-      html += applicationIdMarkup(partner, "applicant", "ssn");
-      html += applicationDobMarkup(partner, "applicant");
-    } else {
-      html += applicationIdMarkup(row, "partner", "dl");
-      html += applicationIdMarkup(row, "partner", "ssn");
-      html += applicationDobMarkup(row, "partner");
-    }
+    html += applicationCoupleIdHtml(row, partner);
     var applied = formatAppliedEt(row.created_at);
     if (applied) html += '<p class="hub-pipe-meta">Applied: ' + esc(applied) + "</p>";
     if (row.interests && String(row.interests).trim()) html += '<p class="hub-pipe-meta">Interests: ' + esc(redactDisplayedId(row.interests)) + "</p>";

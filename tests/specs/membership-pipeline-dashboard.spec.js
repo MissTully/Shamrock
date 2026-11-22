@@ -148,6 +148,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Sam Patel");
   await expect(tool.locator("[data-app-id='app-sam']")).toContainText("Full application not submitted yet");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Alex Quinn and Jordan Quinn");
+  await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Applying as: Couple");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Background check paid $75 couple, Oct 31");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Dues not paid");
   await expect(tool.locator("[data-app-id='app-alex']")).toContainText("Start background check");
@@ -163,7 +164,7 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   const couple = tool.locator("[data-app-id='app-alex']");
   await expect(couple).toBeVisible();
   await couple.screenshot({
-    path: "/opt/cursor/artifacts/membership-couple-bg-paid.png",
+    path: "/opt/cursor/artifacts/join-dashboard-couple-card.png",
     animations: "disabled"
   });
   await page.evaluate(() => {
@@ -228,6 +229,52 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
     animations: "disabled"
   });
   assertHealthy(expect, report, "pipeline dashboard");
+});
+
+test("linked partner card keeps applicant 2 ids from the primary record", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page, {
+    role: {
+      officer: true,
+      canReviewApplications: true,
+      applications: [
+        {
+          id: "app-alex",
+          first_name: "Alex",
+          last_name: "Quinn",
+          membership_status: "background-check",
+          application_fee_type: "dual",
+          partner_member_id: "app-jordan",
+          partner_first_name: "Jordan",
+          partner_last_name: "Quinn",
+          partner_dl_last4: "4321",
+          partner_ssn_last4: "9876",
+          partner_birthday: "1990-04-02",
+          has_partner_dl: true,
+          has_partner_ssn: true,
+          created_at: "2026-10-20T15:00:00.000Z"
+        },
+        {
+          id: "app-jordan",
+          first_name: "Jordan",
+          last_name: "Quinn",
+          membership_status: "pending-new",
+          application_fee_type: "dual",
+          partner_member_id: "app-alex",
+          created_at: "2026-10-20T16:00:00.000Z"
+        }
+      ]
+    }
+  });
+  await page.locator("[data-hub-tab='officer']").click();
+  await page.locator('[data-tool="tool:hubApplications"]').click();
+  const card = page.locator("#hubApplications [data-app-id='app-alex']");
+  await expect(card).toContainText("Alex Quinn and Jordan Quinn");
+  await expect(card).toContainText("Partner driver's license on file, last 4 only: ••••4321");
+  await expect(card).toContainText("Partner SSN on file, last 4 only: •••-••-9876");
+  await expect(card).toContainText("Partner date of birth: 04/02/1990");
+  await expect(page.locator("#hubApplications [data-app-id='app-jordan']")).toHaveCount(0);
+  assertHealthy(expect, report, "applicant 2 ids stay visible");
 });
 
 test("approve on a couple card targets the partner who is still waiting", async ({ page }) => {
@@ -318,6 +365,18 @@ test("journey email samples use fictional names", async ({ page }) => {
   await expect(page.locator("body")).not.toContainText("—");
   await page.screenshot({
     path: "/opt/cursor/artifacts/welcome-email-preview.png",
+    fullPage: true
+  });
+
+  await page.goto("/previews/membership-interest-chair-email.html");
+  await expect(page.locator("#emailBody")).toContainText("Applying as:");
+  await expect(page.locator("#emailBody")).toContainText("Couple");
+  await expect(page.locator("#emailBody")).toContainText("Jordan Quinn");
+  await expect(page.locator("#emailBody a[href='tel:8135550148']")).toHaveText("813-555-0148");
+  await expect(page.locator("#emailBody a[href='tel:8135550199']")).toHaveText("813-555-0199");
+  await expect(page.locator("body")).not.toContainText("—");
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/join-interest-chair-email.png",
     fullPage: true
   });
 });
