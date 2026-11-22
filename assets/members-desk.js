@@ -9574,6 +9574,13 @@
       row.actor_name = ((window.kosProfile || {}).display_name || "Charity Chair");
       row.updated_at = new Date().toISOString();
       state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      if (roleFixture && Array.isArray(roleFixture.volunteerInquiries)) {
+        roleFixture.volunteerInquiries = volunteerInquiriesFixture.map(function (item) {
+          var copy = {};
+          Object.keys(item || {}).forEach(function (key) { copy[key] = item[key]; });
+          return copy;
+        });
+      }
       syncVolunteerInquiryCounts();
       state.volunteerInquiryFlash = status === "done" ? "Marked done." : "Marked contacted.";
       renderHome();
