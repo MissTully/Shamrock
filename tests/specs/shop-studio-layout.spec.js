@@ -67,6 +67,9 @@ test.describe("Shop Studio action buttons stay inside the card", () => {
     expect(source).not.toContain("Mark awaiting Zeffy");
     expect(source).not.toContain("Automation will create");
     expect(source).toContain("https://www.zeffy.com/en-US/ticketing/kos-shop");
+    expect(source).toContain("hubShopStock");
+    expect(source).toContain("Stock on hand");
+    expect(source).toContain("stock_on_hand");
     assertHealthy(expect, report, "shop studio desktop layout");
   });
 
