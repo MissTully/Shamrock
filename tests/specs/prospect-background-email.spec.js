@@ -108,7 +108,10 @@ test("joining packet template SQL keeps payment links out of the editable letter
   expect(defaults).toContain("We're glad you're joining the Krewe");
   expect(defaults).toContain("We're so glad you're joining the Krewe of Shamrock");
   expect(defaults).toContain("Membership dues come later");
-  expect(defaults).toContain("does not include a dues pay button");
+  expect(defaults).toContain("Your dues link comes after the background check passes");
+  expect(defaults).toContain("The rest of this note is simply how to finish joining");
+  expect(defaults).not.toContain("The Membership Chair has opened the background check");
+  expect(defaults).not.toContain("does not include a dues pay button");
   expect(defaults).not.toMatch(/https?:\/\//);
   expect(defaults).not.toContain("—");
   expect(templateSql).not.toContain("Pay Full Krewe dues");
@@ -122,6 +125,9 @@ test("joining packet template SQL keeps payment links out of the editable letter
   expect(seedSql).toContain("kos_prospect_background_check_email_html(text, text, jsonb)");
   expect(seedSql).toContain("null::jsonb");
   expect(seedSql).toContain("Membership dues come later");
+  expect(seedSql).toContain("The rest of this note is simply how to finish joining");
+  expect(seedSql).not.toContain("The Membership Chair has opened the background check");
+  expect(seedSql).not.toContain("does not include a dues pay button");
   expect(seedSql).not.toContain("Pay Full Krewe dues");
   expect(seedSql).not.toContain("update public.kos_runtime_flags");
   expect(seedSql).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);

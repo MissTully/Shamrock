@@ -1749,14 +1749,14 @@ as $defaults$
   select jsonb_build_object(
     'subject', $s$We're glad you're joining the Krewe$s$,
     'greeting', $s$Dear {{first_name}},$s$,
-    'intro', $s$We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you're ready.$s$,
+    'intro', $s$We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The rest of this note is simply how to finish joining, whenever you're ready.$s$,
     'finish_heading', $s$Let's finish your application$s$,
     'finish_body', $s$When you have a quiet moment, open your private link and finish the full application. It asks for a driver's license number and a Social Security number. We use those only for the background check, and we hold them confidentially.$s$,
     'finish_after', $s$This email doesn't include those numbers. Your link expires in 21 days.$s$,
     'fee_heading', $s$Your background check fee$s$,
     'fee_intro', $s$This fee is separate from membership dues. Pick the one that matches your application.$s$,
     'dues_heading', $s$Membership dues come later$s$,
-    'dues_intro', $s$Your dues link comes after the background check passes. This letter does not include a dues pay button. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.$s$,
+    'dues_intro', $s$Your dues link comes after the background check passes. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.$s$,
     'closing', $s$Welcome to the Krewe. We can't wait to have you with us.$s$,
     'signoff', $s$Sláinte,$s$ || chr(10) || $s$Krewe of Shamrock$s$
   );
@@ -1766,7 +1766,7 @@ revoke all on function public.kos_joining_packet_email_defaults() from public, a
 
 update public.kos_joining_packet_template
    set dues_heading = 'Membership dues come later',
-       dues_intro = 'Your dues link comes after the background check passes. This letter does not include a dues pay button. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.',
+       dues_intro = 'Your dues link comes after the background check passes. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.',
        updated_at = now()
  where id = 'draft'
    and dues_intro ilike '%use that level%';

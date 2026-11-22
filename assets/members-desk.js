@@ -5141,7 +5141,7 @@
     { key: "fee_heading", label: "Background check heading", name: "background check heading", hint: "Sits above the background check note.", max: 120, kind: "input" },
     { key: "fee_intro", label: "Background check note", name: "background check note", hint: "Shown above the locked background check pay buttons.", max: 2000, kind: "area" },
     { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the note that dues come later.", max: 120, kind: "input", lockBefore: "fees" },
-    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Tell them the dues link comes after the check passes. This letter has no dues pay button.", max: 2000, kind: "area" },
+    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Tell them the dues link comes after the check passes.", max: 2000, kind: "area" },
     { key: "closing", label: "Closing", name: "closing", hint: "The paragraph before the sign-off.", max: 2000, kind: "area", lockBefore: "dues" },
     { key: "signoff", label: "Sign-off", name: "sign-off", hint: "You can use two lines.", max: 240, kind: "area" }
   ];
@@ -5153,14 +5153,14 @@
     return {
       subject: "We're glad you're joining the Krewe",
       greeting: "Dear {{first_name}},",
-      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you're ready.",
+      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The rest of this note is simply how to finish joining, whenever you're ready.",
       finish_heading: "Let's finish your application",
       finish_body: "When you have a quiet moment, open your private link and finish the full application. It asks for a driver's license number and a Social Security number. We use those only for the background check, and we hold them confidentially.",
       finish_after: "This email doesn't include those numbers. Your link expires in 21 days.",
       fee_heading: "Your background check fee",
       fee_intro: "This fee is separate from membership dues. Pick the one that matches your application.",
       dues_heading: "Membership dues come later",
-      dues_intro: "Your dues link comes after the background check passes. This letter does not include a dues pay button. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.",
+      dues_intro: "Your dues link comes after the background check passes. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.",
       closing: "Welcome to the Krewe. We can't wait to have you with us.",
       signoff: "Sláinte,\nKrewe of Shamrock"
     };
@@ -5280,7 +5280,7 @@
       html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
     }
     html += "<h3>Edit joining packet email</h3>" +
-      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. This letter does not include a dues pay button. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
     JOINING_PACKET_FIELDS.forEach(function (field) {
       var value = draft[field.key] == null ? "" : String(draft[field.key]);
       if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
