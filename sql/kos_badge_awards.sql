@@ -22,9 +22,11 @@ end;
 $$;
 revoke all on function public.kos_award_badge(uuid, text, timestamptz) from public, anon, authenticated;
 
--- 2. Parade Ready check, same gates as the Hub chip:
---    dues paid this year (officers and board are exempt), waiver signed this year,
---    and a mandatory meeting attended this year.
+-- 2. Parade Ready check, same gates as the Hub chip and v_parade_ready:
+--    dues paid for the June-May season (officers and board are exempt),
+--    waiver signed for that season, and a mandatory meeting attended in
+--    that same June-May window. Use sql/kos_dues_season_jan1_fix.sql on
+--    the live project. Do not re-run this whole file just to apply that.
 create or replace function public.kos_member_parade_ready(p_member uuid)
 returns boolean
 language sql
@@ -36,7 +38,7 @@ as $$
     (
       exists (select 1 from public.dues_payments d
               where d.member_id = m.id and d.paid
-                and d.membership_year = extract(year from current_date)::int)
+                and d.membership_year = public.kos_dues_season_year())
       or coalesce(m.member_role, '') in ('officer', 'captain', 'board')
       or exists (select 1 from public.profiles p
                  join public.member_roles r on r.user_id = p.id
@@ -45,12 +47,15 @@ as $$
     )
     and exists (select 1 from public.waivers w
                 where w.member_id = m.id
-                  and w.season_year = extract(year from current_date)::int)
+                  and w.season_year = public.kos_dues_season_year())
     and exists (select 1 from public.event_signups s
                 join public.events e on e.id = s.event_id
                 where s.member_id = m.id and s.status = 'attended'
                   and e.event_type = 'meeting' and e.is_mandatory
-                  and e.start_time >= date_trunc('year', now()))
+                  and (e.start_time at time zone 'America/New_York')::date
+                      >= make_date(public.kos_dues_season_year(), 6, 1)
+                  and (e.start_time at time zone 'America/New_York')::date
+                      < make_date(public.kos_dues_season_year() + 1, 6, 1))
   from public.members m
   where m.id = p_member
     and m.merged_into is null

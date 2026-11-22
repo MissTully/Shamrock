@@ -8,6 +8,9 @@ import season from "../assets/kos-dues-season.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sql = readFileSync(join(root, "sql/kos_dues_renewal.sql"), "utf8");
+const jan1 = readFileSync(join(root, "sql/kos_dues_season_jan1_fix.sql"), "utf8");
+const badgeSql = readFileSync(join(root, "sql/kos_badge_awards.sql"), "utf8");
+const invoiceSql = readFileSync(join(root, "sql/kos_officer_email_and_invoices.sql"), "utf8");
 const webhook = readFileSync(join(root, "supabase/functions/zeffy-webhook/index.ts"), "utf8");
 
 const dates = [
@@ -67,4 +70,27 @@ test("renewal SQL is a file for the owner, not a live update", () => {
   assert.match(webhook, /membershipYearForPayment/);
   assert.match(webhook, /membership_year: membershipYear/);
   assert.doesNotMatch(sql, /—|–/);
+});
+
+test("January 1 dues fix uses the June-May season and is a file for the owner", () => {
+  assert.match(jan1, /NOT APPLIED/);
+  assert.match(jan1, /oazwkwflgbthojvnclfc/);
+  assert.match(jan1, /kos_dues_season_year/);
+  assert.match(jan1, /create or replace function public\.kos_member_parade_ready/);
+  assert.match(jan1, /d\.membership_year = public\.kos_dues_season_year\(\)/);
+  assert.match(jan1, /w\.season_year = public\.kos_dues_season_year\(\)/);
+  assert.match(jan1, /make_date\(public\.kos_dues_season_year\(\), 6, 1\)/);
+  assert.match(jan1, /make_date\(public\.kos_dues_season_year\(\) \+ 1, 6, 1\)/);
+  const jan1Code = jan1.replace(/^--.*$/mg, "");
+  assert.doesNotMatch(jan1Code, /extract\(year from current_date\)/);
+  assert.doesNotMatch(jan1Code, /date_trunc\('year'/);
+  assert.match(jan1, /v_year integer := coalesce\(p_year, public\.kos_dues_season_year\(\)\);/);
+  assert.match(jan1, /officer_list_invoice_targets/);
+  assert.match(jan1, /officer_create_and_send_invoices/);
+  assert.match(jan1, /has_tool\('send_invoices'\)/);
+  assert.doesNotMatch(jan1, /—|–/);
+  assert.match(badgeSql, /d\.membership_year = public\.kos_dues_season_year\(\)/);
+  assert.doesNotMatch(badgeSql, /kos_member_parade_ready[\s\S]{0,1200}extract\(year from current_date\)/);
+  assert.match(invoiceSql, /coalesce\(p_year, public\.kos_dues_season_year\(\)\)/);
+  assert.doesNotMatch(invoiceSql, /coalesce\(p_year, extract\(year from current_date\)/);
 });
