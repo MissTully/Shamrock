@@ -86,6 +86,16 @@ test("backfill completes the known couple without mail or a status change", () =
   assert.match(dashboard, /bg_in_process/);
   assert.match(dashboard, /youtu\.be\/TQq0DlRQjvM/);
   assert.match(dashboard, /href="tel:/);
+  assert.match(dashboard, /kos_membership_dues_year/);
+  assert.match(dashboard, /kos_membership_dues_due_date/);
+  const inductionDues = dashboard.slice(
+    dashboard.indexOf("function public.kos_prepare_induction_dues"),
+    dashboard.indexOf("function public.kos_induction_letter_html")
+  );
+  assert.match(inductionDues, /kos_membership_dues_year\(\)/);
+  assert.match(inductionDues, /kos_membership_dues_due_date\(\)/);
+  assert.doesNotMatch(inductionDues, /extract\(year from current_date\)/);
+  assert.doesNotMatch(inductionDues, /make_date\(v_year, 6, 30\)/);
   assert.match(backfill, /skipped_backfill/);
   assert.match(backfill, /does not change membership_status/);
   assert.doesNotMatch(backfill, /enqueue_email/);

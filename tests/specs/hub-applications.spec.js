@@ -259,7 +259,7 @@ test.describe("Membership Applications", () => {
     await expect(card).toContainText("Full application submitted. Lists show the last 4 only.");
     await expect(card).not.toContainText("123-45-6789");
     await expect(card.locator("[data-app-send]")).toHaveCount(0);
-    await expect(card.locator("[data-app-bg]")).toHaveCount(0);
+    await expect(card.locator("[data-app-resend]")).toHaveText("Send background check email again");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
     await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Sent the background check form.");

@@ -487,7 +487,7 @@ set search_path = public
 as $choice$
 declare
   v_member public.members%rowtype;
-  v_year integer := extract(year from current_date)::integer;
+  v_year integer := public.kos_membership_dues_year();
   v_level text;
   v_title text;
   v_button text;
@@ -759,6 +759,49 @@ $meet$;
 revoke all on function public.kos_next_membership_meeting() from public, anon;
 grant execute on function public.kos_next_membership_meeting() to authenticated;
 
+-- June through May, labeled by the start year. November 2026 and January 2027
+-- are both membership year 2026. June 1 opens the next year.
+create or replace function public.kos_membership_dues_year(p_on date default null)
+returns integer
+language plpgsql
+stable
+set search_path = public
+as $dyear$
+declare
+  v_on date := coalesce(p_on, (timezone('America/New_York', now()))::date);
+begin
+  if to_regprocedure('public.kos_dues_season_year(date)') is not null then
+    return public.kos_dues_season_year(v_on);
+  end if;
+  if extract(month from v_on) >= 6 then
+    return extract(year from v_on)::integer;
+  end if;
+  return extract(year from v_on)::integer - 1;
+end;
+$dyear$;
+
+revoke all on function public.kos_membership_dues_year(date) from public, anon;
+
+-- 30 days after the issue date. June 30 of the season start is already past
+-- for anyone invoiced later in that June-May year.
+create or replace function public.kos_membership_dues_due_date(p_issued date default null)
+returns date
+language plpgsql
+stable
+set search_path = public
+as $ddue$
+declare
+  v_on date := coalesce(p_issued, (timezone('America/New_York', now()))::date);
+begin
+  if to_regprocedure('public.kos_dues_invoice_due_date(date)') is not null then
+    return public.kos_dues_invoice_due_date(v_on);
+  end if;
+  return v_on + 30;
+end;
+$ddue$;
+
+revoke all on function public.kos_membership_dues_due_date(date) from public, anon;
+
 create or replace function public.kos_prepare_induction_dues(p_member_id uuid)
 returns jsonb
 language plpgsql
@@ -766,7 +809,8 @@ security definer
 set search_path = public
 as $offer$
 declare
-  v_year integer := extract(year from current_date)::integer;
+  v_year integer := public.kos_membership_dues_year();
+  v_due date := public.kos_membership_dues_due_date();
   v_member record;
   v_dues public.dues_payments%rowtype;
   v_has boolean := false;
@@ -834,7 +878,7 @@ begin
       member_id, membership_year, amount, due_date, paid,
       membership_level, standard_amount, zeffy_campaign_key, notes
     ) values (
-      p_member_id, v_year, v_amount, make_date(v_year, 6, 30), false,
+      p_member_id, v_year, v_amount, v_due, false,
       v_level, v_amount, v_url, 'Induction dues link'
     );
   else
@@ -843,7 +887,10 @@ begin
            standard_amount = v_amount,
            amount = v_amount,
            zeffy_campaign_key = v_url,
-           due_date = coalesce(due_date, make_date(v_year, 6, 30))
+           due_date = case
+             when due_date is null or due_date < (timezone('America/New_York', now()))::date then v_due
+             else due_date
+           end
      where id = v_dues.id
        and paid = false
        and coalesce(waiver_status, '') <> 'applied';
@@ -1181,7 +1228,7 @@ begin
   end;
   v_offer := '{}'::jsonb;
   if to_regprocedure('public.kos_dues_quote(integer,text)') is not null then
-    v_offer := public.kos_dues_quote(extract(year from current_date)::integer, rec.membership_level);
+    v_offer := public.kos_dues_quote(public.kos_membership_dues_year(), rec.membership_level);
     if nullif(v_offer->>'amount', '') is not null then
       v_amount := trim(to_char((v_offer->>'amount')::numeric, 'FM999990.00'));
     end if;

@@ -5586,6 +5586,9 @@
     if (stage === "new" || stage === "prospect") {
       return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Called, send background check email</button>';
     }
+    if (stage === "fee_pending") {
+      return '<button type="button" class="btn btn-primary" data-app-resend="' + id + '">Send background check email again</button>';
+    }
     if (stage === "bg_paid") {
       return '<button type="button" class="btn btn-primary" data-app-start="' + id + '">Start background check</button>';
     }
@@ -5920,6 +5923,13 @@
       confirmBox.hidden = true;
       confirmBox.removeAttribute("data-id");
     }
+    body.querySelectorAll("[data-app-resend]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-resend");
+        if (!confirm("Send the background check email again? This sends a new link to the full application and the background check fee ($50 individual or $75 couple). It does not include a dues link. Use this when the first email was paused or the link expired. If prospect email is still paused, the card stays here and nothing is emailed.")) return;
+        decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
     body.querySelectorAll("[data-app-start]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-start");
