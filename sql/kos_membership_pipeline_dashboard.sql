@@ -2333,6 +2333,7 @@ declare
   v_partner_email text := nullif(left(lower(trim(coalesce(p_partner_email, ''))), 120), '');
   v_partner_phone text := nullif(left(trim(coalesce(p_partner_phone, '')), 40), '');
   v_partner_id uuid;
+  v_old_partner uuid;
   v_id uuid;
   v_status text;
   v_is_new boolean := false;
@@ -2388,7 +2389,7 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Please try again in a few minutes.');
   end if;
 
-  select id, membership_status into v_id, v_status
+  select id, membership_status, partner_member_id into v_id, v_status, v_old_partner
   from public.members
   where lower(email) = v_email and merged_into is null
   order by created_at
@@ -2515,20 +2516,48 @@ begin
        where id = v_partner_id
          and merged_into is null;
     end if;
+    if v_old_partner is not null and v_old_partner is distinct from v_partner_id then
+      update public.members
+         set partner_member_id = null,
+             updated_at = now()
+       where id = v_old_partner
+         and partner_member_id = v_id;
+      update public.members
+         set partner_member_id = null,
+             updated_at = now()
+       where id = v_id
+         and partner_member_id = v_old_partner;
+    end if;
     if v_partner_id is not null then
       update public.members
          set partner_member_id = v_partner_id,
              updated_at = now()
        where id = v_id
-         and merged_into is null
-         and (partner_member_id is null or partner_member_id = v_partner_id);
+         and merged_into is null;
       update public.members
          set partner_member_id = v_id,
              updated_at = now()
        where id = v_partner_id
          and merged_into is null
-         and (partner_member_id is null or partner_member_id = v_id);
+         and (
+           partner_member_id is null
+           or partner_member_id = v_id
+           or membership_status in (
+             'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+           )
+         );
     end if;
+  elsif (v_is_new or v_open) and v_old_partner is not null then
+    update public.members
+       set partner_member_id = null,
+           updated_at = now()
+     where id = v_old_partner
+       and partner_member_id = v_id;
+    update public.members
+       set partner_member_id = null,
+           updated_at = now()
+     where id = v_id
+       and partner_member_id = v_old_partner;
   end if;
 
   v_addr := v_street || ', ' || v_city || ', ' || v_state || ' ' || v_zip;

@@ -137,6 +137,10 @@ test("couple Join form asks for a partner and stays short", async ({ page }) => 
   expect(sql).toContain("partner_member_id");
   expect(sql).toContain("Please use the $75 couple fee");
   expect(sql).toContain("Please use the $50 individual fee");
+  expect(sql).toContain("v_old_partner is distinct from v_partner_id");
+  expect(sql).toContain("elsif (v_is_new or v_open) and v_old_partner is not null");
+  expect(sql).toContain("where id = v_old_partner");
+  expect(sql).toContain("and partner_member_id = v_id");
   expect(sql).not.toContain("Pay Full Krewe dues");
   expect(sql).not.toContain("—");
   assertHealthy(expect, report, "couple join form");

@@ -123,7 +123,7 @@ test("joining packet template SQL keeps payment links out of the editable letter
   expect(seedSql).toContain("create table if not exists public.kos_joining_packet_template");
   expect(seedSql).toContain("on conflict (id) do nothing");
   expect(seedSql).toContain("kos_prospect_background_check_email_html(text, text, jsonb)");
-  expect(seedSql).toContain("null::jsonb");
+  expect(seedSql).toContain("jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))");
   expect(seedSql).toContain("Membership dues come later");
   expect(seedSql).toContain("The rest of this note is simply how to finish joining");
   expect(seedSql).not.toContain("The Membership Chair has opened the background check");
@@ -141,7 +141,7 @@ test("joining packet template SQL keeps payment links out of the editable letter
     invoiceSql.indexOf("function public.submit_membership_full_application")
   );
   expect(sendFn).toContain("kos_prospect_background_check_email_html(text,text,jsonb)");
-  expect(sendFn).toContain("null::jsonb");
+  expect(sendFn).toContain("jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))");
   expect(sendFn).not.toContain("Pay Full Krewe dues");
   expect(sendFn).toContain("does not include a dues link");
 });
