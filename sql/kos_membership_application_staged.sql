@@ -774,7 +774,13 @@ begin
 
   v_url := 'https://www.kreweofshamrock.com/membership-full-application.html?token=' || v_token;
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
-  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
+  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text,jsonb)') is not null then
+    v_html := public.kos_prospect_background_check_email_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_url,
+      null::jsonb
+    );
+  elsif to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
     v_html := public.kos_prospect_background_check_email_html(
       coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
       v_url
@@ -831,7 +837,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'emailed', true,
-    'message', 'Full application sent. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver''s license number.'
+    'message', 'Full application sent. We emailed the background check fee ($50 individual or $75 couple) and a secure link to the full application. The email does not include a dues link, a Social Security number, or a driver''s license number.'
   );
 end;
 $$;
