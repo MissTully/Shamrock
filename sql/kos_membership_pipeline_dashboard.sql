@@ -96,7 +96,7 @@ alter table public.membership_application_actions
     'background_check', 'background_check_paid', 'dues_pending', 'dues_paid',
     'next_step_sent',
     'full_application_sent', 'full_application_received', 'id_revealed',
-    'note'
+    'note', 'renewed'
   ));
 
 -- Campaign titles used to recognize the two Zeffy background check forms.
@@ -617,15 +617,15 @@ stable
 security definer
 set search_path = public
 as $paid$
+  -- Own dues row, or a payment that names this person (payer or the partner
+  -- on a shared couple charge). The other person's separate dues do not count.
   select exists (
     select 1
       from public.payments p
-      join public.members m on m.id = p_member_id
      where p.product_kind = 'dues'
        and (
          p.member_id = p_member_id
          or p.partner_member_id = p_member_id
-         or p.member_id = m.partner_member_id
        )
   )
   or (
@@ -639,6 +639,68 @@ as $paid$
 $paid$;
 
 revoke all on function public.kos_application_dues_already_paid(uuid) from public, anon, authenticated;
+
+create or replace function public.save_membership_application_note(
+  p_member_id uuid,
+  p_note text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $save$
+declare
+  rec public.members%rowtype;
+  v_actor record;
+  v_note text := nullif(left(btrim(coalesce(p_note, '')), 1000), '');
+begin
+  if auth.uid() is null or not public.can_review_applications() then
+    return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
+  end if;
+  if p_member_id is null then
+    return jsonb_build_object('ok', false, 'message', 'Missing application.');
+  end if;
+  if v_note is null then
+    return jsonb_build_object('ok', false, 'message', 'Write a note before saving.');
+  end if;
+
+  select * into rec
+    from public.members
+   where id = p_member_id
+   for update;
+
+  if not found or rec.merged_into is not null then
+    return jsonb_build_object('ok', false, 'message', 'That application was not found.');
+  end if;
+  if rec.membership_status not in (
+    'pending-new', 'background-check', 'bg_paid', 'dues-pending', 'pending-renewal', 'prospect'
+  ) then
+    return jsonb_build_object('ok', false, 'message', 'That application is no longer waiting for review.');
+  end if;
+
+  select * into v_actor from public._officer_actor();
+
+  insert into public.membership_application_actions (
+    member_id, action, note, from_status, to_status,
+    actor_uid, actor_email, actor_name
+  ) values (
+    rec.id, 'note', v_note, rec.membership_status, rec.membership_status,
+    v_actor.uid, v_actor.email, v_actor.display_name
+  );
+
+  return jsonb_build_object(
+    'ok', true,
+    'message', 'Note saved on the record. Their stage is the same, and the joining packet was not sent.',
+    'status', rec.membership_status
+  );
+end;
+$save$;
+
+revoke all on function public.save_membership_application_note(uuid, text) from public, anon;
+grant execute on function public.save_membership_application_note(uuid, text) to authenticated;
+
+comment on function public.save_membership_application_note(uuid, text) is
+  'Reviewer-only note. Allows bg_paid so a note can be saved while the background check is in progress. Does not change status and does not send email.';
 
 create or replace function public.kos_pass_background_check(
   p_member_id uuid,
@@ -657,7 +719,8 @@ declare
   v_ids uuid[] := '{}';
   v_who uuid;
   v_row public.members%rowtype;
-  v_paid boolean := false;
+  v_this_paid boolean := false;
+  v_unpaid uuid[] := '{}';
   v_level text;
   v_invoice jsonb;
   v_message text;
@@ -689,13 +752,6 @@ begin
 
   select * into v_actor from public._officer_actor();
 
-  v_paid := false;
-  foreach v_who in array v_ids loop
-    if public.kos_application_dues_already_paid(v_who) then
-      v_paid := true;
-    end if;
-  end loop;
-
   foreach v_who in array v_ids loop
     select * into v_row
       from public.members
@@ -707,6 +763,10 @@ begin
     end if;
     if v_row.membership_status not in ('pending-new', 'background-check', 'bg_paid', 'dues-pending', 'prospect') then
       continue;
+    end if;
+    v_this_paid := public.kos_application_dues_already_paid(v_who);
+    if not v_this_paid then
+      v_unpaid := v_unpaid || v_who;
     end if;
     if v_row.membership_status is distinct from 'dues-pending' then
       update public.members
@@ -722,7 +782,7 @@ begin
       v_row.id,
       'dues_pending',
       coalesce(v_note, case
-        when v_paid then 'Passed background check. Dues were already paid, so no dues link was sent.'
+        when v_this_paid then 'Passed background check. Dues were already paid, so no dues link was sent.'
         else 'Passed background check. Dues link sent.'
       end),
       v_row.membership_status,
@@ -731,16 +791,25 @@ begin
     );
   end loop;
 
-  if v_paid then
+  if coalesce(array_length(v_unpaid, 1), 0) = 0 then
     v_message := 'Passed the background check. Dues were already paid, so no dues link was sent.';
     return jsonb_build_object('ok', true, 'emailed', false, 'message', v_message, 'status', 'dues-pending');
   end if;
 
+  -- One email, to someone who still owes dues. A partner who already paid
+  -- does not cancel the email for the other person.
+  select * into rec
+    from public.members
+   where id = v_unpaid[1];
+
   v_level := lower(btrim(coalesce(rec.membership_level, '')));
-  if v_level not in ('full', 'associate', 'auxiliary', 'loa') and v_partner is not null then
+  if v_level not in ('full', 'associate', 'auxiliary', 'loa') and coalesce(array_length(v_unpaid, 1), 0) > 1 then
     select lower(btrim(coalesce(m.membership_level, ''))) into v_level
       from public.members m
-     where m.id = v_partner;
+     where m.id = v_unpaid[2];
+    if v_level in ('full', 'associate', 'auxiliary', 'loa') then
+      select * into rec from public.members where id = v_unpaid[2];
+    end if;
   end if;
 
   if v_level in ('full', 'associate', 'auxiliary', 'loa')
@@ -1601,16 +1670,12 @@ begin
         left join lateral (
           select p.amount_cents,
                  p.created_at,
-                 (
-                   p.partner_member_id is not null
-                   or p.member_id is distinct from m.id
-                 ) as shared
+                 (p.partner_member_id is not null) as shared
             from public.payments p
            where p.product_kind = 'dues'
              and (
                p.member_id = m.id
                or p.partner_member_id = m.id
-               or p.member_id = m.partner_member_id
              )
            order by case when p.member_id = m.id then 0 else 1 end, p.created_at desc
            limit 1
@@ -1620,16 +1685,9 @@ begin
                  d.paid_date::timestamptz as paid_at,
                  true as paid
             from public.dues_payments d
-           where d.paid
-             and (
-               d.member_id = m.id
-               or (
-                 m.partner_member_id is not null
-                 and d.member_id = m.partner_member_id
-               )
-             )
-           order by case when d.member_id = m.id then 0 else 1 end,
-                    d.membership_year desc
+           where d.member_id = m.id
+             and d.paid
+           order by d.membership_year desc
            limit 1
         ) dues_row on true
         left join lateral (

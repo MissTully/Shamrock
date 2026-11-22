@@ -52,6 +52,18 @@ test("dashboard SQL adds the kind, stops the early dues invoice, and alerts only
   );
   assert.match(dashboard, /Active members are never emailed/);
   assert.match(dashboard, /coalesce\(\s*dues_row\.amount_cents/);
+  assert.match(dashboard, /'note', 'renewed'/);
+  const noteFn = dashboard.slice(
+    dashboard.indexOf("function public.save_membership_application_note"),
+    dashboard.indexOf("function public.kos_pass_background_check")
+  );
+  assert.match(noteFn, /'bg_paid'/);
+  const paidFn = dashboard.slice(
+    dashboard.indexOf("function public.kos_application_dues_already_paid"),
+    dashboard.indexOf("function public.save_membership_application_note")
+  );
+  assert.match(paidFn, /p\.partner_member_id = p_member_id/);
+  assert.doesNotMatch(paidFn, /m\.partner_member_id/);
 });
 
 test("backfill completes the known couple without mail or a status change", () => {

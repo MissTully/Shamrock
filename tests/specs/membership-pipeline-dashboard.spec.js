@@ -175,6 +175,53 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   assertHealthy(expect, report, "pipeline dashboard");
 });
 
+test("approve on a couple card targets the partner who is still waiting", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page, {
+    role: {
+      officer: true,
+      canReviewApplications: true,
+      applications: [
+        {
+          id: "app-alex",
+          first_name: "Alex",
+          last_name: "Quinn",
+          membership_status: "active",
+          application_fee_type: "dual",
+          partner_member_id: "app-jordan",
+          background_check_paid: true,
+          background_check_amount_cents: 7500,
+          dues_paid: true,
+          dues_amount_cents: 37500,
+          created_at: "2026-10-01T15:00:00.000Z"
+        },
+        {
+          id: "app-jordan",
+          first_name: "Jordan",
+          last_name: "Quinn",
+          membership_status: "dues-pending",
+          application_fee_type: "dual",
+          partner_member_id: "app-alex",
+          background_check_paid: true,
+          background_check_amount_cents: 7500,
+          dues_paid: true,
+          dues_amount_cents: 37500,
+          created_at: "2026-10-02T15:00:00.000Z"
+        }
+      ]
+    }
+  });
+  await page.locator("[data-hub-tab='officer']").click();
+  await page.locator('[data-tool="tool:hubApplications"]').click();
+  const tool = page.locator("#hubApplications");
+  await expect(tool.locator("[data-app-approve]")).toHaveAttribute("data-app-approve", "app-jordan");
+  page.once("dialog", (dialog) => dialog.accept());
+  await tool.locator("[data-app-approve='app-jordan']").click();
+  await expect(tool.locator("[data-app-approve]")).toHaveCount(0);
+  await expect(tool.locator("[data-app-history='approve']")).toContainText("Jordan Quinn");
+  assertHealthy(expect, report, "couple approve target");
+});
+
 test("dues and chair alert samples use fictional names", async ({ page }) => {
   await page.goto("/previews/dues-after-check-email.html");
   await expect(page.locator("#emailBody")).toContainText("Dear Alex");

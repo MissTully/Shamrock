@@ -5553,8 +5553,14 @@
     return "Background check fee: $50 individual or $75 couple. This is not membership dues.";
   }
 
+  function applicationActionRow(card, stage) {
+    if (applicationStageKey(card.primary) === stage) return card.primary;
+    if (card.partner && applicationStageKey(card.partner) === stage) return card.partner;
+    return card.primary;
+  }
+
   function applicationPrimaryButton(card, stage) {
-    var id = esc(card.primary.id);
+    var id = esc(applicationActionRow(card, stage).id);
     if (stage === "new" || stage === "prospect") {
       return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
     }
@@ -5572,7 +5578,7 @@
 
   function applicationSecondaryButtons(card, stage) {
     if (stage === "active" || stage === "declined" || stage === "archived") return "";
-    var id = esc(card.primary.id);
+    var id = esc(applicationActionRow(card, stage).id);
     return '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
       '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
   }
@@ -5591,6 +5597,7 @@
     var level = applicationLevelLabel(row) || (partner && applicationLevelLabel(partner));
     var whenStage = applicationDaysInStage(row.stage_at || row.created_at);
     var id = esc(row.id);
+    var actionId = esc(applicationActionRow(card, stage).id);
     var search = [name, row.email, partner && partner.email, level, row.phone].filter(Boolean).join(" ");
     var html = '<article class="hub-pipe-card hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '" data-search="' + esc(search) + '">' +
       "<h3>" + esc(name) + "</h3>" +
@@ -5625,10 +5632,10 @@
     html += applicationRecordNoteHtml(row);
     var open = applicationOpenStatus(row.membership_status) || (partner && applicationOpenStatus(partner.membership_status));
     if (open && stage !== "active") {
-      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
-        '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
+      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + actionId + '">Note for the record</label>' +
+        '<textarea class="hub-app-note" id="hubAppNote-' + actionId + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
         '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
-        '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + id + '">Save note</button></div>';
+        '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + actionId + '">Save note</button></div>';
     }
     var primary = applicationPrimaryButton(card, stage);
     var secondary = applicationSecondaryButtons(card, stage);
