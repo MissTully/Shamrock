@@ -6,8 +6,8 @@
 -- as already filed, and the partner's induction dues stayed unpaid.
 --
 -- Now a ticket whose email matches someone already filed on this payment tries
--- the ticket name, then the linked partner (members.partner_member_id) of a
--- member already filed on this payment.
+-- the ticket name, then the linked partner (members.partner_member_id) of the
+-- member whose email was repeated.
 --
 -- This file is the live production definition of kos_record_payment (read with
 -- pg_get_functiondef on Nov 22, 2026) plus that one change. The live function
@@ -50,6 +50,7 @@ declare
   v_holder_email text;
   v_holder_cents integer;
   v_target uuid;
+  v_dup_of uuid;
   v_seen uuid[] := '{}';
   v_pay_id text;
   v_status text;
@@ -218,17 +219,18 @@ begin
       end if;
       -- Same email on both tickets of a couple order: the buyer often types
       -- their own email for the partner's ticket. Try the ticket name, then
-      -- the linked partner of a member already filed on this payment.
+      -- the linked partner of the member that email belongs to.
       if v_target is not null and v_target = any (v_seen) then
+        v_dup_of := v_target;
         v_target := public.kos_match_member_by_name(v_holder->>'name');
         if v_target is null or v_target = any (v_seen) then
+          v_target := null;
           select p.id into v_target
             from public.members s
             join public.members p on p.id = s.partner_member_id
-           where s.id = any (v_seen)
+           where s.id = v_dup_of
              and p.merged_into is null
-             and not (p.id = any (v_seen))
-           limit 1;
+             and not (p.id = any (v_seen));
         end if;
       end if;
       if v_target is null then
