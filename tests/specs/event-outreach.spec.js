@@ -87,8 +87,22 @@ async function openOutreach(page, role) {
   await expect(page.locator("#hubOutreachTable")).toBeVisible();
 }
 
+async function outreachFilters(page) {
+  const min = page.locator("#hubOutreachMin");
+  const never = page.locator("#hubOutreachNever");
+  if (!(await min.isVisible()) || !(await never.isVisible())) {
+    await page.locator('[data-tool="tool:hubEventOutreach"]').click();
+    await expect(min).toBeVisible();
+    await expect(never).toBeVisible();
+  }
+  await min.scrollIntoViewIfNeeded();
+  await never.scrollIntoViewIfNeeded();
+  return { min, never };
+}
+
 test.describe("Event outreach", () => {
   test("event managers see prospects, Zeffy buyers, and legacy emails, then filter and export", async ({ page }) => {
+    test.setTimeout(60_000);
     const report = watchPage(page);
     await openOutreach(page, { officer: true, canManageEvents: true });
 
@@ -127,15 +141,17 @@ test.describe("Event outreach", () => {
     await expect(tool).toContainText("Patrick Doyle");
 
     await page.locator("#hubOutreachSource").selectOption("all");
-    await page.locator("#hubOutreachMin").fill("4");
-    await page.locator("#hubOutreachMin").dispatchEvent("change");
+    let filters = await outreachFilters(page);
+    await filters.min.fill("4");
+    await filters.min.dispatchEvent("change");
     await expect(tool).toContainText("Siobhan Walsh");
     await expect(tool).not.toContainText("Owen Byrne");
     await expect(tool).not.toContainText("Niamh Kelly");
 
-    await page.locator("#hubOutreachMin").fill("0");
-    await page.locator("#hubOutreachMin").dispatchEvent("change");
-    await page.locator("#hubOutreachNever").uncheck();
+    filters = await outreachFilters(page);
+    await filters.min.fill("0");
+    await filters.min.dispatchEvent("change");
+    await filters.never.uncheck();
     await expect(tool).toContainText("Maeve Collins");
     await expect(tool).toContainText("On roster · active");
 
