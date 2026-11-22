@@ -323,6 +323,9 @@
     ".hub-pipe-card{background:#fffdf6;border:1px solid rgba(20,83,45,.2);border-radius:14px;padding:12px;}",
     ".hub-pipe-card h3{margin:0 0 4px;font-size:18px;color:#14532d;font-family:var(--display);}",
     ".hub-pipe-meta{margin:0;color:#3a3a2e;font-size:15px;line-height:1.4;}",
+    ".hub-pipe-phone a{font-size:22px;font-weight:700;color:#14532d;}",
+    ".hub-induction-preview{margin:10px 0;padding:12px;background:#f6efdc;border:1px solid #14532d;border-radius:8px;font-size:15px;line-height:1.45;}",
+    ".hub-induction-preview a{color:#14532d;font-weight:700;}",
     ".hub-chip{display:inline-block;border-radius:999px;padding:4px 10px;font-size:14px;line-height:1.35;margin:6px 6px 0 0;}",
     ".hub-chip.paid{background:#14532d;color:#f6efdc;}",
     ".hub-chip.wait{background:#fff4c2;color:#3d2e00;border:1px solid #a67c00;}",
@@ -332,6 +335,7 @@
     ".hub-app-confirm[hidden]{display:none !important;}",
     ".hub-app-confirm h3{margin:0 0 8px;color:#14532d;font-family:var(--display);}",
     ".hub-app-confirm p{margin:0 0 12px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-app-confirm input{display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:10px;font-size:16px;border:1px solid #14532d;border-radius:8px;background:#fff;}",
     "@media (min-width:801px){.hub-pipeline[data-layout='columns'] .hub-pipe-col > summary{pointer-events:none;}}",
     "@media (max-width:800px){.hub-pipeline{display:block;overflow:visible;}.hub-pipe-col{max-width:none;margin:0 0 10px;}}",
     "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
@@ -4568,17 +4572,26 @@
     return [street, line2].filter(Boolean).join(", ");
   }
 
+  function applicationPhoneHtml(phone) {
+    var raw = String(phone || "").trim();
+    if (!raw) return "";
+    var href = raw.replace(/[^0-9+]/g, "");
+    if (!href) return '<p class="hub-pipe-meta">Phone: ' + esc(raw) + "</p>";
+    return '<p class="hub-pipe-meta hub-pipe-phone">Phone: <a href="tel:' + esc(href) + '">' + esc(raw) + "</a></p>";
+  }
+
   function applicationStatusLabel(status) {
-    if (status === "pending-new") return "New";
-    if (status === "background-check") return "Joining packet sent";
-    if (status === "bg_paid") return "Check in progress";
-    if (status === "dues-pending") return "Awaiting dues";
-    if (status === "active") return "Approved";
+    if (status === "pending-new") return "New interest";
+    if (status === "background-check") return "Background check fee pending";
+    if (status === "bg_paid") return "Background check fee paid";
+    if (status === "bg_in_process") return "Background check in process";
+    if (status === "dues-pending") return "Induction pending";
+    if (status === "active") return "Member";
     if (status === "declined") return "Declined";
-    if (status === "archived") return "Archived";
+    if (status === "archived") return "Withdrawn";
     if (status === "pending-renewal") return "Renewal";
     if (status === "prospect") return "Event prospect";
-    return "New";
+    return "New interest";
   }
 
   function applicationBucketRows() {
@@ -4597,9 +4610,10 @@
   function applicationActionWord(action) {
     if (action === "decline") return "Declined";
     if (action === "archive") return "Archived";
-    if (action === "background_check") return "Joining packet sent";
-    if (action === "background_check_paid") return "Background check paid";
-    if (action === "dues_pending") return "Passed";
+    if (action === "background_check") return "Called, background check email sent";
+    if (action === "background_check_paid") return "Background check fee paid";
+    if (action === "start_background_check") return "Background check in process";
+    if (action === "dues_pending") return "Induction pending";
     if (action === "dues_paid") return "Dues paid";
     if (action === "next_step_sent") return "Next step sent";
     if (action === "full_application_sent") return "Full application sent";
@@ -4687,14 +4701,15 @@
     if (status === "declined") return "declined";
     if (status === "archived") return "archived";
     if (status === "active") return "active";
-    if (status === "dues-pending") return applicationDuesPaid(row) ? "dues_paid" : "dues_wait";
-    if (status === "bg_paid" || applicationBgPaid(row)) return "bg_paid";
-    if (status === "background-check") return "packet";
+    if (status === "dues-pending") return "induction";
+    if (status === "bg_in_process") return "bg_process";
+    if (status === "bg_paid" || (status === "background-check" && applicationBgPaid(row))) return "bg_paid";
+    if (status === "background-check") return "fee_pending";
     return "new";
   }
 
   function applicationEarlierStage(a, b) {
-    var order = ["new", "packet", "bg_paid", "dues_wait", "dues_paid", "active", "prospect", "renewal", "declined", "archived"];
+    var order = ["new", "fee_pending", "bg_paid", "bg_process", "induction", "active", "prospect", "renewal", "declined", "archived"];
     var ia = order.indexOf(a);
     var ib = order.indexOf(b);
     if (ia < 0) return b;
@@ -4857,13 +4872,13 @@
     var got = !!(row.has_ssn || row.has_dl || row.has_partner_ssn || row.has_partner_dl
       || applicationTail4(row.ssn_last4) || applicationTail4(row.dl_last4)
       || applicationTail4(row.partner_ssn_last4) || applicationTail4(row.partner_dl_last4));
-    if (got) return "Full application received. Lists show the last 4 only.";
-    if (row.full_application_sent_at) return "Full application link sent. Waiting for the applicant.";
-    return "Full application: not sent yet.";
+    if (got) return "Full application submitted. Lists show the last 4 only.";
+    if (row.full_application_sent_at) return "Full application not submitted yet.";
+    return "Full application not submitted yet.";
   }
 
   function applicationOpenStatus(status) {
-    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
+    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
   }
 
   function fixtureActor() {
@@ -4901,15 +4916,16 @@
 
   function applicationFlashFor(action) {
     if (action === "approve") {
-      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
+      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership. The note includes the training video.";
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to the joining packet stage. Joining packet sent when prospect emails are on: a secure link to finish the full application and the background check payment ($50 individual or $75 couple). The dues link comes after the check passes. The email does not include a Social Security number or a driver's license number.";
-    if (action === "dues_pending") return "Passed the background check. We emailed one dues link. Membership dues are not the application fee.";
+    if (action === "archive") return "Withdrawn. Their record stays on file and is off the new-application list. Nothing was deleted.";
+    if (action === "background_check") return "Called. We emailed the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number.";
+    if (action === "start_background_check") return "Background check in process. Copy the driver's license and Social Security number into the background check site. No email was sent.";
+    if (action === "dues_pending") return "Induction pending. We emailed the dues link, the meeting, and the invitation to share why they want to join. Membership dues are not the application fee.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
-    if (action === "note") return "Note saved on the record. Their stage is the same, and the joining packet was not sent.";
+    if (action === "note") return "Note saved on the record. Their stage is the same, and the background check email was not sent.";
     return "Saved.";
   }
 
@@ -4918,6 +4934,7 @@
     if (action === "decline") return "declined";
     if (action === "archive") return "archived";
     if (action === "background_check") return "background-check";
+    if (action === "start_background_check") return "bg_in_process";
     if (action === "dues_pending") return "dues-pending";
     return from;
   }
@@ -5014,7 +5031,7 @@
     reloadApplications(client);
   }
 
-  async function decideApplication(client, action, id, note, btn) {
+  async function decideApplication(client, action, id, note, btn, meeting) {
     // A status click rebuilds the card. A second click in the same moment
     // (a double tap, or the browser retrying after the first button is
     // replaced) would log an empty note on top of the real one.
@@ -5052,11 +5069,17 @@
         });
       }
       row.membership_status = applicationStatusFor(action, from);
-      if (action === "dues_pending" && row.partner_member_id) {
+      if (row.partner_member_id && (action === "dues_pending" || action === "start_background_check" || action === "background_check" || action === "approve" || action === "decline" || action === "archive")) {
         (applicationsFixture || []).forEach(function (other) {
-          if (other && String(other.id) === String(row.partner_member_id)) {
-            other.membership_status = "dues-pending";
-          }
+          if (!other || String(other.id) !== String(row.partner_member_id)) return;
+          var partnerFrom = other.membership_status;
+          var move = false;
+          if (action === "dues_pending" && (partnerFrom === "bg_in_process" || partnerFrom === "dues-pending")) move = true;
+          if (action === "start_background_check" && partnerFrom === "bg_paid") move = true;
+          if (action === "background_check" && (partnerFrom === "pending-new" || partnerFrom === "prospect")) move = true;
+          if (action === "approve" && partnerFrom === "dues-pending") move = true;
+          if ((action === "decline" || action === "archive") && partnerFrom !== "active") move = true;
+          if (move) other.membership_status = applicationStatusFor(action, partnerFrom);
         });
       }
       recent.unshift({
@@ -5078,15 +5101,13 @@
       }
       state.applicationRows = applicationsFixture.slice();
       syncApplicationFixtureCounts();
-      state.applicationFlash = (action === "dues_pending" && (applicationDuesPaid(row) || (row.partner_member_id && applicationDuesPaid(applicationRowById(row.partner_member_id)))))
-        ? "Passed the background check. Dues were already paid, so no dues link was sent."
-        : applicationFlashFor(action);
+      state.applicationFlash = applicationFlashFor(action);
       renderHome();
       renderApplicationsFromState();
       openOfficerTool("tool:hubApplications", false);
       return;
     }
-    var args = { p_member_id: id, p_action: action, p_note: note || null };
+    var args = { p_member_id: id, p_action: action, p_note: note || null, p_meeting: meeting || null };
     try {
       var res = await client.rpc("set_membership_application_status", args);
       var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
@@ -5438,9 +5459,10 @@
     var labels = [
       "1. Interest",
       "2. Call",
-      "3. Joining packet",
-      "4. Check and dues",
-      "5. Approve"
+      "3. Background check fee",
+      "4. Check in process",
+      "5. Induction",
+      "6. Member"
     ];
     var html = '<ol class="hub-app-journey" aria-label="Member journey for the Membership Chair">';
     labels.forEach(function (label, i) {
@@ -5454,12 +5476,12 @@
   }
 
   var PIPELINE_STAGES = [
-    { key: "new", title: "New interest", hint: "Call, then send the joining packet." },
-    { key: "packet", title: "Joining packet sent", hint: "Awaiting the background check payment." },
-    { key: "bg_paid", title: "Background check paid", hint: "Check in progress." },
-    { key: "dues_wait", title: "Passed, awaiting dues", hint: "The dues link is out." },
-    { key: "dues_paid", title: "Dues paid", hint: "Ready to approve." },
-    { key: "active", title: "Active", hint: "Recent members." }
+    { key: "new", title: "New interest", hint: "Call, then send the background check email." },
+    { key: "fee_pending", title: "Background check fee pending", hint: "Waiting on the fee. Shows whether the full application is submitted." },
+    { key: "bg_paid", title: "Background check fee paid", hint: "Start the check when you are ready to paste the ID." },
+    { key: "bg_process", title: "Background check in process", hint: "When the check is clean, send the induction email." },
+    { key: "induction", title: "Induction pending", hint: "Dues link is out. Approve after the general meeting vote." },
+    { key: "active", title: "Members (complete)", hint: "Voted in." }
   ];
 
   function applicationRowsForView() {
@@ -5468,7 +5490,7 @@
     if (bucket === "board") {
       return rows.filter(function (r) {
         var s = r && r.membership_status;
-        return s === "pending-new" || s === "background-check" || s === "bg_paid" || s === "dues-pending" || s === "active";
+        return s === "pending-new" || s === "background-check" || s === "bg_paid" || s === "bg_in_process" || s === "dues-pending" || s === "active";
       });
     }
     var want = APP_BUCKET_STATUS[bucket];
@@ -5541,7 +5563,7 @@
       if (applicationCardStage(card) !== "active") return "";
     }
     if (applicationCardStage(card) === "active" && (applicationBgPaid(row) || applicationBgPaid(card.partner)) && applicationDuesPaid(row) && (!card.partner || applicationDuesPaid(card.partner))) {
-      return '<p class="hub-journey-done">Journey complete: joining packet, background check paid, passed, dues paid, active.</p>';
+      return '<p class="hub-journey-done">Journey complete: interest, call, background check fee, check in process, induction, member.</p>';
     }
     return "";
   }
@@ -5562,16 +5584,16 @@
   function applicationPrimaryButton(card, stage) {
     var id = esc(applicationActionRow(card, stage).id);
     if (stage === "new" || stage === "prospect") {
-      return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
-    }
-    if (stage === "packet") {
-      return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet again</button>';
+      return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Called, send background check email</button>';
     }
     if (stage === "bg_paid") {
-      return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Passed background check, send dues link</button>';
+      return '<button type="button" class="btn btn-primary" data-app-start="' + id + '">Start background check</button>';
     }
-    if (stage === "dues_paid" || stage === "renewal") {
-      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
+    if (stage === "bg_process") {
+      return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Proceed with induction, send dues link</button>';
+    }
+    if (stage === "induction" || stage === "renewal") {
+      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (voted in at general meeting)</button>';
     }
     return "";
   }
@@ -5580,7 +5602,7 @@
     if (stage === "active" || stage === "declined" || stage === "archived") return "";
     var id = esc(applicationActionRow(card, stage).id);
     return '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-      '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+      '<button type="button" class="btn" data-app-archive="' + id + '">Withdraw</button>';
   }
 
   function applicationCardHtml(card, stage) {
@@ -5606,7 +5628,8 @@
       (whenStage ? " · " + esc(whenStage) : "") + "</p>";
     if (row.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></p>";
     if (partner && partner.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(partner.email) + '">' + esc(partner.email) + "</a></p>";
-    if (row.phone) html += '<p class="hub-pipe-meta">Phone: ' + esc(row.phone) + "</p>";
+    html += applicationPhoneHtml(row.phone);
+    if (partner && partner.phone && partner.phone !== row.phone) html += applicationPhoneHtml(partner.phone);
     var addr = applicationAddress(row);
     html += '<p class="hub-pipe-meta">' + (addr ? "Address: " + esc(addr) : "Address: not provided") + "</p>";
     html += '<p class="hub-pipe-meta">' + esc(applicationFeeHint(row)) + "</p>";
@@ -5632,22 +5655,20 @@
     html += applicationRecordNoteHtml(row);
     var open = applicationOpenStatus(row.membership_status) || (partner && applicationOpenStatus(partner.membership_status));
     if (open && stage !== "active") {
-      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + actionId + '">Note for the record</label>' +
+      var noteLabel = (stage === "new" || stage === "prospect") ? "Call notes" : "Note for the record";
+      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + actionId + '">' + noteLabel + "</label>" +
         '<textarea class="hub-app-note" id="hubAppNote-' + actionId + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
         '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
         '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + actionId + '">Save note</button></div>';
     }
     var primary = applicationPrimaryButton(card, stage);
     var secondary = applicationSecondaryButtons(card, stage);
-    if (stage === "dues_wait") {
-      html += '<p class="hub-pipe-meta">Waiting for the dues payment.</p>';
-    }
     if (primary || secondary) html += '<div class="hub-appr-btns">' + primary + secondary + "</div>";
     html += "</article>";
     return html;
   }
 
-  function applicationPassCopy(row) {
+  function applicationCoupleNames(row) {
     var partner = applicationFindPartner(row, state.applicationRows || []);
     var names = applicationPersonName(row) || "This applicant";
     if (partner) names += " and " + (applicationPersonName(partner) || "their partner");
@@ -5655,15 +5676,49 @@
       var named = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
       if (named) names += " and " + named;
     }
-    var level = applicationLevelLabel(row) || (partner && applicationLevelLabel(partner));
-    var paid = applicationDuesPaid(row) || (partner && applicationDuesPaid(partner));
-    if (paid) {
-      return "Passed the background check for " + names + "? Dues are already paid, so no dues link will be sent. Both records move forward together when this is a couple.";
-    }
-    if (level) {
-      return "Passed the background check for " + names + "? This sends one dues link for " + level + " and moves the application to awaiting dues. Membership dues are not the background check fee.";
-    }
-    return "Passed the background check for " + names + "? No level is on file, so the email lists every level with a short note. Membership dues are not the background check fee.";
+    return names;
+  }
+
+  function applicationDuesAmount(row) {
+    var level = String((row && row.membership_level) || "").toLowerCase();
+    if (level === "associate") return "450.00";
+    if (level === "auxiliary") return "200.00";
+    if (level === "loa") return "100.00";
+    return "375.00";
+  }
+
+  function applicationInductionPreview(row, whenText, place) {
+    var level = applicationLevelLabel(row) || "Full Krewe";
+    var amount = applicationDuesAmount(row);
+    var paid = applicationDuesPaid(row);
+    var when = whenText || "Date and time go here";
+    var where = place || "Place goes here";
+    var dues = paid
+      ? "<p>Membership dues are already paid.</p>"
+      : "<p><strong>" + esc(level) + "</strong>: $" + esc(amount) + ". This is membership dues, not the background check fee.</p>"
+        + '<p><a href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership">Pay dues on Zeffy</a></p>';
+    return "<p>Dear " + esc((row && row.first_name) || "friend") + ",</p>"
+      + "<p>Your background check is complete. We would like to welcome you in person.</p>"
+      + "<p>You are invited to your in-person induction at our next membership meeting.</p>"
+      + "<p><strong>Date and time:</strong> " + esc(when) + "</p>"
+      + "<p><strong>Place:</strong> " + esc(where) + "</p>"
+      + "<p>At that meeting we will ask you to share a little about why you want to join the Krewe. A sentence or two is plenty.</p>"
+      + dues
+      + "<p>We are glad you are joining us.</p><p>Sláinte!</p>";
+  }
+
+  function applicationSyncInductionPreview() {
+    var box = document.getElementById("hubAppConfirm");
+    var preview = document.getElementById("hubInductionPreview");
+    var send = document.getElementById("hubAppConfirmYes");
+    if (!box || box.dataset.mode !== "induction") return;
+    var whenEl = document.getElementById("hubInductionWhen");
+    var placeEl = document.getElementById("hubInductionPlace");
+    var when = whenEl ? whenEl.value.trim() : "";
+    var place = placeEl ? placeEl.value.trim() : "";
+    var row = applicationRowById(box.dataset.id);
+    if (preview && row) preview.innerHTML = applicationInductionPreview(row, when, place);
+    if (send) send.disabled = !(when && place);
   }
 
   function renderApplicationsFromState() {
@@ -5687,12 +5742,12 @@
         label + n + "</button>";
     }
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      "<small>New interest, joining packet, background check, dues, then approve.</small></div></div>" +
+      "<small>New interest, background check, induction, then membership.</small></div></div>" +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
     var help = bucket === "prospect"
       ? "These are event RSVP prospects, not the join pipeline. Send the joining packet when they are ready to apply."
-      : "Call first, then send the joining packet. The background check fee is $50 individual or $75 couple. The dues link comes after the check passes. Approve when dues are paid.";
+      : "Call first. The card shows the phone number and a Call notes field. Called, send background check email sends the fee link and the full application. It does not include a dues link. After the fee is paid, start the background check. When it is clean, send the induction email with the dues link and the next membership meeting. Approve only after the Krewe votes them in at a general meeting.";
     html += '<p class="hub-pipe-help">' + esc(help) + "</p>" +
       '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
       '<span class="muted">Change the greeting and the notes. The finish link and the background check pay buttons stay locked. The dues link is not in this letter.</span></p>' +
@@ -5704,9 +5759,17 @@
       filterBtn("archived", "Archived") +
       "</div>";
     html += '<div id="hubAppConfirm" class="hub-app-confirm" role="alertdialog" aria-modal="true" aria-labelledby="hubAppConfirmTitle" hidden>' +
-      '<h3 id="hubAppConfirmTitle">Passed background check, send dues link</h3>' +
+      '<h3 id="hubAppConfirmTitle">Proceed with induction, send dues link</h3>' +
       '<p id="hubAppConfirmBody"></p>' +
-      '<div class="hub-appr-btns"><button type="button" class="btn btn-primary" id="hubAppConfirmYes">Send dues link</button>' +
+      '<div id="hubInductionFields">' +
+      '<p id="hubInductionNeed" class="muted">Enter the meeting date, time, and place. There is no upcoming membership meeting on the calendar.</p>' +
+      '<label class="muted" for="hubInductionWhen">Meeting date and time</label>' +
+      '<input id="hubInductionWhen" type="text" autocomplete="off" placeholder="Tuesday, January 6, 2026 at 7:00 PM">' +
+      '<label class="muted" for="hubInductionPlace">Meeting place</label>' +
+      '<input id="hubInductionPlace" type="text" autocomplete="off" placeholder="Krewe hall">' +
+      '<h4>Email preview</h4>' +
+      '<div id="hubInductionPreview" class="hub-induction-preview"></div></div>' +
+      '<div class="hub-appr-btns"><button type="button" class="btn btn-primary" id="hubAppConfirmYes">Send induction email</button>' +
       '<button type="button" class="btn" id="hubAppConfirmNo">Cancel</button></div></div>';
     html += '<label class="hub-app-search"><span>Search applications</span>' +
       '<input id="hubAppSearch" type="search" autocomplete="off" placeholder="Name, email, or level"></label>';
@@ -5806,8 +5869,23 @@
     });
     body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
-        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), noteFor(btn.getAttribute("data-app-approve")), btn);
+        var id = btn.getAttribute("data-app-approve");
+        var row = applicationRowById(id);
+        if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
+        var bodyText = document.getElementById("hubAppConfirmBody");
+        var fields = document.getElementById("hubInductionFields");
+        var yes = document.getElementById("hubAppConfirmYes");
+        if (title) title.textContent = "Approve membership (voted in at general meeting)";
+        if (bodyText) bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video.";
+        if (fields) fields.hidden = true;
+        if (yes) {
+          yes.textContent = "Approve membership";
+          yes.disabled = false;
+        }
+        confirmBox.dataset.mode = "approve";
+        confirmBox.dataset.id = id;
+        confirmBox.hidden = false;
       });
     });
     body.querySelectorAll("[data-app-decline]").forEach(function (btn) {
@@ -5820,7 +5898,7 @@
     body.querySelectorAll("[data-app-archive]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-archive");
-        if (!confirm("Archive this application? Their record stays on file. Nothing is deleted.")) return;
+        if (!confirm("Withdraw this application? Their record stays on file. Nothing is deleted.")) return;
         decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
       });
     });
@@ -5832,7 +5910,7 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Send the joining packet and move this application to the joining packet stage? When prospect emails are on, we email a secure link to finish the full application and the background check payment ($50 individual or $75 couple). The dues link comes after the check passes. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
+        if (!confirm("Called this prospect? We will email the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
       });
     });
@@ -5842,25 +5920,63 @@
       confirmBox.hidden = true;
       confirmBox.removeAttribute("data-id");
     }
+    body.querySelectorAll("[data-app-start]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-start");
+        if (!confirm("Start the background check? The card moves to Background check in process. Copy the driver's license and Social Security number from the card into the background check site. No email is sent.")) return;
+        decideApplication(window.__kosSb || null, "start_background_check", id, noteFor(id), btn);
+      });
+    });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
         var row = applicationRowById(id);
         if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
         var bodyText = document.getElementById("hubAppConfirmBody");
-        if (bodyText) bodyText.textContent = applicationPassCopy(row);
+        var fields = document.getElementById("hubInductionFields");
+        var yesBtn = document.getElementById("hubAppConfirmYes");
+        var whenEl = document.getElementById("hubInductionWhen");
+        var placeEl = document.getElementById("hubInductionPlace");
+        if (title) title.textContent = "Proceed with induction, send dues link";
+        if (bodyText) bodyText.textContent = "Send the induction email to " + applicationCoupleNames(row) + "? It includes the dues link for " + (applicationLevelLabel(row) || "Full Krewe") + ", the next membership meeting, and a note that we will ask them to share why they want to join. Membership dues are not the background check fee.";
+        if (fields) fields.hidden = false;
+        if (whenEl) whenEl.value = "";
+        if (placeEl) placeEl.value = "";
+        if (yesBtn) yesBtn.textContent = "Send induction email";
+        confirmBox.dataset.mode = "induction";
         confirmBox.dataset.id = id;
         confirmBox.hidden = false;
+        applicationSyncInductionPreview();
         var cancel = document.getElementById("hubAppConfirmNo");
         if (cancel) cancel.focus();
       });
     });
+    var whenInput = document.getElementById("hubInductionWhen");
+    var placeInput = document.getElementById("hubInductionPlace");
+    if (whenInput) whenInput.addEventListener("input", applicationSyncInductionPreview);
+    if (placeInput) placeInput.addEventListener("input", applicationSyncInductionPreview);
     var yes = document.getElementById("hubAppConfirmYes");
     var no = document.getElementById("hubAppConfirmNo");
     if (yes) yes.addEventListener("click", function () {
       var id = confirmBox && confirmBox.dataset.id;
+      var mode = confirmBox && confirmBox.dataset.mode;
+      var meeting = null;
+      if (mode === "induction") {
+        var whenValue = (document.getElementById("hubInductionWhen") || {}).value || "";
+        var placeValue = (document.getElementById("hubInductionPlace") || {}).value || "";
+        whenValue = String(whenValue).trim();
+        placeValue = String(placeValue).trim();
+        if (!whenValue || !placeValue) return;
+        meeting = whenValue + "\n" + placeValue;
+      }
       closePassConfirm();
-      if (id) decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), yes);
+      if (!id) return;
+      if (mode === "approve") {
+        decideApplication(window.__kosSb || null, "approve", id, noteFor(id), yes);
+      } else {
+        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), yes, meeting);
+      }
     });
     if (no) no.addEventListener("click", closePassConfirm);
     if (confirmBox) confirmBox.addEventListener("keydown", function (event) {

@@ -149,8 +149,8 @@ test.describe("Membership Applications", () => {
     await expect(tool).toBeVisible();
     await expect(tool.locator("h2")).toHaveText("Membership Applications");
     await expect(tool).toContainText("Call first");
-    await expect(tool.locator("[data-pipe='packet']")).toContainText("Joining packet sent");
-    await expect(tool).toContainText("Call first, then send the joining packet");
+    await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Background check fee pending");
+    await expect(tool).toContainText("Call first. The card shows the phone number");
     await expect(tool).toContainText("Nia Byrne");
     await expect(tool).toContainText("nia.byrne@example.com");
     await expect(tool).toContainText("813-555-0199");
@@ -165,8 +165,9 @@ test.describe("Membership Applications", () => {
     await expect(tool).toContainText("not membership dues");
     await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
-    await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
-    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Send joining packet");
+    await expect(tool).toContainText("Full application submitted. Lists show the last 4 only.");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Called, send background check email");
+    await expect(tool.locator("[data-app-id='app-nia'] a[href='tel:8135550199']")).toHaveText("813-555-0199");
     await expect(tool.locator("[data-app-send]")).toHaveCount(0);
     await expect(tool).not.toContainText("Send full application");
     await expect(tool).not.toContainText("Mark next step sent");
@@ -184,8 +185,11 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-bucket='board']").click();
     await expect(tool).toContainText("Nia Byrne");
 
-    page.once("dialog", (dialog) => dialog.accept());
     await tool.locator("[data-app-approve='app-riley']").click();
+    await expect(tool.locator("#hubAppConfirm")).toBeVisible();
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("voted them in at a general meeting");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
+    await tool.locator("#hubAppConfirmYes").click();
     await expect(tool).toContainText("Approved.");
     await expect(tool).toContainText("Create or reset your password");
     await expect(tool.locator("[data-app-id='app-riley']")).toHaveAttribute("data-app-status", "active");
@@ -211,7 +215,7 @@ test.describe("Membership Applications", () => {
           first_name: "Sam",
           last_name: "Patel",
           email: "sam.patel@example.com",
-          membership_status: "bg_paid",
+          membership_status: "bg_in_process",
           membership_level: "full",
           application_fee_type: "single",
           background_check_paid: true,
@@ -236,27 +240,26 @@ test.describe("Membership Applications", () => {
     });
     await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
-    await expect(tool.locator("[data-pipe='packet']")).toContainText("Joining packet sent");
-    await expect(tool.locator("[data-pipe='dues_wait']")).toContainText("Passed, awaiting dues");
+    await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Background check fee pending");
+    await expect(tool.locator("[data-pipe='induction']")).toContainText("Induction pending");
     await expect(page.locator('[data-tool="tool:hubPayments"]')).toHaveCount(0);
 
     await tool.locator("#hubAppNote-app-nia").fill("Sent the background check form.");
     await tool.locator("[data-app-bg='app-nia']").click();
-    expect(confirmMessage).toContain("finish the full application");
+    expect(confirmMessage).toContain("full application");
     expect(confirmMessage).toContain("$50");
     expect(confirmMessage).toContain("$75");
     expect(confirmMessage).toContain("paused");
-    expect(confirmMessage).toContain("dues link comes after");
+    expect(confirmMessage).toContain("does not include a dues link");
     expect(confirmMessage).not.toContain("—");
-    await expect(tool).toContainText("joining packet stage");
-    await expect(tool).toContainText("secure link");
-    await expect(tool).toContainText("does not include a Social Security number");
+    await expect(tool).toContainText("Called.");
+    await expect(tool).toContainText("a Social Security number");
     const card = tool.locator("[data-app-id='app-nia']");
-    await expect(card).toContainText("Joining packet sent");
-    await expect(card).toContainText("Full application received. Lists show the last 4 only.");
+    await expect(card).toContainText("Background check fee pending");
+    await expect(card).toContainText("Full application submitted. Lists show the last 4 only.");
     await expect(card).not.toContainText("123-45-6789");
     await expect(card.locator("[data-app-send]")).toHaveCount(0);
-    await expect(card.locator("[data-app-bg]")).toHaveText("Send joining packet again");
+    await expect(card.locator("[data-app-bg]")).toHaveCount(0);
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
     await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Sent the background check form.");
@@ -266,9 +269,15 @@ test.describe("Membership Applications", () => {
     await tool.locator("[data-app-dues='app-sam']").click();
     await expect(tool.locator("#hubAppConfirm")).toBeVisible();
     await expect(tool.locator("#hubAppConfirmBody")).toContainText("Full Krewe");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("why they want to join");
     await expect(tool.locator("#hubAppConfirmBody")).not.toContainText("—");
+    await tool.locator("#hubInductionWhen").fill("Tuesday, January 6, 2026 at 7:00 PM");
+    await tool.locator("#hubInductionPlace").fill("Krewe hall");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Tuesday, January 6, 2026 at 7:00 PM");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Krewe hall");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Pay dues on Zeffy");
     await tool.locator("#hubAppConfirmYes").click();
-    await expect(tool).toContainText("Passed the background check.");
+    await expect(tool).toContainText("Induction pending.");
     await expect(tool).toContainText("not the application fee");
     await expect(tool.locator("[data-app-id='app-sam']")).toHaveAttribute("data-app-status", "dues-pending");
     await expect(tool).not.toContainText("123456789");
@@ -558,7 +567,7 @@ test.describe("Membership Applications", () => {
     await expect(casey).toContainText("Event prospect");
     await expect(casey).toContainText("Their note: Signed up for an event.");
     await expect(casey.locator("[data-app-save-note='app-casey']")).toHaveText("Save note");
-    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Called, send background check email");
     await expect(casey).toContainText("leaves their stage as it is");
 
     await casey.locator("#hubAppNote-app-casey").fill("   ");
@@ -576,7 +585,7 @@ test.describe("Membership Applications", () => {
     await casey.locator("#hubAppNote-app-casey").fill("Called about Tartan Ball. Badge 123456789");
     await casey.locator("[data-app-save-note='app-casey']").click();
     await expect(tool.locator("#hubAppFlash")).toContainText("Note saved on the record.");
-    await expect(tool.locator("#hubAppFlash")).toContainText("joining packet was not sent");
+    await expect(tool.locator("#hubAppFlash")).toContainText("background check email was not sent");
     await expect(casey).toHaveAttribute("data-app-status", "prospect");
     await expect(casey.locator("[data-app-record-note]")).toContainText("Record note:");
     await expect(casey.locator("[data-app-record-note]")).toContainText("Called about Tartan Ball.");
@@ -584,7 +593,7 @@ test.describe("Membership Applications", () => {
     await expect(casey.locator("[data-app-record-note]")).toContainText("Lisa Sugrue");
     await expect(casey).toContainText("Their note: Signed up for an event.");
     await expect(casey).not.toContainText("123456789");
-    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Called, send background check email");
     await expect(tool.locator("[data-app-bucket='prospect']")).toContainText("Event prospects (1)");
     await expect(tool.locator("[data-app-history='note']")).toContainText("Casey Prospect");
     await expect(tool.locator("[data-app-history='note']")).toContainText("Called about Tartan Ball.");

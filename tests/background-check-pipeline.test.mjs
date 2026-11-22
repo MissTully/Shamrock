@@ -81,7 +81,11 @@ test("backfill completes the known couple without mail or a status change", () =
   assert.match(backfill, /dues_pending/);
   assert.match(backfill, /dues_paid/);
   assert.match(backfill, /Dues paid \$375/);
-  assert.match(backfill, /Passed background check/);
+  assert.match(backfill, /Induction pending/);
+  assert.match(backfill, /start_background_check/);
+  assert.match(dashboard, /bg_in_process/);
+  assert.match(dashboard, /youtu\.be\/TQq0DlRQjvM/);
+  assert.match(dashboard, /href="tel:/);
   assert.match(backfill, /skipped_backfill/);
   assert.match(backfill, /does not change membership_status/);
   assert.doesNotMatch(backfill, /enqueue_email/);

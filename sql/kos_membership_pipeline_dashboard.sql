@@ -15,13 +15,14 @@
 -- sends no email.
 --
 -- New applicants, going forward:
---   pending-new        New interest
---   background-check   Joining packet sent, waiting on the background check fee
---   bg_paid            Background check paid, check in progress
---   dues-pending       Passed. Waiting on dues, or dues already paid
---   active             Approved
--- The dues invoice is no longer queued when the full application is saved.
--- The chair sends it with "Passed background check, send dues link".
+--   pending-new        New interest. Chair calls, then sends the background check email.
+--   background-check   Background check fee pending. Full application may be in or not.
+--   bg_paid            Background check fee paid. Chair starts the check.
+--   bg_in_process      Background check in process.
+--   dues-pending       Induction pending. Dues link and meeting invite are out.
+--   active             Member. Voted in at a general meeting.
+-- The dues invoice is created when the chair sends the induction email,
+-- not when the full application is saved.
 -- A Zeffy background check payment is product_kind background_check.
 -- The webhook calls kos_apply_background_check_payment, which links the
 -- payer and the partner, writes history, moves background-check to bg_paid,
@@ -35,7 +36,7 @@ alter table public.members drop constraint if exists members_membership_status_c
 alter table public.members add constraint members_membership_status_check
   check (membership_status in (
     'active', 'inactive', 'lapsed', 'prospect',
-    'pending-new', 'background-check', 'bg_paid', 'dues-pending', 'pending-renewal',
+    'pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'pending-renewal',
     'merged', 'declined', 'archived'
   ));
 
@@ -93,7 +94,8 @@ alter table public.membership_application_actions
   add constraint membership_application_actions_action_check
   check (action in (
     'approve', 'decline', 'archive',
-    'background_check', 'background_check_paid', 'dues_pending', 'dues_paid',
+    'background_check', 'background_check_paid', 'start_background_check',
+    'dues_pending', 'dues_paid',
     'next_step_sent',
     'full_application_sent', 'full_application_received', 'id_revealed',
     'note', 'renewed'
@@ -156,7 +158,7 @@ begin
        and lower(btrim(coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, ''))) = v_partner_name
      order by
        case
-         when m.membership_status in ('pending-new', 'background-check', 'bg_paid', 'dues-pending', 'prospect')
+         when m.membership_status in ('pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'prospect')
            then 0
          else 1
        end,
@@ -341,7 +343,7 @@ begin
                updated_at = now()
          where id = v_who;
         v_open := true;
-      elsif v_status in ('pending-new', 'background-check', 'bg_paid', 'dues-pending', 'prospect') then
+      elsif v_status in ('pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'prospect') then
         v_open := true;
       end if;
       insert into public.membership_application_actions (
@@ -354,7 +356,7 @@ begin
     select m.membership_status into v_status
       from public.members m
      where m.id = v_member;
-    v_open := v_status in ('pending-new', 'background-check', 'bg_paid', 'dues-pending', 'prospect');
+    v_open := v_status in ('pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'prospect');
   end if;
 
   if v_notify and v_told = '' and v_open then
@@ -374,7 +376,7 @@ begin
     end if;
     v_html :=
       '<p>' || public.kos_html_text(v_name) || ' paid the $' || v_dollars::text
-      || ' background check fee.</p>'
+      || ' background check fee. Their card is in Background check fee paid. Choose Start background check when you are ready to paste the driver''s license and Social Security number into the background check site.</p>'
       || '<p><a href="https://www.kreweofshamrock.com/members.html#applications">Open Membership Applications</a></p>';
     for v_chair in
       select distinct
@@ -673,7 +675,7 @@ begin
     return jsonb_build_object('ok', false, 'message', 'That application was not found.');
   end if;
   if rec.membership_status not in (
-    'pending-new', 'background-check', 'bg_paid', 'dues-pending', 'pending-renewal', 'prospect'
+    'pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'pending-renewal', 'prospect'
   ) then
     return jsonb_build_object('ok', false, 'message', 'That application is no longer waiting for review.');
   end if;
@@ -702,9 +704,276 @@ grant execute on function public.save_membership_application_note(uuid, text) to
 comment on function public.save_membership_application_note(uuid, text) is
   'Reviewer-only note. Allows bg_paid so a note can be saved while the background check is in progress. Does not change status and does not send email.';
 
+-- ---------------------------------------------------------------------------
+-- 4b) Next membership meeting, dues offer, and the induction letter.
+--     The dues row is created here, when the chair sends the letter.
+-- ---------------------------------------------------------------------------
+create or replace function public.kos_next_membership_meeting()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $meet$
+declare
+  v_name text;
+  v_when timestamptz;
+  v_place text;
+begin
+  if to_regclass('public.events') is null then
+    return null;
+  end if;
+  if not exists (
+    select 1
+      from information_schema.columns
+     where table_schema = 'public'
+       and table_name = 'events'
+       and column_name = 'location'
+  ) then
+    return null;
+  end if;
+  select e.name, e.start_time, nullif(btrim(coalesce(e.location, '')), '')
+    into v_name, v_when, v_place
+    from public.events e
+   where e.start_time > now()
+     and (
+       lower(coalesce(e.event_type, '')) = 'meeting'
+       or e.name ilike '%general meeting%'
+       or e.name ilike '%membership meeting%'
+     )
+   order by e.start_time
+   limit 1;
+  if v_when is null or v_place is null then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'name', coalesce(nullif(btrim(v_name), ''), 'Membership meeting'),
+    'when_text', to_char(v_when at time zone 'America/New_York', 'FMDay, FMMonth FMDD, YYYY')
+      || ' at '
+      || to_char(v_when at time zone 'America/New_York', 'FMHH12:MI AM'),
+    'place', v_place
+  );
+end;
+$meet$;
+
+revoke all on function public.kos_next_membership_meeting() from public, anon;
+grant execute on function public.kos_next_membership_meeting() to authenticated;
+
+create or replace function public.kos_prepare_induction_dues(p_member_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $offer$
+declare
+  v_year integer := extract(year from current_date)::integer;
+  v_member record;
+  v_dues public.dues_payments%rowtype;
+  v_has boolean := false;
+  v_quote jsonb;
+  v_level text;
+  v_amount numeric;
+  v_url text;
+  v_label text;
+  v_name text;
+begin
+  if p_member_id is null or to_regclass('public.dues_payments') is null then
+    return jsonb_build_object('ok', false, 'paid', false, 'message', 'Dues records are not installed.');
+  end if;
+  select m.id, m.membership_level, m.first_name, m.last_name, m.email
+    into v_member
+    from public.members m
+   where m.id = p_member_id
+     and m.merged_into is null;
+  if not found then
+    return jsonb_build_object('ok', false, 'paid', false, 'message', 'Member was not found.');
+  end if;
+  v_name := btrim(coalesce(v_member.first_name, '') || ' ' || coalesce(v_member.last_name, ''));
+  if public.kos_application_dues_already_paid(p_member_id) then
+    return jsonb_build_object(
+      'ok', true, 'paid', true, 'name', v_name,
+      'message', 'Dues are already paid.'
+    );
+  end if;
+  if to_regprocedure('public.kos_dues_quote(integer,text)') is null then
+    return jsonb_build_object(
+      'ok', false, 'paid', false, 'name', v_name,
+      'message', 'Dues catalog is not installed.'
+    );
+  end if;
+  v_quote := public.kos_dues_quote(v_year, v_member.membership_level);
+  v_level := v_quote->>'level';
+  v_amount := (v_quote->>'amount')::numeric;
+  v_url := nullif(btrim(v_quote->>'zeffy_url'), '');
+  v_label := case v_level
+    when 'associate' then 'Associate'
+    when 'loa' then 'Leave of absence'
+    when 'auxiliary' then 'Auxiliary'
+    else 'Full Krewe'
+  end;
+  if coalesce(v_quote->>'from_catalog', 'false') <> 'true' or v_amount is null or v_url is null then
+    return jsonb_build_object(
+      'ok', false, 'paid', false, 'name', v_name, 'level', v_level, 'label', v_label,
+      'message', 'No dues pay link is set for this level yet.'
+    );
+  end if;
+
+  select * into v_dues
+    from public.dues_payments
+   where member_id = p_member_id
+     and membership_year = v_year;
+  v_has := found;
+  if v_has and coalesce(v_dues.waiver_status, '') = 'applied' then
+    return jsonb_build_object('ok', true, 'paid', true, 'name', v_name, 'message', 'A dues waiver is already on file.');
+  end if;
+  if v_has and v_dues.paid then
+    return jsonb_build_object('ok', true, 'paid', true, 'name', v_name, 'message', 'Dues are already paid.');
+  end if;
+  if not v_has then
+    insert into public.dues_payments (
+      member_id, membership_year, amount, due_date, paid,
+      membership_level, standard_amount, zeffy_campaign_key, notes
+    ) values (
+      p_member_id, v_year, v_amount, make_date(v_year, 6, 30), false,
+      v_level, v_amount, v_url, 'Induction dues link'
+    );
+  else
+    update public.dues_payments
+       set membership_level = v_level,
+           standard_amount = v_amount,
+           amount = v_amount,
+           zeffy_campaign_key = v_url,
+           due_date = coalesce(due_date, make_date(v_year, 6, 30))
+     where id = v_dues.id
+       and paid = false
+       and coalesce(waiver_status, '') <> 'applied';
+  end if;
+  if to_regprocedure('public.kos_log_dues_event(text,uuid,integer,jsonb)') is not null then
+    perform public.kos_log_dues_event(
+      'invoice_created',
+      p_member_id,
+      v_year,
+      jsonb_build_object(
+        'source', 'induction',
+        'membership_level', v_level,
+        'amount', v_amount,
+        'zeffy_campaign_key', v_url
+      )
+    );
+  end if;
+  return jsonb_build_object(
+    'ok', true,
+    'paid', false,
+    'name', v_name,
+    'level', v_level,
+    'label', v_label,
+    'amount', trim(to_char(v_amount, 'FM999990.00')),
+    'url', v_url
+  );
+end;
+$offer$;
+
+revoke all on function public.kos_prepare_induction_dues(uuid) from public, anon, authenticated;
+
+create or replace function public.kos_induction_letter_html(
+  p_first text,
+  p_offers jsonb,
+  p_when text,
+  p_place text
+)
+returns text
+language plpgsql
+stable
+set search_path = public
+as $letter$
+declare
+  v_html text;
+  v_offer jsonb;
+  v_any_link boolean := false;
+begin
+  v_html :=
+    '<p>Dear ' || public.kos_html_text(coalesce(nullif(btrim(p_first), ''), 'friend')) || ',</p>'
+    || '<p>Your background check is complete. We would like to welcome you in person.</p>'
+    || '<p>You are invited to your in-person induction at our next membership meeting.</p>'
+    || '<p><strong>Date and time:</strong> ' || public.kos_html_text(p_when) || '</p>'
+    || '<p><strong>Place:</strong> ' || public.kos_html_text(p_place) || '</p>'
+    || '<p>At that meeting we will ask you to share a little about why you want to join the Krewe. A sentence or two is plenty.</p>';
+  if jsonb_typeof(p_offers) = 'array' then
+    for v_offer in select value from jsonb_array_elements(p_offers)
+    loop
+      if coalesce(v_offer->>'paid', '') = 'true' then
+        v_html := v_html || '<p>' || public.kos_html_text(coalesce(v_offer->>'name', 'Dues'))
+          || ': membership dues are already paid.</p>';
+      elsif nullif(v_offer->>'url', '') is not null then
+        v_any_link := true;
+        v_html := v_html
+          || '<p><strong>' || public.kos_html_text(coalesce(v_offer->>'label', 'Full Krewe'))
+          || '</strong>'
+          || case when nullif(v_offer->>'name', '') is not null
+               then ' for ' || public.kos_html_text(v_offer->>'name')
+               else ''
+             end
+          || ': $' || public.kos_html_text(coalesce(v_offer->>'amount', ''))
+          || '. This is membership dues, not the background check fee.</p>'
+          || '<p style="margin:18px 0;"><a href="' || public.kos_html_text(v_offer->>'url') || '" '
+          || 'style="display:inline-block;background:#14532d;color:#fff;padding:12px 18px;border-radius:999px;'
+          || 'text-decoration:none;font-weight:700;">Pay dues on Zeffy</a></p>';
+      else
+        v_html := v_html || '<p>A dues pay link is not ready yet. The treasurer will send it. This is membership dues, not the background check fee.</p>';
+      end if;
+    end loop;
+  end if;
+  if not v_any_link and (p_offers is null or jsonb_array_length(coalesce(p_offers, '[]'::jsonb)) = 0) then
+    v_html := v_html || '<p>A dues pay link is not ready yet. The treasurer will send it.</p>';
+  end if;
+  v_html := v_html || '<p>We are glad you are joining us.</p><p>Sláinte!</p>';
+  return v_html;
+end;
+$letter$;
+
+revoke all on function public.kos_induction_letter_html(text, jsonb, text, text) from public, anon, authenticated;
+
+create or replace function public.kos_induction_meeting(p_meeting text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $when$
+declare
+  v_when text := nullif(btrim(split_part(coalesce(p_meeting, ''), E'\n', 1)), '');
+  v_place text := nullif(btrim(split_part(coalesce(p_meeting, ''), E'\n', 2)), '');
+  v_meet jsonb;
+begin
+  if v_when is not null and v_place is not null then
+    return jsonb_build_object('ok', true, 'when_text', left(v_when, 160), 'place', left(v_place, 200));
+  end if;
+  v_meet := public.kos_next_membership_meeting();
+  if v_meet is not null then
+    return jsonb_build_object(
+      'ok', true,
+      'when_text', v_meet->>'when_text',
+      'place', v_meet->>'place',
+      'from_calendar', true
+    );
+  end if;
+  return jsonb_build_object(
+    'ok', false,
+    'needs_meeting', true,
+    'message', 'Enter the next membership meeting date, time, and place before sending the induction email.'
+  );
+end;
+$when$;
+
+revoke all on function public.kos_induction_meeting(text) from public, anon;
+grant execute on function public.kos_induction_meeting(text) to authenticated;
+
+drop function if exists public.kos_pass_background_check(uuid, text);
+
 create or replace function public.kos_pass_background_check(
   p_member_id uuid,
-  p_note text default null
+  p_note text default null,
+  p_meeting text default null
 )
 returns jsonb
 language plpgsql
@@ -713,18 +982,24 @@ set search_path = public
 as $pass$
 declare
   rec public.members%rowtype;
-  v_partner uuid;
   v_actor record;
   v_note text := nullif(left(btrim(coalesce(p_note, '')), 1000), '');
-  v_ids uuid[] := '{}';
+  v_partner uuid;
+  v_ids uuid[];
   v_who uuid;
   v_row public.members%rowtype;
-  v_this_paid boolean := false;
-  v_unpaid uuid[] := '{}';
-  v_level text;
-  v_invoice jsonb;
+  v_meet jsonb;
+  v_when text;
+  v_place text;
+  v_offers jsonb := '[]'::jsonb;
+  v_offer jsonb;
+  v_html text;
+  v_subject text := 'Your Krewe of Shamrock induction';
+  v_name text;
   v_message text;
   v_moved integer := 0;
+  v_emailed boolean := false;
+  v_mail_to public.members%rowtype;
 begin
   if auth.uid() is null or not public.can_review_applications() then
     return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
@@ -737,9 +1012,19 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'message', 'That application was not found.');
   end if;
-  if rec.membership_status not in ('background-check', 'bg_paid', 'dues-pending') then
-    return jsonb_build_object('ok', false, 'message', 'Pass the background check from the check-in-progress stage.');
+  if rec.membership_status <> 'bg_in_process' then
+    return jsonb_build_object(
+      'ok', false,
+      'message', 'Send the induction email from Background check in process.'
+    );
   end if;
+
+  v_meet := public.kos_induction_meeting(p_meeting);
+  if coalesce(v_meet->>'ok', '') <> 'true' then
+    return v_meet;
+  end if;
+  v_when := v_meet->>'when_text';
+  v_place := v_meet->>'place';
 
   v_partner := public.kos_match_application_partner(rec.id);
   if v_partner = rec.id then
@@ -747,10 +1032,32 @@ begin
   end if;
   v_ids := array[rec.id];
   if v_partner is not null then
-    v_ids := v_ids || v_partner;
+    select m.membership_status into v_name
+      from public.members m
+     where m.id = v_partner
+       and m.merged_into is null;
+    if v_name = 'bg_in_process' then
+      v_ids := v_ids || v_partner;
+    end if;
   end if;
 
+  foreach v_who in array v_ids loop
+    if not public.kos_application_dues_already_paid(v_who) then
+      v_offer := public.kos_prepare_induction_dues(v_who);
+      v_offers := v_offers || jsonb_build_array(v_offer);
+    else
+      select btrim(coalesce(m.first_name, '') || ' ' || coalesce(m.last_name, ''))
+        into v_name
+        from public.members m
+       where m.id = v_who;
+      v_offers := v_offers || jsonb_build_array(jsonb_build_object(
+        'ok', true, 'paid', true, 'name', coalesce(v_name, '')
+      ));
+    end if;
+  end loop;
+
   select * into v_actor from public._officer_actor();
+  v_note := coalesce(v_note || ' ', '') || 'Induction at ' || v_when || ', ' || v_place || '.';
 
   foreach v_who in array v_ids loop
     select * into v_row
@@ -761,12 +1068,8 @@ begin
     if not found then
       continue;
     end if;
-    if v_row.membership_status not in ('pending-new', 'background-check', 'bg_paid', 'dues-pending', 'prospect') then
+    if v_row.membership_status not in ('bg_in_process', 'dues-pending') then
       continue;
-    end if;
-    v_this_paid := public.kos_application_dues_already_paid(v_who);
-    if not v_this_paid then
-      v_unpaid := v_unpaid || v_who;
     end if;
     if v_row.membership_status is distinct from 'dues-pending' then
       update public.members
@@ -781,70 +1084,154 @@ begin
     ) values (
       v_row.id,
       'dues_pending',
-      coalesce(v_note, case
-        when v_this_paid then 'Passed background check. Dues were already paid, so no dues link was sent.'
-        else 'Passed background check. Dues link sent.'
-      end),
+      v_note,
       v_row.membership_status,
       'dues-pending',
       v_actor.uid, v_actor.email, v_actor.display_name
     );
   end loop;
 
-  if coalesce(array_length(v_unpaid, 1), 0) = 0 then
-    v_message := 'Passed the background check. Dues were already paid, so no dues link was sent.';
-    return jsonb_build_object('ok', true, 'emailed', false, 'message', v_message, 'status', 'dues-pending');
-  end if;
-
-  -- One email, to someone who still owes dues. A partner who already paid
-  -- does not cancel the email for the other person.
-  select * into rec
+  select * into v_mail_to
     from public.members
-   where id = v_unpaid[1];
-
-  v_level := lower(btrim(coalesce(rec.membership_level, '')));
-  if v_level not in ('full', 'associate', 'auxiliary', 'loa') and coalesce(array_length(v_unpaid, 1), 0) > 1 then
-    select lower(btrim(coalesce(m.membership_level, ''))) into v_level
-      from public.members m
-     where m.id = v_unpaid[2];
-    if v_level in ('full', 'associate', 'auxiliary', 'loa') then
-      select * into rec from public.members where id = v_unpaid[2];
-    end if;
+   where id = v_ids[1];
+  v_html := public.kos_induction_letter_html(
+    coalesce(nullif(btrim(v_mail_to.first_name), ''), 'friend'),
+    v_offers,
+    v_when,
+    v_place
+  );
+  if to_regprocedure('public.wrap_all_krewe_email_html(text,text)') is not null then
+    v_html := public.wrap_all_krewe_email_html(v_subject, v_html);
+  end if;
+  v_name := btrim(coalesce(v_mail_to.first_name, '') || ' ' || coalesce(v_mail_to.last_name, ''));
+  if public.enqueue_email(
+    v_mail_to.email,
+    nullif(v_name, ''),
+    v_subject,
+    v_html,
+    'membership_induction',
+    v_mail_to.id
+  ) is not null then
+    v_emailed := true;
   end if;
 
-  if v_level in ('full', 'associate', 'auxiliary', 'loa')
-     and to_regprocedure('public.kos_queue_level_dues_invoice(uuid)') is not null
-     and lower(btrim(coalesce(rec.membership_level, ''))) = v_level then
-    v_invoice := public.kos_queue_level_dues_invoice(rec.id);
+  if v_emailed then
+    v_message := 'Induction pending. We emailed the dues link, the meeting, and the invitation to share why they want to join.';
   else
-    v_invoice := public.kos_queue_dues_choice_email(rec.id);
-  end if;
-
-  v_message := coalesce(v_invoice->>'message', 'Passed the background check.');
-  if coalesce(v_invoice->>'emailed', '') = 'true' then
-    v_message := 'Passed the background check. ' || v_message;
-  else
-    v_message := 'Passed the background check. ' || coalesce(v_invoice->>'message', 'The dues email could not be queued.');
+    v_message := 'Induction pending. The dues link email could not be queued. Please send the meeting details yourself.';
   end if;
 
   return jsonb_build_object(
     'ok', true,
-    'emailed', coalesce(v_invoice->>'emailed', 'false') = 'true',
+    'emailed', v_emailed,
     'message', v_message,
     'status', 'dues-pending',
-    'moved', v_moved
+    'moved', v_moved,
+    'when_text', v_when,
+    'place', v_place,
+    'subject', v_subject,
+    'preview_html', v_html
   );
 end;
 $pass$;
 
-revoke all on function public.kos_pass_background_check(uuid, text) from public, anon, authenticated;
+revoke all on function public.kos_pass_background_check(uuid, text, text) from public, anon, authenticated;
 
-comment on function public.kos_pass_background_check(uuid, text) is
-  'Internal. Chair action. Moves the applicant and their partner to dues-pending and sends one dues email, unless dues are already paid.';
+comment on function public.kos_pass_background_check(uuid, text, text) is
+  'Chair action from Background check in process. Creates the level dues invoice, emails one induction letter with the dues link and the next membership meeting, and moves the applicant and partner to Induction pending.';
+
+create or replace function public.preview_membership_induction_email(
+  p_member_id uuid,
+  p_meeting text default null
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $preview$
+declare
+  rec public.members%rowtype;
+  v_meet jsonb;
+  v_level text;
+  v_label text;
+  v_amount text;
+  v_offer jsonb;
+begin
+  if auth.uid() is null or not public.can_review_applications() then
+    return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
+  end if;
+  select * into rec from public.members where id = p_member_id and merged_into is null;
+  if not found then
+    return jsonb_build_object('ok', false, 'message', 'That application was not found.');
+  end if;
+  v_meet := public.kos_induction_meeting(p_meeting);
+  v_level := lower(btrim(coalesce(rec.membership_level, 'full')));
+  v_label := case v_level
+    when 'associate' then 'Associate'
+    when 'loa' then 'Leave of absence'
+    when 'auxiliary' then 'Auxiliary'
+    else 'Full Krewe'
+  end;
+  v_amount := case v_level
+    when 'associate' then '450.00'
+    when 'loa' then '100.00'
+    when 'auxiliary' then '200.00'
+    else '375.00'
+  end;
+  v_offer := '{}'::jsonb;
+  if to_regprocedure('public.kos_dues_quote(integer,text)') is not null then
+    v_offer := public.kos_dues_quote(extract(year from current_date)::integer, rec.membership_level);
+    if nullif(v_offer->>'amount', '') is not null then
+      v_amount := trim(to_char((v_offer->>'amount')::numeric, 'FM999990.00'));
+    end if;
+    if nullif(v_offer->>'level', '') is not null then
+      v_level := v_offer->>'level';
+    end if;
+    v_label := case v_level
+      when 'associate' then 'Associate'
+      when 'loa' then 'Leave of absence'
+      when 'auxiliary' then 'Auxiliary'
+      else 'Full Krewe'
+    end;
+  end if;
+  v_offer := jsonb_build_array(jsonb_build_object(
+    'paid', public.kos_application_dues_already_paid(rec.id),
+    'name', btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, '')),
+    'label', v_label,
+    'amount', v_amount,
+    'url', case
+      when public.kos_application_dues_already_paid(rec.id) then null
+      else nullif(v_offer->>'zeffy_url', '')
+    end
+  ));
+  if coalesce(v_meet->>'ok', '') <> 'true' then
+    return v_meet || jsonb_build_object('subject', 'Your Krewe of Shamrock induction', 'label', v_label, 'amount', v_amount);
+  end if;
+  return jsonb_build_object(
+    'ok', true,
+    'needs_meeting', false,
+    'when_text', v_meet->>'when_text',
+    'place', v_meet->>'place',
+    'from_calendar', coalesce(v_meet->>'from_calendar', 'false') = 'true',
+    'subject', 'Your Krewe of Shamrock induction',
+    'label', v_label,
+    'amount', v_amount,
+    'preview_html', public.kos_induction_letter_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_offer,
+      v_meet->>'when_text',
+      v_meet->>'place'
+    )
+  );
+end;
+$preview$;
+
+revoke all on function public.preview_membership_induction_email(uuid, text) from public, anon;
+grant execute on function public.preview_membership_induction_email(uuid, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 5) Decisions. bg_paid can be approved, declined, or archived.
---    Welcome letter is unchanged. dues_pending is handled above.
+-- 5) Decisions. Approve sends the welcome letter from Induction pending.
 -- ---------------------------------------------------------------------------
 create or replace function public._apply_membership_application_decision(
   p_member_id uuid,
@@ -871,7 +1258,7 @@ begin
   if auth.uid() is null or not public.can_review_applications() then
     return jsonb_build_object('ok', false, 'message', 'You do not have access to membership applications.');
   end if;
-  if p_action not in ('approve', 'decline', 'archive', 'background_check', 'dues_pending', 'next_step_sent') then
+  if p_action not in ('approve', 'decline', 'archive', 'background_check', 'start_background_check', 'dues_pending', 'next_step_sent') then
     return jsonb_build_object('ok', false, 'message', 'That action is not available.');
   end if;
   if p_member_id is null then
@@ -887,7 +1274,7 @@ begin
     return jsonb_build_object('ok', false, 'message', 'That application was not found.');
   end if;
   if rec.membership_status not in (
-    'pending-new', 'background-check', 'bg_paid', 'dues-pending', 'pending-renewal', 'prospect'
+    'pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending', 'pending-renewal', 'prospect'
   ) then
     return jsonb_build_object('ok', false, 'message', 'That application is no longer waiting for review.');
   end if;
@@ -927,6 +1314,12 @@ begin
        set membership_status = 'background-check',
            updated_at = now()
      where id = rec.id;
+  elsif p_action = 'start_background_check' then
+    v_to := 'bg_in_process';
+    update public.members
+       set membership_status = 'bg_in_process',
+           updated_at = now()
+     where id = rec.id;
   elsif p_action = 'dues_pending' then
     v_to := 'dues-pending';
     update public.members
@@ -947,13 +1340,11 @@ begin
 
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
 
-  if p_action = 'approve' and rec.membership_status in (
-    'pending-new', 'prospect', 'background-check', 'bg_paid', 'dues-pending'
-  ) then
+  if p_action = 'approve' and rec.membership_status in ('dues-pending', 'pending-renewal') then
     v_subject := 'Welcome to the Krewe of Shamrock';
     v_html :=
       '<p>Dear ' || public.kos_html_text(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-      || '<p>Welcome. Your membership application is approved, and you are on the krewe roster.</p>'
+      || '<p>Welcome. The Krewe voted you in at a general meeting, and you are on the roster.</p>'
       || '<p>To use the Member Hub, create your login with the same email you put on the application ('
       || public.kos_html_text(coalesce(rec.email, '')) || '):</p>'
       || '<ol>'
@@ -964,6 +1355,8 @@ begin
       || '<li>Come back and sign in with that email and password.</li>'
       || '</ol>'
       || '<p>Signing up with this email links your login to your membership. Old Wild Apricot passwords do not work here.</p>'
+      || '<p>When you are signed in, watch the member website training video: '
+      || '<a href="https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR">Member Hub training</a>.</p>'
       || '<p>Questions: <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</p>'
       || '<p>Sláinte!</p>';
     if to_regprocedure('public.wrap_all_krewe_email_html(text,text)') is not null then
@@ -980,20 +1373,22 @@ begin
       v_emailed := true;
     end if;
     if v_emailed then
-      v_message := 'Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.';
+      v_message := 'Approved. They are an active member now. We emailed a welcome note with the Member Hub login steps and the training video: https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR';
     else
-      v_message := 'Approved. They are an active member now. We could not email them, so please tell them the next step: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.';
+      v_message := 'Approved. They are an active member now. We could not email them, so please tell them the next step: open the Member Hub, tap Create or reset your password, and use the email on this application. The training video is https://youtu.be/TQq0DlRQjvM?si=VN7_9JIyuUbxenvR';
     end if;
   elsif p_action = 'approve' then
     v_message := 'Approved. They are an active member again. They can sign in with the Member Hub login they already use.';
   elsif p_action = 'decline' then
     v_message := 'Declined. Their record stays on file and is off the new-application list. Nothing was deleted.';
   elsif p_action = 'archive' then
-    v_message := 'Archived. Their record stays on file and is off the new-application list. Nothing was deleted.';
+    v_message := 'Withdrawn. Their record stays on file and is off the new-application list. Nothing was deleted.';
   elsif p_action = 'background_check' then
-    v_message := 'Moved to background check in progress. Other officers can see this status and your note.';
+    v_message := 'Called. The background check email is the next message.';
+  elsif p_action = 'start_background_check' then
+    v_message := 'Background check in process. Copy the driver''s license and Social Security number into the background check site. No email was sent.';
   elsif p_action = 'dues_pending' then
-    v_message := 'Passed the background check. The dues link is the next email.';
+    v_message := 'Induction pending. The dues link and the meeting invitation are the next email.';
   else
     v_message := 'Next step sent. The note is on the application history.';
   end if;
@@ -1009,10 +1404,14 @@ $decision$;
 
 revoke all on function public._apply_membership_application_decision(uuid, text, text) from public, anon, authenticated;
 
+drop function if exists public.set_membership_application_status(uuid, text, text);
+drop function if exists public.set_membership_application_status(uuid, text, text, text);
+
 create or replace function public.set_membership_application_status(
   p_member_id uuid,
   p_action text,
-  p_note text default null
+  p_note text default null,
+  p_meeting text default null
 )
 returns jsonb
 language plpgsql
@@ -1024,9 +1423,11 @@ declare
   v_result jsonb;
   v_emails_on boolean := true;
   v_pause text;
+  v_partner uuid;
+  v_partner_status text;
 begin
   if p_action = 'dues_pending' then
-    return public.kos_pass_background_check(p_member_id, p_note);
+    return public.kos_pass_background_check(p_member_id, p_note, p_meeting);
   end if;
 
   if to_regprocedure('public.kos_membership_prospect_emails_enabled()') is not null then
@@ -1041,14 +1442,41 @@ begin
   end if;
 
   v_result := public._apply_membership_application_decision(p_member_id, p_action, p_note);
-  if p_action = 'background_check' and coalesce(v_result->>'ok', '') = 'true' then
+  if coalesce(v_result->>'ok', '') <> 'true' then
+    return v_result;
+  end if;
+
+  v_partner := public.kos_match_application_partner(p_member_id);
+  if v_partner = p_member_id then
+    v_partner := null;
+  end if;
+  if v_partner is not null then
+    select m.membership_status into v_partner_status
+      from public.members m
+     where m.id = v_partner
+       and m.merged_into is null;
+    if p_action = 'background_check' and v_partner_status in ('pending-new', 'prospect') then
+      perform public._apply_membership_application_decision(v_partner, p_action, p_note);
+    elsif p_action = 'start_background_check' and v_partner_status = 'bg_paid' then
+      perform public._apply_membership_application_decision(v_partner, p_action, p_note);
+    elsif p_action = 'approve' and v_partner_status = 'dues-pending' then
+      perform public._apply_membership_application_decision(v_partner, p_action, p_note);
+    elsif p_action in ('decline', 'archive')
+      and v_partner_status in (
+        'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+      ) then
+      perform public._apply_membership_application_decision(v_partner, p_action, p_note);
+    end if;
+  end if;
+
+  if p_action = 'background_check' then
     if v_emails_on then
       v_result := v_result || jsonb_build_object(
         'emailed', true,
-        'message', 'Moved to the joining packet stage. We emailed a secure link to finish the full application and the background check payment ($50 individual or $75 couple). The dues link comes after the check passes. The email does not include a Social Security number or a driver''s license number.'
+        'message', 'Called. We emailed the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver''s license number.'
       );
     else
-      v_pause := 'Moved to the joining packet stage. Prospect email is paused, so no joining packet was sent.';
+      v_pause := 'Called. The card moved to Background check fee pending. Prospect email is paused, so the background check email was not sent.';
       if to_regprocedure('public.kos_membership_prospect_emails_pause_message()') is not null then
         v_pause := v_pause || ' ' || public.kos_membership_prospect_emails_pause_message();
       end if;
@@ -1063,8 +1491,8 @@ begin
 end;
 $status$;
 
-revoke all on function public.set_membership_application_status(uuid, text, text) from public, anon;
-grant execute on function public.set_membership_application_status(uuid, text, text) to authenticated;
+revoke all on function public.set_membership_application_status(uuid, text, text, text) from public, anon;
+grant execute on function public.set_membership_application_status(uuid, text, text, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6) Full application save. No dues invoice here.
@@ -1133,7 +1561,7 @@ begin
   for update;
 
   if not found or rec.membership_status not in (
-    'pending-new', 'prospect', 'background-check', 'bg_paid', 'dues-pending'
+    'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
   ) then
     return jsonb_build_object(
       'ok', false,
@@ -1711,7 +2139,7 @@ begin
             from public.membership_application_actions a
            where a.member_id = m.id
              and a.action in (
-               'background_check', 'background_check_paid', 'dues_pending', 'dues_paid', 'approve'
+               'background_check', 'background_check_paid', 'start_background_check', 'dues_pending', 'dues_paid', 'approve'
              )
         ) journey on true
         where m.merged_into is null
@@ -1719,7 +2147,7 @@ begin
             (
               v_bucket = 'board'
               and (
-                m.membership_status in ('pending-new', 'background-check', 'bg_paid', 'dues-pending')
+                m.membership_status in ('pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending')
                 or (
                   m.membership_status = 'active'
                   and exists (
@@ -1782,3 +2210,197 @@ grant execute on function public.list_membership_applications(text) to authentic
 
 comment on function public.list_membership_applications(text) is
   'Application reviewers. Bucket board is the pipeline, including payment chips. Prospect, renewal, declined, and archived stay separate lists.';
+
+-- ---------------------------------------------------------------------------
+-- Interest email. Phone is a large tap-to-call link for the Membership Chair.
+-- Replaces the copy that told the chair to invoice dues at the full application.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_membership_application(
+  p_first_name text,
+  p_last_name text,
+  p_email text,
+  p_phone text default null,
+  p_notes text default null,
+  p_street_address text default null,
+  p_city text default null,
+  p_state text default null,
+  p_zip text default null,
+  p_fee_type text default null,
+  p_partner_first text default null,
+  p_partner_last text default null,
+  p_ssn text default null,
+  p_partner_ssn text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_first text := left(trim(coalesce(p_first_name,'')), 80);
+  v_last  text := left(trim(coalesce(p_last_name,'')), 80);
+  v_email text := left(lower(trim(coalesce(p_email,''))), 120);
+  v_phone text := nullif(left(trim(coalesce(p_phone,'')), 40), '');
+  v_notes text := nullif(left(trim(coalesce(p_notes,'')), 2000), '');
+  v_street text := nullif(left(trim(coalesce(p_street_address,'')), 120), '');
+  v_city text := nullif(left(trim(coalesce(p_city,'')), 80), '');
+  v_state text := nullif(left(trim(coalesce(p_state,'')), 20), '');
+  v_zip text := nullif(left(trim(coalesce(p_zip,'')), 16), '');
+  v_fee text := lower(coalesce(nullif(btrim(p_fee_type), ''), ''));
+  v_partner_first text := nullif(left(trim(coalesce(p_partner_first, '')), 80), '');
+  v_partner_last text := nullif(left(trim(coalesce(p_partner_last, '')), 80), '');
+  v_id uuid;
+  v_status text;
+  v_is_new boolean := false;
+  v_open boolean := false;
+  v_recent int;
+  v_addr text;
+  v_html text;
+  v_fee_line text;
+  v_subject text;
+  v_tel text;
+begin
+  -- p_ssn and p_partner_ssn stay in the signature so an older join page does not
+  -- error. Stage 0 does not store them and does not put them in email.
+
+  if v_first = '' or v_last = '' then
+    return jsonb_build_object('ok', false, 'message', 'First and last name are required.');
+  end if;
+  if v_email = '' or position('@' in v_email) = 0 then
+    return jsonb_build_object('ok', false, 'message', 'A valid email is required.');
+  end if;
+  if v_street is null or v_city is null or v_state is null or v_zip is null then
+    return jsonb_build_object('ok', false, 'message', 'Please add your mailing address.');
+  end if;
+  if v_fee = 'couple' then
+    v_fee := 'dual';
+  end if;
+  if v_fee <> '' and v_fee not in ('single', 'dual') then
+    return jsonb_build_object('ok', false, 'message', 'Choose single applicant or couple for the application fee.');
+  end if;
+  if v_fee = 'dual' and (v_partner_first is null or v_partner_last is null) then
+    return jsonb_build_object('ok', false, 'message', 'Enter the second applicant''s first and last name.');
+  end if;
+  if v_fee <> 'dual' then
+    v_partner_first := null;
+    v_partner_last := null;
+  end if;
+
+  select count(*) into v_recent
+  from public.members
+  where membership_status in (
+    'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+  )
+    and created_at > now() - interval '10 minutes';
+  if v_recent >= 12 then
+    return jsonb_build_object('ok', false, 'message', 'Please try again in a few minutes.');
+  end if;
+
+  select id, membership_status into v_id, v_status
+  from public.members
+  where lower(email) = v_email and merged_into is null
+  order by created_at
+  limit 1;
+
+  if v_id is null then
+    insert into public.members (
+      first_name, last_name, email, phone, notes,
+      street_address, city, state, zip,
+      member_role, membership_status,
+      application_fee_type, partner_first_name, partner_last_name
+    ) values (
+      v_first, v_last, v_email, v_phone, v_notes,
+      v_street, v_city, v_state, v_zip,
+      'prospect', 'pending-new',
+      nullif(v_fee, ''), v_partner_first, v_partner_last
+    ) returning id into v_id;
+    v_is_new := true;
+    v_status := 'pending-new';
+    v_open := true;
+  else
+    v_open := v_status in (
+      'prospect', 'pending-new', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+    );
+    update public.members set
+      first_name = v_first,
+      last_name = v_last,
+      phone = coalesce(v_phone, phone),
+      notes = coalesce(v_notes, notes),
+      street_address = coalesce(v_street, street_address),
+      city = coalesce(v_city, city),
+      state = coalesce(v_state, state),
+      zip = coalesce(v_zip, zip),
+      application_fee_type = case when v_open and v_fee <> '' then v_fee else application_fee_type end,
+      partner_first_name = case
+        when v_open and v_fee = 'dual' then v_partner_first
+        when v_open and v_fee = 'single' then null
+        else partner_first_name
+      end,
+      partner_last_name = case
+        when v_open and v_fee = 'dual' then v_partner_last
+        when v_open and v_fee = 'single' then null
+        else partner_last_name
+      end,
+      updated_at = now()
+    where id = v_id;
+  end if;
+
+  v_addr := v_street || ', ' || v_city || ', ' || v_state || ' ' || v_zip;
+  v_fee_line := case
+    when v_fee = 'dual' then 'Application fee: couple, $75. This is the background check fee, not membership dues.'
+    when v_fee = 'single' then 'Application fee: single applicant, $50. This is the background check fee, not membership dues.'
+    else 'Application fee: $50 single or $75 couple. This is the background check fee, not membership dues.'
+  end;
+  v_tel := regexp_replace(coalesce(v_phone, ''), '[^0-9+]', '', 'g');
+
+  if v_is_new or v_status in ('prospect', 'pending-new') then
+    v_subject := 'Membership interest: ' || public.kos_redact_id_text(v_first || ' ' || v_last);
+    v_html :=
+      '<p>Someone asked to join the Krewe of Shamrock. This is interest only. Please call them.</p>'
+      || '<p><strong>' || public.kos_email_plain(v_first) || ' ' || public.kos_email_plain(v_last) || '</strong><br/>'
+      || public.kos_email_plain(v_email) || '<br/>'
+      || public.kos_email_plain(v_addr) || '</p>'
+      || case
+           when v_phone is not null and v_tel <> '' then
+             '<p style="font-size:22px;margin:16px 0;"><strong>Phone: </strong><a href="tel:'
+             || v_tel || '">' || public.kos_email_plain(v_phone) || '</a></p>'
+           else '<p>No phone number was given.</p>'
+         end
+      || case
+           when v_fee = 'dual' then '<p>Second applicant: '
+             || public.kos_email_plain(coalesce(v_partner_first, '')) || ' '
+             || public.kos_email_plain(coalesce(v_partner_last, '')) || '</p>'
+           else ''
+         end
+      || '<p>' || public.kos_email_plain(v_fee_line) || '</p>'
+      || case
+           when v_notes is not null then '<p>' || replace(public.kos_email_plain(v_notes), E'\n', '<br/>') || '</p>'
+           else ''
+         end
+      || '<p>After the call, open Membership Applications and choose Called, send background check email. That email has the background check fee and the full application. It does not include a dues link. This email does not include a Social Security number or a driver''s license number.</p>'
+      || '<p><a href="https://www.kreweofshamrock.com/members.html#applications">Open Membership Applications</a></p>';
+    perform public.kos_queue_membership_chair_and_president(
+      v_subject,
+      v_html,
+      'membership_interest',
+      v_id
+    );
+  end if;
+
+  if v_status in ('active', 'pending-renewal', 'lapsed') then
+    return jsonb_build_object(
+      'ok', true,
+      'message', 'You are already on our roster. We updated your mailing address. Questions: secretary@kreweofshamrock.com'
+    );
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'message', 'We received your interest in joining. Someone from the Krewe will call you.'
+  );
+end;
+$$;
+
+grant execute on function public.submit_membership_application(
+  text, text, text, text, text, text, text, text, text, text, text, text, text, text
+) to anon, authenticated;

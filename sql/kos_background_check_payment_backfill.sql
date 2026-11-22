@@ -143,10 +143,10 @@ select step.member_id, step.action, step.note, step.from_status, step.to_status,
        'Membership record', step.created_at
   from (values
     ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'background_check',
-      'Joining packet sent.', 'pending-new', 'background-check',
+      'Called, background check email sent.', 'pending-new', 'background-check',
       timestamptz '2026-10-24 15:00:00-04'),
     ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'background_check',
-      'Joining packet sent.', 'pending-new', 'background-check',
+      'Called, background check email sent.', 'pending-new', 'background-check',
       timestamptz '2026-10-24 15:00:00-04'),
     ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'background_check_paid',
       'Background check paid. Payment 8ebf108a-80c4-432a-9ce0-13ce7196d55c',
@@ -154,12 +154,18 @@ select step.member_id, step.action, step.note, step.from_status, step.to_status,
     ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'background_check_paid',
       'Background check paid. Payment 8ebf108a-80c4-432a-9ce0-13ce7196d55c',
       'background-check', 'bg_paid', timestamptz '2026-10-31 15:00:00-04'),
+    ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'start_background_check',
+      'Background check in process. No email was sent from this record.',
+      'bg_paid', 'bg_in_process', timestamptz '2026-11-01 15:00:00-04'),
+    ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'start_background_check',
+      'Background check in process. No email was sent from this record.',
+      'bg_paid', 'bg_in_process', timestamptz '2026-11-01 15:00:00-04'),
     ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'dues_pending',
-      'Passed background check. No dues email was sent from this record.',
-      'bg_paid', 'dues-pending', timestamptz '2026-11-02 15:00:00-05'),
+      'Induction pending. No dues email was sent from this record.',
+      'bg_in_process', 'dues-pending', timestamptz '2026-11-02 15:00:00-05'),
     ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'dues_pending',
-      'Passed background check. No dues email was sent from this record.',
-      'bg_paid', 'dues-pending', timestamptz '2026-11-02 15:00:00-05'),
+      'Induction pending. No dues email was sent from this record.',
+      'bg_in_process', 'dues-pending', timestamptz '2026-11-02 15:00:00-05'),
     ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'dues_paid',
       'Dues paid $375.', 'dues-pending', 'dues-pending',
       timestamptz '2026-11-03 15:00:00-05'),
@@ -176,8 +182,34 @@ select step.member_id, step.action, step.note, step.from_status, step.to_status,
      select 1 from public.membership_application_actions a
       where a.member_id = step.member_id
         and a.action = step.action
-        and a.note = step.note
    );
+
+-- A re-run keeps one row per step and refreshes the label to the current stage names.
+update public.membership_application_actions a
+   set note = step.note,
+       from_status = step.from_status,
+       to_status = step.to_status
+  from (values
+    ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'background_check',
+      'Called, background check email sent.', 'pending-new', 'background-check'),
+    ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'background_check',
+      'Called, background check email sent.', 'pending-new', 'background-check'),
+    ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'start_background_check',
+      'Background check in process. No email was sent from this record.',
+      'bg_paid', 'bg_in_process'),
+    ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'start_background_check',
+      'Background check in process. No email was sent from this record.',
+      'bg_paid', 'bg_in_process'),
+    ('0faff37d-3794-47e6-a665-ae47f87a4e53'::uuid, 'dues_pending',
+      'Induction pending. No dues email was sent from this record.',
+      'bg_in_process', 'dues-pending'),
+    ('6740f3b2-40ce-404d-9081-971d5f967752'::uuid, 'dues_pending',
+      'Induction pending. No dues email was sent from this record.',
+      'bg_in_process', 'dues-pending')
+  ) as step(member_id, action, note, from_status, to_status)
+ where a.member_id = step.member_id
+   and a.action = step.action
+   and a.actor_name = 'Membership record';
 
 insert into public.membership_application_actions (
   member_id, action, note, from_status, to_status, actor_name, created_at
