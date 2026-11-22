@@ -27,7 +27,7 @@ test("sample renewal preview shows one member, a couple, paid, the list, and a r
   await expect(list).toContainText("Rowan Blake");
   await expect(list).toContainText("Quinn Harper");
   await expect(list).toContainText("Lane Moss");
-  await expect(list).toContainText("Mark renewed");
+  await expect(list).toContainText("Record cash or check");
   await expect(list).toContainText("Download CSV");
 
   const reminder = page.locator("#shot-reminder");

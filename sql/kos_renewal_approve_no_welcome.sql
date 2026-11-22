@@ -127,7 +127,7 @@ begin
     v_subject := 'Welcome to the Krewe of Shamrock';
     v_html :=
       '<p>Dear ' || public.kos_html_text(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-      || '<p>Welcome. The Krewe voted you in at a general meeting, and you are on the roster.</p>'
+      || '<p>Welcome. Your membership is approved, subject to final ratification by the Board of Directors, and you are on the roster.</p>'
       || '<p>To use the Member Hub, create your login with the same email you put on the application ('
       || public.kos_html_text(coalesce(rec.email, '')) || '):</p>'
       || '<ol>'

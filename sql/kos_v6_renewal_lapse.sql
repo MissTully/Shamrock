@@ -23,8 +23,9 @@
 --   * Joining packet preview can pass membership_level so Auxiliary uses the
 --     real email builder.
 --   * kos_is_dues_exempt is the only exempt rule. kos_renewal_rows,
---     kos_lapse_candidates, and kos_mark_lapsed all use it. The default
---     lapse date is August 1.
+--     kos_lapse_candidates, and kos_mark_lapsed all use it. Dues are due
+--     June 1. The default delinquent date is July 1. The default inactive
+--     date is July 16. After that the member must reapply.
 --
 -- Rollback, in the SQL editor, only if no lapsed or reactivation_sent history
 -- rows need to stay valid:
@@ -1026,7 +1027,7 @@ begin
     v_subject := 'Welcome to the Krewe of Shamrock';
     v_html :=
       '<p>Dear ' || public.kos_html_text(coalesce(nullif(btrim(rec.first_name), ''), 'friend')) || ',</p>'
-      || '<p>Welcome. The Krewe voted you in at a general meeting, and you are on the roster.</p>'
+      || '<p>Welcome. Your membership is approved, subject to final ratification by the Board of Directors, and you are on the roster.</p>'
       || '<p>To use the Member Hub, create your login with the same email you put on the application ('
       || public.kos_html_text(coalesce(rec.email, '')) || '):</p>'
       || '<ol>'

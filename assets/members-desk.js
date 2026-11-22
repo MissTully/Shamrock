@@ -5657,8 +5657,8 @@
     { key: "fee_pending", title: "Background check fee pending", hint: "Waiting on the fee. Shows whether the full application is submitted." },
     { key: "bg_paid", title: "Background check fee paid", hint: "Start the check when you are ready to paste the ID." },
     { key: "bg_process", title: "Background check in process", hint: "When the check is clean, send the induction email." },
-    { key: "induction", title: "Induction pending", hint: "Dues link is out. Approve after the general meeting vote." },
-    { key: "active", title: "Members (complete)", hint: "Voted in." }
+    { key: "induction", title: "Induction pending", hint: "Dues link is out. Approval is subject to final ratification by the Board of Directors." },
+    { key: "active", title: "Members (complete)", hint: "On the roster." }
   ];
 
   function applicationRowsForView() {
@@ -5803,7 +5803,7 @@
       return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Proceed with induction, send dues link</button>';
     }
     if (stage === "induction") {
-      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (voted in at general meeting)</button>';
+      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (subject to Board ratification)</button>';
     }
     return "";
   }
@@ -6026,7 +6026,7 @@
     if (state.applicationFlash) html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
     var help = bucket === "prospect"
       ? "These are event RSVP prospects, not the join pipeline. Send the joining packet when they are ready to apply."
-      : "Call first. The card shows the phone number and a Call notes field. Called, send background check email sends the fee link and the full application. It does not include a dues link. After the fee is paid, start the background check. When it is clean, send the induction email with the dues link and the next membership meeting. Approve only after the Krewe votes them in at a general meeting.";
+      : "Call first. The card shows the phone number and a Call notes field. Called, send background check email sends the fee link and the full application. It does not include a dues link. After the fee is paid, start the background check. When it is clean, send the induction email with the dues link and the next membership meeting. Approval is subject to final ratification by the Board of Directors.";
     html += '<p class="hub-pipe-help">' + esc(help) + "</p>" +
       '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
       '<span class="muted">Change the greeting and the notes. The finish link and the background check pay buttons stay locked. The dues link is not in this letter.</span></p>' +
@@ -6153,10 +6153,10 @@
         var fields = document.getElementById("hubInductionFields");
         var yes = document.getElementById("hubAppConfirmYes");
         var unpaid = applicationUnpaidDuesNames(row);
-        if (title) title.textContent = "Approve membership (voted in at general meeting)";
+        if (title) title.textContent = "Approve membership (subject to Board ratification)";
         if (bodyText) {
-          bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video."
-            + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve after the vote." : "");
+          bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? Approval is subject to final ratification by the Board of Directors. They become active members and we email a welcome note with the Member Hub login link and the training video."
+            + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve." : "");
         }
         if (fields) fields.hidden = true;
         if (yes) {
