@@ -1268,7 +1268,10 @@
   }
 
   function openParadeRsvpSection() {
-    showTab("parade", { skipScroll: true });
+    // showTab only flips the visible panel. The hub router would still think
+    // the member is on My Krewe, so the My Krewe tab would not switch back.
+    if (appNavApi && typeof appNavApi.openTab === "function") appNavApi.openTab("parade");
+    else showTab("parade", { skipScroll: true });
     var card = document.getElementById("hubParadeSeasonCard");
     if (card && typeof card.scrollIntoView === "function") {
       try { card.scrollIntoView({ block: "start", behavior: "auto" }); } catch (err) {}

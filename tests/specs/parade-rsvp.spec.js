@@ -462,6 +462,13 @@ test("My Krewe has no parade RSVP controls and the Parade section has them once"
   await expect(section).not.toContainText("@");
   await preview(section, "02-hub-parades-rsvp.png");
 
+  await page.locator('[data-hub-tab="krewe"]').click();
+  await expect(page.locator("[data-hub-panel='krewe']")).toHaveClass(/hub-on/);
+  await expect(page.locator("[data-hub-panel='parade']")).not.toHaveClass(/hub-on/);
+  await expect(page.locator("#hubKreweParadeList [data-hub-open-parade-rsvp]")).toBeVisible();
+  await page.locator('[data-hub-tab="parade"]').click();
+  await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("body")).toHaveClass(/hub-app/);
   await expect(santaCard.locator(".kos-pr-pay")).toBeVisible();
