@@ -1,6 +1,6 @@
 # Officer desk: Email members & Send invoices
 
-For any krewe officer with Officer desk access (board, officer, or captain — not secretary-only).
+For any krewe officer with Officer desk access (board, officer, or captain: not secretary-only).
 
 ## Where to find it
 
@@ -25,7 +25,7 @@ Until the key is set, sends still queue safely and show in history; nothing leav
 
 - The screen reads `kos_dues_catalog` for the selected year and shows each member's `membership_level` with that year's amount and Zeffy link.
 - A level dropdown calls `kos_set_membership_level` before you invoice. That does not rewrite an invoice already on the books.
-- **Create invoices** calls `kos_create_level_invoices`. The preview counts creates, updates, and skips (paid, applied waiver, elected officer, no catalog row) before anything is written.
+- **Create invoices** calls `kos_create_level_invoices` only when `kos_can_manage_invoices()` is true: Treasurer, President, Membership Chair, or a site admin. Anyone else sees "Invoices are for the Treasurer, President, or Membership Chair." and the button is hidden. If that function is not on the database yet, the button stays. The preview counts creates, updates, and skips (paid, applied waiver, elected officer, no catalog row) before anything is written.
 - **Exclude elected officers** is on by default (President, Vice President, Secretary, and Treasurer).
 - Optional email uses the same outbound queue and Resend path as Email members. Each notice includes the level, amount, due date, and the catalog Zeffy link. Paid members are not emailed. If a level has no catalog link, the screen warns, and that email does not invent a pay button.
 - Creates or updates unpaid rows on `dues_payments` (no second billing system). 2026 rates: full $375, associate $450, loa $100, auxiliary $200.
@@ -35,7 +35,7 @@ Until the key is set, sends still queue safely and show in history; nothing leav
 
 The **Event prospects** pill uses the cross-event outreach list (website RSVP prospects and unmatched Zeffy event emails). **Include legacy Wild Apricot emails** is optional and off by default.
 
-Sending still requires `is_krewe_officer()` — the same gate as the other Email members audiences. Seeing the Event outreach list (`can_view_event_outreach`) is not enough to send.
+Sending still requires `is_krewe_officer()`: the same gate as the other Email members audiences. Seeing the Event outreach list (`can_view_event_outreach`) is not enough to send.
 
 The blast does not add active members. An address is included only when it is already on that filtered outreach list, and each email is queued once. Opt-out rows or boolean member columns, if they exist later, are skipped. See EVENT_OUTREACH.md.
 

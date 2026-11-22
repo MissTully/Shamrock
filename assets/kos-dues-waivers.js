@@ -58,7 +58,8 @@
     catalog: {},
     selectedId: "",
     histFilter: "all",
-    busy: false
+    busy: false,
+    canApprove: true
   };
   var loadSeq = 0;
 
@@ -383,10 +384,12 @@
         '<div class="meta">Reason: ' + esc(reason || "none recorded") + "</div>" +
         (blocked
           ? '<div class="meta">Already paid in money. Approve and deny are turned off so this row stays as it is.</div>'
-          : '<div class="hub-wav-actions">' +
-            '<button type="button" class="btn btn-primary" data-approve="' + esc(m.id) + '" aria-label="Approve ' + esc(name) + '">Approve</button>' +
-            '<button type="button" class="btn" data-deny="' + esc(m.id) + '" aria-label="Deny ' + esc(name) + '">Deny</button>' +
-            "</div>") +
+          : (wavState.canApprove === false
+            ? '<div class="meta">Only the President or Treasurer can approve waivers.</div>'
+            : '<div class="hub-wav-actions">' +
+              '<button type="button" class="btn btn-primary" data-approve="' + esc(m.id) + '" aria-label="Approve ' + esc(name) + '">Approve</button>' +
+              '<button type="button" class="btn" data-deny="' + esc(m.id) + '" aria-label="Deny ' + esc(name) + '">Deny</button>' +
+              "</div>")) +
         "</div>";
     }).join("");
   }
@@ -698,7 +701,9 @@
       '<p class="hub-ei-msg" id="hubWavQueueMsg" aria-live="polite"></p></div>' +
       '<div class="hub-wav-block"><h3>Elected-officer batch</h3>' +
       '<p class="hub-ei-note">Apply bylaws exemptions for the membership year above. This waives President, Vice President, Secretary, and Treasurer only. Committee chairs and board members are not included. Members already paid in money are skipped. A different applied waiver is skipped. This does not run when the card opens.</p>' +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubWavBatch">Apply bylaws exemptions for season</button></div>' +
+      (wavState.canApprove === false
+        ? '<p class="hub-ei-note" id="hubWavApproveNote">Only the President or Treasurer can approve waivers.</p>'
+        : '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubWavBatch">Apply bylaws exemptions for season</button></div>') +
       '<p class="hub-ei-msg" id="hubWavBatchMsg" aria-live="polite"></p></div>' +
       '<div class="hub-ei-history"><h3>Waiver history</h3>' +
       '<div class="hub-ei-pills" role="group" aria-label="Waiver history filter">' +
@@ -713,7 +718,8 @@
     document.getElementById("hubWavKind").addEventListener("change", paintReasonLabel);
     document.getElementById("hubWavRequest").addEventListener("click", function () { requestWaiver(client); });
     document.getElementById("hubWavQueue").addEventListener("click", function (ev) { onQueueClick(client, ev); });
-    document.getElementById("hubWavBatch").addEventListener("click", function () { applyElectedBatch(client); });
+    var batch = document.getElementById("hubWavBatch");
+    if (batch) batch.addEventListener("click", function () { applyElectedBatch(client); });
     ["all", "applied", "denied"].forEach(function (f) {
       document.getElementById("hubWavHist_" + f).addEventListener("click", function () {
         wavState.histFilter = f;
@@ -754,6 +760,13 @@
       isOfficer = false;
     }
     if (!isOfficer) return;
+    wavState.canApprove = true;
+    try {
+      var gate = await client.rpc("kos_can_approve_dues_waivers");
+      if (gate && !gate.error && gate.data === false) wavState.canApprove = false;
+    } catch (e2) {
+      wavState.canApprove = true;
+    }
     await loadWaiverCard(client);
     if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
   }

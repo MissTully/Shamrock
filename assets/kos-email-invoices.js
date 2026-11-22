@@ -151,7 +151,8 @@
     selected: {},
     roster: [],
     duesByMember: {},
-    catalog: {}
+    catalog: {},
+    canInvoice: true
   };
 
   function injectCss() {
@@ -1131,7 +1132,9 @@
       "<span>Also email a notice with level, amount, due date, and the catalog Zeffy link</span></label>" +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubInvConfirm" />' +
       "<span>I confirm these invoice records and any emails look right.</span></label>" +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubInvSend">Create invoices</button></div>' +
+      (invState.canInvoice === false
+        ? '<p class="hub-ei-note" id="hubInvLocked">Invoices are for the Treasurer, President, or Membership Chair.</p>'
+        : '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubInvSend">Create invoices</button></div>') +
       '<p class="hub-ei-msg" id="hubInvMsg" aria-live="polite"></p>' +
       '<div class="hub-ei-history"><h3>Recent invoice batches</h3><div id="hubInvHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
@@ -1167,7 +1170,8 @@
       invState.selected = {};
       renderInvoiceList(client);
     });
-    document.getElementById("hubInvSend").addEventListener("click", function () { sendInvoices(client); });
+    var sendBtn = document.getElementById("hubInvSend");
+    if (sendBtn) sendBtn.addEventListener("click", function () { sendInvoices(client); });
     var yearInput = document.getElementById("hubInvYear");
     if (yearInput && !yearInput.value) yearInput.value = String(duesSeasonYearNow());
     setInvFilter("unpaid");
@@ -1202,6 +1206,13 @@
       await loadEmailCard(client || { rpc: function () { return Promise.resolve({ data: { ok: true, items: [] }, error: null }); } });
     }
     if (isOfficer && client) {
+      invState.canInvoice = true;
+      try {
+        var gate = await client.rpc("kos_can_manage_invoices");
+        if (gate && !gate.error && gate.data === false) invState.canInvoice = false;
+      } catch (e2) {
+        invState.canInvoice = true;
+      }
       await loadInvoiceCard(client);
       if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
     }

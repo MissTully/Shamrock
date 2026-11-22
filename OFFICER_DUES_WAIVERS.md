@@ -12,15 +12,15 @@ The card sits with Email members and Send invoices. Payments stays on the Money 
 
 The membership year defaults to **2026**. Change the year at the top. That reloads the lists. It does not waive anyone.
 
-1. **Request a waiver** — search the roster, pick one member, choose a kind, and add a note.
-   - **Elected officer exemption** — suggested when a title segment is President, Vice President, Secretary, or Treasurer. `Treasurer · Committee Chair of Finance` counts. `Committee Chair of Finance` alone does not.
+1. **Request a waiver**: search the roster, pick one member, choose a kind, and add a note.
+   - **Elected officer exemption**: suggested when a title segment is President, Vice President, Secretary, or Treasurer. `Treasurer · Committee Chair of Finance` counts. `Committee Chair of Finance` alone does not.
    - **Service in lieu** and **Other board-approved** need a reason.
    - This calls `kos_request_dues_waiver`. The member stays **unpaid**.
-2. **Pending requests** — everyone with `waiver_status = requested` for that year, with who asked and the reason.
+2. **Pending requests**: everyone with `waiver_status = requested` for that year, with who asked and the reason.
    - **Approve** calls `kos_decide_dues_waiver` with approve true and apply true. Amount due becomes $0, paid, method `waiver`, status `applied`. The catalog rate is kept in `standard_amount` (the waived value).
    - **Deny** calls the same function with approve false. The member stays unpaid.
-3. **Waiver history** — applied and denied rows for the year. Filter with All, Applied, or Denied. Applied rows show the kind, waived value (`standard_amount`), approver, and date.
-4. **Apply bylaws exemptions for season** — asks you to confirm, then calls `kos_apply_elected_officer_exemptions` for the year on the card. President, Vice President, Secretary, and Treasurer only. Committee chairs and board members are not included. Someone already paid in money is skipped. A different applied waiver (for example service in lieu) is skipped. The card shows how many were applied and how many were skipped. **Opening the card does not run this.**
+3. **Waiver history**: applied and denied rows for the year. Filter with All, Applied, or Denied. Applied rows show the kind, waived value (`standard_amount`), approver, and date.
+4. **Apply bylaws exemptions for season**: asks you to confirm, then calls `kos_apply_elected_officer_exemptions` for the year on the card. President, Vice President, Secretary, and Treasurer only. Committee chairs and board members are not included. Someone already paid in money is skipped. A different applied waiver (for example service in lieu) is skipped. The card shows how many were applied and how many were skipped. **Opening the card does not run this.**
 
 Renewals uses this card too. Before an officer marks members lapsed, the preview counts elected officers who have no applied `elected_officer` waiver for the season. That warning is a count only. **Open Dues waivers** on that preview comes here. An elected Treasurer is never a lapse candidate. Apply the season exemptions before the lapse date so those officers are covered. See docs/membership-process.md.
 
@@ -28,9 +28,11 @@ A row already paid in money (cash, check, card, or anything that is not method `
 
 ## Who may use it
 
-The screen uses `is_krewe_officer()`, the same gate as Email members and Send invoices. The five dues functions also check that and refuse anyone else.
+Any officer who can open the desk can **request** a waiver. That still uses the request function's existing officer gate.
 
-The plan prefers the President or Treasurer for discretionary approvals (service in lieu and other board-approved). The Hub's Payments check is Treasurer or board, and the President title is stored as officer, not board, so that check would lock the President out and let other board members in. This card does not use it. Any officer on the desk can request, approve, deny, and run the season batch. Dual control is the history list: it shows who requested and who approved. There is no second database lock.
+**Approve**, **Deny**, and **Apply bylaws exemptions** run only when `kos_can_approve_dues_waivers()` is true: President, Treasurer, or a site admin. Anyone else sees "Only the President or Treasurer can approve waivers." The request form stays. If that function is not on the database yet (PostgREST PGRST202 or an empty result), the buttons stay so a deploy before the SQL does not hide them.
+
+`sql/kos_v7_treasurer_ledger.sql` patches `kos_decide_dues_waiver` and `kos_apply_elected_officer_exemptions` to that helper. `kos_request_dues_waiver` is unchanged.
 
 ## What this screen reads
 

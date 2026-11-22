@@ -108,7 +108,8 @@
     lapseCandidates: [],
     showInactive: false,
     inactiveChecked: false,
-    exemptionsMissing: 0
+    exemptionsMissing: 0,
+    receiptsMissing: false
   };
 
   function filtered() {
@@ -293,9 +294,12 @@
       esc(levelName(row.membership_level)) +
       (row.amount != null ? " · " + esc(money(row.amount)) : "") + " · " + esc(last) +
       (row.email ? " · " + esc(row.email) : "") + '</span>' + partner + '</span></label>' +
-      '<span class="kos-ren-mark"><select data-ren-method="' + esc(row.id) + '" aria-label="Payment method for ' + esc(fullName(row)) + '">' +
-      '<option value="check">Check</option><option value="cash">Cash</option></select>' +
-      '<button type="button" class="btn" data-ren-mark="' + esc(row.id) + '">Mark renewed</button></span></div>';
+      '<span class="kos-ren-mark">' + (state.receiptsMissing
+        ? '<select data-ren-method="' + esc(row.id) + '" aria-label="Payment method for ' + esc(fullName(row)) + '">' +
+          '<option value="check">Check</option><option value="cash">Cash</option></select>' +
+          '<button type="button" class="btn" data-ren-mark="' + esc(row.id) + '">Mark renewed</button>'
+        : '<button type="button" class="btn" data-ren-receipt="' + esc(row.id) + '">Record cash or check</button>') +
+      "</span></div>";
   }
 
   function shell(body) {
@@ -322,7 +326,7 @@
     var inactivePreview = state.showInactive ? '<div class="kos-ren-preview" id="kosRenInactivePreview">' + inactivePreviewHtml() + "</div>" : "";
     root.innerHTML = shell(
       '<p class="kos-ren-note">The ' + esc(state.label || "current") +
-      ' season is June through May. This list is active, delinquent, and pending dues members with no paid dues row for that season. Elected officers are left off. Marking cash or check records the dues row and sets delinquent or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
+      ' season is June through May. This list is active, delinquent, and pending dues members with no paid dues row for that season. Elected officers are left off. Record cash or check records the dues row and sets delinquent or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
       lapseControls() +
       '<div class="kos-ren-filters">' +
       '<label>Search<input id="kosRenSearch" type="search" value="' + esc(state.q) + '" placeholder="Name or email" /></label>' +
@@ -420,6 +424,9 @@
     if (send) send.addEventListener("click", function () { sendReminders(root, send); });
     root.querySelectorAll("[data-ren-mark]").forEach(function (btn) {
       btn.addEventListener("click", function () { markPaid(root, btn); });
+    });
+    root.querySelectorAll("[data-ren-receipt]").forEach(function (btn) {
+      btn.addEventListener("click", function () { openReceipt(root, btn); });
     });
     var edit = root.querySelector("#kosRenLapseEdit");
     if (edit) edit.addEventListener("click", function () { state.editingLapse = true; paint(root); });
@@ -686,6 +693,42 @@
     paint(root);
     var panel = root.querySelector("#kosRenPreview");
     if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: "nearest" });
+  }
+
+  function openReceipt(root, btn) {
+    var id = btn.getAttribute("data-ren-receipt");
+    var row = state.members.filter(function (item) { return item.id === id; })[0];
+    if (!row) return;
+    if (state.receiptsMissing || !window.KosDuesReceipts) {
+      state.receiptsMissing = true;
+      state.msg = "Cash and check recording is not on the database yet. Use Mark renewed.";
+      state.msgKind = "";
+      paint(root);
+      return;
+    }
+    window.KosDuesReceipts.open({
+      member: row,
+      partner: row.partner_name ? { name: row.partner_name } : null,
+      expected: row.amount,
+      allowOffline: !!state.previewOnly,
+      onMissing: function () {
+        state.receiptsMissing = true;
+        state.msg = "Cash and check recording is not on the database yet. Use Mark renewed.";
+        state.msgKind = "";
+        paint(root);
+      },
+      onDone: function (data) {
+        state.msg = (data && data.message) || (fullName(row) + " is marked paid. No email was sent.");
+        state.msgKind = "";
+        delete state.selected[id];
+        if (state.previewOnly) {
+          state.members = state.members.filter(function (item) { return item.id !== id; });
+          paint(root);
+          return;
+        }
+        load(root);
+      }
+    });
   }
 
   async function markPaid(root, btn) {
