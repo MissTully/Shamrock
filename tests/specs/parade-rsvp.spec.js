@@ -268,11 +268,13 @@ test("member hub lists show the parade RSVP widget and the Zeffy pay button", as
   await shot(page, deskCard, "hub-desk-parades-santafest-pay.png");
 
   await page.locator('[data-hub-tab="krewe"]').click();
-  const myCard = page.locator("#hubKreweParadeList [data-parade-card='parade-santa']");
-  await expect(page.locator("#hubKreweParadeList")).toContainText("Parade RSVPs");
-  await expectParadePay(myCard, CUSTOM_PAY);
-  await expect(myCard).not.toContainText("sample.member@example.com");
-  await shot(page, myCard, "hub-my-krewe-santafest-pay.png");
+  const krewe = page.locator("[data-hub-panel='krewe']");
+  await expect(krewe.locator(".kos-parade-rsvp, .kos-pr-going, .kos-pr-cant, .kos-pr-pay, .kos-pr-count")).toHaveCount(0);
+  await expect(krewe.locator(".hub-krewe-parade-title")).toHaveCount(0);
+  await expect(krewe.locator("[data-hub-open-parade-rsvp]")).toHaveCount(1);
+  await expect(krewe.locator("[data-hub-open-parade-rsvp]")).toHaveText("Parade RSVPs are in Parades");
+  await expect(krewe).not.toContainText("Guests you're bringing");
+  await expect(krewe).not.toContainText("Pay guest fees on Zeffy");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('[data-hub-tab="hub"]').click();
@@ -347,7 +349,11 @@ test("a krewe parade with guest count off still offers Going and Can't go", asyn
 
   await expectMarchRsvp(page.locator("#hubHomeParadeList [data-parade-card='parade-pirates']"));
   await page.locator('[data-hub-tab="krewe"]').click();
-  await expectMarchRsvp(page.locator("#hubKreweParadeList [data-parade-card='parade-pirates']"));
+  await expect(page.locator("#hubKreweParadeList .kos-pr-going, #hubKreweParadeList .kos-pr-cant, #hubKreweParadeList .kos-pr-pay")).toHaveCount(0);
+  await expect(page.locator("#hubKreweParadeList")).not.toContainText("$25 per guest");
+  await page.locator('[data-hub-tab="parade"]').click();
+  await expectMarchRsvp(page.locator("#hubParadeSeasonDeskList [data-parade-card='parade-pirates']"));
+  await expect(page.locator("#hubParadeSeasonDeskList [data-parade-card='parade-pirates'] .kos-parade-rsvp")).toHaveCount(1);
   await page.locator('[data-hub-tab="events"]').click();
   await expectMarchRsvp(page.locator("#hubMemberEventList .hub-ev-card", { hasText: "Gasparilla Parade of Pirates" }));
 
@@ -365,4 +371,126 @@ test("public event signup does not show the member Zeffy guest fee button", asyn
   await expect(page.locator("body")).not.toContainText("Pay guest fees on Zeffy");
   await expect(page.locator("body")).not.toContainText("$25 per guest");
   assertHealthy(expect, report, "public event signup stays quiet");
+});
+
+test("My Krewe has no parade RSVP controls and the Parade section has them once", async ({ page }) => {
+  const report = watchPage(page);
+  const previews = process.env.PARADE_RSVP_PREVIEWS
+    ? path.resolve(process.env.PARADE_RSVP_PREVIEWS)
+    : "";
+  const santa = hubSanta({ guests_count: 2 });
+  const childrens = {
+    id: "parade-childrens",
+    name: "Children's Gasparilla",
+    event_type: "parade",
+    source: "krewe",
+    start_time: "2027-01-23T18:00:00Z",
+    end_time: "2027-01-23T22:00:00Z",
+    location: "Downtown Tampa, FL",
+    description: "Children's parade.",
+    status: "published",
+    collect_guests: true,
+    guests_count: 0
+  };
+
+  async function preview(locator, name) {
+    if (!previews) return;
+    fs.mkdirSync(previews, { recursive: true });
+    await page.evaluate(() => document.fonts && document.fonts.ready);
+    await page.evaluate(() => {
+      ["#krewePlayer", ".krewe-music", "#kosTune"].forEach((sel) => {
+        document.querySelectorAll(sel).forEach((el) => { el.style.display = "none"; });
+      });
+    });
+    await locator.screenshot({ path: path.join(previews, name), animations: "disabled" });
+  }
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await unlockMemberHub(page);
+  await page.evaluate(({ profile, parades }) => {
+    window.__kosChairRequestFixture = [];
+    window.__kosHubSetFeed({
+      profile: profile,
+      parades: parades,
+      events: parades
+    });
+  }, {
+    profile: {
+      first_name: "Sample",
+      last_name: "Member",
+      email: "sample.member@example.com",
+      member_id: "member-sample",
+      committee_interests: []
+    },
+    parades: [santa, childrens]
+  });
+
+  await page.locator('[data-hub-tab="krewe"]').click();
+  const kreweCard = page.locator("#hubKrewe > .app-card").first();
+  const krewe = page.locator("[data-hub-panel='krewe']");
+  await expect(kreweCard).toContainText("My Krewe");
+  await expect(kreweCard).toContainText("Profile and member directory");
+  await expect(kreweCard.locator(".kos-parade-rsvp, .kos-pr-going, .kos-pr-cant, .kos-pr-pay, .kos-pr-count")).toHaveCount(0);
+  await expect(kreweCard.locator("h3", { hasText: "Parade RSVPs" })).toHaveCount(0);
+  await expect(krewe).not.toContainText("Guests you're bringing");
+  await expect(krewe).not.toContainText("Pay guest fees on Zeffy");
+  await expect(krewe).not.toContainText("$25 per guest");
+  const jump = krewe.locator("[data-hub-open-parade-rsvp]");
+  await expect(jump).toHaveCount(1);
+  await expect(jump).toHaveText("Parade RSVPs are in Parades");
+  expect(await kreweCard.innerText()).not.toMatch(/[—–]/);
+  await expect(kreweCard).toContainText("sample.member@example.com");
+  await preview(kreweCard, "01-my-krewe-without-the-block.png");
+
+  await jump.click();
+  await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
+  const section = page.locator("#hubParadeSeasonCard");
+  const list = page.locator("#hubParadeSeasonDeskList");
+  await expect(section).toBeVisible();
+  await expect(list.locator(".kos-parade-rsvp")).toHaveCount(2);
+  const santaCard = list.locator("[data-parade-card='parade-santa']");
+  const childCard = list.locator("[data-parade-card='parade-childrens']");
+  await expect(santaCard.locator(".kos-parade-rsvp")).toHaveCount(1);
+  await expect(childCard.locator(".kos-parade-rsvp")).toHaveCount(1);
+  await expectParadePay(santaCard, CUSTOM_PAY);
+  await expect(santaCard.locator(".kos-pr-count")).toHaveValue("2");
+  await expectParadePay(childCard, ZEFFY);
+  await expect(list).toContainText("Children's Gasparilla");
+  await expect(list).toContainText("Jan 23, 2027");
+  await expect(list).toContainText("Dec 5, 2026");
+  expect(await section.innerText()).not.toMatch(/[—–]/);
+  await expect(section).not.toContainText("@");
+  await preview(section, "02-hub-parades-rsvp.png");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("body")).toHaveClass(/hub-app/);
+  await expect(santaCard.locator(".kos-pr-pay")).toBeVisible();
+  await expect(list.locator(".kos-parade-rsvp")).toHaveCount(2);
+  const fit = await page.evaluate(() => {
+    const card = document.querySelector("#hubParadeSeasonCard");
+    const r = card.getBoundingClientRect();
+    return {
+      right: r.right,
+      width: document.documentElement.clientWidth,
+      extra: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    };
+  });
+  expect(fit.extra).toBeLessThanOrEqual(1);
+  expect(fit.right).toBeLessThanOrEqual(fit.width + 1);
+  if (previews) {
+    await page.evaluate(() => {
+      document.querySelectorAll(".app-top, .hub-tabs").forEach((el) => { el.style.display = "none"; });
+      ["#memberContent", "#hubRoot", "[data-hub-panel='parade']"].forEach((sel) => {
+        document.querySelectorAll(sel).forEach((el) => {
+          el.style.overflow = "visible";
+          el.style.height = "auto";
+          el.style.maxHeight = "none";
+        });
+      });
+      document.body.style.overflow = "visible";
+      document.body.style.height = "auto";
+    });
+  }
+  await preview(section, "03-hub-parades-mobile.png");
+  assertHealthy(expect, report, "parade rsvp only on the parade section");
 });
