@@ -187,7 +187,7 @@
   function statusLabel(status) {
     if (!status || status === "active") return "";
     if (status === "pending-renewal") return "Pending dues";
-    if (status === "lapsed") return "Lapsed";
+    if (status === "lapsed") return "Delinquent";
     if (status === "inactive") return "Inactive";
     return status;
   }
@@ -222,7 +222,7 @@
       var badge = statusLabel(member.membership_status);
       html += '<li><button type="button" class="person' + on + '" data-member="' + esc(member.id) + '"><b>' +
         esc(personName(member)) + "</b>" +
-        (badge ? '<span class="pill' + (badge === "Lapsed" || badge === "Inactive" ? " pause" : "") + '">' + esc(badge) + "</span>" : "") +
+        (badge ? '<span class="pill' + (badge === "Delinquent" || badge === "Inactive" ? " pause" : "") + '">' + esc(badge) + "</span>" : "") +
         '<div class="muted">' + esc(member.officer_title || "No officer title") + "</div></button></li>";
     });
     return html + "</ul>";

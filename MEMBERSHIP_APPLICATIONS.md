@@ -100,7 +100,7 @@ Two different fees:
 
 The roster column `application_fee_type` is `single` or `dual`. `membership_level` is `full`, `associate`, `auxiliary`, or `loa`.
 
-Officers and board members (`member_role` or `member_roles` / `officer_title` of officer, captain, or board, using the same title map as the Hub) do not see a pay-dues checklist item. Regular members do.
+Elected officers (President, Vice President, Secretary, Treasurer) are exempt from dues under the bylaws. Board, captains, and committee chairs see the normal Renew card.
 
 ## Background check numbers
 

@@ -2660,7 +2660,7 @@
         : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${season.label} season dues</span></div>`)
         + `<div id="prRenewMount"></div>`;
       const duesHtml = duesExempt
-        ? `<div class="pr-gate ok" id="prDuesExempt"><span class="pr-mark">✅</span><span class="pr-label">Membership dues</span> <span class="pr-hint">· officers and board are not invoiced for dues</span></div>`
+        ? `<div class="pr-gate ok" id="prDuesExempt"><span class="pr-mark">✅</span><span class="pr-label">Membership dues</span> <span class="pr-hint">· elected officers are exempt from dues under the bylaws</span></div>`
         : duesGate(!!me.dues_paid);
       const mediaGate = mediaOk
         ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1</span></div>`

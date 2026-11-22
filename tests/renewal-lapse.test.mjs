@@ -112,8 +112,9 @@ test("one dues exempt helper is used by renewals, candidates, and mark lapsed", 
   const candidate = functionBody(sql, "_kos_is_lapse_candidate");
   const list = functionBody(sql, "kos_lapse_candidates");
   const mark = functionBody(sql, "kos_mark_lapsed");
-  assert.match(exempt, /'officer', 'board', 'captain'/);
-  assert.match(exempt, /BYLAWS: delete this one if/);
+  assert.doesNotMatch(exempt, /member_role/);
+  assert.doesNotMatch(exempt, /'captain'/);
+  assert.doesNotMatch(exempt, /'board'/);
   assert.match(exempt, /kos_is_elected_officer_title/);
   assert.match(exempt, /d\.paid = true or coalesce\(d\.waiver_status, ''\) = 'applied'/);
   assert.match(rows, /not public\.kos_is_dues_exempt\(m\.id, v_year\)/);
@@ -125,10 +126,14 @@ test("one dues exempt helper is used by renewals, candidates, and mark lapsed", 
   assert.doesNotMatch(sql, /function public\._kos_lapse_exempt/);
   assert.match(list, /kos_can_manage_renewals\(\)/);
   assert.match(mark, /kos_can_manage_renewals\(\)/);
-  assert.match(functionBody(sql, "kos_get_lapse_date"), /kos_can_manage_renewals\(\)/);
-  assert.match(functionBody(sql, "kos_set_lapse_date"), /kos_can_manage_renewals\(\)/);
+  assert.match(functionBody(sql, "kos_get_dues_dates"), /kos_can_manage_renewals\(\)/);
+  assert.match(functionBody(sql, "kos_set_dues_date"), /kos_can_manage_renewals\(\)/);
   assert.match(functionBody(sql, "kos_start_reactivation"), /kos_can_manage_renewals\(\)/);
-  assert.match(functionBody(sql, "kos_default_lapse_date"), /make_date\(p_year, 8, 1\)/);
+  assert.match(functionBody(sql, "kos_default_delinquent_on"), /make_date\(p_year, 7, 1\)/);
+  assert.match(functionBody(sql, "kos_default_inactive_on"), /make_date\(p_year, 7, 16\)/);
+  assert.match(functionBody(sql, "kos_my_renewal"), /kos_is_dues_exempt/);
+  const titles = readFileSync(join(root, "sql/kos_dues_foundation.sql"), "utf8");
+  assert.match(titles, /president\|vice president\|secretary\|treasurer/);
 });
 
 test("recorded Zeffy dues still activate lapsed and pending-renewal", () => {

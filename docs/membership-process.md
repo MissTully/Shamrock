@@ -36,8 +36,7 @@ Do not put a returning member in `dues-pending`. That status is the new-applican
 
 `kos_is_dues_exempt` is the only exempt rule. The renewal list, the lapse list, and Mark lapsed all use it.
 
-- Today, role officer, board, or captain is exempt. That role line is marked in the function. Deleting it is the bylaws change. Board, captain, and committee-chair roles would then not be exempt.
-- An elected title stays exempt either way: President, Vice President, Secretary, or Treasurer. `Treasurer · Committee Chair of Finance` counts. A committee chair title alone does not.
+- Only an elected title is exempt: President, Vice President, Secretary, or Treasurer. `Treasurer · Committee Chair of Finance` counts. Board members, captains, and committee chairs owe dues.
 - A dues row for the season that is paid, or a waiver with status applied, stays exempt.
 
 An elected Treasurer is never a lapse candidate.
@@ -52,7 +51,7 @@ Renewals shows a **Lapse date** line. The confirmed default, when nobody has sav
 
 Select lapsed members and choose **Send reactivation link**. You get one letter per level, with that level's Zeffy link. The letter says their membership lapsed for the season, asks them to pay that level on Zeffy, and says they are active again once the payment comes in. After the email queues, those recipients move to pending dues.
 
-On the member side, a lapsed Renew card says "Your membership lapsed. Renew to reactivate." They pick a level and open Zeffy. A pending dues card says "Pending dues: your payment has not come in yet." and still shows the Zeffy buttons. Officers and board keep the note that they are not invoiced.
+On the member side, a delinquent Renew card says dues are past due and names the inactive date. They pick a level and open Zeffy until that date. A pending dues card says "Pending dues: your payment has not come in yet." and still shows the Zeffy buttons. Elected officers (President, Vice President, Secretary, Treasurer) are exempt from dues under the bylaws. Board, captains, and committee chairs are not.
 
 ### Cash or check
 

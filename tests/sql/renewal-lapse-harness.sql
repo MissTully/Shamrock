@@ -159,7 +159,10 @@ insert into public.members (id, first_name, last_name, email, member_role, offic
 values
   ('22222222-2222-4222-8222-222222222222', 'Jane', 'Sample', 'jane.sample@example.com', 'member', null, 'lapsed', 'full', '2020-01-15'),
   ('33333333-3333-4333-8333-333333333333', 'Robin', 'Example', 'robin.example@example.com', 'member', null, 'active', 'full', '2020-01-15'),
-  ('44444444-4444-4444-8444-444444444444', 'Pat', 'Example', 'pat.officer@example.com', 'member', 'Treasurer', 'active', 'full', '2018-06-01');
+  ('44444444-4444-4444-8444-444444444444', 'Pat', 'Example', 'pat.officer@example.com', 'member', 'Treasurer', 'active', 'full', '2018-06-01'),
+  ('55555555-5555-4555-8555-555555555555', 'Bo', 'Example', 'bo.example@example.com', 'board', 'Board Member', 'active', 'full', '2019-01-01'),
+  ('66666666-6666-4666-8666-666666666666', 'Cam', 'Example', 'cam.example@example.com', 'captain', 'Captain', 'active', 'full', '2019-01-01'),
+  ('77777777-7777-4777-8777-777777777777', 'Val', 'Example', 'val.example@example.com', 'officer', 'Vice President', 'active', 'full', '2019-01-01');
 
 do $$
 declare
@@ -171,6 +174,9 @@ declare
   v_mark jsonb;
   v_robin text;
 begin
+  insert into public.kos_dues_settings (membership_year, delinquent_on, inactive_on)
+  values (2026, date '2026-07-01', date '2099-07-16');
+
   v_started := public.kos_start_reactivation(array['22222222-2222-4222-8222-222222222222'::uuid]);
   if coalesce(v_started->>'ok', '') <> 'true' or coalesce(v_started->>'started', '') <> '1' then
     raise exception 'start_reactivation failed: %', v_started;
@@ -249,13 +255,20 @@ begin
   select string_agg(m.first_name, ',') into v_robin
     from jsonb_array_elements(v_candidates->'members') as person
     join public.members m on m.id = (person->>'id')::uuid;
-  if coalesce(v_robin, '') not like '%Robin%' then
-    raise exception 'Robin Example should be a candidate, got %', v_candidates;
+  if coalesce(v_robin, '') not like '%Robin%'
+     or v_robin not like '%Bo%'
+     or v_robin not like '%Cam%' then
+    raise exception 'board and captain should be candidates, got %', v_candidates;
+  end if;
+  if v_robin like '%Val%' or v_candidates::text like '%77777777-7777-4777-8777-777777777777%' then
+    raise exception 'vice president should not be a candidate, got %', v_candidates;
   end if;
 
-  insert into public.kos_dues_settings (membership_year, lapse_on)
-  values (2026, date '2099-08-01')
-  on conflict (membership_year) do update set lapse_on = excluded.lapse_on;
+  insert into public.kos_dues_settings (membership_year, delinquent_on, inactive_on)
+  values (2026, date '2099-07-01', date '2099-07-16')
+  on conflict (membership_year) do update
+    set delinquent_on = excluded.delinquent_on,
+        inactive_on = excluded.inactive_on;
   v_mark := public.kos_mark_lapsed(array['33333333-3333-4333-8333-333333333333'::uuid], 'too early');
   if coalesce(v_mark->>'ok', '') <> 'false' then
     raise exception 'mark lapsed should refuse before the date: %', v_mark;

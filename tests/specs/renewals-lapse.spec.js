@@ -50,8 +50,10 @@ function renewalsFixture(extra) {
     season_label: "2026-27",
     members: MEMBERS,
     lapseTools: true,
-    lapseOn: "2026-08-01",
+    lapseOn: "2026-07-01",
+    inactiveOn: "2026-07-16",
     canLapseToday: true,
+    canMarkInactive: true,
     exemptionsMissing: 1,
     lapseCandidates: [{
       id: "mem-robin",
@@ -105,9 +107,12 @@ test.describe("Renewals lapse and reactivation", () => {
     card = await openRenewals(page, renewalsFixture());
     await expect(card).toContainText("Pending dues");
     await expect(card).toContainText("Jane Sample");
-    await expect(card.locator("[data-ren-lapse-date]")).toHaveText("August 1, 2026");
+    await expect(card.locator("[data-ren-lapse-date]")).toHaveText("July 1, 2026");
+    await expect(card.locator("[data-ren-inactive-date]")).toHaveText("July 16, 2026");
+    await expect(card).toContainText("Elected officers are left off");
+    await expect(card).not.toContainText("board are left off");
     await expect(card.locator("#kosRenLapse")).toBeEnabled();
-    await expect(card.locator("#kosRenLapse")).toHaveText("Mark lapsed");
+    await expect(card.locator("#kosRenLapse")).toHaveText("Mark delinquent");
     await expect(card.locator("#kosRenReactivate")).toBeVisible();
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await card.screenshot({
@@ -118,7 +123,7 @@ test.describe("Renewals lapse and reactivation", () => {
     await card.locator("#kosRenLapse").click();
     const lapse = card.locator("#kosRenLapsePreview");
     await expect(lapse).toContainText("1");
-    await expect(lapse).toContainText("member would lapse");
+    await expect(lapse).toContainText("member would be marked delinquent");
     await expect(lapse).toContainText("Robin Example");
     await expect(lapse).not.toContainText("Pat Example");
     await expect(lapse.locator("[data-ren-exempt-warn]")).toContainText("1 elected officer");
@@ -173,7 +178,7 @@ test.describe("Member hub renew cards", () => {
       });
     });
     const sheet = page.locator("#appSheet");
-    await expect(sheet.locator("h2")).toHaveText("Your membership lapsed. Renew to reactivate.");
+    await expect(sheet.locator("h2")).toHaveText("Your dues are past due. Pay by July 16, 2026 to stay a member.");
     await expect(sheet.locator("[data-renew-level='full']")).toBeVisible();
     await sheet.locator(".kos-renew").screenshot({
       path: path.join(V6, "08-hub-lapsed-renew.png"),

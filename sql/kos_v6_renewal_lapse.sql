@@ -53,7 +53,7 @@ alter table public.membership_application_actions
     'full_application_sent', 'full_application_received', 'id_revealed',
     'note', 'renewed',
     'level_set', 'background_check_fee_included',
-    'lapsed', 'reactivation_sent'
+    'lapsed', 'reactivation_sent', 'inactivated'
   ));
 
 -- Live values are the ten from sql/kos_dues_foundation.sql. The two new
@@ -74,123 +74,197 @@ alter table public.kos_dues_events
     'level_set',
     'officer_exemptions_batch',
     'member_lapsed',
-    'reactivation_started'
+    'reactivation_started',
+    'member_inactivated'
   ));
 
 -- ---------------------------------------------------------------------------
--- 2) Lapse date. One default, August 1 of the season year, in one function.
---    Melissa can change that default here. Officers can override a year
---    from Renewals without editing this file.
+-- 2) Bylaws dates. Dues are due June 1. Unpaid on July 1 is delinquent.
+--    After July 16 the member can be marked inactive and must reapply.
+--    Officers can edit either date for a season. Defaults live here.
 -- ---------------------------------------------------------------------------
 create table if not exists public.kos_dues_settings (
   membership_year integer primary key,
-  lapse_on date not null,
+  delinquent_on date,
+  inactive_on date,
   updated_at timestamptz not null default now(),
   updated_by text
 );
+
+alter table public.kos_dues_settings add column if not exists delinquent_on date;
+alter table public.kos_dues_settings add column if not exists inactive_on date;
+alter table public.kos_dues_settings drop column if exists lapse_on;
+
+update public.kos_dues_settings
+   set delinquent_on = coalesce(delinquent_on, make_date(membership_year, 7, 1)),
+       inactive_on = coalesce(inactive_on, make_date(membership_year, 7, 16))
+ where delinquent_on is null or inactive_on is null;
+
+alter table public.kos_dues_settings alter column delinquent_on set not null;
+alter table public.kos_dues_settings alter column inactive_on set not null;
 
 alter table public.kos_dues_settings enable row level security;
 revoke all on table public.kos_dues_settings from public, anon, authenticated;
 
 comment on table public.kos_dues_settings is
-  'Per-season lapse date. No client policies. Officers read and write it through kos_get_lapse_date and kos_set_lapse_date.';
+  'Per-season delinquent and inactive dates. No client policies. Officers read and write them through kos_get_dues_dates and kos_set_dues_date.';
 
-create or replace function public.kos_default_lapse_date(p_year integer)
+create or replace function public.kos_default_delinquent_on(p_year integer)
 returns date
 language sql
 immutable
 set search_path = public
 as $$
-  select make_date(p_year, 8, 1);
+  select make_date(p_year, 7, 1);
 $$;
 
-comment on function public.kos_default_lapse_date(integer) is
-  'Confirmed default lapse date when kos_dues_settings has no row: August 1 of the season start year. Change the default here only.';
+create or replace function public.kos_default_inactive_on(p_year integer)
+returns date
+language sql
+immutable
+set search_path = public
+as $$
+  select make_date(p_year, 7, 16);
+$$;
 
-revoke all on function public.kos_default_lapse_date(integer) from public, anon, authenticated;
+comment on function public.kos_default_delinquent_on(integer) is
+  'Default delinquent date: July 1 of the season start year.';
+comment on function public.kos_default_inactive_on(integer) is
+  'Default inactive date: July 16 of the season start year. After this date a delinquent member must reapply.';
 
-create or replace function public.kos_get_lapse_date(p_year integer default null)
+revoke all on function public.kos_default_delinquent_on(integer) from public, anon, authenticated;
+revoke all on function public.kos_default_inactive_on(integer) from public, anon, authenticated;
+
+create or replace function public.kos_dues_delinquent_on(p_year integer)
+returns date
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select s.delinquent_on from public.kos_dues_settings s where s.membership_year = p_year),
+    public.kos_default_delinquent_on(p_year)
+  );
+$$;
+
+create or replace function public.kos_dues_inactive_on(p_year integer)
+returns date
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select s.inactive_on from public.kos_dues_settings s where s.membership_year = p_year),
+    public.kos_default_inactive_on(p_year)
+  );
+$$;
+
+revoke all on function public.kos_dues_delinquent_on(integer) from public, anon, authenticated;
+revoke all on function public.kos_dues_inactive_on(integer) from public, anon, authenticated;
+
+drop function if exists public.kos_get_lapse_date(integer);
+drop function if exists public.kos_set_lapse_date(integer, date);
+drop function if exists public.kos_default_lapse_date(integer);
+
+create or replace function public.kos_get_dues_dates(p_year integer default null)
 returns jsonb
 language plpgsql
 stable
 security definer
 set search_path = public
-as $get_lapse$
+as $get_dates$
 declare
   v_year integer := coalesce(p_year, public.kos_dues_season_year());
-  v_on date;
+  v_delinquent date := public.kos_dues_delinquent_on(v_year);
+  v_inactive date := public.kos_dues_inactive_on(v_year);
+  v_today date := (timezone('America/New_York', now()))::date;
 begin
   if not public.kos_can_manage_renewals() then
     return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
   end if;
-  select s.lapse_on into v_on
-    from public.kos_dues_settings s
-   where s.membership_year = v_year;
-  v_on := coalesce(v_on, public.kos_default_lapse_date(v_year));
   return jsonb_build_object(
     'ok', true,
     'year', v_year,
-    'lapse_on', v_on,
-    'can_lapse_today', (timezone('America/New_York', now()))::date >= v_on
+    'delinquent_on', v_delinquent,
+    'inactive_on', v_inactive,
+    'can_mark_delinquent', v_today >= v_delinquent,
+    'can_mark_inactive', v_today >= v_inactive
   );
 end;
-$get_lapse$;
+$get_dates$;
 
-comment on function public.kos_get_lapse_date(integer) is
-  'Membership Chair, Treasurer, President, and site admins. Lapse date for the season. August 1 when no row is saved.';
+comment on function public.kos_get_dues_dates(integer) is
+  'Membership Chair, Treasurer, President, and site admins. Delinquent and inactive dates for the season.';
 
-revoke all on function public.kos_get_lapse_date(integer) from public, anon;
-grant execute on function public.kos_get_lapse_date(integer) to authenticated;
+revoke all on function public.kos_get_dues_dates(integer) from public, anon;
+grant execute on function public.kos_get_dues_dates(integer) to authenticated;
 
-create or replace function public.kos_set_lapse_date(p_year integer, p_date date)
+create or replace function public.kos_set_dues_date(p_year integer, p_kind text, p_date date)
 returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $set_lapse$
+as $set_date$
 declare
   v_year integer := coalesce(p_year, public.kos_dues_season_year());
+  v_kind text := lower(btrim(coalesce(p_kind, '')));
   v_actor record;
   v_by text;
+  v_delinquent date;
+  v_inactive date;
+  v_today date := (timezone('America/New_York', now()))::date;
 begin
   if not public.kos_can_manage_renewals() then
     return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
   end if;
+  if v_kind not in ('delinquent', 'inactive') then
+    return jsonb_build_object('ok', false, 'message', 'Choose the delinquent date or the inactive date.');
+  end if;
   if p_date is null then
-    return jsonb_build_object('ok', false, 'message', 'Choose a lapse date.');
+    return jsonb_build_object('ok', false, 'message', 'Choose a date.');
+  end if;
+  v_delinquent := public.kos_dues_delinquent_on(v_year);
+  v_inactive := public.kos_dues_inactive_on(v_year);
+  if v_kind = 'delinquent' then
+    v_delinquent := p_date;
+  else
+    v_inactive := p_date;
   end if;
   select * into v_actor from public._officer_actor();
   v_by := nullif(btrim(coalesce(v_actor.email, v_actor.display_name, '')), '');
-  insert into public.kos_dues_settings (membership_year, lapse_on, updated_at, updated_by)
-  values (v_year, p_date, now(), v_by)
+  insert into public.kos_dues_settings (membership_year, delinquent_on, inactive_on, updated_at, updated_by)
+  values (v_year, v_delinquent, v_inactive, now(), v_by)
   on conflict (membership_year) do update
-    set lapse_on = excluded.lapse_on,
+    set delinquent_on = excluded.delinquent_on,
+        inactive_on = excluded.inactive_on,
         updated_at = now(),
         updated_by = excluded.updated_by;
   return jsonb_build_object(
     'ok', true,
     'year', v_year,
-    'lapse_on', p_date,
-    'can_lapse_today', (timezone('America/New_York', now()))::date >= p_date,
-    'message', 'Lapse date saved.'
+    'delinquent_on', v_delinquent,
+    'inactive_on', v_inactive,
+    'can_mark_delinquent', v_today >= v_delinquent,
+    'can_mark_inactive', v_today >= v_inactive,
+    'message', 'Date saved.'
   );
 end;
-$set_lapse$;
+$set_date$;
 
-comment on function public.kos_set_lapse_date(integer, date) is
-  'Membership Chair, Treasurer, President, and site admins. Saves the lapse date for one season. Does not lapse anyone and does not send email.';
+comment on function public.kos_set_dues_date(integer, text, date) is
+  'Membership Chair, Treasurer, President, and site admins. Saves the delinquent or inactive date for one season. Does not change member status and does not send email.';
 
-revoke all on function public.kos_set_lapse_date(integer, date) from public, anon;
-grant execute on function public.kos_set_lapse_date(integer, date) to authenticated;
+revoke all on function public.kos_set_dues_date(integer, text, date) from public, anon;
+grant execute on function public.kos_set_dues_date(integer, text, date) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 3) Who is exempt from dues. One helper. kos_renewal_rows,
 --    kos_lapse_candidates, and kos_mark_lapsed all use it.
---    Today: officer, board, or captain role, or an elected officer title,
---    or a paid row, or an applied waiver.
---    Later, bylaws may keep only the four elected titles. That change is
---    the one role line marked BYLAWS below. Board, captain, and
---    committee-chair roles would then not be exempt.
+--    Only an elected officer title (President, Vice President, Secretary,
+--    or Treasurer), a paid row, or an applied waiver. Board, captains,
+--    and committee chairs owe dues. There is no member_role test.
 -- ---------------------------------------------------------------------------
 create or replace function public.kos_is_dues_exempt(p_member_id uuid, p_year integer)
 returns boolean
@@ -200,22 +274,18 @@ security definer
 set search_path = public
 as $exempt$
 declare
-  v_role text;
   v_title text;
 begin
-  select m.member_role, m.officer_title
-    into v_role, v_title
+  select m.officer_title
+    into v_title
     from public.members m
    where m.id = p_member_id;
   if not found then
     return true;
   end if;
-  -- BYLAWS: delete this one if. Then only the four elected titles, a paid
-  -- row, or an applied waiver are exempt. Board, captain, and committee-chair
-  -- roles are not elected titles and would no longer be exempt.
-  if coalesce(v_role, '') in ('officer', 'board', 'captain') then
-    return true;
-  end if;
+  -- Bylaws Section 3. Only President, Vice President, Secretary, and
+  -- Treasurer. kos_is_elected_officer_title matches those four as a whole
+  -- title segment, split on the middle dot the site uses between titles.
   if to_regprocedure('public.kos_is_elected_officer_title(text)') is not null
      and public.kos_is_elected_officer_title(v_title) then
     return true;
@@ -234,7 +304,7 @@ end;
 $exempt$;
 
 comment on function public.kos_is_dues_exempt(uuid, integer) is
-  'Internal. The only dues exempt rule. Officer, board, or captain role, or an elected officer title, or a paid or applied-waiver row for the year. The role line is the one bylaws change.';
+  'Internal. The only dues exempt rule. Elected officer title (President, Vice President, Secretary, Treasurer), or a paid or applied-waiver row for the year.';
 
 revoke all on function public.kos_is_dues_exempt(uuid, integer) from public, anon, authenticated;
 
@@ -379,10 +449,7 @@ begin
   if not public.kos_can_manage_renewals() then
     return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
   end if;
-  select s.lapse_on into v_on
-    from public.kos_dues_settings s
-   where s.membership_year = v_year;
-  v_on := coalesce(v_on, public.kos_default_lapse_date(v_year));
+  v_on := public.kos_dues_delinquent_on(v_year);
   v_today := (timezone('America/New_York', now()))::date >= v_on;
   v_missing := public._kos_exemptions_missing(v_year);
   select coalesce(jsonb_agg(jsonb_build_object(
@@ -436,16 +503,13 @@ begin
   if not public.kos_can_manage_renewals() then
     return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
   end if;
-  select s.lapse_on into v_on
-    from public.kos_dues_settings s
-   where s.membership_year = v_year;
-  v_on := coalesce(v_on, public.kos_default_lapse_date(v_year));
+  v_on := public.kos_dues_delinquent_on(v_year);
   if (timezone('America/New_York', now()))::date < v_on then
     return jsonb_build_object(
       'ok', false,
       'lapsed', 0,
       'skipped', 0,
-      'message', 'Mark lapsed is available on ' || to_char(v_on, 'FMMonth FMDD, YYYY') || '.'
+      'message', 'Mark delinquent is available on ' || to_char(v_on, 'FMMonth FMDD, YYYY') || '.'
     );
   end if;
 
@@ -515,8 +579,87 @@ comment on function public.kos_mark_lapsed(uuid[], text) is
 revoke all on function public.kos_mark_lapsed(uuid[], text) from public, anon;
 grant execute on function public.kos_mark_lapsed(uuid[], text) to authenticated;
 
+create or replace function public.kos_mark_inactive(p_member_ids uuid[], p_note text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $inactive$
+declare
+  v_year integer := public.kos_dues_season_year();
+  v_on date := public.kos_dues_inactive_on(v_year);
+  v_actor record;
+  v_note text := nullif(left(btrim(coalesce(p_note, '')), 1000), '');
+  v_id uuid;
+  v_status text;
+  v_count integer := 0;
+  v_skipped integer := 0;
+begin
+  if not public.kos_can_manage_renewals() then
+    return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
+  end if;
+  if (timezone('America/New_York', now()))::date < v_on then
+    return jsonb_build_object(
+      'ok', false,
+      'inactivated', 0,
+      'skipped', 0,
+      'message', 'Mark inactive is available on ' || to_char(v_on, 'FMMonth FMDD, YYYY') || '.'
+    );
+  end if;
+  select * into v_actor from public._officer_actor();
+  foreach v_id in array coalesce(p_member_ids, array[]::uuid[])
+  loop
+    select m.membership_status into v_status
+      from public.members m
+     where m.id = v_id
+       and m.merged_into is null
+     for update;
+    if not found
+       or lower(coalesce(v_status, '')) not in ('lapsed', 'pending-renewal')
+       or public.kos_is_dues_exempt(v_id, v_year) then
+      v_skipped := v_skipped + 1;
+      continue;
+    end if;
+    update public.members
+       set membership_status = 'inactive',
+           updated_at = now()
+     where id = v_id
+       and lower(coalesce(membership_status, '')) in ('lapsed', 'pending-renewal');
+    if not found then
+      v_skipped := v_skipped + 1;
+      continue;
+    end if;
+    insert into public.membership_application_actions (
+      member_id, action, note, from_status, to_status,
+      actor_uid, actor_email, actor_name
+    ) values (
+      v_id, 'inactivated', v_note, v_status, 'inactive',
+      v_actor.uid, v_actor.email, v_actor.display_name
+    );
+    if to_regprocedure('public.kos_log_dues_event(text,uuid,integer,jsonb)') is not null then
+      perform public.kos_log_dues_event(
+        'member_inactivated', v_id, v_year, jsonb_build_object('note', v_note, 'inactive_on', v_on)
+      );
+    end if;
+    v_count := v_count + 1;
+  end loop;
+  return jsonb_build_object(
+    'ok', true,
+    'inactivated', v_count,
+    'skipped', v_skipped,
+    'message', v_count::text || ' marked inactive. ' || v_skipped::text || ' skipped. No email was sent.'
+  );
+end;
+$inactive$;
+
+comment on function public.kos_mark_inactive(uuid[], text) is
+  'Membership Chair, Treasurer, President, and site admins. On or after the inactive date, sets unpaid lapsed or pending-renewal members to inactive. No email.';
+
+revoke all on function public.kos_mark_inactive(uuid[], text) from public, anon;
+grant execute on function public.kos_mark_inactive(uuid[], text) to authenticated;
+
 -- ---------------------------------------------------------------------------
--- 4) Reactivation. Lapsed only. Unpaid dues row, then pending-renewal.
+-- 4) Reactivation. Lapsed only, and only before the inactive date.
 --    A paid row or an applied waiver is left alone.
 -- ---------------------------------------------------------------------------
 create or replace function public._kos_reactivate_member(p_member_id uuid)
@@ -547,6 +690,9 @@ begin
     return false;
   end if;
   if lower(coalesce(v_member.membership_status, '')) <> 'lapsed' then
+    return false;
+  end if;
+  if (timezone('America/New_York', now()))::date >= public.kos_dues_inactive_on(v_year) then
     return false;
   end if;
   if exists (
@@ -650,6 +796,14 @@ declare
 begin
   if not public.kos_can_manage_renewals() then
     return jsonb_build_object('ok', false, 'message', 'Renewals are for the Membership Chair, Treasurer, President, or an admin.');
+  end if;
+  if (timezone('America/New_York', now()))::date >= public.kos_dues_inactive_on(public.kos_dues_season_year()) then
+    return jsonb_build_object(
+      'ok', false,
+      'started', 0,
+      'skipped', coalesce(cardinality(p_member_ids), 0),
+      'message', 'Reactivation is closed. After the inactive date a member must submit a new application.'
+    );
   end if;
   foreach v_id in array coalesce(p_member_ids, array[]::uuid[])
   loop
@@ -990,6 +1144,13 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'message', 'Your roster row was not found.');
   end if;
+  if lower(coalesce(v_status, '')) = 'inactive' then
+    return jsonb_build_object('ok', false, 'message', 'Your membership is inactive. To rejoin, submit a new membership application.');
+  end if;
+  if lower(coalesce(v_status, '')) = 'lapsed'
+     and (timezone('America/New_York', now()))::date >= public.kos_dues_inactive_on(v_year) then
+    return jsonb_build_object('ok', false, 'message', 'The date to pay and stay a member has passed. To rejoin, submit a new membership application.');
+  end if;
 
   if v_from is distinct from v_level then
     update public.members
@@ -1111,6 +1272,116 @@ grant execute on function public.preview_joining_packet_email(jsonb) to authenti
 
 comment on function public.preview_joining_packet_email(jsonb) is
   'Reviewers only. Preview the joining packet for the sample name Nia and a placeholder token. Optional membership_level auxiliary uses the Auxiliary fee sentence. Does not send email.';
+
+-- Member hub card. Same body as sql/kos_dues_renewal.sql, plus the
+-- inactive date, and exempt comes from kos_is_dues_exempt. A paid row
+-- still reports paid so the card can say they are paid.
+create or replace function public.kos_my_renewal()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+  v_member record;
+  v_year integer := public.kos_dues_season_year();
+  v_paid boolean := false;
+  v_paid_date date;
+  v_partner_id uuid;
+  v_partner jsonb := null;
+  v_levels jsonb;
+  v_exempt boolean := false;
+begin
+  if auth.uid() is null then
+    return jsonb_build_object('ok', false, 'message', 'Sign in to renew.');
+  end if;
+  v_id := public.kos_current_member_id();
+  if v_id is null then
+    return jsonb_build_object('ok', false, 'message', 'Your login is not linked to a roster row yet.');
+  end if;
+  select m.id, m.membership_level, m.membership_status, m.officer_title, m.member_role
+    into v_member
+    from public.members m
+   where m.id = v_id
+     and m.merged_into is null;
+  if not found then
+    return jsonb_build_object('ok', false, 'message', 'Your roster row was not found.');
+  end if;
+
+  select d.paid, d.paid_date
+    into v_paid, v_paid_date
+    from public.dues_payments d
+   where d.member_id = v_id
+     and d.membership_year = v_year
+     and d.paid
+   limit 1;
+  v_paid := coalesce(v_paid, false);
+
+  v_exempt := public.kos_is_dues_exempt(v_id, v_year) and not v_paid;
+
+  v_partner_id := public.kos_linked_partner_id(v_id);
+  if v_partner_id is not null then
+    select jsonb_build_object(
+      'member_id', p.id,
+      'first_name', p.first_name,
+      'last_name', p.last_name,
+      'membership_level', coalesce(p.membership_level, 'full'),
+      'paid', exists (
+        select 1 from public.dues_payments d
+         where d.member_id = p.id
+           and d.membership_year = v_year
+           and d.paid
+      )
+    )
+      into v_partner
+      from public.members p
+     where p.id = v_partner_id;
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'level', x.level,
+    'label', x.label,
+    'amount', coalesce(c.amount, public.kos_dues_fallback_amount(x.level)),
+    'zeffy_url', c.zeffy_url,
+    'explainer', c.explainer
+  ) order by x.ord), '[]'::jsonb)
+    into v_levels
+    from (
+      values
+        (1, 'full', 'Full'),
+        (2, 'associate', 'Associate'),
+        (3, 'auxiliary', 'Auxiliary'),
+        (4, 'loa', 'Leave of absence')
+    ) as x(ord, level, label)
+    left join public.kos_dues_catalog c
+      on c.membership_year = v_year
+     and c.level = x.level
+     and c.active;
+
+  return jsonb_build_object(
+    'ok', true,
+    'year', v_year,
+    'season_label', v_year::text || '-' || right((v_year + 1)::text, 2),
+    'paid', v_paid,
+    'paid_date', v_paid_date,
+    'exempt', v_exempt,
+    'inactive_on', public.kos_dues_inactive_on(v_year),
+    'membership_level', coalesce(v_member.membership_level, 'full'),
+    'membership_status', v_member.membership_status,
+    'partner', v_partner,
+    'levels', v_levels,
+    'treasurer_email', 'treasurer@kreweofshamrock.com'
+  );
+end;
+$$;
+
+comment on function public.kos_my_renewal() is
+  'Signed-in member. Current dues season, catalog levels, paid flag, linked partner, and whether kos_is_dues_exempt applies before payment. Does not change any row.';
+
+revoke all on function public.kos_my_renewal() from public, anon;
+grant execute on function public.kos_my_renewal() to authenticated;
 
 -- Rollback only. Do not run this list as part of applying the file.
 -- After restoring the three function bodies named in the header:

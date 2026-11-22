@@ -705,7 +705,20 @@ test.describe("Membership Applications", () => {
     await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
     const card = tool.locator("[data-app-id='app-jane']");
-    await expect(card.locator("[data-app-start]")).toBeDisabled();
+    const waitingBtn = card.locator("[data-app-start]");
+    await expect(waitingBtn).toBeDisabled();
+    await expect(waitingBtn).toHaveAttribute("disabled", "");
+    const waitingStyle = await waitingBtn.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        cursor: style.cursor,
+        backgroundImage: style.backgroundImage,
+        boxShadow: style.boxShadow
+      };
+    });
+    expect(waitingStyle.cursor).toBe("not-allowed");
+    expect(waitingStyle.backgroundImage).toBe("none");
+    expect(waitingStyle.boxShadow).toBe("none");
     await expect(card.locator("[data-app-start-wait]")).toHaveText("Waiting for the full application");
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await card.screenshot({
@@ -735,7 +748,10 @@ test.describe("Membership Applications", () => {
       });
     });
     const ready = page.locator("#hubApplications [data-app-id='app-jane']");
-    await expect(ready.locator("[data-app-start]")).toBeEnabled();
+    const readyBtn = ready.locator("[data-app-start]");
+    await expect(readyBtn).toBeEnabled();
+    const readyStyle = await readyBtn.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(readyStyle).toContain("gradient");
     await expect(ready.locator("[data-app-start-wait]")).toHaveCount(0);
     await expect(ready).toContainText("0000");
     await expect(ready).not.toContainText("123-45-6789");

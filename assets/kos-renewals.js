@@ -12,7 +12,7 @@
   };
   var STATUS = {
     active: "Active",
-    lapsed: "Lapsed",
+    lapsed: "Delinquent",
     "pending-renewal": "Pending dues"
   };
   var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -99,7 +99,9 @@
     mailMode: "reminder",
     lapseTools: false,
     lapseOn: "",
+    inactiveOn: "",
     canLapseToday: false,
+    canMarkInactive: false,
     editingLapse: false,
     showLapse: false,
     lapseChecked: false,
@@ -212,7 +214,7 @@
         return "<li><b>" + esc(fullName(row)) + "</b> · " + esc(levelName(row.membership_level)) +
           (row.email ? " · " + esc(row.email) : "") + "</li>";
       }).join("") + "</ul>"
-      : '<p class="kos-ren-note">No one would lapse.</p>';
+      : '<p class="kos-ren-note">No one would be marked delinquent.</p>';
     var missing = Number(state.exemptionsMissing) || 0;
     var warn = missing
       ? '<p class="kos-ren-warn" data-ren-exempt-warn>' + missing + " elected officer" + (missing === 1 ? "" : "s") +
@@ -220,27 +222,37 @@
         '<button type="button" class="btn" id="kosRenWaivers">Open Dues waivers</button></p>'
       : "";
     return '<p class="kos-ren-count"><b>' + rows.length + '</b> ' +
-      (rows.length === 1 ? "member would lapse." : "members would lapse.") + "</p>" +
+      (rows.length === 1 ? "member would be marked delinquent." : "members would be marked delinquent.") + "</p>" +
       list + warn +
       '<label class="kos-ren-confirm"><input type="checkbox" id="kosRenLapseCheck"' +
       (state.lapseChecked ? " checked" : "") + " />" +
       "<span>I have checked this list</span></label>" +
-      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenLapseConfirm">Mark lapsed</button></div>';
+      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenLapseConfirm">Mark delinquent</button></div>';
   }
 
   function lapseControls() {
     if (!state.lapseTools) return "";
     var when = formatLongDate(state.lapseOn);
+    var later = formatLongDate(state.inactiveOn);
     var edit = state.editingLapse
-      ? '<label class="kos-ren-lapse-edit">Lapse date<input id="kosRenLapseInput" type="date" value="' + esc(dateOnly(state.lapseOn)) + '" /></label>' +
-        '<button type="button" class="btn" id="kosRenLapseSave">Save lapse date</button>'
-      : "Lapse date: <b data-ren-lapse-date>" + esc(when || "Not set") + "</b> " +
+      ? '<label class="kos-ren-lapse-edit">Delinquent on<input id="kosRenLapseInput" type="date" value="' + esc(dateOnly(state.lapseOn)) + '" /></label>' +
+        '<button type="button" class="btn" id="kosRenLapseSave">Save</button>'
+      : "Delinquent on: <b data-ren-lapse-date>" + esc(when || "Not set") + "</b> " +
         '<button type="button" class="btn" id="kosRenLapseEdit">Edit</button>';
+    var editLater = state.editingInactive
+      ? '<label class="kos-ren-lapse-edit">Inactive after<input id="kosRenInactiveInput" type="date" value="' + esc(dateOnly(state.inactiveOn)) + '" /></label>' +
+        '<button type="button" class="btn" id="kosRenInactiveSave">Save</button>'
+      : "Inactive after: <b data-ren-inactive-date>" + esc(later || "Not set") + "</b> " +
+        '<button type="button" class="btn" id="kosRenInactiveEdit">Edit</button>';
     var mark = state.canLapseToday
-      ? '<button type="button" class="btn" id="kosRenLapse">Mark lapsed</button>'
-      : '<button type="button" class="btn" id="kosRenLapse" disabled>Available on ' + esc(when || "the lapse date") + "</button>";
+      ? '<button type="button" class="btn" id="kosRenLapse">Mark delinquent</button>'
+      : '<button type="button" class="btn" id="kosRenLapse" disabled>Available on ' + esc(when || "the delinquent date") + "</button>";
+    var markInactive = state.canMarkInactive
+      ? '<button type="button" class="btn" id="kosRenInactive">Mark inactive</button>'
+      : '<button type="button" class="btn" id="kosRenInactive" disabled>Available on ' + esc(later || "the inactive date") + "</button>";
     return '<p class="kos-ren-lapse" id="kosRenLapseLine">' + edit + "</p>" +
-      '<div class="kos-ren-actions">' + mark +
+      '<p class="kos-ren-lapse" id="kosRenInactiveLine">' + editLater + "</p>" +
+      '<div class="kos-ren-actions">' + mark + markInactive +
       '<button type="button" class="btn" id="kosRenReactivate">Send reactivation link</button></div>';
   }
 
@@ -283,14 +295,14 @@
     var lapsePreview = state.showLapse ? '<div class="kos-ren-preview" id="kosRenLapsePreview">' + lapsePreviewHtml() + "</div>" : "";
     root.innerHTML = shell(
       '<p class="kos-ren-note">The ' + esc(state.label || "current") +
-      ' season is June through May. This list is active, lapsed, and pending dues members with no paid dues row for that season. Elected officers and board are left off, same as the member hub. Marking cash or check records the dues row and sets lapsed or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
+      ' season is June through May. This list is active, delinquent, and pending dues members with no paid dues row for that season. Elected officers are left off. Marking cash or check records the dues row and sets delinquent or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
       lapseControls() +
       '<div class="kos-ren-filters">' +
       '<label>Search<input id="kosRenSearch" type="search" value="' + esc(state.q) + '" placeholder="Name or email" /></label>' +
       '<label>Status<select id="kosRenStatus">' +
       option("all", "All statuses", state.status) +
       option("active", "Active", state.status) +
-      option("lapsed", "Lapsed", state.status) +
+      option("lapsed", "Delinquent", state.status) +
       option("pending-renewal", "Pending dues", state.status) +
       '</select></label>' +
       '<label>Level<select id="kosRenLevel">' +
@@ -384,6 +396,8 @@
     if (saveDate) saveDate.addEventListener("click", function () { saveLapseDate(root, saveDate); });
     var lapse = root.querySelector("#kosRenLapse");
     if (lapse) lapse.addEventListener("click", function () { openLapsePreview(root); });
+    var inactiveBtn = root.querySelector("#kosRenInactive");
+    if (inactiveBtn) inactiveBtn.addEventListener("click", function () { markInactive(root, inactiveBtn); });
     var lapseCheck = root.querySelector("#kosRenLapseCheck");
     if (lapseCheck) lapseCheck.addEventListener("change", function () { state.lapseChecked = !!lapseCheck.checked; });
     var lapseGo = root.querySelector("#kosRenLapseConfirm");
@@ -426,8 +440,11 @@
 
   function applyLapsePayload(data) {
     if (!data) return;
-    state.lapseOn = data.lapse_on || state.lapseOn;
-    if (data.can_lapse_today != null) state.canLapseToday = !!data.can_lapse_today;
+    state.lapseOn = data.delinquent_on || data.lapse_on || state.lapseOn;
+    state.inactiveOn = data.inactive_on || state.inactiveOn;
+    if (data.can_mark_delinquent != null) state.canLapseToday = !!data.can_mark_delinquent;
+    else if (data.can_lapse_today != null) state.canLapseToday = !!data.can_lapse_today;
+    if (data.can_mark_inactive != null) state.canMarkInactive = !!data.can_mark_inactive;
     if (data.exemptions_missing != null) state.exemptionsMissing = Number(data.exemptions_missing) || 0;
     if (Array.isArray(data.members)) state.lapseCandidates = data.members;
   }
@@ -454,7 +471,7 @@
     try {
       var client = window.__kosSb;
       if (!client) throw new Error("Still connecting.");
-      var res = await client.rpc("kos_set_lapse_date", { p_year: state.year, p_date: next });
+      var res = await client.rpc("kos_set_dues_date", { p_year: state.year, p_kind: "delinquent", p_date: next });
       if (res.error) {
         if (rpcMissing(res.error)) {
           state.lapseTools = false;
@@ -467,7 +484,7 @@
       var data = res.data || {};
       if (data.ok === false) throw new Error(data.message || "Could not save the lapse date.");
       applyLapsePayload(data);
-      state.lapseOn = data.lapse_on || next;
+      state.lapseOn = data.delinquent_on || data.lapse_on || next;
       state.editingLapse = false;
       state.msg = data.message || "Lapse date saved.";
       state.msgKind = "";
@@ -553,6 +570,46 @@
       await load(root);
     } catch (e) {
       state.msg = (e && e.message) || "Could not mark those members lapsed.";
+      state.msgKind = "err";
+      paint(root);
+    }
+  }
+
+  async function markInactive(root, btn) {
+    var rows = state.members.filter(function (row) {
+      return row.membership_status === "lapsed" || row.membership_status === "pending-renewal";
+    });
+    if (!rows.length) {
+      state.msg = "No delinquent or pending dues members to mark inactive.";
+      state.msgKind = "err";
+      paint(root);
+      return;
+    }
+    var ask = "Mark " + rows.length + " members inactive? They must submit a new application. No email is sent.";
+    if (!state.previewOnly && !window.confirm(ask)) return;
+    if (state.previewOnly) {
+      rows.forEach(function (row) { row.membership_status = "inactive"; });
+      state.msg = rows.length + " marked inactive. No email was sent.";
+      state.msgKind = "";
+      paint(root);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      var client = window.__kosSb;
+      if (!client) throw new Error("Still connecting.");
+      var res = await client.rpc("kos_mark_inactive", {
+        p_member_ids: rows.map(function (row) { return row.id; }),
+        p_note: null
+      });
+      if (res.error) throw res.error;
+      var data = res.data || {};
+      if (data.ok === false) throw new Error(data.message || "Could not mark those members inactive.");
+      state.msg = data.message || "Marked inactive. No email was sent.";
+      state.msgKind = "";
+      await load(root);
+    } catch (e) {
+      state.msg = (e && e.message) || "Could not mark those members inactive.";
       state.msgKind = "err";
       paint(root);
     }
@@ -719,8 +776,10 @@
     state.msg = payload.msg || "";
     state.mailMode = payload.mailMode || "reminder";
     state.lapseTools = payload.lapseTools !== false;
-    state.lapseOn = payload.lapseOn || payload.lapse_on || "";
+    state.lapseOn = payload.lapseOn || payload.lapse_on || payload.delinquentOn || "";
+    state.inactiveOn = payload.inactiveOn || payload.inactive_on || "";
     state.canLapseToday = payload.canLapseToday != null ? !!payload.canLapseToday : !!payload.can_lapse_today;
+    state.canMarkInactive = payload.canMarkInactive != null ? !!payload.canMarkInactive : !!payload.can_mark_inactive;
     state.editingLapse = !!payload.editingLapse;
     state.showLapse = !!payload.showLapse;
     state.lapseChecked = !!payload.lapseChecked;
@@ -754,7 +813,7 @@
       state.members = data.members || [];
       state.lapseTools = false;
       try {
-        var lapse = await client.rpc("kos_get_lapse_date", { p_year: state.year });
+        var lapse = await client.rpc("kos_get_dues_dates", { p_year: state.year });
         if (lapse.error) {
           if (!rpcMissing(lapse.error)) throw lapse.error;
         } else if (lapse.data && lapse.data.ok !== false) {

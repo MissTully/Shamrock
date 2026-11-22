@@ -482,6 +482,9 @@
     ".hub-prof-form textarea,.hub-claim textarea,.hub-event-form textarea{min-height:88px;}",
     ".hub-appr{padding:12px 14px;border-radius:12px;gap:10px;}",
     ".hub-appr-btns .btn,.hub-appr-btns button{min-height:44px;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled{background:#e4dfd2;background-image:none;color:#4a453c;border-color:#b7b0a2;box-shadow:none;cursor:not-allowed;opacity:1;transform:none;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled:hover{background:#e4dfd2;background-image:none;box-shadow:none;transform:none;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled::after{content:none;display:none;animation:none;}",
     ".hub-event-row{padding:14px;border-radius:12px;}",
     ".dir-grid{grid-template-columns:1fr;gap:10px;}",
     ".dir-card{min-height:56px;padding:12px 14px;}",
@@ -2073,31 +2076,8 @@
 
   function profileDuesExempt(profile) {
     var p = profile || window.kosProfile || {};
-    var roles = [];
-    if (p.member_role) roles.push(p.member_role);
-    var grants = p.roles || p.member_roles || [];
-    if (Array.isArray(grants)) {
-      grants.forEach(function (g) {
-        if (typeof g === "string") roles.push(g);
-        else if (g && g.role) roles.push(g.role);
-      });
-    }
-    var L = window.KOS_LEADERSHIP;
-    if (L && typeof L.highestMemberRole === "function") {
-      var top = L.highestMemberRole(roles);
-      if (top === "officer" || top === "board") return true;
-      if (p.officer_title && typeof L.splitTitles === "function" && typeof L.rolesForTitle === "function") {
-        var fromTitles = [];
-        L.splitTitles(p.officer_title).forEach(function (title) {
-          fromTitles = fromTitles.concat(L.rolesForTitle(title) || []);
-        });
-        var titled = L.highestMemberRole(fromTitles);
-        if (titled === "officer" || titled === "board") return true;
-      }
-      return false;
-    }
-    return roles.some(function (r) {
-      return /^(officer|captain|board|treasurer|secretary)$/i.test(String(r || ""));
+    return String(p.officer_title || "").split(/\s*·\s*/).some(function (part) {
+      return /^(president|vice president|secretary|treasurer)$/i.test(part.trim());
     });
   }
 
@@ -4583,6 +4563,8 @@
 
   function shownMembershipStatus(status) {
     if (status === "pending-renewal") return "Pending dues";
+    if (status === "lapsed") return "Delinquent";
+    if (status === "inactive") return "Inactive";
     return status || "";
   }
 
@@ -4595,6 +4577,8 @@
     if (status === "active") return "Member";
     if (status === "declined") return "Declined";
     if (status === "archived") return "Withdrawn";
+    if (status === "lapsed") return "Delinquent";
+    if (status === "inactive") return "Inactive";
     if (status === "pending-renewal") return "Pending dues";
     if (status === "prospect") return "Event prospect";
     return "New interest";
