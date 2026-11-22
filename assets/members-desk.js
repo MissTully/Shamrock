@@ -5690,7 +5690,10 @@
       "<small>New interest, joining packet, background check, dues, then approve.</small></div></div>" +
       '<div class="app-body" id="hubApplicationsBody">';
     if (state.applicationFlash) html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
-    html += '<p class="hub-pipe-help">Call first, then send the joining packet. The background check fee is $50 individual or $75 couple. The dues link comes after the check passes. Approve when dues are paid.</p>' +
+    var help = bucket === "prospect"
+      ? "These are event RSVP prospects, not the join pipeline. Send the joining packet when they are ready to apply."
+      : "Call first, then send the joining packet. The background check fee is $50 individual or $75 couple. The dues link comes after the check passes. Approve when dues are paid.";
+    html += '<p class="hub-pipe-help">' + esc(help) + "</p>" +
       '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
       '<span class="muted">Change the greeting and the notes. The finish link and the background check pay buttons stay locked. The dues link is not in this letter.</span></p>' +
       '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
