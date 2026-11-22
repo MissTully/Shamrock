@@ -1,7 +1,6 @@
--- NOT APPLIED. Do not run this against the live project from the app,
--- a webhook, or a script. After review, paste this file into the Supabase
--- SQL editor for project oazwkwflgbthojvnclfc (Krewe of Shamrock) and run it.
--- Safe to re-run.
+-- Applied in production (Nov 2026). Do not run this against the live project
+-- from the app, a webhook, or a script. It is already on project
+-- oazwkwflgbthojvnclfc (Krewe of Shamrock). Safe to re-run.
 --
 -- Dues renewal for the June-May season.
 --

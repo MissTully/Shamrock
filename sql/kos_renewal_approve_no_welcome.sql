@@ -1,3 +1,4 @@
+-- Applied in production (Nov 2026).
 -- Renewal approvals do not send the welcome letter.
 --
 -- APPLY THIS IN THE SUPABASE SQL EDITOR. The website deploy does not run it.

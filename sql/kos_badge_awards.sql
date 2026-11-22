@@ -23,7 +23,7 @@ $$;
 revoke all on function public.kos_award_badge(uuid, text, timestamptz) from public, anon, authenticated;
 
 -- 2. Parade Ready check, same gates as the Hub chip and v_parade_ready:
---    dues paid for the June-May season (officers and board are exempt),
+--    dues paid for the June-May season (elected officers are exempt),
 --    waiver signed for that season, and a mandatory meeting attended in
 --    that same June-May window. Use sql/kos_dues_season_jan1_fix.sql on
 --    the live project. Do not re-run this whole file just to apply that.

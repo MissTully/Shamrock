@@ -11,7 +11,7 @@ Apply `sql/kos_hub_volunteer_hours.sql` in the Supabase SQL editor before this g
 - Shortfall buyout is $12 per hour.
 - In-kind donations count: every $12 is one hour. The member enters the hours, and marks the log as in-kind.
 - Parade security on an alcohol parade is logged at double hours. The member enters the hours that should count. The Hub does not double them again.
-- Officers and board stay dues-exempt the way Phase 2 already set. This does not change dues.
+- Elected officers (President, Vice President, Secretary, Treasurer) stay dues-exempt under the bylaws. Board, captains, and committee chairs owe dues. This file does not change that rule.
 
 ## How a log is created
 

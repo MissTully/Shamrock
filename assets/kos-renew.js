@@ -1,6 +1,6 @@
 /* Renew my membership. One card for the phone sheet, Parade Ready, and desktop Home.
    Levels come from kos_my_renewal (kos_dues_catalog). Seeded 2026 rates show
-   if that SQL is not applied yet. Officers and board stay exempt. */
+   if that SQL is not applied yet. Elected officers stay exempt. */
 (function () {
   var TREASURER = "treasurer@kreweofshamrock.com";
   var SEEDED = [
@@ -83,6 +83,8 @@
       label: src.season_label || season.label,
       line: season.line,
       level: src.membership_level || src.level || "full",
+      status: src.membership_status || src.status || (src.parade && src.parade.membership_status) || "",
+      inactiveOn: src.inactive_on || src.inactiveOn || "",
       paidDate: src.paid_date || src.paidDate || "",
       partner: partner,
       levels: levels.map(function (row) {
@@ -108,6 +110,7 @@
       exempt: typeof window.kosDuesExempt === "function" && window.kosDuesExempt(),
       year: year,
       membership_level: (parade && parade.membership_level) || (window.kosProfile && window.kosProfile.membership_level) || "full",
+      membership_status: (hint && hint.membership_status) || (parade && parade.membership_status) || (window.kosProfile && window.kosProfile.membership_status) || "",
       partner: hint && hint.partner ? hint.partner : null,
       levels: SEEDED,
       holdNavigation: !!(hint && hint.holdNavigation),
@@ -120,14 +123,22 @@
     return [partner.first_name, partner.last_name].filter(Boolean).join(" ").trim();
   }
 
+  function inactiveBy(model) {
+    var raw = model.inactiveOn || ((model.year || "") + "-07-16");
+    var match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(raw));
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    if (!match) return "July 16";
+    return months[Number(match[2]) - 1] + " " + Number(match[3]) + ", " + match[1];
+  }
+
   function cardHtml(raw, opts) {
     var model = normalize(raw);
     var titleAttr = opts && opts.titleId ? ' id="' + esc(opts.titleId) + '"' : "";
     var season = seasonOf(model.year);
-    if (model.exempt) {
+    if (model.status === "inactive") {
       return '<div class="kos-renew" data-renew-root>' +
-        '<h2' + titleAttr + '>Renew my membership</h2>' +
-        '<p>Officers and board are not invoiced for dues. That part of Parade Ready stays complete for you.</p>' +
+        '<h2' + titleAttr + '>Your membership is inactive. To rejoin, submit a new membership application.</h2>' +
+        '<p><a href="membership-application.html">Open the Join page</a></p>' +
         '<p>Questions: <a href="mailto:' + esc(TREASURER) + '">' + esc(TREASURER) + '</a></p></div>';
     }
     if (model.paid) {
@@ -140,6 +151,12 @@
         '<p>Parade Ready shows dues as complete for this season.</p>' +
         '<p>Questions: <a href="mailto:' + esc(model.treasurer) + '">' + esc(model.treasurer) + '</a></p></div>';
     }
+    if (model.exempt) {
+      return '<div class="kos-renew" data-renew-root>' +
+        '<h2' + titleAttr + '>Renew my membership</h2>' +
+        '<p>Elected officers (President, Vice President, Secretary, Treasurer) are exempt from dues under the bylaws. That part of Parade Ready stays complete for you.</p>' +
+        '<p>Questions: <a href="mailto:' + esc(TREASURER) + '">' + esc(TREASURER) + '</a></p></div>';
+    }
     var name = partnerName(model.partner);
     var both = "";
     if (name && model.partner && model.partner.paid) {
@@ -150,6 +167,10 @@
         ' is linked on your membership. Check this, then pick one level. Zeffy opens one checkout. On that page, add two tickets: one for you and one for ' +
         esc(name) + '. Put each person\'s name and email on their own ticket so both roster rows are marked paid. You pay the two tickets together. It is not a two-for-one price. We save this level for both of you before the page opens.</span></label>';
     }
+    var heading = "Renew my membership";
+    var pendingNote = "";
+    if (model.status === "lapsed") heading = "Your dues are past due. Pay by " + inactiveBy(model) + " to stay a member.";
+    if (model.status === "pending-renewal") pendingNote = '<p data-renew-pending>Pending dues: your payment has not come in yet.</p>';
     var buttons = model.levels.map(function (row) {
       return '<button type="button" class="kos-renew-level" data-renew-level="' + esc(row.level) + '" data-zeffy-url="' + esc(row.zeffy_url || "") + '">' +
         '<span class="kos-renew-level-top"><b>' + esc(row.label) + '</b><b class="price">' + esc(money(row.amount)) + '</b></span>' +
@@ -158,7 +179,8 @@
     }).join("");
     return '<div class="kos-renew" data-renew-root>' +
       '<p class="kos-renew-kicker">Krewe of Shamrock</p>' +
-      '<h2' + titleAttr + '>Renew my membership</h2>' +
+      '<h2' + titleAttr + '>' + esc(heading) + '</h2>' +
+      pendingNote +
       '<p class="kos-renew-season">' + esc(season.line) + '</p>' +
       '<p>Pick the level you want this season. We save that choice, then open Zeffy so you can pay. These are membership dues, not the join application fee.</p>' +
       both +

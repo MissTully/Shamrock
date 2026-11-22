@@ -22,6 +22,8 @@ The membership year defaults to **2026**. Change the year at the top. That reloa
 3. **Waiver history** — applied and denied rows for the year. Filter with All, Applied, or Denied. Applied rows show the kind, waived value (`standard_amount`), approver, and date.
 4. **Apply bylaws exemptions for season** — asks you to confirm, then calls `kos_apply_elected_officer_exemptions` for the year on the card. President, Vice President, Secretary, and Treasurer only. Committee chairs and board members are not included. Someone already paid in money is skipped. A different applied waiver (for example service in lieu) is skipped. The card shows how many were applied and how many were skipped. **Opening the card does not run this.**
 
+Renewals uses this card too. Before an officer marks members lapsed, the preview counts elected officers who have no applied `elected_officer` waiver for the season. That warning is a count only. **Open Dues waivers** on that preview comes here. An elected Treasurer is never a lapse candidate. Apply the season exemptions before the lapse date so those officers are covered. See docs/membership-process.md.
+
 A row already paid in money (cash, check, card, or anything that is not method `waiver`) stays as it is. The request button is off, and approve / deny are not offered for that row.
 
 ## Who may use it
