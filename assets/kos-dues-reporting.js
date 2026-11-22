@@ -631,7 +631,7 @@
       '<option value="paid">Paid</option><option value="waived">Waived</option></select></div></div>' +
       '<div id="hubPayMembers"></div>' +
       '<h3>Aging</h3>' +
-      '<p class="hub-pay-note">Unpaid dues by due date. This screen does not send email. Reminders stay on the existing path: Send invoices, and the steps in DUES_REMINDER_AUTOMATION.md.</p>' +
+      '<p class="hub-pay-note">Unpaid dues by due date. This screen does not send email. Reminders go out from Send invoices.</p>' +
       '<div id="hubPayAging"></div>';
     panel.innerHTML = html;
     var search = document.getElementById("hubPaySearch");

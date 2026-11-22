@@ -48,7 +48,7 @@ Each group shows the count, the `standard_amount` total, the member names, and t
 
 Unpaid rows only, by `due_date`: not yet due, 1–30, 31–60, 61–90, over 90 days, and no due date. Due today counts as not yet due.
 
-This screen does not send reminder email. There is no one-click send. Reminders stay on the existing path: **Send invoices**, and the steps in DUES_REMINDER_AUTOMATION.md.
+This screen does not send reminder email. There is no one-click send. Reminders go out from Send invoices.
 
 ## Export
 

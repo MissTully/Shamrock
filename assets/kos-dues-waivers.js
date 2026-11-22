@@ -671,7 +671,7 @@
       '<div class="app-head"><span class="ic">🎖</span><div><h2>Dues waivers</h2>' +
       "<small>Request, approve, or apply elected-officer dues exemptions</small></div></div>" +
       '<div class="app-body hub-ei">' +
-      '<p class="hub-ei-note">Any officer who can open this desk can use this card. The database check is the same officer gate as Email members and Send invoices. Service in lieu and other board-approved waivers are meant for the President or Treasurer to approve. There is no separate President-only switch on the Hub, so this history list is the record of who requested and who approved. A request does not mark anyone paid. Opening this card does not apply elected-officer exemptions.</p>' +
+      '<p class="hub-ei-note">Any officer can request a waiver. Only the President or Treasurer can approve or deny one. Approving sets the member\'s dues to $0 and marks them paid. A request does not mark anyone paid. Opening this card does not apply the season exemptions.</p>' +
       '<div class="hub-ei-grid">' +
       '<div><label for="hubWavYear">Membership year</label>' +
       '<input id="hubWavYear" type="number" min="2000" max="2100" value="2026" /></div>' +
