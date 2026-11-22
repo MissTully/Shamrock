@@ -1,6 +1,7 @@
 -- Joining packet email: chairs edit the greeting and the explanatory
--- paragraphs. The finish button, background check pay buttons, and dues
--- notes and pay buttons stay out of that text.
+-- paragraphs. The finish button and the background check pay buttons stay
+-- locked. This letter has no dues pay link. Dues are sent later, after
+-- the background check.
 --
 -- APPLY THIS IN THE SUPABASE SQL EDITOR. The website deploy does not run it.
 --   Project: oazwkwflgbthojvnclfc
@@ -11,15 +12,21 @@
 -- Does not turn prospect email on. This file never updates
 -- kos_runtime_flags key membership_prospect_emails.
 --
--- Send joining packet (Move to background check) reads the saved draft
--- through kos_prospect_background_check_email_html. Payment web addresses
--- stay in background_check_payments and kos_dues_catalog. They are not
--- columns on the template and they are not accepted in the free text.
+-- Send joining packet reads the saved draft through
+-- kos_prospect_background_check_email_html(text, text, jsonb). Background
+-- check pay addresses stay in background_check_payments. They are not
+-- columns on the template. This letter does not read kos_dues_catalog
+-- and it does not add a dues pay button.
+--
+-- If the draft table is missing in production, apply
+-- sql/kos_joining_packet_template_seed.sql. Re-applying this file does not
+-- add dues pay buttons. The letter keeps the finish link and the background
+-- check fee links only.
 --
 -- If you run sql/kos_membership_application_staged.sql,
 -- sql/kos_membership_background_check_invoice.sql, or
--- sql/kos_prospect_background_check_email.sql again, run this file again
--- afterward.
+-- sql/kos_prospect_background_check_email.sql again, run
+-- sql/kos_joining_packet_template_seed.sql again afterward.
 
 -- ---------------------------------------------------------------------------
 -- 1) One draft row. Reviewers write it only through the functions below.
@@ -66,8 +73,8 @@ as $defaults$
     'finish_after', $s$This email doesn't include those numbers. Your link expires in 21 days.$s$,
     'fee_heading', $s$Your background check fee$s$,
     'fee_intro', $s$This fee is separate from membership dues. Pick the one that matches your application.$s$,
-    'dues_heading', $s$Pick the membership that fits$s$,
-    'dues_intro', $s$Membership dues are separate from the background check fee. Read the short note for each level, then use that level's button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don't also pay the background check above. If you're not sure which level fits, write to treasurer@kreweofshamrock.com and we'll help before you pay.$s$,
+    'dues_heading', $s$Membership dues come later$s$,
+    'dues_intro', $s$Your dues link comes after the background check passes. This letter does not include a dues pay button. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.$s$,
     'closing', $s$Welcome to the Krewe. We can't wait to have you with us.$s$,
     'signoff', $s$Sláinte,$s$ || chr(10) || $s$Krewe of Shamrock$s$
   );
@@ -287,7 +294,6 @@ declare
   v_name text := coalesce(nullif(btrim(p_first_name), ''), 'friend');
   v_app text := btrim(coalesce(p_application_url, ''));
   v_html text := '';
-  v_year integer := extract(year from current_date)::integer;
   v_bg jsonb := '{}'::jsonb;
   v_defaults jsonb := public.kos_joining_packet_email_defaults();
   v_tpl jsonb := '{}'::jsonb;
@@ -301,8 +307,6 @@ declare
   v_money text;
   v_fallback_amount numeric;
   v_fallback_explainer text;
-  v_title text;
-  v_level text;
   v_greeting text;
   v_intro text;
   v_finish_heading text;
@@ -336,15 +340,9 @@ begin
   v_dues_intro := coalesce(nullif(btrim(v_tpl->>'dues_intro'), ''), v_defaults->>'dues_intro');
   v_closing := coalesce(nullif(btrim(v_tpl->>'closing'), ''), v_defaults->>'closing');
   v_signoff := coalesce(nullif(btrim(v_tpl->>'signoff'), ''), v_defaults->>'signoff');
-
-  if to_regclass('public.kos_dues_catalog') is not null
-     and not exists (
-       select 1 from public.kos_dues_catalog
-        where membership_year = v_year and active
-     ) then
-    select max(membership_year) into v_year
-      from public.kos_dues_catalog
-     where active;
+  if v_dues_intro ilike '%use that level%' or v_dues_intro ilike '%pay button%' and v_dues_intro ilike '%each level%' then
+    v_dues_heading := v_defaults->>'dues_heading';
+    v_dues_intro := v_defaults->>'dues_intro';
   end if;
 
   if to_regclass('public.kos_runtime_flags') is not null then
@@ -420,56 +418,6 @@ begin
     || public.kos_joining_packet_fill(v_dues_heading, v_name) || '</h2>'
     || '<p>' || public.kos_joining_packet_fill(v_dues_intro, v_name) || '</p>';
 
-  for v_level, v_title, v_button, v_fallback_amount, v_fallback_explainer in
-    select item_level, item_title, item_button, item_amount, item_explainer
-      from (values
-        ('full'::text, 'Full Krewe Membership'::text, 'Pay Full Krewe dues'::text, 375::numeric,
-          'You''re a voting member, and you march in all the parades. You also share the 12/12 volunteer commitment: 12 hours in the Krewe year (June through May), or $12 for each hour you don''t work.'::text),
-        ('associate'::text, 'Associate'::text, 'Pay Associate dues'::text, 450::numeric,
-          'This is for one year. You can join two parades of your choice. There''s no vote, and you don''t take on the 12/12 volunteer commitment.'::text),
-        ('auxiliary'::text, 'Auxiliary'::text, 'Pay Auxiliary dues'::text, 200::numeric,
-          'This is a non-voting membership for one major parade. The fee already includes the background check and the membership portion.'::text),
-        ('loa'::text, 'Leave of Absence (LOA)'::text, 'Pay leave of absence dues'::text, 100::numeric,
-          'This is our social membership for a year when you''d like to step back and still stay connected. That''s leave of absence.'::text)
-      ) as levels(item_level, item_title, item_button, item_amount, item_explainer)
-  loop
-    v_amount := v_fallback_amount;
-    v_explainer := v_fallback_explainer;
-    v_link := null;
-    if to_regclass('public.kos_dues_catalog') is not null and v_year is not null then
-      select c.amount,
-             coalesce(nullif(btrim(c.explainer), ''), v_fallback_explainer),
-             nullif(btrim(c.zeffy_url), '')
-        into v_amount, v_explainer, v_link
-        from public.kos_dues_catalog c
-       where c.membership_year = v_year
-         and c.level = v_level
-         and c.active
-       limit 1;
-      if not found then
-        v_amount := v_fallback_amount;
-        v_explainer := v_fallback_explainer;
-        v_link := null;
-      end if;
-    end if;
-    v_money := case
-      when v_amount = trunc(v_amount) then '$' || trim(to_char(v_amount, 'FM999990'))
-      else '$' || trim(to_char(v_amount, 'FM999990.00'))
-    end;
-    v_html := v_html
-      || '<h3 style="margin:16px 0 6px;font-size:17px;color:#14532d;">'
-      || public.kos_email_plain(v_title) || ', ' || v_money || '</h3>'
-      || '<p style="margin:0 0 8px;">' || public.kos_email_plain(v_explainer) || '</p>';
-    if v_link is not null then
-      v_html := v_html
-        || '<p style="margin:8px 0 18px;"><a href="' || public.kos_html_text(v_link)
-        || '" style="' || v_btn_style || '">' || public.kos_email_plain(v_button) || '</a></p>';
-    else
-      v_html := v_html
-        || '<p style="margin:0 0 18px;">We don''t have that pay link ready yet. Please write to treasurer@kreweofshamrock.com before you pay, and please don''t send card numbers by email.</p>';
-    end if;
-  end loop;
-
   v_html := v_html
     || '<p>' || public.kos_joining_packet_fill(v_closing, v_name) || '</p>'
     || '<p>' || public.kos_joining_packet_fill(v_signoff, v_name) || '</p>';
@@ -481,7 +429,7 @@ $html$;
 revoke all on function public.kos_prospect_background_check_email_html(text, text, jsonb) from public, anon, authenticated;
 
 comment on function public.kos_prospect_background_check_email_html(text, text, jsonb) is
-  'Internal. Joining packet body. Paragraphs come from the draft template. The finish link, background check pay buttons, and dues notes and pay buttons are filled from the token, runtime flags, and kos_dues_catalog.';
+  'Internal. Joining packet body. Finish link and background check pay buttons stay. Dues pay buttons are not included. The dues link comes after the check passes.';
 
 create or replace function public.kos_prospect_background_check_email_html(
   p_first_name text,
@@ -628,7 +576,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'template', v_clean,
-    'message', 'Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.'
+    'message', 'Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically. This letter has no dues pay button.'
   );
 end;
 $save$;
@@ -714,7 +662,8 @@ begin
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
   v_html := public.kos_prospect_background_check_email_html(
     coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
-    v_url
+    v_url,
+    null::jsonb
   );
   v_subject := coalesce(nullif(btrim(public.kos_joining_packet_email_subject()), ''), v_subject);
 
@@ -753,7 +702,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'emailed', true,
-    'message', 'Full application sent. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver''s license number.'
+    'message', 'Full application sent. We emailed the background check fee ($50 individual or $75 couple) and a secure link to the full application. The email does not include a dues link, a Social Security number, or a driver''s license number.'
   );
 end;
 $send$;

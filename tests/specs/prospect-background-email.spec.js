@@ -45,8 +45,11 @@ test("prospect email sample shows an explainer before each pay link", async ({ p
   }
   expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
   expect(html).not.toContain("—");
+  expect(html).not.toContain("Pay Full Krewe dues");
+  expect(html).not.toContain("Pay Associate dues");
+  expect(html).not.toContain("zeffy.com/en-US/ticketing/krewe-of-shamrock-membership");
   await page.screenshot({
-    path: "/opt/cursor/artifacts/screenshots/prospect-background-check-email.png",
+    path: "/opt/cursor/artifacts/background-check-email.png",
     fullPage: true
   });
 });
@@ -104,6 +107,35 @@ test("joining packet template SQL keeps payment links out of the editable letter
   );
   expect(defaults).toContain("We're glad you're joining the Krewe");
   expect(defaults).toContain("We're so glad you're joining the Krewe of Shamrock");
+  expect(defaults).toContain("Membership dues come later");
+  expect(defaults).toContain("does not include a dues pay button");
   expect(defaults).not.toMatch(/https?:\/\//);
   expect(defaults).not.toContain("—");
+  expect(templateSql).not.toContain("Pay Full Krewe dues");
+
+  const seedSql = fs.readFileSync(
+    path.join(__dirname, "../../sql/kos_joining_packet_template_seed.sql"),
+    "utf8"
+  );
+  expect(seedSql).toContain("create table if not exists public.kos_joining_packet_template");
+  expect(seedSql).toContain("on conflict (id) do nothing");
+  expect(seedSql).toContain("kos_prospect_background_check_email_html(text, text, jsonb)");
+  expect(seedSql).toContain("null::jsonb");
+  expect(seedSql).toContain("Membership dues come later");
+  expect(seedSql).not.toContain("Pay Full Krewe dues");
+  expect(seedSql).not.toContain("update public.kos_runtime_flags");
+  expect(seedSql).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
+
+  const invoiceSql = fs.readFileSync(
+    path.join(__dirname, "../../sql/kos_membership_background_check_invoice.sql"),
+    "utf8"
+  );
+  const sendFn = invoiceSql.slice(
+    invoiceSql.indexOf("function public.send_membership_full_application"),
+    invoiceSql.indexOf("function public.submit_membership_full_application")
+  );
+  expect(sendFn).toContain("kos_prospect_background_check_email_html(text,text,jsonb)");
+  expect(sendFn).toContain("null::jsonb");
+  expect(sendFn).not.toContain("Pay Full Krewe dues");
+  expect(sendFn).toContain("does not include a dues link");
 });

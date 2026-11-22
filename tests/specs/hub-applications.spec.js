@@ -521,6 +521,10 @@ test.describe("Membership Applications", () => {
     await tool.locator("#hubPacketSave").click();
     await expect(tool.locator("#hubPacketFlash")).toContainText("Draft template saved");
     await expect(tool.locator("#hubPacketFlash")).toContainText("stay filled in automatically");
+    await tool.screenshot({
+      path: "/opt/cursor/artifacts/joining-packet-editor-saved.png",
+      animations: "disabled"
+    });
 
     await tool.locator("#hubPacketClose").click();
     await expect(tool.locator("#hubEditJoiningPacket")).toBeVisible();
