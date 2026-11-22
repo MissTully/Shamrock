@@ -13,20 +13,12 @@ const SQL = fs.readFileSync(
 const LINKS = [
   ["Finish your application", "membership-full-application.html?token="],
   ["Pay the individual fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"],
-  ["Pay the couple fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"],
-  ["Pay Full Krewe dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"],
-  ["Pay Associate dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership"],
-  ["Pay Auxiliary dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership"],
-  ["Pay leave of absence dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2"]
+  ["Pay the couple fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"]
 ];
 
 const EXPLAINERS = [
   ["Just you on the application.", "Pay the individual fee"],
-  ["The two of you, applying together.", "Pay the couple fee"],
-  ["You're a voting member, and you march in all the parades", "Pay Full Krewe dues"],
-  ["There's no vote, and you don't take on the 12/12 volunteer commitment.", "Pay Associate dues"],
-  ["The fee already includes the background check and the membership portion.", "Pay Auxiliary dues"],
-  ["That's leave of absence.", "Pay leave of absence dues"]
+  ["The two of you, applying together.", "Pay the couple fee"]
 ];
 
 test("prospect email sample shows an explainer before each pay link", async ({ page }) => {
@@ -35,7 +27,9 @@ test("prospect email sample shows an explainer before each pay link", async ({ p
   await expect(body).toContainText("We're so glad you're joining the Krewe of Shamrock");
   await expect(body).toContainText("Let's finish your application");
   await expect(body).toContainText("Your background check fee");
-  await expect(body).toContainText("Pick the membership that fits");
+  await expect(body).toContainText("Membership dues come later");
+  await expect(body).toContainText("Your dues link comes after the background check passes");
+  await expect(body).not.toContainText("Pay Full Krewe dues");
   await expect(body).toContainText("treasurer@kreweofshamrock.com");
   await expect(body).toContainText("Welcome to the Krewe. We can't wait to have you with us.");
   await expect(body).not.toContainText("If you didn't ask to join");

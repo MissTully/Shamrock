@@ -123,6 +123,35 @@ const loadDuesCatalogUrls = async (
   }
 };
 
+/** individual/couple campaigns from kos_runtime_flags.background_check_payments. */
+const loadBackgroundCampaigns = async (
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<JsonObject> => {
+  try {
+    const response = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/kos_runtime_flags?select=value&key=eq.background_check_payments`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          accept: "application/json",
+        },
+      },
+    );
+    if (!response.ok) {
+      console.error("background_check_payments read failed", response.status);
+      return {};
+    }
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows.length) return {};
+    return asObject(asObject(rows[0]).value);
+  } catch (err) {
+    console.error("background_check_payments read error", err);
+    return {};
+  }
+};
+
 /** Prefer real contact objects; Zeffy often sets payment.contact to a UUID string. */
 const pickContact = (payment: JsonObject): JsonObject => {
   const buyer = asObject(payment.buyer);
@@ -339,6 +368,7 @@ Deno.serve(async (req: Request) => {
   const membershipYear = membershipYearForPayment(metadata, payment, new Date());
   const catalogUrls = await loadDuesCatalogUrls(supabaseUrl, serviceRoleKey);
   const duesUrls = catalogUrls.length ? catalogUrls : SEEDED_DUES_CATALOG_URLS;
+  const backgroundCampaigns = await loadBackgroundCampaigns(supabaseUrl, serviceRoleKey);
   const ticketHolders = collectTicketHolders(payment);
 
   const payload: JsonObject = {
@@ -373,7 +403,7 @@ Deno.serve(async (req: Request) => {
       metadata.campaign_url,
     ),
     description,
-    product_kind: inferKind(metadata, payment, duesUrls),
+    product_kind: inferKind(metadata, payment, duesUrls, backgroundCampaigns),
     ticket_holders: ticketHolders,
     membership_year: membershipYear,
     // An id-only webhook has no items or phone. Keep the API payment on data
@@ -409,6 +439,48 @@ Deno.serve(async (req: Request) => {
     recordedInner.id,
     recordedInner.payment_id,
   );
+  let backgroundCheck: JsonObject | null = null;
+  if (payload.product_kind === "background_check") {
+    try {
+      const applyResponse = await fetch(
+        `${supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/kos_apply_background_check_payment`,
+        {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            authorization: `Bearer ${serviceRoleKey}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            p: {
+              payment_id: paymentRowId,
+              provider: payload.provider,
+              provider_payment_id: paymentId,
+              provider_event_id: providerEventId,
+              amount_cents: amountCents,
+              payer_email: payerEmail,
+              payer_name: payerName,
+              description,
+              campaign_url: payload.campaign_url,
+              notify: true,
+            },
+          }),
+        },
+      );
+      if (applyResponse.ok) {
+        backgroundCheck = asObject(await applyResponse.json().catch(() => ({})));
+      } else {
+        const detail = await applyResponse.text().catch(() => "");
+        console.error("kos_apply_background_check_payment failed", applyResponse.status, detail);
+        if (applyResponse.status !== 404) {
+          return json({ error: "Unable to link background check payment" }, 502);
+        }
+      }
+    } catch (err) {
+      console.error("kos_apply_background_check_payment error", err);
+      return json({ error: "Unable to link background check payment" }, 502);
+    }
+  }
   const guestToken = extractGuestToken(
     metadata.kos_guest,
     metadata.token,
@@ -452,5 +524,5 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error("kos_apply_parade_guest_payment error", err);
   }
-  return json({ received: true, recorded, guest_match: guestMatch });
+  return json({ received: true, recorded, guest_match: guestMatch, background_check: backgroundCheck });
 });
