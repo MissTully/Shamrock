@@ -20,6 +20,7 @@
     ".hub-report-table td{padding:7px 10px;border-top:1px solid rgba(168,128,28,.18);vertical-align:top;}",
     ".hub-report-table tr:nth-child(even) td{background:#fffdf4;}",
     ".hub-report-msg{min-height:1.2em;color:var(--green-800);font-size:14px;margin:8px 0 0;}",
+    ".hub-report-msg.is-error{color:#8a1c12;font-weight:600;}",
     ".hub-report-section{margin-top:20px;padding-top:16px;border-top:1px dashed rgba(168,128,28,.4);}",
     ".hub-report-section h3{font-family:var(--display);color:var(--green-800);margin:0 0 4px;font-size:18px;}",
     ".hub-report-section .sub{font-size:13px;color:var(--muted);margin:0 0 8px;}",
@@ -177,22 +178,33 @@
     }
   }
 
+  function setReportMsg(el, text, isError) {
+    if (!el) return;
+    el.textContent = text || "";
+    if (isError) el.classList.add("is-error");
+    else el.classList.remove("is-error");
+  }
+
   async function runEventReport(client) {
     var key = (document.getElementById("hubReportEvent") || {}).value;
     var msg = document.getElementById("hubReportMsg");
     var out = document.getElementById("hubReportEventOut");
-    if (!key) { if (msg) msg.textContent = "Choose an event first."; return; }
-    if (msg) msg.textContent = "Running report…";
+    if (!key) {
+      setReportMsg(msg, "Pick an event first.", true);
+      if (out) out.innerHTML = '<p class="hub-report-msg is-error">Pick an event first.</p>';
+      return;
+    }
+    setReportMsg(msg, "Running report…", false);
     try {
       var res = await client.rpc("officer_event_report", { p_key: key });
       if (res.error) throw res.error;
       if (!res.data || res.data.ok === false) throw new Error((res.data && res.data.message) || "Report failed.");
       lastEventReport = res.data;
-      if (msg) msg.textContent = "";
+      setReportMsg(msg, "", false);
       renderEventReport(res.data);
     } catch (e) {
       if (out) out.innerHTML = "";
-      if (msg) msg.textContent = "Couldn't run the report: " + ((e && e.message) || e);
+      setReportMsg(msg, "Couldn't run the report: " + ((e && e.message) || e), true);
     }
   }
 
@@ -403,8 +415,15 @@
       '</div><p class="hub-report-msg" id="hubReportMoneyMsg" aria-live="polite"></p>' +
       '<div id="hubReportMoneyOut"></div></div>' + COMMITTEE_SECTION + '</div>';
     applyReportGroupAccess(card);
-    document.getElementById("hubReportRun").addEventListener("click", function () { runEventReport(client); });
-    document.getElementById("hubReportMoneyRun").addEventListener("click", function () { runMoneyReport(client); });
+    if (!card._kosReportClicks) {
+      card._kosReportClicks = true;
+      card.addEventListener("click", function (ev) {
+        var t = ev.target && ev.target.closest ? ev.target.closest("button") : ev.target;
+        if (!t || !card.contains(t)) return;
+        if (t.id === "hubReportRun") runEventReport(client);
+        else if (t.id === "hubReportMoneyRun") runMoneyReport(client);
+      });
+    }
     wireCommitteeSection(client);
     await loadOptions(client);
     if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
