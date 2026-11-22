@@ -134,6 +134,22 @@ test.describe("Renewals lapse and reactivation", () => {
       animations: "disabled"
     });
 
+    await card.locator("#kosRenInactive").click();
+    const inactive = card.locator("#kosRenInactivePreview");
+    await expect(inactive).toContainText("2");
+    await expect(inactive).toContainText("members would be marked inactive");
+    await expect(inactive).toContainText("They must submit a new application. No email is sent.");
+    await expect(inactive).toContainText("Jane Sample");
+    await expect(inactive).toContainText("jane.sample@example.com");
+    await expect(inactive).toContainText("Alex Example");
+    await expect(inactive).toContainText("alex.example@example.com");
+    await expect(inactive).not.toContainText("Robin Example");
+    await expect(inactive).toContainText("I have checked this list");
+    await inactive.screenshot({
+      path: path.join(V6, "10-mark-inactive-preview.png"),
+      animations: "disabled"
+    });
+
     await card.locator("[data-ren-id='mem-alex']").check();
     await card.locator("#kosRenReactivate").click();
     const letter = card.locator("#kosRenPreview");
@@ -210,6 +226,57 @@ test.describe("Member hub renew cards", () => {
     await expect(sheet.locator("[data-renew-level='auxiliary']")).toBeVisible();
     await sheet.locator(".kos-renew").screenshot({
       path: path.join(V6, "09-hub-pending-dues-renew.png"),
+      animations: "disabled"
+    });
+
+    await page.evaluate(() => {
+      window.__kosHubSetFeed({
+        profile: {
+          first_name: "Jane",
+          last_name: "Sample",
+          email: "jane.sample@example.com",
+          member_role: "member",
+          officer_title: "",
+          membership_status: "inactive"
+        },
+        paradeReady: { dues_paid: false, membership_status: "inactive", membership_level: "full" },
+        membershipStatus: "inactive"
+      });
+      window.kosRenew.open({
+        paid: false,
+        membership_status: "inactive",
+        membership_level: "full",
+        preview: true,
+        holdNavigation: true
+      });
+    });
+    await expect(sheet.locator("h2")).toHaveText("Your membership is inactive. To rejoin, submit a new membership application.");
+    await expect(sheet.locator("a[href='membership-application.html']")).toHaveText("Open the Join page");
+    await expect(sheet.locator("[data-renew-level]")).toHaveCount(0);
+    await sheet.locator(".kos-renew").screenshot({
+      path: path.join(V6, "11-hub-inactive-card.png"),
+      animations: "disabled"
+    });
+
+    await page.evaluate(() => {
+      window.__kosHubSetFeed({
+        profile: {
+          first_name: "Alex",
+          last_name: "Example",
+          email: "alex.example@example.com",
+          member_role: "officer",
+          officer_title: "Vice President",
+          membership_status: "active"
+        },
+        paradeReady: { dues_paid: false, membership_status: "active" },
+        membershipStatus: "active"
+      });
+      window.kosRenew.open({ preview: true, holdNavigation: true });
+    });
+    await expect(sheet.locator(".kos-renew")).toContainText("Elected officers (President, Vice President, Secretary, Treasurer) are exempt from dues under the bylaws.");
+    await expect(sheet.locator("[data-renew-level]")).toHaveCount(0);
+    await sheet.locator(".kos-renew").screenshot({
+      path: path.join(V6, "12-hub-renew-exempt-note.png"),
       animations: "disabled"
     });
     assertHealthy(expect, report, "hub renew cards");

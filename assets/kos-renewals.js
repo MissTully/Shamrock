@@ -106,6 +106,8 @@
     showLapse: false,
     lapseChecked: false,
     lapseCandidates: [],
+    showInactive: false,
+    inactiveChecked: false,
     exemptionsMissing: 0
   };
 
@@ -230,6 +232,30 @@
       '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenLapseConfirm">Mark delinquent</button></div>';
   }
 
+  function inactiveCandidates() {
+    return (state.members || []).filter(function (row) {
+      return row.membership_status === "lapsed" || row.membership_status === "pending-renewal";
+    });
+  }
+
+  function inactivePreviewHtml() {
+    var rows = inactiveCandidates();
+    var list = rows.length
+      ? "<ul class=\"kos-ren-lapse-list\">" + rows.map(function (row) {
+        return "<li><b>" + esc(fullName(row)) + "</b> · " + esc(levelName(row.membership_level)) +
+          (row.email ? " · " + esc(row.email) : "") + "</li>";
+      }).join("") + "</ul>"
+      : '<p class="kos-ren-note">No delinquent or pending dues members to mark inactive.</p>';
+    var noun = rows.length === 1 ? "member would be marked inactive." : "members would be marked inactive.";
+    return '<p class="kos-ren-count"><b>' + rows.length + '</b> ' + noun +
+      " They must submit a new application. No email is sent.</p>" +
+      list +
+      '<label class="kos-ren-confirm"><input type="checkbox" id="kosRenInactiveCheck"' +
+      (state.inactiveChecked ? " checked" : "") + " />" +
+      "<span>I have checked this list</span></label>" +
+      '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenInactiveConfirm">Mark inactive</button></div>';
+  }
+
   function lapseControls() {
     if (!state.lapseTools) return "";
     var when = formatLongDate(state.lapseOn);
@@ -293,6 +319,7 @@
       '<span>I have read this preview and the recipient count.</span></label>' +
       '<div class="kos-ren-actions"><button type="button" class="btn btn-primary" id="kosRenSend">' + sendLabel + "</button></div></div>" : "";
     var lapsePreview = state.showLapse ? '<div class="kos-ren-preview" id="kosRenLapsePreview">' + lapsePreviewHtml() + "</div>" : "";
+    var inactivePreview = state.showInactive ? '<div class="kos-ren-preview" id="kosRenInactivePreview">' + inactivePreviewHtml() + "</div>" : "";
     root.innerHTML = shell(
       '<p class="kos-ren-note">The ' + esc(state.label || "current") +
       ' season is June through May. This list is active, delinquent, and pending dues members with no paid dues row for that season. Elected officers are left off. Marking cash or check records the dues row and sets delinquent or pending dues members to active. No email goes out for that. Reminders use the officer email queue, and only after you confirm.</p>' +
@@ -322,6 +349,7 @@
       '<div class="kos-ren-list">' + list + '</div>' +
       preview +
       lapsePreview +
+      inactivePreview +
       '<p class="kos-ren-msg' + (state.msgKind === "err" ? " is-err" : "") + '" id="kosRenMsg" role="status">' +
       esc(state.msg) + '</p>'
     );
@@ -369,6 +397,8 @@
       state.showPreview = false;
       state.confirmed = false;
       state.showLapse = false;
+      state.showInactive = false;
+      state.inactiveChecked = false;
       paint(root);
     });
     var csv = root.querySelector("#kosRenCsv");
@@ -378,6 +408,7 @@
       state.mailMode = "reminder";
       state.showPreview = true;
       state.showLapse = false;
+      state.showInactive = false;
       state.msg = "";
       paint(root);
       var panel = root.querySelector("#kosRenPreview");
@@ -397,7 +428,11 @@
     var lapse = root.querySelector("#kosRenLapse");
     if (lapse) lapse.addEventListener("click", function () { openLapsePreview(root); });
     var inactiveBtn = root.querySelector("#kosRenInactive");
-    if (inactiveBtn) inactiveBtn.addEventListener("click", function () { markInactive(root, inactiveBtn); });
+    if (inactiveBtn) inactiveBtn.addEventListener("click", function () { openInactivePreview(root); });
+    var inactiveCheck = root.querySelector("#kosRenInactiveCheck");
+    if (inactiveCheck) inactiveCheck.addEventListener("change", function () { state.inactiveChecked = !!inactiveCheck.checked; });
+    var inactiveGo = root.querySelector("#kosRenInactiveConfirm");
+    if (inactiveGo) inactiveGo.addEventListener("click", function () { confirmInactive(root, inactiveGo); });
     var lapseCheck = root.querySelector("#kosRenLapseCheck");
     if (lapseCheck) lapseCheck.addEventListener("change", function () { state.lapseChecked = !!lapseCheck.checked; });
     var lapseGo = root.querySelector("#kosRenLapseConfirm");
@@ -499,6 +534,7 @@
     if (!state.canLapseToday) return;
     state.showLapse = true;
     state.showPreview = false;
+    state.showInactive = false;
     state.lapseChecked = false;
     state.msg = "";
     if (!state.previewOnly) {
@@ -575,20 +611,36 @@
     }
   }
 
-  async function markInactive(root, btn) {
-    var rows = state.members.filter(function (row) {
-      return row.membership_status === "lapsed" || row.membership_status === "pending-renewal";
-    });
+  function openInactivePreview(root) {
+    if (!state.canMarkInactive) return;
+    state.showInactive = true;
+    state.showLapse = false;
+    state.showPreview = false;
+    state.inactiveChecked = false;
+    state.msg = "";
+    paint(root);
+    var panel = root.querySelector("#kosRenInactivePreview");
+    if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: "nearest" });
+  }
+
+  async function confirmInactive(root, btn) {
+    var rows = inactiveCandidates();
     if (!rows.length) {
       state.msg = "No delinquent or pending dues members to mark inactive.";
       state.msgKind = "err";
       paint(root);
       return;
     }
-    var ask = "Mark " + rows.length + " members inactive? They must submit a new application. No email is sent.";
-    if (!state.previewOnly && !window.confirm(ask)) return;
+    if (!state.inactiveChecked) {
+      state.msg = "Check the box after you review the list.";
+      state.msgKind = "err";
+      paint(root);
+      return;
+    }
     if (state.previewOnly) {
       rows.forEach(function (row) { row.membership_status = "inactive"; });
+      state.showInactive = false;
+      state.inactiveChecked = false;
       state.msg = rows.length + " marked inactive. No email was sent.";
       state.msgKind = "";
       paint(root);
@@ -607,6 +659,8 @@
       if (data.ok === false) throw new Error(data.message || "Could not mark those members inactive.");
       state.msg = data.message || "Marked inactive. No email was sent.";
       state.msgKind = "";
+      state.showInactive = false;
+      state.inactiveChecked = false;
       await load(root);
     } catch (e) {
       state.msg = (e && e.message) || "Could not mark those members inactive.";
@@ -626,6 +680,7 @@
     state.mailMode = "reactivation";
     state.showPreview = true;
     state.showLapse = false;
+    state.showInactive = false;
     state.confirmed = false;
     state.msg = "";
     paint(root);
@@ -783,6 +838,8 @@
     state.editingLapse = !!payload.editingLapse;
     state.showLapse = !!payload.showLapse;
     state.lapseChecked = !!payload.lapseChecked;
+    state.showInactive = !!payload.showInactive;
+    state.inactiveChecked = !!payload.inactiveChecked;
     state.lapseCandidates = payload.lapseCandidates || payload.candidates || [];
     state.exemptionsMissing = Number(payload.exemptionsMissing != null ? payload.exemptionsMissing : payload.exemptions_missing) || 0;
   }
