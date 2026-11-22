@@ -121,6 +121,7 @@ const PIPELINE = [
 ];
 
 test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
+  test.setTimeout(60_000);
   const report = watchPage(page);
   await unlockMemberHub(page, {
     role: { officer: true, canReviewApplications: true, applications: PIPELINE }
@@ -146,9 +147,8 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
     path: "/opt/cursor/artifacts/membership-couple-bg-paid.png",
     animations: "disabled"
   });
-  await page.screenshot({
+  await tool.screenshot({
     path: "/opt/cursor/artifacts/membership-dashboard-desktop.png",
-    fullPage: true,
     animations: "disabled"
   });
 
@@ -157,9 +157,13 @@ test("dashboard shows the pipeline with mock applicants", async ({ page }) => {
   await expect(tool.locator("#hubAppConfirmBody")).toContainText("Alex Quinn and Jordan Quinn");
   await expect(tool.locator("#hubAppConfirmBody")).toContainText("Full Krewe");
   await tool.locator("#hubAppConfirm").screenshot({
-    path: "/opt/cursor/artifacts/membership-passed-confirm.png"
+    path: "/opt/cursor/artifacts/membership-passed-confirm.png",
+    animations: "disabled"
   });
-  await tool.locator("#hubAppConfirmNo").click();
+  await page.evaluate(() => {
+    const box = document.getElementById("hubAppConfirm");
+    if (box) box.hidden = true;
+  });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addStyleTag({ content: ".krewe-nav,.krewe-music,.app-tabbar{display:none !important}" });

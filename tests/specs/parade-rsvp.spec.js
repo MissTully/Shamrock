@@ -50,8 +50,7 @@ async function shot(page, locator, name) {
       document.querySelectorAll(sel).forEach((el) => { el.style.display = "none"; });
     });
   });
-  await locator.scrollIntoViewIfNeeded();
-  await locator.screenshot({ path: path.join(SHOTS, name) });
+  await locator.screenshot({ path: path.join(SHOTS, name), animations: "disabled" });
 }
 
 test("public parade card offers a quiet guest RSVP and keeps contact details off the page", async ({ page }) => {
