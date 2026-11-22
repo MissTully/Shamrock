@@ -2961,6 +2961,34 @@
         rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     }
     function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
+    function duesSeasonYear(){
+      if(window.kosDuesSeason && typeof window.kosDuesSeason.duesSeasonYear==="function"){
+        return window.kosDuesSeason.duesSeasonYear();
+      }
+      const fmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"numeric"});
+      const map={};
+      fmt.formatToParts(new Date()).forEach(p=>{ if(p.type!=="literal") map[p.type]=Number(p.value); });
+      return map.month>=6 ? map.year : map.year-1;
+    }
+    function nyDateISO(iso){
+      if(!iso) return "";
+      const d=new Date(iso);
+      if(isNaN(d)) return "";
+      return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+    }
+    function fmtDay(iso){
+      if(!iso) return "-";
+      const s=String(iso).slice(0,10);
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+        const [y,m,d]=s.split("-").map(Number);
+        return new Date(y,m-1,d).toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"});
+      }
+      return fmtDate(iso);
+    }
+    function isOpenRosterStatus(st){
+      const s=String(st||"");
+      return s!=="merged" && s!=="declined" && s!=="archived";
+    }
     let _isOfficer=null;
     async function isOfficer(){
       if(_isOfficer!==null) return _isOfficer;
@@ -2979,13 +3007,61 @@
       { id:"wristband_pickup", cat:"Parade Readiness", icon:"🎗️", title:"Wristband Pickup List", secure:true,
         desc:"Who is Parade Ready (dues + waiver + meeting), and exactly what everyone else is missing.",
         run: async()=>{
-          const { data, error } = await supabase.from("v_parade_ready").select("*").order("last_name",{ascending:true});
-          if(error) throw error;
-          const rows=data||[];
+          const season=duesSeasonYear();
+          const volunteerSeason=season+1;
+          const seasonStart=season+"-06-01";
+          const seasonEnd=(season+1)+"-06-01";
+          const memRes=await supabase.from("members")
+            .select("id,first_name,last_name,membership_status,membership_level,merged_into")
+            .is("merged_into",null)
+            .order("last_name",{ascending:true});
+          if(memRes.error) throw memRes.error;
+          const rows=(memRes.data||[]).filter(m=>isOpenRosterStatus(m.membership_status));
+          const [{data:dues,error:eDues},{data:waivers,error:eWav},{data:hours,error:eHrs},{data:meetings,error:eMt}]=await Promise.all([
+            supabase.from("dues_payments").select("member_id,paid").eq("membership_year",season).eq("paid",true),
+            supabase.from("waivers").select("member_id").eq("season_year",season),
+            supabase.from("volunteer_hours").select("member_id,hours,approved,is_demo").eq("season_year",volunteerSeason),
+            supabase.from("events").select("id,start_time,event_type,is_mandatory").eq("event_type","meeting").eq("is_mandatory",true)
+          ]);
+          if(eDues) throw eDues; if(eWav) throw eWav; if(eHrs) throw eHrs; if(eMt) throw eMt;
+          const meetingIds=(meetings||[]).filter(e=>{
+            const day=nyDateISO(e.start_time);
+            return day>=seasonStart && day<seasonEnd;
+          }).map(e=>e.id);
+          let signups=[];
+          if(meetingIds.length){
+            const sg=await supabase.from("event_signups").select("member_id,event_id,status").eq("status","attended").in("event_id",meetingIds);
+            if(sg.error) throw sg.error;
+            signups=sg.data||[];
+          }
+          const duesSet=new Set((dues||[]).map(r=>r.member_id));
+          const wavSet=new Set((waivers||[]).map(r=>r.member_id));
+          const meetSet=new Set((signups||[]).map(r=>r.member_id));
+          const hoursBy={};
+          (hours||[]).forEach(v=>{
+            if(v.is_demo) return;
+            const rec=hoursBy[v.member_id]||(hoursBy[v.member_id]={approved:0,logged:0});
+            const n=Number(v.hours||0);
+            rec.logged+=n;
+            if(v.approved) rec.approved+=n;
+          });
+          const decorated=rows.map(r=>{
+            const h=hoursBy[r.id]||{approved:0,logged:0};
+            return {
+              first_name:r.first_name,
+              last_name:r.last_name,
+              membership_status:r.membership_status,
+              dues_paid:duesSet.has(r.id),
+              waiver_signed:wavSet.has(r.id),
+              meeting_attended:meetSet.has(r.id),
+              hours_approved:h.approved,
+              volunteer_hours_approved:h.approved
+            };
+          });
           const isReady=r=>r.dues_paid&&r.waiver_signed&&r.meeting_attended;
-          const ready=rows.filter(isReady), not=rows.filter(r=>!isReady(r));
+          const ready=decorated.filter(isReady), not=decorated.filter(r=>!isReady(r));
           const mark=v=>v?"✅":"-";
-          return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
+          return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:decorated.length}])
             + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
             + rTable(["Name","Status","Volunteer hrs"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-", `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]))
             + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
@@ -3232,21 +3308,40 @@
           ]) + rTable(["Role","Count"], Object.keys(byRole).sort().map(k=>[k, byRole[k]]));
         }},
       { id:"officer_roster", cat:"Membership", icon:"🎖️", title:"Officer & Captain Roster",
-        desc:"Who holds leadership roles in the krewe (names only).",
+        desc:"Who holds leadership roles in the krewe, with membership status.",
         run: async()=>{
-          const { data, error } = await supabase.from("member_directory")
-            .select("first_name,last_name,member_role,membership_status").order("last_name",{ascending:true});
+          const { data, error } = await supabase.from("members")
+            .select("first_name,last_name,member_role,membership_status,merged_into")
+            .is("merged_into",null)
+            .order("last_name",{ascending:true});
           if(error) throw error;
-          const rows=(data||[]).filter(m=>["captain","officer"].includes((m.member_role||"").toLowerCase()));
+          const rows=(data||[]).filter(m=>isOpenRosterStatus(m.membership_status) && ["captain","officer"].includes((m.member_role||"").toLowerCase()));
           return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"-"]));
         }},
-      { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Year",
-        desc:"Count of members who joined since January 1.",
+      { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Season",
+        desc:"Members who joined this season (June through May), with contact details.",
+        secure:true,
         run: async()=>{
-          const { data, error } = await supabase.from("v_report_membership").select("new_this_year,total_members").single();
+          const season=duesSeasonYear();
+          const seasonStart=season+"-06-01";
+          const seasonEnd=(season+1)+"-06-01";
+          const seasonLbl=window.kosDuesSeason && typeof window.kosDuesSeason.seasonLabel==="function"
+            ? window.kosDuesSeason.seasonLabel(season)
+            : (season+"-"+String(season+1).slice(-2));
+          const { data, error } = await supabase.from("members")
+            .select("first_name,last_name,email,phone,join_date,membership_status,merged_into")
+            .is("merged_into",null)
+            .order("join_date",{ascending:false});
           if(error) throw error;
-          return rStats([{l:"Joined this year",v:data.new_this_year},{l:"Total members",v:data.total_members}]) +
-            `<p class="rpt-note">A full welcome list with contact details is available once secure member login is added.</p>`;
+          const roster=(data||[]).filter(m=>isOpenRosterStatus(m.membership_status));
+          const joined=roster.filter(m=>m.join_date && String(m.join_date).slice(0,10)>=seasonStart && String(m.join_date).slice(0,10)<seasonEnd);
+          if(!joined.length){
+            return rStats([{l:"Joined this season",v:0},{l:"Total members",v:roster.length}]) +
+              '<p class="empty">No members have a join date in the '+esc(seasonLbl)+' season (June through May) yet.</p>';
+          }
+          return rStats([{l:"Joined this season",v:joined.length},{l:"Total members",v:roster.length}]) +
+            rTable(["Name","Joined","Email","Phone"],
+              joined.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), fmtDay(m.join_date), m.email||"-", m.phone||"-"]));
         }},
       { id:"member_directory_full", cat:"Membership", icon:"📒", title:"Member Contact Directory", secure:true,
         desc:"Full roster with email and phone for each member.",
@@ -4867,7 +4962,7 @@
   <script src="assets/kos-event-studio.js?v=20261116listday1" defer></script>
   <script src="assets/kos-shop-studio.js?v=20261122stock2" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
-  <script src="assets/kos-reports.js?v=20261114roles1" defer></script>
+  <script src="assets/kos-reports.js?v=20261122reports1" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
   <script src="assets/kos-email-invoices.js?v=20261121renew1" defer></script>
   <script src="assets/kos-renewals.js?v=20261121renew1" defer></script>
