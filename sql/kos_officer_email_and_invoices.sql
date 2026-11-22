@@ -262,7 +262,7 @@ set search_path to 'public'
 as $$
 declare
   v_filter text := lower(coalesce(nullif(btrim(p_filter), ''), 'unpaid'));
-  v_year integer := coalesce(p_year, extract(year from current_date)::integer);
+  v_year integer := coalesce(p_year, public.kos_dues_season_year());
   v_q text := lower(btrim(coalesce(p_q, '')));
   v_limit integer := greatest(1, least(coalesce(p_limit, 80), 200));
 begin
@@ -352,7 +352,7 @@ security definer
 set search_path to 'public'
 as $$
 declare
-  v_year integer := coalesce(p_year, extract(year from current_date)::integer);
+  v_year integer := coalesce(p_year, public.kos_dues_season_year());
   v_type text := lower(coalesce(nullif(btrim(p_invoice_type), ''), 'dues_year'));
   v_amount numeric;
   v_note text := nullif(btrim(p_note), '');
