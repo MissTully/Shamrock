@@ -1556,8 +1556,16 @@ begin
                bg.amount_cents as background_check_amount_cents,
                bg.created_at as background_check_paid_at,
                coalesce(bg.couple, false) as background_check_couple,
-               (dues_pay.created_at is not null or coalesce(dues_row.paid, false)) as dues_paid,
-               coalesce(dues_pay.amount_cents, dues_row.amount_cents) as dues_amount_cents,
+               (coalesce(dues_row.paid, false) or dues_pay.created_at is not null) as dues_paid,
+               -- Per person from dues_payments ($375), not the shared Zeffy charge ($750).
+               coalesce(
+                 dues_row.amount_cents,
+                 case
+                   when dues_pay.shared and dues_pay.amount_cents is not null
+                     then dues_pay.amount_cents / 2
+                   else dues_pay.amount_cents
+                 end
+               ) as dues_amount_cents,
                coalesce(dues_pay.created_at, dues_row.paid_at) as dues_paid_at,
                coalesce(stage.created_at, m.updated_at, m.created_at) as stage_at,
                coalesce(journey.items, '[]'::jsonb) as journey
@@ -1591,7 +1599,12 @@ begin
            limit 1
         ) bg on true
         left join lateral (
-          select p.amount_cents, p.created_at
+          select p.amount_cents,
+                 p.created_at,
+                 (
+                   p.partner_member_id is not null
+                   or p.member_id is distinct from m.id
+                 ) as shared
             from public.payments p
            where p.product_kind = 'dues'
              and (
@@ -1605,11 +1618,18 @@ begin
         left join lateral (
           select round(d.amount * 100)::integer as amount_cents,
                  d.paid_date::timestamptz as paid_at,
-                 d.paid
+                 true as paid
             from public.dues_payments d
-           where d.member_id = m.id
-             and d.paid
-           order by d.membership_year desc
+           where d.paid
+             and (
+               d.member_id = m.id
+               or (
+                 m.partner_member_id is not null
+                 and d.member_id = m.partner_member_id
+               )
+             )
+           order by case when d.member_id = m.id then 0 else 1 end,
+                    d.membership_year desc
            limit 1
         ) dues_row on true
         left join lateral (

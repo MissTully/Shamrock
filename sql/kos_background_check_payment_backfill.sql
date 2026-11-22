@@ -12,18 +12,23 @@
 -- shows both of them as complete:
 --   Background check paid Oct 31, 2026, $75 couple, one payment linked to both
 --   Passed
---   Dues paid Nov 3, 2026, $375 each
+--   Dues paid from the existing Nov 3, 2026 Zeffy payment of $750
+--   (about 10:01 AM ET, payer Tim Birnley). That one row stays one row.
+--   Each partner's $375 is the dues_payments amount, not a second payment.
 --   Active
--- It does not change membership_status. It does not queue mail, and it does
--- not call the payment or invoice functions. The new applicant flow is only
--- for payments that arrive after this backfill.
+-- It does not change membership_status. It does not insert payment rows.
+-- It does not queue mail, and it does not call the payment or invoice
+-- functions. The new applicant flow is only for payments that arrive after
+-- this backfill.
 --
 -- Other payments still filed as other, whose text matches a background check
 -- campaign, are refiled and linked the same way: history only, no status
 -- change, no mail.
 
 -- ---------------------------------------------------------------------------
--- 1) The known couple payment and the two dues rows.
+-- 1) Background check payment, then the existing $750 dues payment.
+--    Do not insert dues rows into public.payments. A second pair of $375
+--    rows would count the same $750 again in revenue reports.
 -- ---------------------------------------------------------------------------
 update public.payments
    set product_kind = 'background_check',
@@ -49,40 +54,56 @@ update public.members
  where id = '6740f3b2-40ce-404d-9081-971d5f967752'
    and (partner_member_id is null or partner_member_id = '0faff37d-3794-47e6-a665-ae47f87a4e53');
 
-insert into public.payments (
-  id, provider, provider_event_id, provider_payment_id,
-  amount_cents, currency, status, payer_name, description,
-  product_kind, member_id, created_at, raw
-)
-values
-  (
-    'b3750001-1113-4113-8000-0faff37d4e53',
-    'backfill',
-    'backfill-dues-0faff37d-3794-47e6-a665-ae47f87a4e53',
-    'backfill-dues-0faff37d-3794-47e6-a665-ae47f87a4e53',
-    37500, 'usd', 'succeeded', 'Tim Birnley', 'Krewe of Shamrock Membership',
-    'dues', '0faff37d-3794-47e6-a665-ae47f87a4e53',
-    timestamptz '2026-11-03 15:00:00-05',
-    jsonb_build_object('backfill', true, 'do_not_email', true, 'background_check_chair_notified', 'skipped_backfill')
-  ),
-  (
-    'b3750002-1113-4113-8000-6740f3b29677',
-    'backfill',
-    'backfill-dues-6740f3b2-40ce-404d-9081-971d5f967752',
-    'backfill-dues-6740f3b2-40ce-404d-9081-971d5f967752',
-    37500, 'usd', 'succeeded', 'Susan Dreisbaugh', 'Krewe of Shamrock Membership',
-    'dues', '6740f3b2-40ce-404d-9081-971d5f967752',
-    timestamptz '2026-11-03 15:00:00-05',
-    jsonb_build_object('backfill', true, 'do_not_email', true, 'background_check_chair_notified', 'skipped_backfill')
-  )
-on conflict (provider_event_id) do update
-  set product_kind = 'dues',
-      amount_cents = 37500,
-      member_id = excluded.member_id,
-      created_at = excluded.created_at,
-      raw = excluded.raw;
+-- Drop synthetic dues rows if an earlier paste of this file created them.
+delete from public.payments
+ where provider = 'backfill'
+   and provider_event_id in (
+     'backfill-dues-0faff37d-3794-47e6-a665-ae47f87a4e53',
+     'backfill-dues-6740f3b2-40ce-404d-9081-971d5f967752'
+   );
+
+-- One existing Zeffy charge: $750 on Nov 3, 2026, about 10:01 AM ET, Tim Birnley.
+-- Keep its amount and its timestamp. File it as dues and link Susan on it.
+do $link_dues$
+declare
+  v_id uuid;
+  v_email text;
+begin
+  select lower(btrim(m.email)) into v_email
+    from public.members m
+   where m.id = '0faff37d-3794-47e6-a665-ae47f87a4e53';
+
+  select p.id into v_id
+    from public.payments p
+   where p.amount_cents = 75000
+     and p.id <> '8ebf108a-80c4-432a-9ce0-13ce7196d55c'
+     and (p.created_at at time zone 'America/New_York')::date = date '2026-11-03'
+     and (
+       p.member_id = '0faff37d-3794-47e6-a665-ae47f87a4e53'
+       or p.payer_name ilike '%tim birnley%'
+       or (v_email is not null and lower(btrim(coalesce(p.payer_email, ''))) = v_email)
+     )
+   order by abs(extract(epoch from (p.created_at - timestamptz '2026-11-03 10:01:00-05')))
+   limit 1;
+
+  if v_id is null then
+    raise exception 'Nov 3, 2026 $750 dues payment for Tim Birnley was not found. No payments row was inserted.';
+  end if;
+
+  update public.payments
+     set product_kind = 'dues',
+         member_id = '0faff37d-3794-47e6-a665-ae47f87a4e53',
+         partner_member_id = '6740f3b2-40ce-404d-9081-971d5f967752',
+         raw = coalesce(raw, '{}'::jsonb) || jsonb_build_object(
+           'do_not_email', true,
+           'background_check_chair_notified', 'skipped_backfill'
+         )
+   where id = v_id;
+end
+$link_dues$;
 
 -- Paid dues rows for the tracker. Direct table write. No invoice function.
+-- Each row is $375. The dashboard chip reads this amount, not the $750 charge.
 insert into public.dues_payments (
   member_id, membership_year, amount, due_date, paid, paid_date, payment_method,
   membership_level, standard_amount, notes

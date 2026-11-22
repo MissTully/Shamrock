@@ -51,6 +51,7 @@ test("dashboard SQL adds the kind, stops the early dues invoice, and alerts only
     /kos_queue_level_dues_invoice/
   );
   assert.match(dashboard, /Active members are never emailed/);
+  assert.match(dashboard, /coalesce\(\s*dues_row\.amount_cents/);
 });
 
 test("backfill completes the known couple without mail or a status change", () => {
@@ -59,9 +60,11 @@ test("backfill completes the known couple without mail or a status change", () =
   assert.match(backfill, /0faff37d-3794-47e6-a665-ae47f87a4e53/);
   assert.match(backfill, /6740f3b2-40ce-404d-9081-971d5f967752/);
   assert.match(backfill, /7500/);
-  assert.match(backfill, /37500/);
+  assert.match(backfill, /75000/);
   assert.match(backfill, /2026-10-31/);
-  assert.match(backfill, /2026-11-03/);
+  assert.match(backfill, /2026-11-03 10:01/);
+  assert.doesNotMatch(backfill, /insert into public\.payments/i);
+  assert.doesNotMatch(backfill, /37500/);
   assert.match(backfill, /background_check_paid/);
   assert.match(backfill, /dues_pending/);
   assert.match(backfill, /dues_paid/);
