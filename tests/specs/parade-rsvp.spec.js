@@ -501,3 +501,45 @@ test("My Krewe has no parade RSVP controls and the Parade section has them once"
   await preview(section, "03-hub-parades-mobile.png");
   assertHealthy(expect, report, "parade rsvp only on the parade section");
 });
+
+test("parade RSVP link opens the parade list after Carpool on a phone", async ({ page }) => {
+  const report = watchPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await unlockMemberHub(page);
+  await page.evaluate((santa) => {
+    window.__kosChairRequestFixture = [];
+    window.__kosHubSetFeed({
+      profile: {
+        first_name: "Sample",
+        last_name: "Member",
+        email: "sample.member@example.com",
+        member_id: "member-sample",
+        committee_interests: []
+      },
+      parades: [santa],
+      events: [santa]
+    });
+  }, hubSanta());
+
+  await page.locator('.app-tile[data-app-go="carpool"]').click();
+  await expect(page.locator("body")).toHaveClass(/app-focus/);
+  await expect(page.locator("#carpoolCard")).toBeVisible();
+  await expect(page.locator("#hubParadeSeasonCard")).toBeHidden();
+
+  await page.locator('[data-hub-tab="krewe"]').click();
+  await expect(page.locator("[data-hub-panel='krewe']")).toHaveClass(/hub-on/);
+  await page.locator("[data-hub-open-parade-rsvp]").click();
+
+  await expect(page.locator("[data-hub-panel='parade']")).toHaveClass(/hub-on/);
+  await expect(page.locator("body")).not.toHaveClass(/app-focus/);
+  await expect(page.locator("#appBackBar")).toBeHidden();
+  await expect(page.locator("#appPageTitle")).toHaveText("Parade");
+  await expect(page.locator("#hubParadeSeasonCard")).toBeVisible();
+  await expect(page.locator("#hubParadeSeasonDeskList .kos-pr-going")).toBeVisible();
+  await expect(page.locator("#hubParadeSeasonDeskList .kos-pr-pay")).toHaveText("Pay guest fees on Zeffy");
+
+  await page.locator('[data-hub-tab="krewe"]').click();
+  await expect(page.locator("[data-hub-panel='krewe']")).toHaveClass(/hub-on/);
+  await expect(page.locator("[data-hub-panel='parade']")).not.toHaveClass(/hub-on/);
+  assertHealthy(expect, report, "parade rsvp link clears carpool");
+});

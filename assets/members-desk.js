@@ -1268,9 +1268,11 @@
   }
 
   function openParadeRsvpSection() {
-    // showTab only flips the visible panel. The hub router would still think
-    // the member is on My Krewe, so the My Krewe tab would not switch back.
-    if (appNavApi && typeof appNavApi.openTab === "function") appNavApi.openTab("parade");
+    // Open the Parade tab at its root. showTab skips the hub router, so the
+    // My Krewe tab would not switch back. openTab restores a saved drill
+    // such as Carpool, and on a phone that drill hides the parade RSVP card.
+    if (appNavApi && typeof appNavApi.showParadeRoot === "function") appNavApi.showParadeRoot();
+    else if (appNavApi && typeof appNavApi.openTab === "function") appNavApi.openTab("parade");
     else showTab("parade", { skipScroll: true });
     var card = document.getElementById("hubParadeSeasonCard");
     if (card && typeof card.scrollIntoView === "function") {
