@@ -122,6 +122,7 @@ test("parades.html is a recruiting page with Join CTAs and no public march RSVP"
   expect(html).toContain("<b>Where:</b> Downtown Tampa</p>");
   expect(html).toContain("the parade where the Krewe of Shamrock was born in 1999");
   expect(html).toContain("Kilts and a sea of green.");
+  expect(html).toContain('href="membership-application.html?level=associate">Become an Associate member</a>');
   expect(html).not.toMatch(/born in 1999\.\s*Pipes/);
   for (const file of [
     "assets/flyers/santafest-2026.jpg",

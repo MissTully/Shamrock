@@ -314,6 +314,8 @@
     ".hub-app-search{display:block;margin:0 0 12px;}",
     ".hub-app-search span{display:block;font-size:15px;color:#3a3a2e;margin:0 0 4px;}",
     ".hub-app-search input{width:100%;max-width:420px;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(20,83,45,.35);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-level-label{display:block;margin:8px 0 4px;font-size:15px;color:#3a3a2e;}",
+    ".hub-level-select{display:block;width:100%;box-sizing:border-box;margin:0 0 8px;padding:8px;font:inherit;border:1px solid rgba(20,83,45,.35);border-radius:8px;background:#fff;}",
     ".hub-pipeline{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;}",
     ".hub-pipe-col{flex:1 0 280px;max-width:340px;background:#f6efdc;border:1px solid rgba(168,128,28,.55);border-radius:16px;}",
     ".hub-pipe-col summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;font-family:var(--display);color:#14532d;font-weight:700;font-size:16px;}",
@@ -4621,6 +4623,8 @@
     if (action === "id_revealed") return "Background-check number opened";
     if (action === "approve") return "Approved";
     if (action === "note") return "Note";
+    if (action === "level_set") return "Membership level";
+    if (action === "background_check_fee_included") return "Auxiliary fee included";
     return "Updated";
   }
 
@@ -4947,7 +4951,10 @@
     openOfficerTool("tool:hubApplications", false);
   }
 
-  function applicationFlashFor(action) {
+  function applicationFlashFor(action, from) {
+    if (action === "approve" && from === "pending-renewal") {
+      return "Renewed. They are active again and keep their current Member Hub login. No email was sent.";
+    }
     if (action === "approve") {
       return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership. The note includes the training video.";
     }
@@ -4973,6 +4980,125 @@
   }
 
   var lastDecisionStamp = { key: "", at: 0 };
+
+  function applicationLevelOpen(status) {
+    return status === "pending-new" || status === "prospect" || status === "background-check" || status === "bg_paid" || status === "bg_in_process";
+  }
+
+  function applicationFixtureRow(id) {
+    var found = null;
+    (applicationsFixture || []).forEach(function (row) {
+      if (row && String(row.id) === String(id)) found = row;
+    });
+    return found;
+  }
+
+  function rememberFixtureApplications() {
+    if (roleFixture) {
+      roleFixture.applications = applicationsFixture;
+      roleFixture.applicationRecent = state.applicationRecent;
+    }
+    state.applicationRows = applicationsFixture.slice();
+    syncApplicationFixtureCounts();
+  }
+
+  async function setApplicationLevel(client, id, level, sel) {
+    var allowed = { full: 1, associate: 1, auxiliary: 1, loa: 1 };
+    if (!allowed[level]) return;
+    if (applicationsFixture) {
+      var row = applicationFixtureRow(id);
+      if (!row || !applicationLevelOpen(row.membership_status)) {
+        renderApplicationsFromState();
+        return;
+      }
+      row.membership_level = level;
+      if (row.partner_member_id) {
+        var partner = applicationFixtureRow(row.partner_member_id);
+        if (partner && applicationLevelOpen(partner.membership_status)) partner.membership_level = level;
+      }
+      rememberFixtureApplications();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Could not save that membership level.");
+      return;
+    }
+    if (sel) sel.disabled = true;
+    try {
+      var res = await client.rpc("set_application_membership_level", {
+        p_member_id: id,
+        p_level: level
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not save that membership level.");
+      state.applicationFlash = payload.message || "Membership level saved.";
+    } catch (e) {
+      alert("Could not save that membership level: " + ((e && e.message) || e));
+    }
+    reloadApplications(client);
+  }
+
+  async function markAuxiliaryFeeIncluded(client, id, note, btn) {
+    var message = "Moved to Background check fee paid. Auxiliary dues ($200) include the background check fee. No email was sent.";
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      var row = applicationFixtureRow(id);
+      if (!row || row.membership_status !== "background-check" || String(row.membership_level || "").toLowerCase() !== "auxiliary") {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      var actor = fixtureActor();
+      var recent = state.applicationRecent || [];
+      row.membership_status = "bg_paid";
+      recent.unshift({
+        id: "act-aux-" + Date.now(),
+        member_id: row.id,
+        action: "background_check_fee_included",
+        note: "Auxiliary: background check fee included in the $200 dues.",
+        from_status: "background-check",
+        to_status: "bg_paid",
+        actor_name: actor.actor_name,
+        actor_email: actor.actor_email,
+        created_at: actor.created_at,
+        applicant: applicationPersonName(row)
+      });
+      if (row.partner_member_id) {
+        var partner = applicationFixtureRow(row.partner_member_id);
+        if (partner && partner.membership_status === "background-check") partner.membership_status = "bg_paid";
+      }
+      state.applicationRecent = recent.slice(0, 12);
+      rememberFixtureApplications();
+      state.applicationFlash = message;
+      renderHome();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Could not move that application.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc("kos_mark_background_fee_included", {
+        p_member_id: id,
+        p_note: note || null
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not move that application.");
+      state.applicationFlash = payload.message || message;
+    } catch (e) {
+      alert("Could not move that application: " + ((e && e.message) || e));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadApplications(client);
+  }
+
 
   function applicationRecordNoteHtml(row) {
     var text = row && row.record_note ? String(row.record_note).trim() : "";
@@ -5134,7 +5260,7 @@
       }
       state.applicationRows = applicationsFixture.slice();
       syncApplicationFixtureCounts();
-      state.applicationFlash = applicationFlashFor(action);
+      state.applicationFlash = applicationFlashFor(action, from);
       renderHome();
       renderApplicationsFromState();
       openOfficerTool("tool:hubApplications", false);
@@ -5265,6 +5391,7 @@
       + joiningPacketButton(JOINING_PACKET_SAMPLE_URL, "Finish your application")
       + "<p>" + joiningPacketPlain(draft.finish_after, name) + "</p>"
       + "<h2>" + joiningPacketPlain(draft.fee_heading, name) + "</h2>"
+      + "<p>You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.</p>"
       + "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>"
       + joiningPacketLevelHtml(locked.fees)
       + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
@@ -5558,10 +5685,20 @@
     return applicationEarlierStage(a, applicationStageKey(card.partner));
   }
 
+  function applicationAuxFeeIncluded(row) {
+    if (!row || String(row.membership_level || "").toLowerCase() !== "auxiliary") return false;
+    if (applicationBgPaid(row)) return false;
+    var status = row.membership_status;
+    return status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "active";
+  }
+
   function applicationBgChip(card) {
     var row = card.primary;
     var partner = card.partner;
     var paid = applicationBgPaid(row) || applicationBgPaid(partner);
+    if (!paid && (applicationAuxFeeIncluded(row) || applicationAuxFeeIncluded(partner))) {
+      return '<span class="hub-chip paid">Included with Auxiliary</span>';
+    }
     if (!paid) return '<span class="hub-chip wait">Not paid yet</span>';
     var src = applicationBgPaid(row) ? row : partner;
     var cents = src.background_check_amount_cents;
@@ -5628,10 +5765,46 @@
     if (stage === "bg_process") {
       return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Proceed with induction, send dues link</button>';
     }
-    if (stage === "induction" || stage === "renewal") {
+    if (stage === "induction") {
       return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (voted in at general meeting)</button>';
     }
+    if (stage === "renewal") {
+      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve renewal</button>';
+    }
     return "";
+  }
+
+  function applicationLevelChoices() {
+    return [
+      ["full", "Full Krewe, $375"],
+      ["associate", "Associate, $450"],
+      ["auxiliary", "Auxiliary, $200"],
+      ["loa", "Leave of absence, $100"]
+    ];
+  }
+
+  function applicationLevelStage(stage) {
+    return stage === "new" || stage === "prospect" || stage === "fee_pending" || stage === "bg_paid" || stage === "bg_process";
+  }
+
+  function applicationLevelSelectHtml(card, stage) {
+    if (!applicationLevelStage(stage)) return "";
+    var row = applicationActionRow(card, stage);
+    var level = String((row && row.membership_level) || "full").toLowerCase();
+    if (level !== "full" && level !== "associate" && level !== "auxiliary" && level !== "loa") level = "full";
+    var html = '<label class="hub-level-label" for="hubLevel-' + esc(row.id) + '">Membership level</label>' +
+      '<select class="hub-level-select" id="hubLevel-' + esc(row.id) + '" data-app-level="' + esc(row.id) + '">';
+    applicationLevelChoices().forEach(function (opt) {
+      html += '<option value="' + opt[0] + '"' + (opt[0] === level ? " selected" : "") + ">" + esc(opt[1]) + "</option>";
+    });
+    return html + "</select>";
+  }
+
+  function applicationAuxFeeButton(card, stage) {
+    if (stage !== "fee_pending") return "";
+    var row = applicationActionRow(card, stage);
+    if (String((row && row.membership_level) || "").toLowerCase() !== "auxiliary") return "";
+    return '<button type="button" class="btn" data-app-aux-fee="' + esc(row.id) + '">Auxiliary: fee included</button>';
   }
 
   function applicationSecondaryButtons(card, stage) {
@@ -5686,9 +5859,11 @@
         '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
         '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + actionId + '">Save note</button></div>';
     }
+    html += applicationLevelSelectHtml(card, stage);
     var primary = applicationPrimaryButton(card, stage);
+    var auxFee = applicationAuxFeeButton(card, stage);
     var secondary = applicationSecondaryButtons(card, stage);
-    if (primary || secondary) html += '<div class="hub-appr-btns">' + primary + secondary + "</div>";
+    if (primary || auxFee || secondary) html += '<div class="hub-appr-btns">' + primary + auxFee + secondary + "</div>";
     html += "</article>";
     return html;
   }
@@ -5712,16 +5887,60 @@
     return "375.00";
   }
 
+  function applicationDuesUrl(row) {
+    var level = String((row && row.membership_level) || "full").toLowerCase();
+    if (level === "associate") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership";
+    if (level === "auxiliary") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership";
+    if (level === "loa") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+    return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+  }
+
+  function applicationDuesBlock(person) {
+    var name = applicationPersonName(person);
+    var level = applicationLevelLabel(person) || "Full Krewe";
+    var amount = applicationDuesAmount(person);
+    if (applicationDuesPaid(person)) {
+      return "<p>" + esc(name || "Dues") + ": membership dues are already paid.</p>";
+    }
+    return "<p><strong>" + esc(level) + "</strong>"
+      + (name ? " for " + esc(name) : "")
+      + ": $" + esc(amount) + ". This is membership dues, not the background check fee.</p>"
+      + '<p><a href="' + esc(applicationDuesUrl(person)) + '">Pay dues on Zeffy</a></p>';
+  }
+
+  function applicationInductionPeople(row) {
+    var people = [row];
+    var partner = applicationFindPartner(row, state.applicationRows || []);
+    if (partner && String(partner.id) !== String(row.id)) people.push(partner);
+    return people;
+  }
+
+  function applicationUnpaidDuesNames(row) {
+    var names = [];
+    applicationInductionPeople(row).forEach(function (person) {
+      if (!applicationDuesPaid(person)) names.push(applicationPersonName(person) || "This applicant");
+    });
+    return names.join(" and ");
+  }
+
   function applicationInductionPreview(row, whenText, place) {
-    var level = applicationLevelLabel(row) || "Full Krewe";
-    var amount = applicationDuesAmount(row);
-    var paid = applicationDuesPaid(row);
     var when = whenText || "Date and time go here";
     var where = place || "Place goes here";
-    var dues = paid
-      ? "<p>Membership dues are already paid.</p>"
-      : "<p><strong>" + esc(level) + "</strong>: $" + esc(amount) + ". This is membership dues, not the background check fee.</p>"
-        + '<p><a href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership">Pay dues on Zeffy</a></p>';
+    var people = applicationInductionPeople(row);
+    var dues = "";
+    var urls = {};
+    var shared = false;
+    people.forEach(function (person) {
+      if (!applicationDuesPaid(person)) {
+        var url = applicationDuesUrl(person);
+        if (urls[url]) shared = true;
+        urls[url] = true;
+      }
+      dues += applicationDuesBlock(person);
+    });
+    if (shared) {
+      dues += "<p>On Zeffy, add one ticket for each person and put each person's name and email on their own ticket.</p>";
+    }
     return "<p>Dear " + esc((row && row.first_name) || "friend") + ",</p>"
       + "<p>Your background check is complete. We would like to welcome you in person.</p>"
       + "<p>You are invited to your in-person induction at our next membership meeting.</p>"
@@ -5901,11 +6120,18 @@
         var bodyText = document.getElementById("hubAppConfirmBody");
         var fields = document.getElementById("hubInductionFields");
         var yes = document.getElementById("hubAppConfirmYes");
-        if (title) title.textContent = "Approve membership (voted in at general meeting)";
-        if (bodyText) bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video.";
+        var renewal = row.membership_status === "pending-renewal";
+        var unpaid = renewal ? "" : applicationUnpaidDuesNames(row);
+        if (title) title.textContent = renewal ? "Approve renewal" : "Approve membership (voted in at general meeting)";
+        if (bodyText) {
+          bodyText.textContent = renewal
+            ? "Make " + (applicationPersonName(row) || "this member") + " active again? No email is sent. They keep their current Member Hub login."
+            : "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video."
+              + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve after the vote." : "");
+        }
         if (fields) fields.hidden = true;
         if (yes) {
-          yes.textContent = "Approve membership";
+          yes.textContent = renewal ? "Approve renewal" : "Approve membership";
           yes.disabled = false;
         }
         confirmBox.dataset.mode = "approve";
@@ -5957,6 +6183,20 @@
         var id = btn.getAttribute("data-app-start");
         if (!confirm("Start the background check? The card moves to Background check in process. Copy the driver's license and Social Security number from the card into the background check site. No email is sent.")) return;
         decideApplication(window.__kosSb || null, "start_background_check", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-level]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        setApplicationLevel(window.__kosSb || null, sel.getAttribute("data-app-level"), sel.value, sel);
+      });
+    });
+    body.querySelectorAll("[data-app-aux-fee]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-aux-fee");
+        var row = applicationRowById(id);
+        var name = applicationPersonName(row) || "this applicant";
+        if (!confirm("Auxiliary dues ($200) include the background check fee. Move " + name + " to Background check fee paid without a fee payment? No email is sent.")) return;
+        markAuxiliaryFeeIncluded(window.__kosSb || null, id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
