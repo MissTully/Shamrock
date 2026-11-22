@@ -4642,6 +4642,10 @@
 
   function applicationPayDate(iso) {
     if (!iso) return "";
+    // dues_payments.paid_date is a calendar date. The list sends it as midnight
+    // UTC, which is the evening before in New York. Show that calendar day.
+    var dateOnly = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]00:00:00(?:\.0+)?(?:Z|[+-]00(?::?00)?)?)?$/.exec(String(iso));
+    if (dateOnly) iso = dateOnly[1] + "-" + dateOnly[2] + "-" + dateOnly[3] + "T12:00:00-05:00";
     var d = new Date(iso);
     if (isNaN(d.getTime())) return "";
     var nowYear = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(new Date());
