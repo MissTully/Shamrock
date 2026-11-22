@@ -6458,6 +6458,16 @@
     return "Logged in the Hub";
   }
 
+  var hourNoteDrafts = {};
+
+  function rememberHourNoteDrafts(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll("textarea[data-hours-note]").forEach(function (el) {
+      var id = String(el.id || "").replace(/^hubHoursNote-/, "");
+      if (id) hourNoteDrafts[id] = el.value || "";
+    });
+  }
+
   function renderHourApprovalsHtml(rows) {
     if (!rows || !rows.length) return "";
     var html = '<h3 class="hub-appr-h">Volunteer hours</h3>';
@@ -6472,7 +6482,7 @@
         '<div class="muted">' + esc(bits.join(" · ")) + "</div>" +
         (q.notes ? '<div class="muted">' + esc(q.notes) + "</div>" : "") +
         '<label class="muted" style="display:block;margin-top:8px;" for="hubHoursNote-' + esc(q.id) + '">Optional note</label>' +
-        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision"></textarea>' +
+        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision">' + esc(hourNoteDrafts[String(q.id)] || "") + "</textarea>" +
         '</div><div class="hub-appr-btns">' +
         '<button type="button" class="btn btn-primary" data-hours-approve="' + esc(q.id) + '">Approve</button>' +
         '<button type="button" class="btn" data-hours-decline="' + esc(q.id) + '">Decline</button>' +
@@ -6622,6 +6632,7 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
+    rememberHourNoteDrafts(card);
     var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
       '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
