@@ -153,7 +153,7 @@ begin
 
   v_html :=
     '<p>Dear ' || public.kos_email_plain(v_name) || ',</p>'
-    || '<p>We''re so glad you''re joining the Krewe of Shamrock. We''re excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you''re ready.</p>'
+    || '<p>We''re so glad you''re joining the Krewe of Shamrock. We''re excited to have you. The rest of this note is simply how to finish joining, whenever you''re ready.</p>'
     || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Let''s finish your application</h2>'
     || '<p>When you have a quiet moment, open your private link and finish the full application. It asks for a driver''s license number and a Social Security number. We use those only for the background check, and we hold them confidentially.</p>';
 
