@@ -1,12 +1,20 @@
 -- kos_shop_inventory.sql
--- Shop stock counts. Apply this file in the Supabase SQL editor for project
--- oazwkwflgbthojvnclfc. Deploying the website does not run it.
--- Do not apply automatically. Safe to run more than once.
+-- Shop stock counts that mirror Zeffy. Apply this file in the Supabase
+-- SQL editor for project oazwkwflgbthojvnclfc. Deploying the website
+-- does not run it. Do not apply automatically. Safe to run more than once.
+--
+-- Zeffy is the source of truth and the hard cap (Total available under
+-- More options, or Manage inventory for variants). The documented Zeffy
+-- API and payment webhooks do not expose remaining quantity or sold-out
+-- state, so this file does not pull live Zeffy counts. The site count is
+-- a manual starting mirror plus automatic decrement when a paid store
+-- payment is recorded.
 --
 -- What this adds:
---   * shop_products.stock_on_hand integer, null meaning untracked.
+--   * shop_products.stock_on_hand integer, null meaning not mirrored yet.
 --     0 means sold out on the public shop page.
---   * Shop Studio (upsert_shop_product) can set and edit the count.
+--   * Shop Studio (upsert_shop_product) can set and edit the count, labeled
+--     Match Zeffy Total available, with a Sold out path that stores 0.
 --   * After a paid store payment is recorded, kos_apply_shop_stock_for_payment
 --     decrements stock for each line item whose name matches a tracked
 --     product. Idempotent per payment and product. Unmatched lines (for
@@ -19,10 +27,10 @@
 --   * Matching uses the same name match as shop order emails
 --     (product name, Zeffy campaign name, or slug). If a Zeffy ticket
 --     title does not match, adjust the count by hand in Shop Studio.
---   * The public shop shows Sold out and removes that card's link to
---     Zeffy. Zeffy itself does not cap quantity unless that campaign
---     ticket has a limit, so also set a ticket limit or remove a sold
---     out item in Zeffy if you need a hard cap.
+--   * The public shop shows Sold out and removes that card's link.
+--     Buyers can still purchase the item in the shared KOS Shop unless
+--     Tammy also sets Total available to the number already sold, or
+--     hides the item, in Zeffy.
 
 alter table public.shop_products
   add column if not exists stock_on_hand integer;
@@ -35,7 +43,7 @@ do $$ begin
 exception when others then null; end $$;
 
 comment on column public.shop_products.stock_on_hand is
-  'Units on hand. Null means stock is not tracked. 0 is sold out on the public shop.';
+  'Site mirror of Zeffy remaining count. Null means not mirrored yet. 0 is sold out on the public shop.';
 
 create table if not exists public.shop_stock_ledger (
   id uuid primary key default gen_random_uuid(),
@@ -88,10 +96,10 @@ begin
      begin
        v_stock:=(p->>'stock_on_hand')::integer;
      exception when others then
-       return jsonb_build_object('ok',false,'message','Stock on hand must be a whole number of zero or more, or left blank.');
+       return jsonb_build_object('ok',false,'message','Match Zeffy Total available must be a whole number of zero or more, or left blank.');
      end;
      if v_stock < 0 then
-       return jsonb_build_object('ok',false,'message','Stock on hand must be a whole number of zero or more, or left blank.');
+       return jsonb_build_object('ok',false,'message','Match Zeffy Total available must be a whole number of zero or more, or left blank.');
      end if;
    end if;
  end if;

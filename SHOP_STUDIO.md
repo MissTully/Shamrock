@@ -12,12 +12,14 @@ Coming soon items can show on the shop page without a link. Draft and awaiting-Z
 
 The treasurer sees completed shop sales through `zeffy-webhook`, which classifies the KOS Shop campaign as store and matches members by email. Missed orders can be recorded with `sql/kos_shop_backfill.sql` and the ready-to-run list in `sql/kos_shop_backfill_kos_shop_nov2026.sql`. Do not run those until the steps in the pull request report.
 
-## Stock on hand
+## Matching Zeffy inventory
 
-Officers and the merchandise editor can set a **Stock on hand** count on each product in Shop Studio. Leave it blank if you are not tracking that item. Enter 0 to show **Sold out** on the public shop and to turn off that card's link to Zeffy. When the count is 5 or less, the shop shows "Only N left."
+Zeffy is the source of truth and the hard cap. In the KOS Shop campaign, each item has **Total available** under More options, and items with sizes or colors have **Manage inventory**. Zeffy reduces that count on each sale and marks the item sold out.
 
-After a paid KOS Shop order is recorded by `zeffy-webhook`, the database decrements stock for each line item whose name matches a tracked product (the same name match as shop order emails). That happens once per payment. A Zeffy tip line is skipped. If a ticket title in Zeffy does not match the product name, campaign name, or slug, adjust the count by hand.
+The site count is a mirror, not a second cap. In Shop Studio, set **Match Zeffy Total available** to the same number you entered in Zeffy, or to the remaining count if sales already happened. Leave it blank if you are not mirroring that item yet. New paid KOS Shop orders recorded by `zeffy-webhook` then reduce the site count automatically (the same name match as shop order emails, once per payment). If you restock or change the Zeffy count, update the site field to the new remaining amount.
+
+Use the **Sold out** switch to set the site count to 0. That shows Sold out on the public shop and turns off that card's link. To stop sales in Zeffy too, set Total available to the number already sold, or hide the item. Otherwise buyers can still purchase it in the shared KOS Shop.
+
+The documented Zeffy API and payment webhooks do not expose remaining quantity or sold-out state, so the site cannot pull the live Zeffy count on a schedule. Campaign rates include a total capacity field (`seats`), not the remaining amount.
 
 Run `sql/kos_shop_inventory.sql` in the Supabase SQL editor before relying on these counts. Deploying the website does not run it. Do not re-insert historical shop payments after you set counts, or those rows will decrement stock.
-
-The website sold-out state does not stop a purchase inside Zeffy. Zeffy itself does not cap quantity unless that campaign ticket has a limit, so also set a ticket limit or remove a sold out item in Zeffy if you need a hard cap.
