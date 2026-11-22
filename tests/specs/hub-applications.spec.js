@@ -1,7 +1,12 @@
 // Membership Applications officer tool. Role fixtures drive the Hub offline
 // so this does not write to the live database.
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+
+const PREVIEW = path.join(__dirname, "../../docs/preview/membership-training-fixes");
+fs.mkdirSync(PREVIEW, { recursive: true });
 
 const APPLICATIONS = [
   {
@@ -633,7 +638,6 @@ test.describe("Membership Applications", () => {
 
   test("renewal approval uses its own button and sends no welcome flash", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     await unlockMemberHub(page, {
       role: {
         officer: true,
@@ -679,7 +683,7 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("#hubAppConfirmYes")).toHaveText("Approve renewal");
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await tool.locator("#hubAppConfirm").screenshot({
-      path: previewDir + "/01-renewal-approve-dialog.png",
+      path: path.join(PREVIEW, "01-renewal-approve-dialog.png"),
       animations: "disabled"
     });
     await tool.locator("#hubAppConfirmYes").click();
@@ -693,7 +697,6 @@ test.describe("Membership Applications", () => {
 
   test("induction approve warns when dues are unpaid and does not block", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     await unlockMemberHub(page, {
       role: {
         officer: true,
@@ -749,7 +752,7 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await tool.locator("#hubAppConfirm").screenshot({
-      path: previewDir + "/04-approve-unpaid-warning.png",
+      path: path.join(PREVIEW, "04-approve-unpaid-warning.png"),
       animations: "disabled"
     });
     await tool.locator("#hubAppConfirmNo").click();
@@ -762,7 +765,6 @@ test.describe("Membership Applications", () => {
 
   test("couple induction preview shows one dues block per person", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     await unlockMemberHub(page, {
       role: {
         officer: true,
@@ -815,7 +817,7 @@ test.describe("Membership Applications", () => {
     expect(html).toContain("On Zeffy, add one ticket for each person and put each person's name and email on their own ticket.");
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await tool.locator("#hubAppConfirm").screenshot({
-      path: previewDir + "/05-couple-induction-preview.png",
+      path: path.join(PREVIEW, "05-couple-induction-preview.png"),
       animations: "disabled"
     });
     assertHealthy(expect, report, "couple induction preview");
@@ -823,7 +825,6 @@ test.describe("Membership Applications", () => {
 
   test("membership level select is hidden from induction and prices the preview", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     await unlockMemberHub(page, {
       role: {
         officer: true,
@@ -881,7 +882,7 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("[data-app-id='app-nia'] [data-app-level]")).toHaveCount(0);
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await jane.screenshot({
-      path: previewDir + "/03-level-picker.png",
+      path: path.join(PREVIEW, "03-level-picker.png"),
       animations: "disabled"
     });
     await tool.locator("[data-app-id='app-john'] [data-app-level]").selectOption("associate");
@@ -895,7 +896,7 @@ test.describe("Membership Applications", () => {
     const phoneCard = tool.locator("[data-app-id='app-jane']");
     await expect(phoneCard.locator("[data-app-level]")).toBeVisible();
     await phoneCard.screenshot({
-      path: previewDir + "/03-level-picker-phone.png",
+      path: path.join(PREVIEW, "03-level-picker-phone.png"),
       animations: "disabled"
     });
     assertHealthy(expect, report, "membership level picker");
@@ -903,7 +904,6 @@ test.describe("Membership Applications", () => {
 
   test("auxiliary fee included is only on an auxiliary fee-pending card", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     let confirmMessage = "";
     page.on("dialog", (dialog) => {
       confirmMessage = dialog.message();
@@ -962,7 +962,7 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("[data-app-start='app-nia']")).toHaveText("Start background check");
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await jane.screenshot({
-      path: previewDir + "/06-auxiliary-fee-included.png",
+      path: path.join(PREVIEW, "06-auxiliary-fee-included.png"),
       animations: "disabled"
     });
     await jane.locator("[data-app-aux-fee]").click();
@@ -977,7 +977,6 @@ test.describe("Membership Applications", () => {
 
   test("joining packet preview shows the auxiliary background check line", async ({ page }) => {
     const report = watchPage(page);
-    const previewDir = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
     await unlockMemberHub(page, {
       role: {
         officer: true,
@@ -1003,7 +1002,7 @@ test.describe("Membership Applications", () => {
     await expect(preview).toContainText("Nia");
     await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
     await preview.screenshot({
-      path: previewDir + "/07-bg-email-auxiliary.png",
+      path: path.join(PREVIEW, "07-bg-email-auxiliary.png"),
       animations: "disabled"
     });
     assertHealthy(expect, report, "auxiliary background email preview");

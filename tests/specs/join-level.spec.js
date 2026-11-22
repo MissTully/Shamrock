@@ -1,9 +1,12 @@
 // Associate intent on the public Join form. The route is aborted, so nothing
 // is written to the live database. Fixture people and example.com only.
+const fs = require("fs");
+const path = require("path");
 const { test, expect } = require("@playwright/test");
 const { watchPage, assertHealthy } = require("./helpers");
 
-const PREVIEW = "/agent/repos/Shamrock/docs/preview/membership-training-fixes";
+const PREVIEW = path.join(__dirname, "../../docs/preview/membership-training-fixes");
+fs.mkdirSync(PREVIEW, { recursive: true });
 
 async function fillJane(page) {
   await page.fill("#firstName", "Jane");
@@ -28,13 +31,13 @@ test("associate join link shows the level line and can clear it", async ({ page 
   await expect(page.locator("#partnerFields")).toBeHidden();
   await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
   await page.locator(".form-card").screenshot({
-    path: PREVIEW + "/02-associate-join-line.png",
+    path: path.join(PREVIEW, "02-associate-join-line.png"),
     animations: "disabled"
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(line).toBeVisible();
   await page.locator(".form-card").screenshot({
-    path: PREVIEW + "/02-associate-join-line-phone.png",
+    path: path.join(PREVIEW, "02-associate-join-line-phone.png"),
     animations: "disabled"
   });
   await page.locator("#clearLevel").click();

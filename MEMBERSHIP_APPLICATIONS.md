@@ -6,7 +6,7 @@ The live journey is:
 
 1. Join. The public form is Single or Couple. `parades.html` can open it with `?level=associate`. Without that parameter, nothing about level is shown and the interest is Full membership.
 2. Interest email. `submit_membership_application` emails the Membership Chair and the President. An Associate interest adds "Interested in: Associate membership".
-3. Called, send background check email. That letter has the full-application link and the background check fee ($50 individual or $75 couple). It does not include a dues pay link. Auxiliary applicants also see that their $200 dues include the background check.
+3. Called, send background check email. That letter has the full-application link and the background check fee ($50 individual or $75 couple). It does not include a dues pay link. Auxiliary applicants are told their $200 dues include the background check, and that letter does not also show the $50 or $75 pay buttons.
 4. Fee paid (the Zeffy alert moves the row to Background check fee paid), or **Auxiliary: fee included** for an Auxiliary row still waiting on that fee. The Auxiliary button sends no email.
 5. Start background check and Copy IDs. Copy puts the driver's license or Social Security number on the clipboard. The card stays masked. No email is sent.
 6. Proceed with induction, send dues link. One dues block per person. A couple with the same Zeffy link is told to add one ticket per person.

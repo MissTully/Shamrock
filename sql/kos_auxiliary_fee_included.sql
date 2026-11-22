@@ -14,7 +14,8 @@
 -- Replaces public.kos_prospect_background_check_email_html(text, text, jsonb)
 -- and public.send_membership_full_application(uuid, text). When the template
 -- jsonb membership_level is auxiliary, the fee section says the $200 dues
--- include the background check. send_membership_full_application passes
+-- include the background check. That Auxiliary letter does not also show the
+-- $50 or $75 pay buttons. send_membership_full_application passes
 -- membership_level the same way it passes fee_type.
 --
 -- Rollback: drop function public.kos_mark_background_fee_included(uuid, text);
@@ -248,7 +249,7 @@ begin
     || public.kos_joining_packet_fill(v_fee_heading, v_name) || '</h2>';
   if v_member_level = 'auxiliary' then
     v_html := v_html || '<p>You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.</p>';
-  end if;
+  else
   v_html := v_html
     || '<p>' || public.kos_joining_packet_fill(v_fee_intro, v_name) || '</p>';
   if v_apply = 'dual' then
@@ -301,6 +302,7 @@ begin
         || '<p style="margin:0 0 18px;">We don''t have that pay link ready yet. Please write to treasurer@kreweofshamrock.com before you pay, and please don''t send card numbers by email.</p>';
     end if;
   end loop;
+  end if;
 
   v_html := v_html
     || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">'

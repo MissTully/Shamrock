@@ -10,7 +10,9 @@
 -- Replaces public.submit_membership_application with the same arguments as
 -- sql/kos_join_couple_interest.sql, plus a trailing p_membership_level text
 -- default null. Only 'associate' and 'full' are accepted. Null leaves the
--- stored level alone on an open row and stores full on a new row.
+-- stored level alone. A resubmit can set it only while the row is still
+-- before Induction pending, so a dues invoice already sent is not rewritten.
+-- A new row stores full when the level is null.
 -- When the level is associate, the chair and President interest email adds
 -- "Interested in: Associate membership".
 --
@@ -198,7 +200,12 @@ begin
         when v_open and v_fee = 'single' then null
         else partner_phone
       end,
-      membership_level = case when v_open and v_level is not null then v_level else membership_level end,
+      membership_level = case
+        when v_level is not null and v_status in (
+          'prospect', 'pending-new', 'background-check', 'bg_paid', 'bg_in_process'
+        ) then v_level
+        else membership_level
+      end,
       updated_at = now()
     where id = v_id;
   end if;
@@ -269,7 +276,7 @@ begin
              end,
              membership_level = case
                when v_level is not null and membership_status in (
-                 'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process', 'dues-pending'
+                 'pending-new', 'prospect', 'background-check', 'bg_paid', 'bg_in_process'
                ) then v_level
                else membership_level
              end,
