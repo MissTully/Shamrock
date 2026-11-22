@@ -114,6 +114,53 @@ export const urlMatchesCatalog = (linkBlob, duesCatalogUrls) => {
   });
 };
 
+/** Fold em dashes so a Zeffy title can match the stored campaign text. */
+const foldDashes = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * background_check_payments is a map of individual/couple, or a list of
+ * {url, description}. Matching uses the campaign URL slug and the description.
+ */
+export const backgroundCampaignEntries = (backgroundCampaigns) => {
+  const root = Array.isArray(backgroundCampaigns)
+    ? backgroundCampaigns
+    : (backgroundCampaigns && typeof backgroundCampaigns === "object"
+      ? Object.values(backgroundCampaigns)
+      : []);
+  const out = [];
+  for (const item of root) {
+    if (typeof item === "string") {
+      out.push({ url: item, description: "" });
+      continue;
+    }
+    const obj = asObject(item);
+    out.push({
+      url: text(obj.url, obj.zeffy_url, obj.link) || "",
+      description: text(obj.description, obj.campaign, obj.title) || "",
+    });
+  }
+  return out;
+};
+
+export const matchesBackgroundCampaign = (description, linkBlob, backgroundCampaigns) => {
+  const desc = foldDashes(description);
+  const links = foldDashes(linkBlob);
+  const blob = `${desc} ${links}`.trim();
+  if (!blob) return false;
+  for (const entry of backgroundCampaignEntries(backgroundCampaigns)) {
+    const key = campaignKey(entry.url);
+    if (key && blob.includes(key)) return true;
+    const stored = foldDashes(entry.description);
+    if (stored.length >= 12 && desc.includes(stored)) return true;
+  }
+  return false;
+};
+
 const ticketNameOf = (item) =>
   text(
     item.name,
@@ -134,12 +181,16 @@ const ticketNameOf = (item) =>
  * because every membership form is a Zeffy ticketing form.
  *
  * duesCatalogUrls are the live kos_dues_catalog.zeffy_url values.
+ * backgroundCampaigns is the background_check_payments flag (individual and
+ * couple url + description). A match is product_kind background_check.
+ * Any other "background check" title is also background_check, so the
+ * membership category cannot file that fee as dues.
  */
-export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = []) => {
+export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = [], backgroundCampaigns = null) => {
   const meta = asObject(metadata);
   const pay = asObject(payment);
   const explicit = text(meta.kind, meta.product_kind, pay.product_kind)?.toLowerCase();
-  if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
+  if (explicit && ["store", "event", "dues", "donation", "raffle", "background_check", "other"].includes(explicit)) {
     return explicit;
   }
 
@@ -225,9 +276,16 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = []) => 
   // Shop / store before ticketing. The KOS Shop URL lives under /ticketing/.
   if (/(shop|store|merch)/.test(kindBlob)) return "store";
 
-  // The $75 background check is a ticketing form with category membership.
-  // Name wins over that category, or it would be filed as dues.
-  if (classifyBlob.includes("background check")) return "other";
+  // The background check fee is a ticketing form with category membership.
+  // Name and the two stored campaigns win over that category, or the fee
+  // would be filed as dues. Dues text that does not mention a background
+  // check still classifies as dues below.
+  if (
+    matchesBackgroundCampaign(classifyBlob, linkBlob, backgroundCampaigns) ||
+    classifyBlob.includes("background check")
+  ) {
+    return "background_check";
+  }
 
   // Membership dues. Category, ticket or description text, then the catalog URL.
   // Full, Associate, Auxiliary, LOA, and Leave of absence are the dues products.

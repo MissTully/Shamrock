@@ -302,9 +302,42 @@
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
     ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-fee{margin:6px 0 0;font-size:15px;line-height:1.4;color:#3a3a2e;}",
-    ".hub-app-id{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0;}",
+    ".hub-app-id{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;margin:4px 0;}",
     ".hub-app-id > span{min-width:0;}",
     ".hub-app-copy{min-height:36px;padding:6px 14px;}",
+    ".hub-pipe-help{margin:0 0 12px;font-size:16px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-pipe-tiles{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;}",
+    ".hub-pipe-tile{min-width:108px;text-align:left;cursor:pointer;border:1px solid rgba(168,128,28,.55);background:#fffdf6;color:#14532d;border-radius:14px;padding:8px 12px;font-family:var(--display);}",
+    ".hub-pipe-tile:focus-visible,.hub-pipe-col summary:focus-visible,.hub-app-confirm button:focus-visible{outline:3px solid #14532d;outline-offset:2px;}",
+    ".hub-pipe-tile .n{display:block;font-size:22px;font-weight:700;color:#14532d;}",
+    ".hub-pipe-tile .l{display:block;font-size:13px;line-height:1.3;color:#3d2e00;}",
+    ".hub-app-search{display:block;margin:0 0 12px;}",
+    ".hub-app-search span{display:block;font-size:15px;color:#3a3a2e;margin:0 0 4px;}",
+    ".hub-app-search input{width:100%;max-width:420px;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(20,83,45,.35);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-pipeline{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;}",
+    ".hub-pipe-col{flex:1 0 280px;max-width:340px;background:#f6efdc;border:1px solid rgba(168,128,28,.55);border-radius:16px;}",
+    ".hub-pipe-col summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;font-family:var(--display);color:#14532d;font-weight:700;font-size:16px;}",
+    ".hub-pipe-col summary::-webkit-details-marker{display:none;}",
+    ".hub-pipe-count{background:#14532d;color:#f6efdc;border-radius:999px;min-width:1.6em;text-align:center;padding:2px 8px;font-size:14px;}",
+    ".hub-pipe-cards{display:flex;flex-direction:column;gap:10px;padding:0 10px 12px;}",
+    ".hub-pipe-card{background:#fffdf6;border:1px solid rgba(20,83,45,.2);border-radius:14px;padding:12px;}",
+    ".hub-pipe-card h3{margin:0 0 4px;font-size:18px;color:#14532d;font-family:var(--display);}",
+    ".hub-pipe-meta{margin:0;color:#3a3a2e;font-size:15px;line-height:1.4;}",
+    ".hub-pipe-phone a{font-size:22px;font-weight:700;color:#14532d;}",
+    ".hub-induction-preview{margin:10px 0;padding:12px;background:#f6efdc;border:1px solid #14532d;border-radius:8px;font-size:15px;line-height:1.45;}",
+    ".hub-induction-preview a{color:#14532d;font-weight:700;}",
+    ".hub-chip{display:inline-block;border-radius:999px;padding:4px 10px;font-size:14px;line-height:1.35;margin:6px 6px 0 0;}",
+    ".hub-chip.paid{background:#14532d;color:#f6efdc;}",
+    ".hub-chip.wait{background:#fff4c2;color:#3d2e00;border:1px solid #a67c00;}",
+    ".hub-journey-done{margin:8px 0 0;font-size:14px;line-height:1.4;color:#14532d;}",
+    ".hub-pipe-empty{margin:0;color:#3a3a2e;font-size:15px;}",
+    ".hub-app-confirm{position:relative;margin:0 0 12px;background:#fffdf6;border:2px solid #14532d;border-radius:16px;padding:16px;}",
+    ".hub-app-confirm[hidden]{display:none !important;}",
+    ".hub-app-confirm h3{margin:0 0 8px;color:#14532d;font-family:var(--display);}",
+    ".hub-app-confirm p{margin:0 0 12px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-app-confirm input{display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:10px;font-size:16px;border:1px solid #14532d;border-radius:8px;background:#fff;}",
+    "@media (min-width:801px){.hub-pipeline[data-layout='columns'] .hub-pipe-col > summary{pointer-events:none;}}",
+    "@media (max-width:800px){.hub-pipeline{display:block;overflow:visible;}.hub-pipe-col{max-width:none;margin:0 0 10px;}}",
     "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
     /* ---- Officer desk layout ---- */
     ".hub-officer-hero{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:18px;padding:18px 20px;margin:0 0 16px;}",
@@ -612,7 +645,7 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "board", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
   window.kosHubState = state;
   var feedLock = null;
   var applicationsFixture = null;
@@ -635,9 +668,9 @@
 
   function applicationsTileDesc() {
     var n = Number(state.applicationCount) || 0;
-    if (n === 1) return "1 new application. Call, then send the joining packet.";
+    if (n === 1) return "1 new application. Call, then send the joining packet. The dues link comes after the check passes.";
     if (n === 0) return "No new applications right now";
-    return n + " new applications. Call, then send the joining packet.";
+    return n + " new applications. Call, then send the joining packet. The dues link comes after the check passes.";
   }
 
   function volunteerInquiryCountOf(status) {
@@ -4389,6 +4422,7 @@
   var APP_BUCKET_STATUS = {
     "new": "pending-new",
     background: "background-check",
+    bg_paid: "bg_paid",
     dues: "dues-pending",
     approved: "active",
     declined: "declined",
@@ -4458,6 +4492,7 @@
     state.applicationCounts = {
       "new": countStatus(rows, "pending-new"),
       background: countStatus(rows, "background-check"),
+      bg_paid: countStatus(rows, "bg_paid"),
       dues: countStatus(rows, "dues-pending"),
       approved: countStatus(rows, "active"),
       declined: countStatus(rows, "declined"),
@@ -4477,7 +4512,9 @@
     var asked = state.applicationBucket || "new";
     if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "renewal" && asked !== "prospect" && data.bucket === "new") {
       state.applicationRows = [];
-      state.applicationLoadError = "This stage needs the database update in sql/kos_membership_application_pipeline.sql.";
+      state.applicationLoadError = asked === "board"
+        ? "This pipeline needs the database update in sql/kos_membership_pipeline_dashboard.sql."
+        : "This stage needs the database update in sql/kos_membership_application_pipeline.sql.";
       return;
     }
     state.applicationLoadError = "";
@@ -4535,16 +4572,26 @@
     return [street, line2].filter(Boolean).join(", ");
   }
 
+  function applicationPhoneHtml(phone) {
+    var raw = String(phone || "").trim();
+    if (!raw) return "";
+    var href = raw.replace(/[^0-9+]/g, "");
+    if (!href) return '<p class="hub-pipe-meta">Phone: ' + esc(raw) + "</p>";
+    return '<p class="hub-pipe-meta hub-pipe-phone">Phone: <a href="tel:' + esc(href) + '">' + esc(raw) + "</a></p>";
+  }
+
   function applicationStatusLabel(status) {
-    if (status === "pending-new") return "New";
-    if (status === "background-check") return "Background check in progress";
-    if (status === "dues-pending") return "Dues pending";
-    if (status === "active") return "Approved";
+    if (status === "pending-new") return "New interest";
+    if (status === "background-check") return "Background check fee pending";
+    if (status === "bg_paid") return "Background check fee paid";
+    if (status === "bg_in_process") return "Background check in process";
+    if (status === "dues-pending") return "Induction pending";
+    if (status === "active") return "Member";
     if (status === "declined") return "Declined";
-    if (status === "archived") return "Archived";
+    if (status === "archived") return "Withdrawn";
     if (status === "pending-renewal") return "Renewal";
     if (status === "prospect") return "Event prospect";
-    return "New";
+    return "New interest";
   }
 
   function applicationBucketRows() {
@@ -4563,8 +4610,11 @@
   function applicationActionWord(action) {
     if (action === "decline") return "Declined";
     if (action === "archive") return "Archived";
-    if (action === "background_check") return "Background check in progress";
-    if (action === "dues_pending") return "Dues pending";
+    if (action === "background_check") return "Called, background check email sent";
+    if (action === "background_check_paid") return "Background check fee paid";
+    if (action === "start_background_check") return "Background check in process";
+    if (action === "dues_pending") return "Induction pending";
+    if (action === "dues_paid") return "Dues paid";
     if (action === "next_step_sent") return "Next step sent";
     if (action === "full_application_sent") return "Full application sent";
     if (action === "full_application_received") return "Full application received";
@@ -4572,6 +4622,101 @@
     if (action === "approve") return "Approved";
     if (action === "note") return "Note";
     return "Updated";
+  }
+
+  function applicationBgPaid(row) {
+    return !!(row && (row.background_check_paid === true || row.background_check_paid === "true"));
+  }
+
+  function applicationDuesPaid(row) {
+    return !!(row && (row.dues_paid === true || row.dues_paid === "true"));
+  }
+
+  function applicationMoney(cents, fallback) {
+    var n = Number(cents);
+    if (!isFinite(n) || n <= 0) return fallback || "";
+    var dollars = Math.round(n) / 100;
+    if (Math.abs(dollars - Math.round(dollars)) < 0.001) return "$" + Math.round(dollars);
+    return "$" + dollars.toFixed(2);
+  }
+
+  function applicationPayDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var nowYear = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(new Date());
+    var thatYear = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(d);
+    var opts = { timeZone: "America/New_York", month: "short", day: "numeric" };
+    if (thatYear !== nowYear) opts.year = "numeric";
+    try { return new Intl.DateTimeFormat("en-US", opts).format(d); }
+    catch (e) { return ""; }
+  }
+
+  function applicationDaysInStage(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days < 1) return "Today";
+    if (days === 1) return "1 day in this stage";
+    return days + " days in this stage";
+  }
+
+  function applicationLevelLabel(row) {
+    var level = String((row && row.membership_level) || "").toLowerCase();
+    if (level === "full") return "Full Krewe";
+    if (level === "associate") return "Associate";
+    if (level === "auxiliary") return "Auxiliary";
+    if (level === "loa") return "Leave of absence";
+    return "";
+  }
+
+  function applicationPersonName(row) {
+    return ((row && row.first_name || "") + " " + (row && row.last_name || "")).trim();
+  }
+
+  function applicationFindPartner(row, rows) {
+    if (!row) return null;
+    var i;
+    if (row.partner_member_id) {
+      for (i = 0; i < rows.length; i++) {
+        if (rows[i] && String(rows[i].id) === String(row.partner_member_id)) return rows[i];
+      }
+    }
+    var want = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim().toLowerCase();
+    var fee = String(row.application_fee_type || "").toLowerCase();
+    if (!want || (fee !== "dual" && fee !== "couple" && !row.background_check_couple)) return null;
+    for (i = 0; i < rows.length; i++) {
+      if (!rows[i] || String(rows[i].id) === String(row.id)) continue;
+      if (applicationPersonName(rows[i]).toLowerCase() === want) return rows[i];
+    }
+    return null;
+  }
+
+  function applicationStageKey(row) {
+    var status = row && row.membership_status || "";
+    if (status === "pending-new") return "new";
+    if (status === "prospect") return "prospect";
+    if (status === "pending-renewal") return "renewal";
+    if (status === "declined") return "declined";
+    if (status === "archived") return "archived";
+    if (status === "active") return "active";
+    if (status === "dues-pending") return "induction";
+    if (status === "bg_in_process") return "bg_process";
+    if (status === "bg_paid" || (status === "background-check" && applicationBgPaid(row))) return "bg_paid";
+    if (status === "background-check") return "fee_pending";
+    return "new";
+  }
+
+  function applicationEarlierStage(a, b) {
+    var order = ["new", "fee_pending", "bg_paid", "bg_process", "induction", "active", "prospect", "renewal", "declined", "archived"];
+    var ia = order.indexOf(a);
+    var ib = order.indexOf(b);
+    if (ia < 0) return b;
+    if (ib < 0) return a;
+    if (a === "active") return b;
+    if (b === "active") return a;
+    return ia <= ib ? a : b;
   }
 
   function applicationFeeLine(row) {
@@ -4727,13 +4872,13 @@
     var got = !!(row.has_ssn || row.has_dl || row.has_partner_ssn || row.has_partner_dl
       || applicationTail4(row.ssn_last4) || applicationTail4(row.dl_last4)
       || applicationTail4(row.partner_ssn_last4) || applicationTail4(row.partner_dl_last4));
-    if (got) return "Full application received. Lists show the last 4 only.";
-    if (row.full_application_sent_at) return "Full application link sent. Waiting for the applicant.";
-    return "Full application: not sent yet.";
+    if (got) return "Full application submitted. Lists show the last 4 only.";
+    if (row.full_application_sent_at) return "Full application not submitted yet.";
+    return "Full application not submitted yet.";
   }
 
   function applicationOpenStatus(status) {
-    return status === "pending-new" || status === "background-check" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
+    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
   }
 
   function fixtureActor() {
@@ -4771,15 +4916,16 @@
 
   function applicationFlashFor(action) {
     if (action === "approve") {
-      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
+      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership. The note includes the training video.";
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check. Joining packet sent when prospect emails are on: a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
-    if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
+    if (action === "archive") return "Withdrawn. Their record stays on file and is off the new-application list. Nothing was deleted.";
+    if (action === "background_check") return "Called. We emailed the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number.";
+    if (action === "start_background_check") return "Background check in process. Copy the driver's license and Social Security number into the background check site. No email was sent.";
+    if (action === "dues_pending") return "Induction pending. We emailed the dues link, the meeting, and the invitation to share why they want to join. Membership dues are not the application fee.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
-    if (action === "note") return "Note saved on the record. Their stage is the same, and the joining packet was not sent.";
+    if (action === "note") return "Note saved on the record. Their stage is the same, and the background check email was not sent.";
     return "Saved.";
   }
 
@@ -4788,6 +4934,7 @@
     if (action === "decline") return "declined";
     if (action === "archive") return "archived";
     if (action === "background_check") return "background-check";
+    if (action === "start_background_check") return "bg_in_process";
     if (action === "dues_pending") return "dues-pending";
     return from;
   }
@@ -4884,7 +5031,7 @@
     reloadApplications(client);
   }
 
-  async function decideApplication(client, action, id, note, btn) {
+  async function decideApplication(client, action, id, note, btn, meeting) {
     // A status click rebuilds the card. A second click in the same moment
     // (a double tap, or the browser retrying after the first button is
     // replaced) would log an empty note on top of the real one.
@@ -4922,6 +5069,19 @@
         });
       }
       row.membership_status = applicationStatusFor(action, from);
+      if (row.partner_member_id && (action === "dues_pending" || action === "start_background_check" || action === "background_check" || action === "approve" || action === "decline" || action === "archive")) {
+        (applicationsFixture || []).forEach(function (other) {
+          if (!other || String(other.id) !== String(row.partner_member_id)) return;
+          var partnerFrom = other.membership_status;
+          var move = false;
+          if (action === "dues_pending" && (partnerFrom === "bg_in_process" || partnerFrom === "dues-pending")) move = true;
+          if (action === "start_background_check" && partnerFrom === "bg_paid") move = true;
+          if (action === "background_check" && (partnerFrom === "pending-new" || partnerFrom === "prospect")) move = true;
+          if (action === "approve" && partnerFrom === "dues-pending") move = true;
+          if ((action === "decline" || action === "archive") && partnerFrom !== "active") move = true;
+          if (move) other.membership_status = applicationStatusFor(action, partnerFrom);
+        });
+      }
       recent.unshift({
         id: "act-" + Date.now(),
         member_id: row.id,
@@ -4947,7 +5107,7 @@
       openOfficerTool("tool:hubApplications", false);
       return;
     }
-    var args = { p_member_id: id, p_action: action, p_note: note || null };
+    var args = { p_member_id: id, p_action: action, p_note: note || null, p_meeting: meeting || null };
     try {
       var res = await client.rpc("set_membership_application_status", args);
       var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
@@ -4980,8 +5140,8 @@
     { key: "finish_after", label: "After the application button", name: "note after the application button", hint: "Shown under the locked button. The button itself is added automatically.", max: 2000, kind: "area", lockBefore: "finish" },
     { key: "fee_heading", label: "Background check heading", name: "background check heading", hint: "Sits above the background check note.", max: 120, kind: "input" },
     { key: "fee_intro", label: "Background check note", name: "background check note", hint: "Shown above the locked background check pay buttons.", max: 2000, kind: "area" },
-    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the membership note.", max: 120, kind: "input", lockBefore: "fees" },
-    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Shown above the locked dues notes and pay buttons.", max: 2000, kind: "area" },
+    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the note that dues come later.", max: 120, kind: "input", lockBefore: "fees" },
+    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Tell them the dues link comes after the check passes. This letter has no dues pay button.", max: 2000, kind: "area" },
     { key: "closing", label: "Closing", name: "closing", hint: "The paragraph before the sign-off.", max: 2000, kind: "area", lockBefore: "dues" },
     { key: "signoff", label: "Sign-off", name: "sign-off", hint: "You can use two lines.", max: 240, kind: "area" }
   ];
@@ -4999,8 +5159,8 @@
       finish_after: "This email doesn't include those numbers. Your link expires in 21 days.",
       fee_heading: "Your background check fee",
       fee_intro: "This fee is separate from membership dues. Pick the one that matches your application.",
-      dues_heading: "Pick the membership that fits",
-      dues_intro: "Membership dues are separate from the background check fee. Read the short note for each level, then use that level's button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don't also pay the background check above. If you're not sure which level fits, write to treasurer@kreweofshamrock.com and we'll help before you pay.",
+      dues_heading: "Membership dues come later",
+      dues_intro: "Your dues link comes after the background check passes. This letter does not include a dues pay button. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.",
       closing: "Welcome to the Krewe. We can't wait to have you with us.",
       signoff: "Sláinte,\nKrewe of Shamrock"
     };
@@ -5076,7 +5236,6 @@
       + joiningPacketLevelHtml(locked.fees)
       + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
       + "<p>" + joiningPacketPlain(draft.dues_intro, name) + "</p>"
-      + joiningPacketLevelHtml(locked.dues)
       + "<p>" + joiningPacketPlain(draft.closing, name) + "</p>"
       + "<p>" + joiningPacketPlain(draft.signoff, name) + "</p>";
     return {
@@ -5094,7 +5253,7 @@
       return '<div class="hub-packet-lock" data-packet-locked="fees"><b>Locked: background check pay buttons</b><p>Individual and couple amounts, notes, and pay buttons come from the background check payment settings. They are not edited in this letter.</p></div>';
     }
     if (kind === "dues") {
-      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>Locked: dues notes and pay buttons</b><p>Each membership level note and pay button comes from the dues catalog. They are not edited in this letter.</p></div>';
+      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>No dues pay buttons in this letter</b><p>The dues link is sent after the background check passes. It is not edited here.</p></div>';
     }
     return "";
   }
@@ -5121,7 +5280,7 @@
       html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
     }
     html += "<h3>Edit joining packet email</h3>" +
-      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button, the background check pay buttons, and the dues notes and pay buttons stay locked so the links stay correct. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. This letter does not include a dues pay button. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
     JOINING_PACKET_FIELDS.forEach(function (field) {
       var value = draft[field.key] == null ? "" : String(draft[field.key]);
       if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
@@ -5253,7 +5412,7 @@
     if (applicationsFixture) {
       state.joiningPacketTemplate = joiningPacketClone(draft);
       state.joiningPacketDraft = joiningPacketClone(draft);
-      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically.";
       state.joiningPacketError = "";
       renderApplicationsFromState();
       return;
@@ -5273,7 +5432,7 @@
       state.joiningPacketDraft = joiningPacketClone(payload.template || draft);
       state.joiningPacketLoaded = true;
       state.joiningPacketDirty = false;
-      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically.";
       state.joiningPacketError = "";
       state.joiningPacketPreview.fingerprint = JSON.stringify(state.joiningPacketDraft);
     } catch (e) {
@@ -5300,9 +5459,10 @@
     var labels = [
       "1. Interest",
       "2. Call",
-      "3. Joining packet",
-      "4. Check and dues",
-      "5. Approve"
+      "3. Background check fee",
+      "4. Check in process",
+      "5. Induction",
+      "6. Member"
     ];
     var html = '<ol class="hub-app-journey" aria-label="Member journey for the Membership Chair">';
     labels.forEach(function (label, i) {
@@ -5315,52 +5475,253 @@
     return html + "</ol>";
   }
 
-  function applicationActionButtons(row) {
-    var id = esc(row.id);
-    var status = row.membership_status || "";
-    var primary = "";
-    var secondary = "";
-    var other = "";
-    if (status === "pending-new" || status === "prospect") {
-      primary = '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-      other =
-        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
-        '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>' +
-        '<button type="button" class="btn" data-app-approve="' + id + '">Approve</button>' +
-        "</div></details>";
-    } else if (status === "background-check") {
-      primary = '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Move to dues pending</button>';
-      secondary =
-        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-    } else if (status === "dues-pending") {
-      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-      other =
-        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
-        '<button type="button" class="btn" data-app-bg="' + id + '">Send joining packet again</button>' +
-        "</div></details>";
-    } else if (status === "pending-renewal") {
-      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-    } else {
-      primary =
-        (status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>') +
-        (status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
-        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+  var PIPELINE_STAGES = [
+    { key: "new", title: "New interest", hint: "Call, then send the background check email." },
+    { key: "fee_pending", title: "Background check fee pending", hint: "Waiting on the fee. Shows whether the full application is submitted." },
+    { key: "bg_paid", title: "Background check fee paid", hint: "Start the check when you are ready to paste the ID." },
+    { key: "bg_process", title: "Background check in process", hint: "When the check is clean, send the induction email." },
+    { key: "induction", title: "Induction pending", hint: "Dues link is out. Approve after the general meeting vote." },
+    { key: "active", title: "Members (complete)", hint: "Voted in." }
+  ];
+
+  function applicationRowsForView() {
+    var bucket = state.applicationBucket || "board";
+    var rows = state.applicationRows || [];
+    if (bucket === "board") {
+      return rows.filter(function (r) {
+        var s = r && r.membership_status;
+        return s === "pending-new" || s === "background-check" || s === "bg_paid" || s === "bg_in_process" || s === "dues-pending" || s === "active";
+      });
     }
-    return '<div class="hub-appr-btns">' + primary + secondary + "</div>" + other;
+    var want = APP_BUCKET_STATUS[bucket];
+    return rows.filter(function (r) { return r && r.membership_status === want; });
+  }
+
+  function applicationCards(rows) {
+    var used = {};
+    var cards = [];
+    rows.forEach(function (row) {
+      if (!row || used[String(row.id)]) return;
+      var partner = applicationFindPartner(row, rows);
+      if (partner && String(partner.id) !== String(row.id)) {
+        var rowTime = new Date(row.created_at || 0).getTime();
+        var partnerTime = new Date(partner.created_at || 0).getTime();
+        var primary = rowTime <= partnerTime ? row : partner;
+        var other = primary === row ? partner : row;
+        used[String(primary.id)] = true;
+        used[String(other.id)] = true;
+        cards.push({ primary: primary, partner: other });
+      } else {
+        used[String(row.id)] = true;
+        cards.push({ primary: row, partner: null });
+      }
+    });
+    return cards;
+  }
+
+  function applicationCardStage(card) {
+    var a = applicationStageKey(card.primary);
+    if (!card.partner) return a;
+    return applicationEarlierStage(a, applicationStageKey(card.partner));
+  }
+
+  function applicationBgChip(card) {
+    var row = card.primary;
+    var partner = card.partner;
+    var paid = applicationBgPaid(row) || applicationBgPaid(partner);
+    if (!paid) return '<span class="hub-chip wait">Not paid yet</span>';
+    var src = applicationBgPaid(row) ? row : partner;
+    var cents = src.background_check_amount_cents;
+    var couple = !!(src.background_check_couple || String(row.application_fee_type || "").toLowerCase() === "dual" || String(row.application_fee_type || "").toLowerCase() === "couple" || Number(cents) >= 7000);
+    var amount = applicationMoney(cents, couple ? "$75" : "$50");
+    var when = applicationPayDate(src.background_check_paid_at);
+    return '<span class="hub-chip paid">' + esc("Background check paid " + amount + " " + (couple ? "couple" : "individual") + (when ? ", " + when : "")) + "</span>";
+  }
+
+  function applicationDuesChip(card) {
+    var row = card.primary;
+    var partner = card.partner;
+    var aPaid = applicationDuesPaid(row);
+    var bPaid = partner ? applicationDuesPaid(partner) : true;
+    if (!aPaid || !bPaid) return '<span class="hub-chip wait">Dues not paid</span>';
+    var amount = applicationMoney(row.dues_amount_cents, "");
+    var when = applicationPayDate(row.dues_paid_at || (partner && partner.dues_paid_at));
+    var text;
+    if (partner && amount && applicationMoney(partner.dues_amount_cents, "") === amount) {
+      text = "Dues paid " + amount + " each" + (when ? " on " + when : "");
+    } else if (partner && amount) {
+      text = "Dues paid " + amount + " and " + (applicationMoney(partner.dues_amount_cents, "dues") || "dues") + (when ? " on " + when : "");
+    } else {
+      text = "Dues paid" + (amount ? " " + amount : "") + (when ? " on " + when : "");
+    }
+    return '<span class="hub-chip paid">' + esc(text) + "</span>";
+  }
+
+  function applicationJourneyLine(card) {
+    var row = card.primary;
+    if (applicationStageKey(row) !== "active" && (!card.partner || applicationStageKey(card.partner) !== "active")) {
+      if (applicationCardStage(card) !== "active") return "";
+    }
+    if (applicationCardStage(card) === "active" && (applicationBgPaid(row) || applicationBgPaid(card.partner)) && applicationDuesPaid(row) && (!card.partner || applicationDuesPaid(card.partner))) {
+      return '<p class="hub-journey-done">Journey complete: interest, call, background check fee, check in process, induction, member.</p>';
+    }
+    return "";
+  }
+
+  function applicationFeeHint(row) {
+    var t = String(row.application_fee_type || row.fee_type || "").toLowerCase();
+    if (t === "dual" || t === "couple") return "Background check fee: $75 couple. This is not membership dues.";
+    if (t === "single") return "Background check fee: $50 individual. This is not membership dues.";
+    return "Background check fee: $50 individual or $75 couple. This is not membership dues.";
+  }
+
+  function applicationActionRow(card, stage) {
+    if (applicationStageKey(card.primary) === stage) return card.primary;
+    if (card.partner && applicationStageKey(card.partner) === stage) return card.partner;
+    return card.primary;
+  }
+
+  function applicationPrimaryButton(card, stage) {
+    var id = esc(applicationActionRow(card, stage).id);
+    if (stage === "new" || stage === "prospect") {
+      return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Called, send background check email</button>';
+    }
+    if (stage === "fee_pending") {
+      return '<button type="button" class="btn btn-primary" data-app-resend="' + id + '">Send background check email again</button>';
+    }
+    if (stage === "bg_paid") {
+      return '<button type="button" class="btn btn-primary" data-app-start="' + id + '">Start background check</button>';
+    }
+    if (stage === "bg_process") {
+      return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Proceed with induction, send dues link</button>';
+    }
+    if (stage === "induction" || stage === "renewal") {
+      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (voted in at general meeting)</button>';
+    }
+    return "";
+  }
+
+  function applicationSecondaryButtons(card, stage) {
+    if (stage === "active" || stage === "declined" || stage === "archived") return "";
+    var id = esc(applicationActionRow(card, stage).id);
+    return '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+      '<button type="button" class="btn" data-app-archive="' + id + '">Withdraw</button>';
+  }
+
+  function applicationCardHtml(card, stage) {
+    var row = card.primary;
+    var partner = card.partner;
+    var name = applicationPersonName(row) || "Applicant";
+    if (partner) {
+      var partnerName = applicationPersonName(partner);
+      if (partnerName) name = name + " and " + partnerName;
+    } else {
+      var named = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+      if (named) name = name + " and " + named;
+    }
+    var level = applicationLevelLabel(row) || (partner && applicationLevelLabel(partner));
+    var whenStage = applicationDaysInStage(row.stage_at || row.created_at);
+    var id = esc(row.id);
+    var actionId = esc(applicationActionRow(card, stage).id);
+    var search = [name, row.email, partner && partner.email, level, row.phone].filter(Boolean).join(" ");
+    var html = '<article class="hub-pipe-card hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '" data-search="' + esc(search) + '">' +
+      "<h3>" + esc(name) + "</h3>" +
+      '<p class="hub-pipe-meta">' + esc(applicationStatusLabel(row.membership_status)) +
+      (level ? " · " + esc(level) : "") +
+      (whenStage ? " · " + esc(whenStage) : "") + "</p>";
+    if (row.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></p>";
+    if (partner && partner.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(partner.email) + '">' + esc(partner.email) + "</a></p>";
+    html += applicationPhoneHtml(row.phone);
+    if (partner && partner.phone && partner.phone !== row.phone) html += applicationPhoneHtml(partner.phone);
+    var addr = applicationAddress(row);
+    html += '<p class="hub-pipe-meta">' + (addr ? "Address: " + esc(addr) : "Address: not provided") + "</p>";
+    html += '<p class="hub-pipe-meta">' + esc(applicationFeeHint(row)) + "</p>";
+    html += "<div>" + applicationBgChip(card) + applicationDuesChip(card) + "</div>";
+    html += applicationJourneyLine(card);
+    html += '<p class="hub-pipe-meta" data-app-packet>' + esc(applicationPacketLine(row)) + "</p>";
+    html += applicationIdMarkup(row, "applicant", "dl");
+    html += applicationIdMarkup(row, "applicant", "ssn");
+    html += applicationDobMarkup(row, "applicant");
+    if (partner) {
+      html += applicationIdMarkup(partner, "applicant", "dl");
+      html += applicationIdMarkup(partner, "applicant", "ssn");
+      html += applicationDobMarkup(partner, "applicant");
+    } else {
+      html += applicationIdMarkup(row, "partner", "dl");
+      html += applicationIdMarkup(row, "partner", "ssn");
+      html += applicationDobMarkup(row, "partner");
+    }
+    var applied = formatAppliedEt(row.created_at);
+    if (applied) html += '<p class="hub-pipe-meta">Applied: ' + esc(applied) + "</p>";
+    if (row.interests && String(row.interests).trim()) html += '<p class="hub-pipe-meta">Interests: ' + esc(redactDisplayedId(row.interests)) + "</p>";
+    html += '<p class="hub-pipe-meta">Their note: ' + (row.notes && String(row.notes).trim() ? esc(redactDisplayedId(row.notes)) : "none") + "</p>";
+    html += applicationRecordNoteHtml(row);
+    var open = applicationOpenStatus(row.membership_status) || (partner && applicationOpenStatus(partner.membership_status));
+    if (open && stage !== "active") {
+      var noteLabel = (stage === "new" || stage === "prospect") ? "Call notes" : "Note for the record";
+      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + actionId + '">' + noteLabel + "</label>" +
+        '<textarea class="hub-app-note" id="hubAppNote-' + actionId + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
+        '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
+        '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + actionId + '">Save note</button></div>';
+    }
+    var primary = applicationPrimaryButton(card, stage);
+    var secondary = applicationSecondaryButtons(card, stage);
+    if (primary || secondary) html += '<div class="hub-appr-btns">' + primary + secondary + "</div>";
+    html += "</article>";
+    return html;
+  }
+
+  function applicationCoupleNames(row) {
+    var partner = applicationFindPartner(row, state.applicationRows || []);
+    var names = applicationPersonName(row) || "This applicant";
+    if (partner) names += " and " + (applicationPersonName(partner) || "their partner");
+    else {
+      var named = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+      if (named) names += " and " + named;
+    }
+    return names;
+  }
+
+  function applicationDuesAmount(row) {
+    var level = String((row && row.membership_level) || "").toLowerCase();
+    if (level === "associate") return "450.00";
+    if (level === "auxiliary") return "200.00";
+    if (level === "loa") return "100.00";
+    return "375.00";
+  }
+
+  function applicationInductionPreview(row, whenText, place) {
+    var level = applicationLevelLabel(row) || "Full Krewe";
+    var amount = applicationDuesAmount(row);
+    var paid = applicationDuesPaid(row);
+    var when = whenText || "Date and time go here";
+    var where = place || "Place goes here";
+    var dues = paid
+      ? "<p>Membership dues are already paid.</p>"
+      : "<p><strong>" + esc(level) + "</strong>: $" + esc(amount) + ". This is membership dues, not the background check fee.</p>"
+        + '<p><a href="https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership">Pay dues on Zeffy</a></p>';
+    return "<p>Dear " + esc((row && row.first_name) || "friend") + ",</p>"
+      + "<p>Your background check is complete. We would like to welcome you in person.</p>"
+      + "<p>You are invited to your in-person induction at our next membership meeting.</p>"
+      + "<p><strong>Date and time:</strong> " + esc(when) + "</p>"
+      + "<p><strong>Place:</strong> " + esc(where) + "</p>"
+      + "<p>At that meeting we will ask you to share a little about why you want to join the Krewe. A sentence or two is plenty.</p>"
+      + dues
+      + "<p>We are glad you are joining us.</p><p>Sláinte!</p>";
+  }
+
+  function applicationSyncInductionPreview() {
+    var box = document.getElementById("hubAppConfirm");
+    var preview = document.getElementById("hubInductionPreview");
+    var send = document.getElementById("hubAppConfirmYes");
+    if (!box || box.dataset.mode !== "induction") return;
+    var whenEl = document.getElementById("hubInductionWhen");
+    var placeEl = document.getElementById("hubInductionPlace");
+    var when = whenEl ? whenEl.value.trim() : "";
+    var place = placeEl ? placeEl.value.trim() : "";
+    var row = applicationRowById(box.dataset.id);
+    if (preview && row) preview.innerHTML = applicationInductionPreview(row, when, place);
+    if (send) send.disabled = !(when && place);
   }
 
   function renderApplicationsFromState() {
@@ -5373,122 +5734,97 @@
       renderJoiningPacketEditor(card);
       return;
     }
-    var bucket = state.applicationBucket || "new";
-    var rows = applicationBucketRows();
-    var intro = {
-      renewal: "These are renewals, not new join-form applications. Approve when dues are settled.",
-      prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "You already sent the joining packet. They should finish the full application and pay the background check fee. The dues invoice is emailed when they submit that form and begin the check. The application fee is separate from membership dues.",
-      dues: "You are waiting on membership dues, not the application fee. The dues invoice was emailed when they submitted the full application and began the background check.",
-      approved: "Approved. These people are active members.",
-      declined: "Declined applications stay on file. Nothing was deleted.",
-      archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check."
-    }[bucket] || "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check.";
-    var empty = {
-      renewal: "No pending renewals.",
-      prospect: "No event prospects in this list.",
-      background: "Nobody is in background check right now.",
-      dues: "Nobody is waiting on membership dues right now.",
-      approved: "No approved applications in this list yet.",
-      declined: "No declined applications.",
-      archived: "No archived applications.",
-      "new": "No new applications right now. When someone submits the join form, they will show up here."
-    }[bucket] || "No new applications right now. When someone submits the join form, they will show up here.";
+    var bucket = state.applicationBucket || "board";
+    var rows = applicationRowsForView();
+    var cards = applicationCards(rows);
+    var wide = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 801px)").matches : true;
     function filterBtn(key, label) {
-      return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on"' : "") + ">" +
-        label + " (" + applicationCountOf(key) + ")</button>";
+      var countKey = key === "board" ? "new" : key;
+      var n = key === "board" ? "" : " (" + applicationCountOf(countKey) + ")";
+      return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + ">" +
+        label + n + "</button>";
     }
-    var nextStep = {
-      "new": "Next step: call the prospect, then send the joining packet.",
-      background: "Next step: wait for the full application and background check fee, then move to dues pending when ready.",
-      dues: "Next step: confirm dues, then Approve.",
-      approved: "These members are active.",
-      declined: "No next step. Records stay on file.",
-      archived: "No next step. Records stay on file.",
-      renewal: "Next step: Approve when the renewal is ready.",
-      prospect: "Event prospects are not the join-form pipeline."
-    }[bucket] || "Next step: call the prospect, then send the joining packet.";
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Guide each person from interest to active member. Call first. Then send the joining packet. Wait for the check and dues. Approve when they are ready.</small></div></div>' +
+      "<small>New interest, background check, induction, then membership.</small></div></div>" +
       '<div class="app-body" id="hubApplicationsBody">';
-    if (state.applicationFlash) {
-      html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
-    }
-    html += '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
-      '<span class="muted">Change the greeting and the notes. The finish link and pay buttons stay locked.</span></p>' +
+    if (state.applicationFlash) html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
+    var help = bucket === "prospect"
+      ? "These are event RSVP prospects, not the join pipeline. Send the joining packet when they are ready to apply."
+      : "Call first. The card shows the phone number and a Call notes field. Called, send background check email sends the fee link and the full application. It does not include a dues link. After the fee is paid, start the background check. When it is clean, send the induction email with the dues link and the next membership meeting. Approve only after the Krewe votes them in at a general meeting.";
+    html += '<p class="hub-pipe-help">' + esc(help) + "</p>" +
+      '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
+      '<span class="muted">Change the greeting and the notes. The finish link and the background check pay buttons stay locked. The dues link is not in this letter.</span></p>' +
       '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
-      filterBtn("new", "New applications") +
-      filterBtn("background", "Background check") +
-      filterBtn("dues", "Dues pending") +
-      filterBtn("approved", "Approved") +
+      filterBtn("board", "Pipeline") +
+      filterBtn("prospect", "Event prospects") +
+      filterBtn("renewal", "Renewals") +
       filterBtn("declined", "Declined") +
       filterBtn("archived", "Archived") +
-      filterBtn("renewal", "Renewals") +
-      filterBtn("prospect", "Event prospects") +
-      "</div>" +
-      applicationJourneyHtml(bucket) +
-      '<p class="hub-app-next">' + esc(nextStep) + "</p>" +
-      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
+      "</div>";
+    html += '<div id="hubAppConfirm" class="hub-app-confirm" role="alertdialog" aria-modal="true" aria-labelledby="hubAppConfirmTitle" hidden>' +
+      '<h3 id="hubAppConfirmTitle">Proceed with induction, send dues link</h3>' +
+      '<p id="hubAppConfirmBody"></p>' +
+      '<div id="hubInductionFields">' +
+      '<p id="hubInductionNeed" class="muted">Enter the meeting date, time, and place. There is no upcoming membership meeting on the calendar.</p>' +
+      '<label class="muted" for="hubInductionWhen">Meeting date and time</label>' +
+      '<input id="hubInductionWhen" type="text" autocomplete="off" placeholder="Tuesday, January 6, 2026 at 7:00 PM">' +
+      '<label class="muted" for="hubInductionPlace">Meeting place</label>' +
+      '<input id="hubInductionPlace" type="text" autocomplete="off" placeholder="Krewe hall">' +
+      '<h4>Email preview</h4>' +
+      '<div id="hubInductionPreview" class="hub-induction-preview"></div></div>' +
+      '<div class="hub-appr-btns"><button type="button" class="btn btn-primary" id="hubAppConfirmYes">Send induction email</button>' +
+      '<button type="button" class="btn" id="hubAppConfirmNo">Cancel</button></div></div>';
+    html += '<label class="hub-app-search"><span>Search applications</span>' +
+      '<input id="hubAppSearch" type="search" autocomplete="off" placeholder="Name, email, or level"></label>';
+
     if (state.applicationLoadError && !rows.length) {
       html += '<p class="empty">' + esc(state.applicationLoadError) + "</p>";
-    } else if (!rows.length) {
-      html += '<p class="empty">' + esc(empty) + "</p>";
-    } else {
-      rows.forEach(function (row) {
-        var name = ((row.first_name || "") + " " + (row.last_name || "")).trim() || "Applicant";
-        var addr = applicationAddress(row);
-        var when = formatAppliedEt(row.created_at);
-        var partner = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
-        var open = applicationOpenStatus(row.membership_status);
-        var id = esc(row.id);
-        html += '<div class="hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '">' +
-          "<div><b>" + esc(name) + "</b>" +
-          '<span class="hub-app-status' + (row.membership_status === "active" ? " ok" : "") + '">' + esc(applicationStatusLabel(row.membership_status)) + "</span>" +
-          (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
-          (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
-          (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
-          (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
-          '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are not the application fee. The joining packet lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100. The dues invoice is emailed when they submit the full application and begin the background check.</div>' +
-          '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
-          applicationIdMarkup(row, "applicant", "dl") +
-          applicationIdMarkup(row, "applicant", "ssn") +
-          applicationDobMarkup(row, "applicant") +
-          applicationIdMarkup(row, "partner", "dl") +
-          applicationIdMarkup(row, "partner", "ssn") +
-          applicationDobMarkup(row, "partner") +
-          (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
-          (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
-          (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +
-          applicationRecordNoteHtml(row) +
-          (open
-            ? '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
-              '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
-              '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
-              '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + id + '">Save note</button></div>'
-            : "") +
-          "</div>";
-        if (open) {
-          html += applicationActionButtons(row);
-        }
-        html += "</div>";
+    } else if (bucket === "board") {
+      var counts = {};
+      PIPELINE_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
+      cards.forEach(function (item) { counts[applicationCardStage(item)] = (counts[applicationCardStage(item)] || 0) + 1; });
+      html += '<div class="hub-pipe-tiles" role="list">';
+      PIPELINE_STAGES.forEach(function (stage) {
+        html += '<button type="button" class="hub-pipe-tile" data-pipe-jump="' + stage.key + '">' +
+          '<span class="n">' + (counts[stage.key] || 0) + '</span><span class="l">' + esc(stage.title) + "</span></button>";
       });
+      html += '</div><div class="hub-pipeline"' + (wide ? ' data-layout="columns"' : "") + ">";
+      var opened = false;
+      PIPELINE_STAGES.forEach(function (stage) {
+        var mine = cards.filter(function (item) { return applicationCardStage(item) === stage.key; });
+        var open = wide || (!opened && mine.length);
+        if (!wide && mine.length && !opened) opened = true;
+        html += '<details class="hub-pipe-col" id="hubPipe-' + stage.key + '" data-pipe="' + stage.key + '"' + (open ? " open" : "") + ">" +
+          "<summary>" + esc(stage.title) + ' <span class="hub-pipe-count">' + mine.length + "</span></summary>" +
+          '<div class="hub-pipe-cards">';
+        if (!mine.length) html += '<p class="hub-pipe-empty">None right now.</p>';
+        mine.forEach(function (item) { html += applicationCardHtml(item, stage.key); });
+        html += "</div></details>";
+      });
+      html += "</div>";
+    } else if (!cards.length) {
+      html += '<p class="empty">' + (bucket === "prospect"
+        ? "No event prospects in this list."
+        : bucket === "renewal"
+          ? "No pending renewals."
+          : "No applications in this list.") + "</p>";
+    } else {
+      html += '<div class="hub-pipe-cards">';
+      cards.forEach(function (item) { html += applicationCardHtml(item, applicationCardStage(item)); });
+      html += "</div>";
     }
+
     var recent = state.applicationRecent || [];
     if (recent.length) {
       html += '<h3 class="hub-appr-h">Recent decisions</h3>';
       recent.forEach(function (r) {
         var when = formatAppliedEt(r.created_at);
+        var fromLabel = applicationStatusLabel(r.from_status);
+        var toLabel = applicationStatusLabel(r.to_status);
         html += '<div class="hub-appr" data-app-history="' + esc(r.action || "") + '"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
           (r.applicant ? " · " + esc(r.applicant) : "") +
-          '<div class="muted">' + (function () {
-            var fromLabel = applicationStatusLabel(r.from_status);
-            var toLabel = applicationStatusLabel(r.to_status);
-            return esc(fromLabel === toLabel ? fromLabel : fromLabel + " to " + toLabel);
-          })() + "</div>" +
-          '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") +
-          (when ? " · " + esc(when) : "") + "</div>" +
+          '<div class="muted">' + esc(fromLabel === toLabel ? fromLabel : fromLabel + " to " + toLabel) + "</div>" +
+          '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") + (when ? " · " + esc(when) : "") + "</div>" +
           (r.note ? '<div class="muted">Note: ' + esc(redactDisplayedId(r.note)) + "</div>" : "") +
           "</div></div>";
       });
@@ -5501,12 +5837,29 @@
     if (editPacket) editPacket.addEventListener("click", function () { openJoiningPacketEditor(); });
     body.querySelectorAll("[data-app-bucket]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        state.applicationBucket = btn.getAttribute("data-app-bucket") || "new";
+        state.applicationBucket = btn.getAttribute("data-app-bucket") || "board";
         state.applicationFlash = "";
         if (applicationsFixture) renderApplicationsFromState();
         else reloadApplications(window.__kosSb || null);
       });
     });
+    body.querySelectorAll("[data-pipe-jump]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = document.getElementById("hubPipe-" + btn.getAttribute("data-pipe-jump"));
+        if (!target) return;
+        target.open = true;
+        target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+    var search = document.getElementById("hubAppSearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        var q = search.value.trim().toLowerCase();
+        body.querySelectorAll("[data-search]").forEach(function (el) {
+          el.hidden = !!(q && String(el.getAttribute("data-search") || "").toLowerCase().indexOf(q) < 0);
+        });
+      });
+    }
     function noteFor(id) {
       var el = document.getElementById("hubAppNote-" + id);
       return el ? (el.value || "").trim() : "";
@@ -5519,8 +5872,23 @@
     });
     body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
-        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), noteFor(btn.getAttribute("data-app-approve")), btn);
+        var id = btn.getAttribute("data-app-approve");
+        var row = applicationRowById(id);
+        if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
+        var bodyText = document.getElementById("hubAppConfirmBody");
+        var fields = document.getElementById("hubInductionFields");
+        var yes = document.getElementById("hubAppConfirmYes");
+        if (title) title.textContent = "Approve membership (voted in at general meeting)";
+        if (bodyText) bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? The Krewe voted them in at a general meeting. They become active members and we email a welcome note with the Member Hub login link and the training video.";
+        if (fields) fields.hidden = true;
+        if (yes) {
+          yes.textContent = "Approve membership";
+          yes.disabled = false;
+        }
+        confirmBox.dataset.mode = "approve";
+        confirmBox.dataset.id = id;
+        confirmBox.hidden = false;
       });
     });
     body.querySelectorAll("[data-app-decline]").forEach(function (btn) {
@@ -5533,7 +5901,7 @@
     body.querySelectorAll("[data-app-archive]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-archive");
-        if (!confirm("Archive this application? Their record stays on file. Nothing is deleted.")) return;
+        if (!confirm("Withdraw this application? Their record stays on file. Nothing is deleted.")) return;
         decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
       });
     });
@@ -5545,16 +5913,84 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Send the joining packet and move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
+        if (!confirm("Called this prospect? We will email the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
+    var confirmBox = document.getElementById("hubAppConfirm");
+    function closePassConfirm() {
+      if (!confirmBox) return;
+      confirmBox.hidden = true;
+      confirmBox.removeAttribute("data-id");
+    }
+    body.querySelectorAll("[data-app-resend]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-resend");
+        if (!confirm("Send the background check email again? This sends a new link to the full application and the background check fee ($50 individual or $75 couple). It does not include a dues link. Use this when the first email was paused or the link expired. If prospect email is still paused, the card stays here and nothing is emailed.")) return;
+        decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-start]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-start");
+        if (!confirm("Start the background check? The card moves to Background check in process. Copy the driver's license and Social Security number from the card into the background check site. No email is sent.")) return;
+        decideApplication(window.__kosSb || null, "start_background_check", id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
-        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. This button does not send another invoice. The dues invoice is emailed when they submit the full application.")) return;
-        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
+        var row = applicationRowById(id);
+        if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
+        var bodyText = document.getElementById("hubAppConfirmBody");
+        var fields = document.getElementById("hubInductionFields");
+        var yesBtn = document.getElementById("hubAppConfirmYes");
+        var whenEl = document.getElementById("hubInductionWhen");
+        var placeEl = document.getElementById("hubInductionPlace");
+        if (title) title.textContent = "Proceed with induction, send dues link";
+        if (bodyText) bodyText.textContent = "Send the induction email to " + applicationCoupleNames(row) + "? It includes the dues link for " + (applicationLevelLabel(row) || "Full Krewe") + ", the next membership meeting, and a note that we will ask them to share why they want to join. Membership dues are not the background check fee.";
+        if (fields) fields.hidden = false;
+        if (whenEl) whenEl.value = "";
+        if (placeEl) placeEl.value = "";
+        if (yesBtn) yesBtn.textContent = "Send induction email";
+        confirmBox.dataset.mode = "induction";
+        confirmBox.dataset.id = id;
+        confirmBox.hidden = false;
+        applicationSyncInductionPreview();
+        var cancel = document.getElementById("hubAppConfirmNo");
+        if (cancel) cancel.focus();
       });
+    });
+    var whenInput = document.getElementById("hubInductionWhen");
+    var placeInput = document.getElementById("hubInductionPlace");
+    if (whenInput) whenInput.addEventListener("input", applicationSyncInductionPreview);
+    if (placeInput) placeInput.addEventListener("input", applicationSyncInductionPreview);
+    var yes = document.getElementById("hubAppConfirmYes");
+    var no = document.getElementById("hubAppConfirmNo");
+    if (yes) yes.addEventListener("click", function () {
+      var id = confirmBox && confirmBox.dataset.id;
+      var mode = confirmBox && confirmBox.dataset.mode;
+      var meeting = null;
+      if (mode === "induction") {
+        var whenValue = (document.getElementById("hubInductionWhen") || {}).value || "";
+        var placeValue = (document.getElementById("hubInductionPlace") || {}).value || "";
+        whenValue = String(whenValue).trim();
+        placeValue = String(placeValue).trim();
+        if (!whenValue || !placeValue) return;
+        meeting = whenValue + "\n" + placeValue;
+      }
+      closePassConfirm();
+      if (!id) return;
+      if (mode === "approve") {
+        decideApplication(window.__kosSb || null, "approve", id, noteFor(id), yes);
+      } else {
+        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), yes, meeting);
+      }
+    });
+    if (no) no.addEventListener("click", closePassConfirm);
+    if (confirmBox) confirmBox.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closePassConfirm();
     });
   }
 
@@ -10049,7 +10485,7 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
-    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
+    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for the check, send dues after it passes, then approve." },
     "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
     "Events": { icon: "📅", sub: "Event Studio, who's coming, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },

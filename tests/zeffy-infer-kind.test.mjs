@@ -64,7 +64,35 @@ test("inferKind classifies dues, the background check, events, and shop", () => 
     amount: 7500,
     items: [{ type: "ticket", name: "Background check", amount: 7500 }],
   }, CATALOG);
-  assert.equal(background, "other");
+  assert.equal(background, "background_check");
+
+  const campaigns = {
+    individual: {
+      url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual",
+      description: "Krewe of Shamrock Background Check - Individual"
+    },
+    couple: {
+      url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple",
+      description: "Krewe of Shamrock Background Check - Couple"
+    }
+  };
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    campaign_category: "membership",
+    description: "Krewe of Shamrock Background Check — Couple",
+    amount: 7500
+  }, CATALOG, campaigns), "background_check");
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    url: "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual",
+    description: "2026 season",
+    amount: 5000
+  }, CATALOG, campaigns), "background_check");
+  assert.equal(inferKind({}, {
+    description: "Krewe of Shamrock Membership",
+    url: CATALOG[0],
+    amount: 37500
+  }, CATALOG, campaigns), "dues");
 
   const eventTicket = inferKind({}, {
     campaign_type: "ticketing",
@@ -177,7 +205,7 @@ test("dues migration marks each holder once and is not a live update", () => {
   assert.match(sql, /m\.membership_level/);
   assert.doesNotMatch(sql, /join application fee/);
   assert.match(webhook, /ticket_holders: ticketHolders/);
-  assert.match(webhook, /inferKind\(metadata, payment, duesUrls\)/);
+  assert.match(webhook, /inferKind\(metadata, payment, duesUrls, backgroundCampaigns\)/);
   assert.match(webhook, /kos_dues_catalog/);
   assert.match(parade, /prRenewMount/);
   assert.match(parade, /Renew my membership|kosRenew\.mount/);
