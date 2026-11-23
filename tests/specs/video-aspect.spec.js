@@ -1,6 +1,6 @@
 // Member videos size their frame from the file. Embeds stay 16:9,
 // except YouTube Shorts and Facebook Reels, which stay 9:16.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 const PORTRAIT = "http://127.0.0.1:4173/tests/fixtures/video-portrait.mp4";
 const LANDSCAPE = "http://127.0.0.1:4173/tests/fixtures/video-landscape.mp4";

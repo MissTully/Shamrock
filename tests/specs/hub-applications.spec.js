@@ -1,6 +1,6 @@
 // Membership Applications officer tool. Role fixtures drive the Hub offline
 // so this does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");

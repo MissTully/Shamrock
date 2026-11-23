@@ -1,6 +1,6 @@
 // Event outreach officer tool. Role and row fixtures drive the Hub offline
 // so this does not read or write the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const ROWS = [

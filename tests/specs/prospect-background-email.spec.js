@@ -1,7 +1,7 @@
 // Sample of the Move to background check prospect email.
 // The live letter is built in SQL. This checks the rendered sample and that
 // the SQL keeps the pause off and stores the payment links outside the HTML.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 

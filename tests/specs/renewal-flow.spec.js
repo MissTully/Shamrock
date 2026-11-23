@@ -1,5 +1,5 @@
 // Sample-data preview of Renew my membership and the Officer Desk renewals list.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 test("sample renewal preview shows one member, a couple, paid, the list, and a reminder", async ({ page }) => {

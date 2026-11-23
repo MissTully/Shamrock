@@ -1,6 +1,6 @@
 // Shop Studio product actions must stay inside the card.
 // Offline fixture rows only. This does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const ROW = (name, meta, badge, buttons) =>

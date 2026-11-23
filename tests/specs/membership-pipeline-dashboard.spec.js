@@ -1,5 +1,5 @@
 // Pipeline dashboard screenshots. Fixture people only. No live roster data.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 async function artifactShot(locator, file) {

@@ -2,7 +2,7 @@
 // is written to the live database. Fixture people and example.com only.
 const fs = require("fs");
 const path = require("path");
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 const PREVIEW = path.join(__dirname, "../../docs/preview/membership-training-fixes");

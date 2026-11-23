@@ -1,5 +1,5 @@
 // Member FAQ lives on the Member desk, not on the public site.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const FACTS = [

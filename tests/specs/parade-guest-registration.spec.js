@@ -1,5 +1,5 @@
 // Guest parade registration: Event Studio fields, public form, Hub approval, officer list.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 const OPEN_EVENT = {

@@ -1,6 +1,6 @@
 // Member photos keep the shape of the file, including a phone JPEG whose
 // pixels are landscape but whose EXIF orientation says portrait.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const path = require("path");
 
 const WIDE = "/tests/fixtures/gallery-wide.jpg";

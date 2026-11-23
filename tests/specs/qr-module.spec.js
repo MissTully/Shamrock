@@ -3,7 +3,7 @@
 // and drive window.kosQR directly, so they cover the self-hosted library,
 // the paint/draw entry points, and the download button, without needing an
 // officer sign-in.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 test.describe("shared QR generator", () => {
   test("members.html exposes the self-hosted library and kosQR", async ({ page }) => {

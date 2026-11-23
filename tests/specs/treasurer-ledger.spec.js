@@ -1,6 +1,6 @@
 // Treasurer ledger, receipt dialog, waiver gate, and invoice gate.
 // Fixture people only. This file does not call the live Supabase project.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 const { unlockMemberHub } = require("./helpers");

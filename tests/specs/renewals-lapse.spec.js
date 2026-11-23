@@ -1,6 +1,6 @@
 // Officer desk Renewals and the member Renew card. Fixture data only.
 // This file does not call the live Supabase project.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");

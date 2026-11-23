@@ -1,6 +1,6 @@
 // After October 24, 2026 the public Tartan Ball page is a recap.
 // No ticket purchase language, and the 2026 photos sit with the older ones.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 test("tartan ball page celebrates the night and does not sell tickets", async ({ page }) => {

@@ -1,6 +1,6 @@
 // Phone-app Member Hub shell. Offline fixtures stand in for roster,
 // parade, and event rows so this never writes to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const PARADE = {

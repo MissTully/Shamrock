@@ -1,6 +1,6 @@
 // Member photos lead the public gallery, with no section label.
 // The Hub photo form keeps an optional caption under the picker.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 test("gallery leads with member photos and has no submissions heading", async ({ page }) => {
   await page.goto("/gallery.html");

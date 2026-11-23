@@ -1,6 +1,6 @@
 // Officer desk Send invoices (Phase 2): catalog quotes, level changes,
 // preview counts, and kos_create_level_invoices plus outbound email.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const season = require("../../assets/kos-dues-season.js");
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

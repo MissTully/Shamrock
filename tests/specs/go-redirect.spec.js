@@ -3,7 +3,7 @@
 // registry and redirects. The happy path needs the live database, so these
 // tests cover what runs entirely in the browser: the missing-code message and
 // the graceful failure when the server can't be reached.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 test("go.html without a code explains and offers the home page", async ({ page }) => {
   await page.goto("/go.html");

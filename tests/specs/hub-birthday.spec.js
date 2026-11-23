@@ -1,7 +1,7 @@
 // Happy Birthday card on Member Hub home.
 // Offline: roster rows are injected through __kosHubSetBirthdays, with an
 // explicit America/New_York month+day so the suite does not depend on the clock.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const TODAY = { month: 9, day: 24 };

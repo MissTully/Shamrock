@@ -1,5 +1,5 @@
 // Regression: every page loads cleanly with the shared chrome intact.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, PAGES } = require("./helpers");
 
 for (const { file, title } of PAGES) {
