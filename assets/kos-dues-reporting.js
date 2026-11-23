@@ -33,7 +33,7 @@
     ".hub-dues-rep td.num,.hub-dues-rep th.num{text-align:right;white-space:nowrap;}" +
     ".hub-dues-rep .hub-pay-src{display:inline-block;padding:2px 8px;border-radius:999px;background:#14532d;color:#f6efdc;border:1px solid #ecd07e;font-weight:700;line-height:1.3;}" +
     "@media (max-width:720px){" +
-    ".hub-dues-rep .hub-pay-wrap{overflow:visible;}" +
+    ".hub-dues-rep .hub-pay-wrap:has(table.hub-pay-stack){overflow:visible;}" +
     ".hub-dues-rep table.hub-pay-stack{min-width:0;}" +
     ".hub-dues-rep table.hub-pay-stack thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}" +
     ".hub-dues-rep table.hub-pay-stack tr{display:block;padding:10px 12px;border-top:1px solid rgba(168,128,28,.35);}" +
@@ -524,6 +524,47 @@
     });
   }
 
+  function samePayer(email, name, payEmail, payName) {
+    if (email && payEmail && email === payEmail) return true;
+    return !!(name && payName && name === payName);
+  }
+
+  function knownPaymentYear(pay, email, name) {
+    if (pay && pay.membership_year != null && pay.membership_year !== "") return Number(pay.membership_year);
+    var when = String((pay && (pay.when || pay.created_at)) || "").slice(0, 10);
+    var found = null;
+    (state.payments || []).some(function (p) {
+      var kind = String(p.product_kind || "").toLowerCase();
+      if (kind && kind !== "dues") return false;
+      if (p.membership_year == null || p.membership_year === "") return false;
+      if (!samePayer(email, name, String(p.payer_email || "").toLowerCase(), String(p.payer_name || "").toLowerCase())) return false;
+      var created = String(p.created_at || "").slice(0, 10);
+      if (when && created && when !== created) return false;
+      found = Number(p.membership_year);
+      return true;
+    });
+    return found;
+  }
+
+  function recentCoversDues(row) {
+    var email = String(row.email || "").toLowerCase();
+    var name = String(row.name || "").toLowerCase();
+    var season = year();
+    var from = seasonStart(season);
+    var to = seasonEnd(season);
+    return (state.recent || []).some(function (pay) {
+      var kind = String(pay.kind || pay.product_kind || "").toLowerCase();
+      if (kind && kind !== "dues") return false;
+      var payEmail = String(pay.email || pay.payer_email || "").toLowerCase();
+      var payName = String(pay.payer || pay.payer_name || "").toLowerCase();
+      if (!samePayer(email, name, payEmail, payName)) return false;
+      var payYear = knownPaymentYear(pay, email, name);
+      if (payYear != null) return payYear === season;
+      var day = String(pay.when || pay.created_at || "").slice(0, 10);
+      return !!day && day >= from && day <= to;
+    });
+  }
+
   function ledgerRowMatches(row, filter) {
     if (!filter || filter === "all") return true;
     if (filter === "Wild Apricot") return ledgerSourceLabel(row) === "Wild Apricot";
@@ -547,17 +588,7 @@
         });
       });
       apricotRows.forEach(function (r) {
-        var email = String(r.email || "").toLowerCase();
-        var name = String(r.name || "").toLowerCase();
-        var already = (state.recent || []).some(function (pay) {
-          var kind = String(pay.kind || pay.product_kind || "").toLowerCase();
-          if (kind && kind !== "dues") return false;
-          var payEmail = String(pay.email || pay.payer_email || "").toLowerCase();
-          var payName = String(pay.payer || pay.payer_name || "").toLowerCase();
-          if (email && payEmail && email === payEmail) return true;
-          return !!(name && payName && name === payName);
-        });
-        if (already) return;
+        if (recentCoversDues(r)) return;
         listed.push({
           when: r.paidDate,
           name: r.name,

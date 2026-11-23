@@ -563,6 +563,131 @@ test("cash ledger fallback lists wild apricot once and skips cash, check, and wa
   await expect(ledger.getByRole("row", { name: /Pat Waiver/ })).toHaveCount(0);
 });
 
+test("a Zeffy dues payment from another year does not hide Wild Apricot", async ({ page }) => {
+  await useHubChrome(page);
+  await page.evaluate(() => {
+    const nia = "22222222-2222-4222-8222-222222222225";
+    const quinn = "22222222-2222-4222-8222-222222222222";
+    const members = [
+      { id: nia, first_name: "Nia", last_name: "Sample", email: "nia.sample@example.com", membership_level: "full", membership_status: "active" },
+      { id: quinn, first_name: "Quinn", last_name: "Example", email: "quinn.example@example.com", membership_level: "associate", membership_status: "active" }
+    ];
+    const dues = [
+      { id: "d-nia", member_id: nia, membership_year: 2026, amount: 375, paid: true, paid_date: "2026-07-12", payment_method: "other", notes: "Paid on Wild Apricot (legacy import). Invoice 100001.", membership_level: "full", standard_amount: 375 },
+      { id: "d-quinn", member_id: quinn, membership_year: 2026, amount: 337.5, paid: true, paid_date: "2026-08-02", payment_method: "other", notes: "Paid on Wild Apricot (legacy import). Invoice 100002.", membership_level: "associate", standard_amount: 450 }
+    ];
+    const payments = [
+      { id: "p-quinn", created_at: "2026-07-20T15:00:00.000Z", amount_cents: 45000, product_kind: "dues", payer_email: "quinn.example@example.com", payer_name: "Quinn Example", description: "2027 membership", member_id: quinn, membership_year: 2027 }
+    ];
+    const tables = { members, dues_payments: dues, kos_dues_catalog: [], payments };
+    function chain(table) {
+      const filters = [];
+      const c = {
+        select() { return c; },
+        eq(col, val) { filters.push(["eq", col, val]); return c; },
+        is(col, val) { filters.push(["is", col, val]); return c; },
+        in() { return c; },
+        order() { return c; },
+        range() { return c; },
+        then(resolve, reject) {
+          let rows = (tables[table] || []).slice();
+          filters.forEach((f) => {
+            if (f[0] === "eq") rows = rows.filter((r) => r[f[1]] === f[2]);
+            if (f[0] === "is" && f[2] == null) rows = rows.filter((r) => r[f[1]] == null);
+          });
+          return Promise.resolve({ data: rows, error: null }).then(resolve, reject);
+        }
+      };
+      return c;
+    }
+    window.__kosSb = {
+      rpc: async (name) => {
+        if (name === "can_view_payments") return { data: true };
+        if (name === "kos_treasurer_ledger") return { data: null };
+        if (name === "list_recent_payments") {
+          return {
+            data: [
+              { when: "2025-08-01T12:00:00.000Z", amount_cents: 37500, kind: "dues", payer: "Nia Sample", email: "nia.sample@example.com", description: "2025 membership", matched: true },
+              { when: "2026-07-20T15:00:00.000Z", amount_cents: 45000, kind: "dues", payer: "Quinn Example", email: "quinn.example@example.com", description: "2027 membership", matched: true }
+            ]
+          };
+        }
+        return { data: null };
+      },
+      from(table) { return chain(table); }
+    };
+  });
+  await page.addScriptTag({ url: "/assets/kos-dues-reporting.js?v=20261123wa2" });
+  await page.evaluate(() => window.kosRenderDuesPayments(window.__kosSb));
+  await page.waitForFunction(() => window.__kosDuesReportingReady === "shown");
+  const ledger = page.locator("#hubPayPanel_ledger");
+  await expect(ledger.locator("#hubPayApricotLedger")).toHaveText("$712.50");
+  const nia = ledger.getByRole("row", { name: /Nia Sample/ });
+  await expect(nia).toHaveCount(2);
+  await expect(nia.filter({ hasText: "Wild Apricot" })).toHaveCount(1);
+  await expect(nia.filter({ hasText: "Zeffy" })).toHaveCount(1);
+  const quinn = ledger.getByRole("row", { name: /Quinn Example/ });
+  await expect(quinn).toHaveCount(2);
+  await expect(quinn.filter({ hasText: "Wild Apricot" })).toHaveCount(1);
+  await expect(quinn.filter({ hasText: "Zeffy" })).toHaveCount(1);
+});
+
+test("phone export table stays horizontally scrollable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await useHubChrome(page);
+  await page.evaluate(() => {
+    const season = {
+      ok: true,
+      year: 2026,
+      owing_total: 0,
+      owing_amount: 0,
+      invoiced_unpaid: { renewal: { count: 0, amount: 0 }, induction: { count: 0, amount: 0 } },
+      not_invoiced: { count: 0, amount: 0 },
+      waived: { count: 0, amount: 0 },
+      voided: { count: 0, amount: 0 },
+      collected: [{ method: "check", level: "full", count: 2, amount: 750 }],
+      background_check_fees: { count: 0, amount_cents: 0 }
+    };
+    const tables = { members: [], dues_payments: [], kos_dues_catalog: [], payments: [] };
+    function chain(table) {
+      const c = {
+        select() { return c; },
+        eq() { return c; },
+        is() { return c; },
+        in() { return c; },
+        order() { return c; },
+        range() { return c; },
+        then(resolve, reject) {
+          return Promise.resolve({ data: tables[table] || [], error: null }).then(resolve, reject);
+        }
+      };
+      return c;
+    }
+    window.__kosSb = {
+      rpc: async (name) => {
+        if (name === "can_view_payments") return { data: true };
+        if (name === "kos_dues_season_report") return { data: season };
+        if (name === "kos_treasurer_ledger") return { data: null };
+        if (name === "list_recent_payments") return { data: [] };
+        return { data: null };
+      },
+      from(table) { return chain(table); }
+    };
+  });
+  await page.addScriptTag({ url: "/assets/kos-dues-reporting.js?v=20261123wa2" });
+  await page.evaluate(() => window.kosRenderDuesPayments(window.__kosSb));
+  await page.waitForFunction(() => window.__kosDuesReportingReady === "shown");
+  await page.getByRole("tab", { name: "Export" }).click();
+  const collectedWrap = page.locator("#hubPayCollected").locator("xpath=ancestor::div[contains(@class,'hub-pay-wrap')]");
+  await expect(collectedWrap).toBeVisible();
+  await expect(page.locator("#hubPayCollected")).toContainText("Count");
+  await expect(page.locator("#hubPayCollected")).toContainText("Amount");
+  expect(await collectedWrap.evaluate((el) => getComputedStyle(el).overflowX)).toBe("auto");
+  await page.getByRole("tab", { name: "Dues season" }).click();
+  const levelWrap = page.locator("#hubPayLevels").locator("xpath=ancestor::div[contains(@class,'hub-pay-wrap')]");
+  expect(await levelWrap.evaluate((el) => getComputedStyle(el).overflowX)).toBe("visible");
+});
+
 function waiverClient(canApprove) {
   const members = [
     { id: "55555555-5555-4555-8555-555555555555", first_name: "Eve", last_name: "Nash", email: "eve.nash@example.com", membership_level: "full", officer_title: "", membership_status: "active" }
