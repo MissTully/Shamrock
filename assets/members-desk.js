@@ -6899,7 +6899,7 @@
       data = res.data;
     } catch (e) {}
     if (!data || !data.length) {
-      body.innerHTML = '<p class="empty">No online payments yet. They appear here automatically once the payment system is connected (see PAYMENTS_SETUP.md).</p>';
+      body.innerHTML = '<p class="empty">No online payments yet. They appear here once payments are connected.</p>';
       return;
     }
     var html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:16px;">' +
@@ -10788,7 +10788,7 @@
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
-    hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
+    hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubWhosComing: { title: "Who's coming", desc: "RSVP list for one event, including public signups, with headcount and CSV.", icon: "👥", section: "Events" },

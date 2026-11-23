@@ -189,7 +189,7 @@ test("season totals exclude waivers and the payments ledger", async ({ page }) =
   await expect(page.locator("#hubPayAging button")).toHaveCount(0);
   await expect(page.locator("#hubPayPanel_season")).toContainText("does not send email");
 
-  await page.getByRole("tab", { name: "Ledger", exact: true }).click();
+  await page.getByRole("tab", { name: "Cash ledger", exact: true }).click();
   await expect(page.locator("#hubPayPanel_ledger")).toBeVisible();
   await expect(page.locator("#hubPayPanel_ledger")).toContainText("Cal Pitt");
   await expect(page.locator("#hubPayPanel_ledger")).toContainText("Guest Donor");

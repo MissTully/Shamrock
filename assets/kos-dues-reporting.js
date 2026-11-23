@@ -16,19 +16,31 @@
     ".hub-dues-rep .hub-pay-tab{appearance:none;border:1px solid rgba(168,128,28,.4);background:#fff;border-radius:999px;" +
     "padding:10px 14px;font:inherit;font-size:14px;min-height:44px;cursor:pointer;color:#14532d;}" +
     ".hub-dues-rep .hub-pay-tab.on{background:#14532d;color:#fff;border-color:#14532d;}" +
-    ".hub-dues-rep .hub-pay-note{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.45;}" +
-    ".hub-dues-rep .hub-pay-msg{margin:8px 0 0;font-size:14px;min-height:1.2em;color:#b3261e;}" +
+    ".hub-dues-rep{color:#1c3324;}" +
+    ".hub-dues-rep .hub-pay-note{margin:0 0 10px;font-size:15px;color:#1c3324;line-height:1.45;}" +
+    ".hub-dues-rep .hub-pay-msg{margin:8px 0 0;font-size:14px;min-height:1.2em;color:#8a1c12;}" +
     ".hub-dues-rep .hub-pay-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin:12px 0;}" +
     ".hub-dues-rep .hub-pay-card{background:#fffdf4;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:10px 12px;}" +
     ".hub-dues-rep .hub-pay-card b{display:block;font-family:var(--display);font-size:22px;color:#14532d;line-height:1.2;}" +
-    ".hub-dues-rep .hub-pay-card span{display:block;font-size:12px;color:var(--muted);line-height:1.35;margin-top:4px;}" +
+    ".hub-dues-rep .hub-pay-card span{display:block;font-size:13px;color:#1c3324;line-height:1.35;margin-top:4px;}" +
     ".hub-dues-rep h3{margin:16px 0 8px;font-family:var(--display);font-size:17px;color:#14532d;}" +
-    ".hub-dues-rep .hub-pay-wrap{overflow-x:auto;border:1px solid rgba(168,128,28,.3);border-radius:12px;}" +
-    ".hub-dues-rep table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px;}" +
+    ".hub-dues-rep .hub-pay-wrap{overflow-x:auto;border:1px solid rgba(168,128,28,.3);border-radius:12px;background:#fff;}" +
+    ".hub-dues-rep table{width:100%;border-collapse:collapse;font-size:15px;min-width:640px;color:#1c3324;}" +
     ".hub-dues-rep th{background:linear-gradient(180deg,#166534,#14532d);color:#fff;text-align:left;padding:8px 10px;font-family:var(--display);font-weight:600;font-size:13px;}" +
-    ".hub-dues-rep td{padding:7px 10px;border-top:1px solid rgba(168,128,28,.18);vertical-align:top;}" +
+    ".hub-dues-rep td{padding:7px 10px;border-top:1px solid rgba(168,128,28,.18);vertical-align:top;color:#1c3324;}" +
     ".hub-dues-rep tr:nth-child(even) td{background:#fffdf4;}" +
+    ".hub-dues-rep tfoot td{font-weight:700;color:#102816;background:#e7f3ea;border-top:2px solid #14532d;}" +
     ".hub-dues-rep td.num,.hub-dues-rep th.num{text-align:right;white-space:nowrap;}" +
+    ".hub-dues-rep .hub-pay-src{display:inline-block;padding:2px 8px;border-radius:999px;background:#14532d;color:#f6efdc;border:1px solid #ecd07e;font-weight:700;line-height:1.3;}" +
+    "@media (max-width:720px){" +
+    ".hub-dues-rep .hub-pay-wrap:has(table.hub-pay-stack){overflow:visible;}" +
+    ".hub-dues-rep table.hub-pay-stack{min-width:0;}" +
+    ".hub-dues-rep table.hub-pay-stack thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}" +
+    ".hub-dues-rep table.hub-pay-stack tr{display:block;padding:10px 12px;border-top:1px solid rgba(168,128,28,.35);}" +
+    ".hub-dues-rep table.hub-pay-stack td{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border:0;padding:3px 0;text-align:left;}" +
+    ".hub-dues-rep table.hub-pay-stack td::before{content:attr(data-label);font-weight:700;color:#14532d;flex:none;}" +
+    ".hub-dues-rep table.hub-pay-stack td.num{text-align:right;}" +
+    "}" +
     ".hub-dues-rep .hub-pay-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:8px 0 10px;}" +
     ".hub-dues-rep .hub-pay-kind{margin-top:14px;padding:12px;border-radius:12px;background:#f6efdd;border-left:4px solid #d4af37;}" +
     ".hub-dues-rep .hub-pay-kind h3{margin:0 0 6px;}" +
@@ -138,6 +150,37 @@
     return KIND_LABEL[kind] || kind || "Waiver";
   }
 
+  function isWildApricotMethod(method, notes) {
+    return String(method || "").toLowerCase() === "other" && /wild apricot/i.test(String(notes || ""));
+  }
+
+  function paymentMethodLabel(method, notes) {
+    var raw = String(method || "").trim();
+    if (!raw) return "";
+    if (raw.toLowerCase() === "other") return isWildApricotMethod(raw, notes) ? "Wild Apricot" : "Other";
+    return raw;
+  }
+
+  function ledgerSourceLabel(row) {
+    var source = String((row && row.source) || "");
+    if (/wild apricot/i.test(source)) return "Wild Apricot";
+    var method = String((row && row.method) || "");
+    var note = (row && (row.note || row.notes)) || "";
+    if (method.toLowerCase() === "other") return isWildApricotMethod(method, note) ? "Wild Apricot" : "Other";
+    return method || source || "";
+  }
+
+  function sourceHtml(label) {
+    if (label === "Wild Apricot") return '<span class="hub-pay-src">Wild Apricot</span>';
+    return esc(label || "");
+  }
+
+  function rowDollars(row) {
+    if (!row) return 0;
+    if (row.amount_cents != null && row.amount_cents !== "") return num(row.amount_cents) / 100;
+    return num(row.amount);
+  }
+
   function fullName(m) {
     return (((m && m.first_name) || "") + " " + ((m && m.last_name) || "")).trim();
   }
@@ -245,14 +288,17 @@
     var cash = 0;
     var outstanding = 0;
     var waived = 0;
+    var apricot = 0;
     (rows || []).forEach(function (r) {
       cash += r.cashAmt;
       outstanding += r.dueAmt;
       waived += r.waivedAmt;
+      if (r.status === "paid" && isWildApricotMethod(r.method, r.notes)) apricot += r.cashAmt;
     });
     return {
       invoiced: (rows || []).length,
       cash: cash,
+      apricot: apricot,
       outstanding: outstanding,
       waived: waived,
       rate: formatRate(cash, outstanding)
@@ -329,7 +375,7 @@
         r.amount.toFixed(2),
         r.standard == null ? "" : r.standard.toFixed(2),
         r.status,
-        r.method,
+        paymentMethodLabel(r.method, r.notes),
         r.paid ? "true" : "false",
         r.paidDate,
         r.dueDate,
@@ -427,12 +473,12 @@
   function paintShell(card) {
     card.innerHTML =
       '<div class="app-head"><span class="ic">💵</span><div><h2>Dues &amp; Payments</h2>' +
-      "<small>Season dues, waivers, exports, and the online payments ledger</small></div></div>" +
+      "<small>Season dues, waivers, exports, and the cash ledger</small></div></div>" +
       '<div class="app-body hub-dues-rep">' +
       '<div class="hub-pay-top"><div><label for="hubPayYear">Membership year</label>' +
       '<input id="hubPayYear" type="number" min="2000" max="2100" value="2026" /></div></div>' +
       '<div class="hub-pay-tabs" id="hubPayTabs" role="tablist" aria-label="Dues and payments">' +
-      '<button type="button" class="hub-pay-tab on" id="hubPayTab_ledger" role="tab" aria-selected="true">Ledger</button>' +
+      '<button type="button" class="hub-pay-tab on" id="hubPayTab_ledger" role="tab" aria-selected="true">Cash ledger</button>' +
       '<button type="button" class="hub-pay-tab" id="hubPayTab_season" role="tab" aria-selected="false">Dues season</button>' +
       '<button type="button" class="hub-pay-tab" id="hubPayTab_waivers" role="tab" aria-selected="false">Waivers</button>' +
       '<button type="button" class="hub-pay-tab" id="hubPayTab_zeffy" role="tab" aria-selected="false">Check Zeffy</button>' +
@@ -472,45 +518,140 @@
     return row ? num(row.amount) : null;
   }
 
+  function wildApricotDuesRows() {
+    return (state.rows || []).filter(function (r) {
+      return r.status === "paid" && isWildApricotMethod(r.method, r.notes);
+    });
+  }
+
+  function samePayer(email, name, payEmail, payName) {
+    if (email && payEmail && email === payEmail) return true;
+    return !!(name && payName && name === payName);
+  }
+
+  function knownPaymentYear(pay, email, name) {
+    if (pay && pay.membership_year != null && pay.membership_year !== "") return Number(pay.membership_year);
+    var when = String((pay && (pay.when || pay.created_at)) || "").slice(0, 10);
+    var found = null;
+    (state.payments || []).some(function (p) {
+      var kind = String(p.product_kind || "").toLowerCase();
+      if (kind && kind !== "dues") return false;
+      if (p.membership_year == null || p.membership_year === "") return false;
+      if (!samePayer(email, name, String(p.payer_email || "").toLowerCase(), String(p.payer_name || "").toLowerCase())) return false;
+      var created = String(p.created_at || "").slice(0, 10);
+      if (when && created && when !== created) return false;
+      found = Number(p.membership_year);
+      return true;
+    });
+    return found;
+  }
+
+  function recentCoversDues(row) {
+    var email = String(row.email || "").toLowerCase();
+    var name = String(row.name || "").toLowerCase();
+    var season = year();
+    var from = seasonStart(season);
+    var to = seasonEnd(season);
+    return (state.recent || []).some(function (pay) {
+      var kind = String(pay.kind || pay.product_kind || "").toLowerCase();
+      if (kind && kind !== "dues") return false;
+      var payEmail = String(pay.email || pay.payer_email || "").toLowerCase();
+      var payName = String(pay.payer || pay.payer_name || "").toLowerCase();
+      if (!samePayer(email, name, payEmail, payName)) return false;
+      var payYear = knownPaymentYear(pay, email, name);
+      if (payYear != null) return payYear === season;
+      var day = String(pay.when || pay.created_at || "").slice(0, 10);
+      return !!day && day >= from && day <= to;
+    });
+  }
+
+  function ledgerRowMatches(row, filter) {
+    if (!filter || filter === "all") return true;
+    if (filter === "Wild Apricot") return ledgerSourceLabel(row) === "Wild Apricot";
+    return row.source === filter || row.method === filter;
+  }
+
   function renderLedger() {
     var panel = document.getElementById("hubPayPanel_ledger");
     if (!panel) return;
     if (!state.ledger) {
-      var note = '<p class="hub-pay-note">Latest online payments recorded automatically. This list is not added into season cash. A dues payment already on the season row would be counted twice.</p>';
-      if (!state.recent.length) {
-        panel.innerHTML = note + '<p class="empty">No online payments yet. They appear here automatically once the payment system is connected (see PAYMENTS_SETUP.md).</p>';
+      var apricotRows = wildApricotDuesRows();
+      var listed = [];
+      (state.recent || []).forEach(function (r) {
+        listed.push({
+          when: String(r.when || "").slice(0, 10),
+          name: r.payer || "?",
+          source: "Zeffy",
+          detail: r.description || r.kind || "",
+          amount: num(r.amount_cents) / 100,
+          unmatched: !r.matched
+        });
+      });
+      apricotRows.forEach(function (r) {
+        if (recentCoversDues(r)) return;
+        listed.push({
+          when: r.paidDate,
+          name: r.name,
+          source: "Wild Apricot",
+          detail: "Dues",
+          amount: r.cashAmt,
+          unmatched: false
+        });
+      });
+      var apricotTotal = 0;
+      listed.forEach(function (r) {
+        if (r.source === "Wild Apricot") apricotTotal += r.amount;
+      });
+      var note = '<p class="hub-pay-note">Zeffy payments, plus Wild Apricot dues from this season. Wild Apricot is already inside Cash collected on Dues season. This list does not add that money again, and it does not repeat cash, check, or waivers.</p>';
+      if (listed.some(function (r) { return r.source === "Wild Apricot"; })) {
+        note += '<div class="hub-pay-cards"><div class="hub-pay-card"><b id="hubPayApricotLedger">' + esc(money(apricotTotal)) +
+          '</b><span>Wild Apricot dues, not added again to cash collected</span></div></div>';
+      }
+      listed.sort(function (a, b) {
+        if (a.when === b.when) return 0;
+        return a.when < b.when ? 1 : -1;
+      });
+      if (!listed.length) {
+        panel.innerHTML = note + '<p class="empty">No payments in this list yet.</p>';
         return;
       }
-      var old = note + '<div class="hub-pay-wrap"><table><thead><tr>' +
-        "<th>When</th><th>Who</th><th>What</th><th class=\"num\">Amount</th></tr></thead><tbody>";
-      state.recent.forEach(function (r) {
-        var when = String(r.when || "").slice(0, 10);
-        old += "<tr><td>" + esc(when) + "</td><td>" + esc(r.payer || "?") +
-          (r.matched ? "" : ' <span style="color:#b3261e;">(no roster match)</span>') +
-          "</td><td>" + esc(r.description || r.kind || "") +
-          '</td><td class="num">' + esc(money(num(r.amount_cents) / 100)) + "</td></tr>";
+      var old = note + '<div class="hub-pay-wrap"><table class="hub-pay-stack"><thead><tr>' +
+        "<th>When</th><th>Who</th><th>Source</th><th>What</th><th class=\"num\">Amount</th></tr></thead><tbody>";
+      listed.forEach(function (r) {
+        old += "<tr><td data-label=\"When\">" + esc(r.when) + "</td><td data-label=\"Who\">" + esc(r.name) +
+          (r.unmatched ? ' <span style="color:#8a1c12;">(no roster match)</span>' : "") +
+          "</td><td data-label=\"Source\">" + sourceHtml(r.source) +
+          "</td><td data-label=\"What\">" + esc(r.detail) +
+          '</td><td class="num" data-label="Amount">' + esc(money(r.amount)) + "</td></tr>";
       });
       old += "</tbody></table></div>";
       panel.innerHTML = old;
       return;
     }
+    var allRows = state.ledger.rows || [];
+    var apricot = 0;
+    allRows.forEach(function (r) {
+      if (r.voided) return;
+      if (ledgerSourceLabel(r) === "Wild Apricot") apricot += rowDollars(r);
+    });
     var deposit = money(num(state.ledger.deposit_total_cents) / 100);
     var days = state.ledger.deposits_by_day || [];
     var dayHtml = days.map(function (d) {
       return "<li>" + esc(d.day) + " · " + esc(money(num(d.total_cents) / 100)) + "</li>";
     }).join("");
     var filter = state.methodFilter || "all";
-    var rows = (state.ledger.rows || []).filter(function (r) {
-      return filter === "all" || r.source === filter || r.method === filter;
-    });
+    var rows = allRows.filter(function (r) { return ledgerRowMatches(r, filter); });
     var html =
-      '<p class="hub-pay-note">June 1 through May 31. Deposit total is cash and check that has not been voided. Zeffy card payments and waivers are listed and are not in the deposit total.</p>' +
+      '<p class="hub-pay-note">June 1 through May 31. Deposit total is cash and check that has not been voided. The Wild Apricot card is every Wild Apricot row in this season. That money is already inside Cash collected on Dues season, so it is not added to the deposit total. Zeffy card payments and waivers are listed and are not in the deposit total. Filtering the list does not change the cards.</p>' +
       '<div class="hub-pay-cards"><div class="hub-pay-card"><b id="hubPayDeposit">' + esc(deposit) +
-      '</b><span>Deposit total (cash and check)</span></div></div>' +
+      '</b><span>Deposit total (cash and check)</span></div>' +
+      '<div class="hub-pay-card"><b id="hubPayApricotLedger">' + esc(money(apricot)) +
+      '</b><span>Wild Apricot dues, not in the deposit total</span></div></div>' +
       (dayHtml ? "<ul>" + dayHtml + "</ul>" : "") +
       '<div class="hub-pay-filters">' +
-      '<div><label for="hubPayMethod">Method</label><select id="hubPayMethod">' +
-      optionFilter("all", "All methods", filter) +
+      '<div><label for="hubPayMethod">Source</label><select id="hubPayMethod">' +
+      optionFilter("all", "All sources", filter) +
+      optionFilter("Wild Apricot", "Wild Apricot", filter) +
       optionFilter("zeffy", "Zeffy", filter) +
       optionFilter("cash", "Cash", filter) +
       optionFilter("check", "Check", filter) +
@@ -521,21 +662,22 @@
       '<label for="hubPayRecordSearch">Member</label>' +
       '<input id="hubPayRecordSearch" type="search" placeholder="Name or email" autocomplete="off" />' +
       '<div id="hubPayRecordHits"></div></div>' +
-      '<div class="hub-pay-wrap"><table><thead><tr>' +
-      "<th>When</th><th>Who</th><th>Method</th><th>Check</th><th class=\"num\">Amount</th><th></th></tr></thead><tbody>";
+      '<div class="hub-pay-wrap"><table class="hub-pay-stack"><thead><tr>' +
+      "<th>When</th><th>Who</th><th>Source</th><th>Check</th><th class=\"num\">Amount</th><th></th></tr></thead><tbody>";
     if (!rows.length) html += '<tr><td colspan="6">No rows in this filter.</td></tr>';
     rows.forEach(function (r) {
+      var label = ledgerSourceLabel(r);
       var tools = "";
-      if (state.canRecord && r.receipt_id && !r.voided && r.source !== "zeffy" && r.source !== "waiver") {
+      if (state.canRecord && r.receipt_id && !r.voided && label !== "Wild Apricot" && r.source !== "zeffy" && r.source !== "waiver") {
         tools = '<button type="button" class="btn" data-void="' + esc(r.receipt_id) + '">Void</button> ' +
           '<button type="button" class="btn" data-adjust="' + esc(r.receipt_id) + '">Adjust</button>';
       }
-      html += "<tr" + (r.voided ? ' class="hub-pay-void"' : "") + "><td>" + esc(String(r.when || "").slice(0, 10)) +
-        "</td><td>" + esc(r.name || "") + (r.voided ? " (voided)" : "") +
-        "</td><td>" + esc(r.method || r.source || "") +
-        "</td><td>" + esc(r.check_number || "") +
-        '</td><td class="num">' + esc(money(r.amount)) +
-        "</td><td>" + tools + "</td></tr>";
+      html += "<tr" + (r.voided ? ' class="hub-pay-void"' : "") + "><td data-label=\"When\">" + esc(String(r.when || "").slice(0, 10)) +
+        "</td><td data-label=\"Who\">" + esc(r.name || "") + (r.voided ? " (voided)" : "") +
+        "</td><td data-label=\"Source\">" + sourceHtml(label) +
+        "</td><td data-label=\"Check\">" + esc(r.check_number || "") +
+        '</td><td class="num" data-label="Amount">' + esc(money(rowDollars(r))) +
+        "</td><td data-label=\"\">" + tools + "</td></tr>";
     });
     html += "</tbody></table></div>";
     panel.innerHTML = html;
@@ -598,31 +740,36 @@
         esc(String(state.seasonReport.owing_total || 0)) + "</b> owing (matches Renewals)</p>";
     }
     var html = owing +
-      '<p class="hub-pay-note">Cash collected is the sum of paid dues rows whose method is not waiver. Waived dues stay out of cash and out of the collection-rate denominator. Collection rate is cash ÷ (cash + outstanding).</p>' +
+      '<p class="hub-pay-note">Cash collected counts every paid row except waivers, so it includes the Wild Apricot card. Waived dues stay out of Cash collected and out of the collection rate. Collection rate is cash divided by cash plus outstanding. All levels matches these cards.</p>' +
       '<div class="hub-pay-cards">' +
       '<div class="hub-pay-card"><b id="hubPayInvoiced">' + esc(String(sum.invoiced)) + '</b><span>Members invoiced</span></div>' +
       '<div class="hub-pay-card"><b id="hubPayCash">' + esc(money(sum.cash)) + '</b><span>Cash collected</span></div>' +
+      '<div class="hub-pay-card"><b id="hubPayApricot">' + esc(money(sum.apricot)) + '</b><span>Wild Apricot, included in cash collected</span></div>' +
       '<div class="hub-pay-card"><b id="hubPayOutstanding">' + esc(money(sum.outstanding)) + '</b><span>Outstanding</span></div>' +
       '<div class="hub-pay-card"><b id="hubPayWaived">' + esc(money(sum.waived)) + '</b><span>Waived value</span></div>' +
       '<div class="hub-pay-card"><b id="hubPayRate">' + esc(sum.rate) + '</b><span>Collection rate</span></div>' +
       "</div>" +
       "<h3>By membership level</h3>" +
-      '<div class="hub-pay-wrap"><table id="hubPayLevels"><thead><tr>' +
-      '<th>Level</th><th class="num">Invoiced</th><th class="num">Paid cash</th><th class="num">Waived</th>' +
+      '<div class="hub-pay-wrap"><table id="hubPayLevels" class="hub-pay-stack"><thead><tr>' +
+      '<th>Level</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Waived</th>' +
       '<th class="num">Outstanding</th><th class="num">Catalog rate</th></tr></thead><tbody>';
     if (!levels.length) {
       html += '<tr><td colspan="6">No dues rows for this year.</td></tr>';
     }
     levels.forEach(function (b) {
       var rate = catalogRate(b.level);
-      html += '<tr data-level="' + esc(b.level) + '"><td>' + esc(levelLabel(b.level)) +
-        '</td><td class="num">' + esc(String(b.invoiced)) +
-        '</td><td class="num">' + esc(money(b.cash)) +
-        '</td><td class="num">' + esc(money(b.waived)) +
-        '</td><td class="num">' + esc(money(b.outstanding)) +
-        '</td><td class="num">' + (rate == null ? "—" : esc(money(rate))) + "</td></tr>";
+      html += '<tr data-level="' + esc(b.level) + '"><td data-label="Level">' + esc(levelLabel(b.level)) +
+        '</td><td class="num" data-label="Invoiced">' + esc(String(b.invoiced)) +
+        '</td><td class="num" data-label="Collected">' + esc(money(b.cash)) +
+        '</td><td class="num" data-label="Waived">' + esc(money(b.waived)) +
+        '</td><td class="num" data-label="Outstanding">' + esc(money(b.outstanding)) +
+        '</td><td class="num" data-label="Catalog rate">' + (rate == null ? "—" : esc(money(rate))) + "</td></tr>";
     });
-    html += "</tbody></table></div>" +
+    html += '</tbody><tfoot><tr><td data-label="Level">All levels</td><td class="num" id="hubPayLevelInvoiced" data-label="Invoiced">' + esc(String(sum.invoiced)) +
+      '</td><td class="num" id="hubPayLevelCash" data-label="Collected">' + esc(money(sum.cash)) +
+      '</td><td class="num" id="hubPayLevelWaived" data-label="Waived">' + esc(money(sum.waived)) +
+      '</td><td class="num" id="hubPayLevelDue" data-label="Outstanding">' + esc(money(sum.outstanding)) +
+      '</td><td class="num" data-label="Catalog rate"></td></tr></tfoot></table></div>' +
       "<h3>Member detail</h3>" +
       '<div class="hub-pay-filters">' +
       '<div><label for="hubPaySearch">Search</label><input id="hubPaySearch" type="search" placeholder="Name or email" autocomplete="off" /></div>' +
@@ -650,17 +797,19 @@
       host.innerHTML = '<p class="empty">No members match this filter.</p>';
       return;
     }
-    var html = '<div class="hub-pay-wrap"><table><thead><tr>' +
+    var html = '<div class="hub-pay-wrap"><table class="hub-pay-stack"><thead><tr>' +
       "<th>Name</th><th>Level</th><th class=\"num\">Amount owed</th><th>Status</th><th>Method</th><th>Paid date</th><th>Notes</th>" +
       "</tr></thead><tbody>";
     rows.forEach(function (r) {
       var notes = r.notes || "";
       if (notes.length > 80) notes = notes.slice(0, 77) + "...";
-      html += '<tr><td><button type="button" class="hub-pay-name" data-history="' + esc(r.memberId || "") + '">' +
-        esc(r.name) + "</button></td><td>" + esc(levelLabel(r.level)) +
-        '</td><td class="num">' + esc(money(r.dueAmt)) + "</td><td>" + esc(statusLabel(r.status)) +
-        "</td><td>" + esc(r.method || "—") + "</td><td>" + esc(r.paidDate || "—") +
-        "</td><td>" + esc(notes || "—") + "</td></tr>";
+      var methodText = paymentMethodLabel(r.method, r.notes);
+      html += '<tr><td data-label="Name"><button type="button" class="hub-pay-name" data-history="' + esc(r.memberId || "") + '">' +
+        esc(r.name) + "</button></td><td data-label=\"Level\">" + esc(levelLabel(r.level)) +
+        '</td><td class="num" data-label="Amount owed">' + esc(money(r.dueAmt)) + "</td><td data-label=\"Status\">" + esc(statusLabel(r.status)) +
+        "</td><td data-label=\"Method\">" + (methodText ? sourceHtml(methodText) : "None") +
+        "</td><td data-label=\"Paid date\">" + esc(r.paidDate || "None") +
+        "</td><td data-label=\"Notes\">" + esc(notes || "None") + "</td></tr>";
     });
     html += "</tbody></table></div>";
     host.innerHTML = html;
