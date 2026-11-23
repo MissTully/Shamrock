@@ -1,6 +1,6 @@
 // Hub-native volunteer hours: no Track It Forward instructions, Approvals
 // queue, host confirm, Event Studio cap, and volunteer signup pending hours.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");

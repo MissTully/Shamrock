@@ -1,5 +1,5 @@
 // Event Studio optional raffle / meal / online fields, and signup meal visibility.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 async function openEventStudio(page) {

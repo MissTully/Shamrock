@@ -1,6 +1,6 @@
 // Member Hub home-screen install path: manifest, icons, service worker,
 // Apple standalone tags, hub how-to card, and no public homepage banner.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 test.describe("Member Hub home-screen install", () => {

@@ -1,6 +1,6 @@
 // Locker rentals: Zeffy pay links, FCFS form, and the officer queue shell.
 // Does not submit a real reservation. The live database is not mutated.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const SMALL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small";

@@ -1,7 +1,7 @@
 // Quick QR picker: one dropdown holding events (auto-filled from the events
 // table), tracked library codes, and handy links. Mounts the real studio
 // script against a stubbed database client, as the other QR specs do.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 async function mountStudio(page) {
   await page.goto("/raffle-qr-sheet.html"); // loads vendor QRCode + kosQR

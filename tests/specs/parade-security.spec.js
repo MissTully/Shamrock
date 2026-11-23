@@ -1,5 +1,5 @@
 // Parade security sign-up: member empty state, sample shifts, officer roster, public CTA.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 const fs = require("fs");
 const path = require("path");

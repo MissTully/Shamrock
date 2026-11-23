@@ -1,5 +1,5 @@
 // Shamrock Leaders titles: questionnaire options match the directory language.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 const OFFICER_TITLES = ["President", "Vice President", "Treasurer", "Secretary"];

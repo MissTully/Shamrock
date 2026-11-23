@@ -1,6 +1,6 @@
 // Officer desk Dues & Payments (Phase 4): season totals, waiver breakdown,
 // aging buckets, and CSV field presence. Stubbed reads only.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 const ADA = "11111111-1111-4111-8111-111111111111";
 const BEA = "22222222-2222-4222-8222-222222222222";

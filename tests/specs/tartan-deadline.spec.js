@@ -3,7 +3,7 @@
 // now that the October 24, 2026 ball has passed.
 // Member Hub (sign-in and both hubs) still shows a Saturday reminder through
 // the end of October 24, then hides it. That badge is an event reminder, not a ticket sale.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const HUB_LABEL = "Tartan Ball is this Saturday, October 24!";

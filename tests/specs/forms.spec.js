@@ -1,7 +1,7 @@
 // Regression: form structure and client-side validation.
 // These tests never submit valid data — the forms write to the production
 // Supabase backend, so we only exercise the browser-side validation path.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 test("join interest form: required fields block an empty submit", async ({ page }) => {

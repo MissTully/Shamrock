@@ -1,5 +1,5 @@
 // Who's coming: Officer Desk RSVP list. Fixtures only. The SQL file is not applied.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 const fs = require("fs");
 const path = require("path");

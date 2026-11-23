@@ -1,7 +1,7 @@
 // Craic Cup is a real hub tab. Its pill uses the same dark-green active
 // state as Home, Events, and My Krewe, including deep links and in-hub jumps.
 // Offline fixtures only. This does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const GREEN = "rgb(20, 83, 45)";

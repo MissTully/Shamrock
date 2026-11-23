@@ -1,6 +1,6 @@
 // Show / Hide on every password field. Desktop is the wide castle door.
 // Phone width is the compact door. Nothing here signs in or writes to Supabase.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 function revealBtn(page, inputId) {

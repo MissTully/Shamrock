@@ -1,5 +1,5 @@
 // Parade season: Event Studio parade + meeting link, Hub status, public cards, .ics.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 async function openEventStudio(page) {

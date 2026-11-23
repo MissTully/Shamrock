@@ -1,6 +1,6 @@
 // Public shop catalog. Logged-out visitors see live items and open the
 // shared KOS Shop in the same tab. No site cart.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 const KOS = "https://www.zeffy.com/en-US/ticketing/kos-shop";

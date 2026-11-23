@@ -1,6 +1,6 @@
 // Officer desk Dues waivers (Phase 3): request, approve+apply, deny,
 // elected-officer batch confirm, and paid cash rows left untouched.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 const ADA = "11111111-1111-4111-8111-111111111111";
 const BEA = "22222222-2222-4222-8222-222222222222";

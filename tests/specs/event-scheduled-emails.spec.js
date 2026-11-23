@@ -1,6 +1,6 @@
 // Event Studio scheduled krewe emails: announcement, ticket reminder,
 // and the registration-closing warning sent two days before close.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 async function openEventStudio(page) {

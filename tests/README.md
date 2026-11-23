@@ -48,6 +48,13 @@ External services (Supabase, CDNs, Google Fonts) are treated as optional:
 the suite passes offline, and only same-origin failures or genuine script
 errors fail a test.
 
+Browser specs import `{ test, expect }` from `specs/kos-fixtures.js`, not
+from `@playwright/test`. That shared fixture stubs `*.supabase.co/storage/*`
+so CI never downloads live videos or images from the production project.
+Storage images are fulfilled with a 1x1 PNG. Videos and audio are aborted.
+Local fixture files under `tests/fixtures/` still load as usual. A static
+check fails if a new spec imports Playwright's `test` directly.
+
 ## Membership training SQL harness
 
 `tests/sql/membership-training-fixes-harness.sql` checks the four training-fix

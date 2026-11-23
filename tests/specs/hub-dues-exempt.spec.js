@@ -1,5 +1,5 @@
 // Elected officers are not shown a dues invoice. Board, captains, and chairs are.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const PARADE = {

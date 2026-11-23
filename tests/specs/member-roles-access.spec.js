@@ -1,5 +1,5 @@
 // Member roles and access. Role fixtures drive the Hub offline.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 const rules = require("../../assets/kos-roles-access-rules.js");
 
