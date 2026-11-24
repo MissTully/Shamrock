@@ -175,6 +175,30 @@ h1,h2,h3{ font-family:var(--display); letter-spacing:.4px; line-height:1.2; }
 .btn-primary:hover{ background:linear-gradient(180deg,#f3dd97,var(--gold-light)); }
 .btn-outline{ background:rgba(255,255,255,.06); color:#fff; border-color:rgba(236,208,126,.8); }
 .btn-outline:hover{ background:rgba(236,208,126,.18); border-color:#fff; }
+/* Secondary button for cream and parchment. .btn-outline is white text
+   for dark bands and heroes, so it disappears on a light section.
+   #145a32 on the cream field is about 7:1, above WCAG AA. */
+.btn-outline-light,
+a.btn-outline-light:link,
+a.btn-outline-light:visited,
+a.btn-outline-light:hover,
+a.btn-outline-light:focus,
+a.btn-outline-light:focus-visible{
+  background:transparent;
+  color:#145a32;
+  border-color:#145a32;
+  text-decoration:none;
+}
+.btn-outline-light:hover,
+a.btn-outline-light:hover{
+  background:rgba(20,90,50,.10);
+  border-color:#0e4426;
+}
+.btn-outline-light:focus-visible,
+a.btn-outline-light:focus-visible{
+  outline:3px solid #145a32;
+  outline-offset:3px;
+}
 
 .btn-green{ background:linear-gradient(180deg,var(--green-600),var(--green-800)); color:#fff; box-shadow:var(--shadow-sm); }
 .btn-green:hover{ background:linear-gradient(180deg,var(--green-700),var(--green-900)); }
