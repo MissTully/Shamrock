@@ -242,4 +242,92 @@ test.describe("Charity member volunteer hours", () => {
     expect(overflow).toBe(true);
     assertHealthy(expect, report, "phone charity hours");
   });
+
+  test("the note next to the button is the one that is saved", async ({ page }) => {
+    const report = watchPage(page);
+    const card = await openRoster(page);
+    await card.locator("[data-charity-toggle='m-patrick']").click();
+    const pending = card.locator("[data-charity-pending='p-dup'] textarea");
+    const expanded = card.locator("[data-charity-log='p-dup'] textarea");
+    await pending.fill("Counted from the list");
+    await expect(expanded).toHaveValue("Counted from the list");
+    await expanded.evaluate(function (el) { el.value = "Stale expanded note"; });
+    await card.locator("[data-charity-pending='p-dup'] [data-charity-reject='p-dup']").click();
+    const log = card.locator("[data-charity-log='p-dup']");
+    await expect(log).toContainText("Review note: Counted from the list");
+    await expect(log).not.toContainText("Stale expanded note");
+
+    const sean = card.locator("[data-charity-pending='s1'] textarea");
+    await sean.fill("Temporary");
+    await sean.fill("");
+    await card.locator("[data-charity-pending='s1'] [data-charity-approve='s1']").click();
+    await card.locator("[data-charity-toggle='m-sean']").click();
+    const seanLog = card.locator("[data-charity-log='s1']");
+    await expect(seanLog).toBeVisible();
+    await expect(seanLog).not.toContainText("Temporary");
+    await expect(seanLog).not.toContainText("Review note");
+    assertHealthy(expect, report, "charity review note");
+  });
+
+  test("a slower season response does not replace the season on screen", async ({ page }) => {
+    const report = watchPage(page);
+    const card = await openRoster(page);
+    await page.evaluate(function () {
+      function emptyQuery() {
+        var query = Promise.resolve({ data: [], error: null });
+        ["select", "eq", "order", "in", "limit", "neq"].forEach(function (name) {
+          query[name] = function () { return query; };
+        });
+        return query;
+      }
+      window.__kosSb = {
+        from: function () { return emptyQuery(); },
+        rpc: function (name, args) {
+          if (name !== "list_charity_volunteer_hours") {
+            return Promise.resolve({ data: null, error: null });
+          }
+          var season = Number(args && args.p_season);
+          var delay = season === 2026 ? 300 : 30;
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve({
+                error: null,
+                data: {
+                  ok: true,
+                  season_year: season,
+                  seasons: [2027, 2026],
+                  members: [{
+                    member_id: "m-live",
+                    first_name: "Live",
+                    last_name: "Member",
+                    name: "Live Member",
+                    membership_level: "full",
+                    logs: season === 2027 ? [{
+                      id: "live-1",
+                      member_id: "m-live",
+                      season_year: 2027,
+                      worked_on: "2026-09-01",
+                      activity: "Basket packing",
+                      hours: 9,
+                      source: "manual",
+                      status: "approved"
+                    }] : []
+                  }]
+                }
+              });
+            }, delay);
+          });
+        }
+      };
+      window.__kosHubCharityHoursLive();
+    });
+    await card.locator("#hubCharitySeason").selectOption("2026");
+    await card.locator("#hubCharitySeason").selectOption("2027");
+    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 approved");
+    await page.waitForTimeout(400);
+    await expect(card.locator("#hubCharitySeason")).toHaveValue("2027");
+    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 approved");
+    await expect(card.locator("[data-charity-member='m-live']")).not.toContainText("0 approved");
+    assertHealthy(expect, report, "charity season race");
+  });
 });

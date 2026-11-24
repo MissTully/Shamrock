@@ -10813,11 +10813,20 @@
 
   function rememberCharityNoteDrafts(root) {
     if (!root || !root.querySelectorAll) return;
+    var grouped = {};
     root.querySelectorAll("[data-charity-note]").forEach(function (el) {
       var id = el.getAttribute("data-charity-note");
       if (!id) return;
-      var value = el.value || "";
-      if (!charityHoursState.noteDrafts[id] || value) charityHoursState.noteDrafts[id] = value;
+      if (!grouped[id]) grouped[id] = [];
+      grouped[id].push(el.value || "");
+    });
+    Object.keys(grouped).forEach(function (id) {
+      var values = grouped[id];
+      var prev = charityHoursState.noteDrafts[id] || "";
+      var changed = values.filter(function (value) { return value !== prev; });
+      // A cleared box is a real edit. Do not put the previous text back
+      // because another copy of the same note still holds it.
+      charityHoursState.noteDrafts[id] = changed.length ? changed[changed.length - 1] : (values[0] || "");
     });
   }
 
@@ -11047,6 +11056,16 @@
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
     });
+    card.querySelectorAll("[data-charity-note]").forEach(function (el) {
+      el.addEventListener("input", function () {
+        var id = el.getAttribute("data-charity-note");
+        var value = el.value || "";
+        if (id) charityHoursState.noteDrafts[id] = value;
+        card.querySelectorAll("[data-charity-note]").forEach(function (other) {
+          if (other !== el && other.getAttribute("data-charity-note") === id) other.value = value;
+        });
+      });
+    });
     card.querySelectorAll("[data-charity-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         decideCharityHours(btn.getAttribute("data-charity-approve"), true, btn);
@@ -11078,9 +11097,18 @@
     renderCharityHours();
   }
 
+  function charityNoteFromButton(id, btn) {
+    var scope = btn && btn.closest ? btn.closest(".hub-appr, .hub-charity-log") : null;
+    var area = scope && scope.querySelector ? scope.querySelector("[data-charity-note]") : null;
+    if (area && area.getAttribute("data-charity-note") === String(id)) return area.value || "";
+    return null;
+  }
+
   async function decideCharityHours(id, approved, btn) {
     rememberCharityNoteDrafts(document.getElementById("hubCharityHours"));
-    var note = charityNoteDraft(id);
+    var typed = charityNoteFromButton(id, btn);
+    if (typed !== null) charityHoursState.noteDrafts[String(id)] = typed;
+    var note = (typed !== null ? typed : charityNoteDraft(id)).trim();
     if (btn) btn.disabled = true;
     if (charityHoursState.fixture) {
       charityApplyFixtureDecision(id, approved, note);
@@ -11115,6 +11143,8 @@
     loadCharityHours(client);
   }
 
+  var charityHoursLoadGen = 0;
+
   async function loadCharityHours(client) {
     if (!canSeeCharityHours()) return;
     if (charityHoursState.fixture) {
@@ -11127,31 +11157,41 @@
       renderCharityHours();
       return;
     }
+    var requestedSeason = charityHoursState.season || null;
+    var gen = ++charityHoursLoadGen;
     var args = {};
-    if (charityHoursState.season) args.p_season = charityHoursState.season;
+    if (requestedSeason) args.p_season = requestedSeason;
     try {
       var res = await client.rpc("list_charity_volunteer_hours", args);
-      if (charityHoursState.fixture) return;
+      if (gen !== charityHoursLoadGen || charityHoursState.fixture) return;
       if (res && res.error) throw res.error;
       var data = res && res.data;
       if (!data || data.ok === false) {
         charityHoursState.payload = null;
         charityHoursState.error = (data && data.message) || "You cannot view other members' volunteer hours.";
+      } else if (requestedSeason && Number(data.season_year) !== Number(requestedSeason)) {
+        return;
       } else {
         charityHoursState.error = "";
         charityHoursState.payload = data;
         if (!charityHoursState.season && data.season_year) charityHoursState.season = data.season_year;
       }
     } catch (e) {
-      if (charityHoursState.fixture) return;
+      if (gen !== charityHoursLoadGen || charityHoursState.fixture) return;
       var msg = String((e && e.message) || e || "");
       charityHoursState.payload = null;
       charityHoursState.error = /could not find the function|schema cache|404|PGRST202/i.test(msg)
         ? "Member hours are not available yet. Apply sql/kos_charity_volunteer_hours.sql, then refresh."
         : "Could not load member hours. Try again in a moment.";
     }
+    if (gen !== charityHoursLoadGen) return;
     renderCharityHours();
   }
+
+  window.__kosHubCharityHoursLive = function () {
+    charityHoursState.fixture = false;
+    charityHoursLoadGen += 1;
+  };
 
   window.__kosHubSetCharityHours = function (payload) {
     charityHoursState.fixture = true;
