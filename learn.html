@@ -132,6 +132,52 @@ details[open] > summary .hs-more{display:none;}
   .hs-opts button{width:100%;text-align:left;}
   .lm-cat-ico{flex:0 0 34px;height:34px;font-size:17px;}
 }
+/* Essay inside The Wheel of the Year */
+#art-earrach{
+  margin-top:18px;
+  padding-top:6px;
+  border-top:1px dashed rgba(168,128,28,.35);
+}
+#art-earrach h3{
+  font-family:var(--display);
+  color:var(--green-800);
+  font-size:1.15rem;
+  letter-spacing:.3px;
+  line-height:1.25;
+  margin:1.15em 0 .35em;
+}
+#art-earrach .essay-title{margin:12px 0 .15em;}
+#art-earrach .essay-by{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-family:var(--fancy);
+  font-style:italic;
+}
+#art-earrach .essay-more{margin:2px 0 4px;}
+#art-earrach .essay-more > summary{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:44px;
+  width:auto;
+  margin:0;
+  padding:8px 2px;
+  list-style:none;
+  cursor:pointer;
+  border:0;
+  background:transparent;
+  color:var(--gold-deep);
+  font-family:var(--fancy);
+  font-style:italic;
+  font-weight:600;
+  font-size:1.05em;
+}
+#art-earrach .essay-more > summary::-webkit-details-marker{display:none;}
+#art-earrach .essay-more > summary:hover{color:var(--green-800);}
+#art-earrach .essay-more > summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px;}
+#art-earrach .essay-more > summary .when-open{display:none;}
+#art-earrach .essay-more[open] > summary .when-closed{display:none;}
+#art-earrach .essay-more[open] > summary .when-open{display:inline;}
 </style>
 </head>
 <body>
@@ -903,6 +949,29 @@ details[open] > summary .hs-more{display:none;}
       <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
          and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
          finer place to wear your green than marching with the Krewe.</p>
+      <div id="art-earrach">
+      <h3 class="essay-title">Earrach: Spring and the Irish Memory</h3>
+      <p class="essay-by">By Patrick MacGregor</p>
+      <p>People who come to Ireland usually expect our history to be a story of loss, and it is one. In my years of teaching it, though, I have found that the Irish story makes the most sense when you read it through the season we call <em>earrach</em>, spring. Our calendar says spring begins on the first of February, while most of the world is still shoveling snow. I think that says a good deal about us. We have always been a people inclined to announce spring before the evidence quite supports it.</p>
+      <details class="essay-more">
+        <summary><span class="when-closed">Read more</span><span class="when-open">Show less</span></summary>
+        <h3>Brigid and the older year</h3>
+        <p>The first of February is Saint Brigid's Day. Before Christianity it was Imbolc, one of the four great festivals of the Gaelic year, tied to lambing and the return of milk to the ewes. The Church did not erase that festival. It laid a saint over it. Brigid of Kildare, the abbess remembered for giving away whatever she had to the poor, took on much of the character of an older goddess of the same name. Families still weave her rush cross and hang it over the door. In 2023 the state made her day a public holiday, the first in Ireland named for a woman.</p>
+        <p>That layering is the first lesson of Irish history. Very little here is ever fully replaced. New things are built on old foundations, and the old shows through.</p>
+        <h3>Patrick, the outsider</h3>
+        <p>March brings Saint Patrick, and with him a great deal of misunderstanding. Patrick was not Irish. He was a Romano-Briton of the fifth century, taken as a boy by Irish raiders and kept as a slave herding animals. He escaped and later chose to return to the island of his captivity as a missionary. His own writings, the <em>Confessio</em>, survive, and they are humble and plainly written by a man who never felt fully at ease among the educated.</p>
+        <p>I tell my students that the patron saint of Ireland was a trafficked foreigner who forgave his captors. Whatever your faith, that is a strange and generous founding story for a nation, and it deserves more attention than the green beer.</p>
+        <h3>The spring that failed</h3>
+        <p>No Irish historian can write about spring without writing about the years when it did not come. From 1845, a blight destroyed the potato crop that much of the rural poor depended on almost entirely. The failure repeated, and the Great Famine lasted until about 1852. Roughly a million people died of starvation and the diseases that came with it, and at least another million emigrated, often on overcrowded and deadly ships. The population of the island fell by about a quarter within a decade, and it kept falling for generations.</p>
+        <p>Food continued to be exported from Ireland during those years, and relief from the government in London was slow and limited by the economic thinking of the day. Historians still argue about how much blame to assign and in what proportions. What is not in dispute is the scale of the loss, or that the Famine scattered the Irish across Britain, North America and Australia. The tens of millions around the world who claim Irish descent today are in large part its long echo.</p>
+        <h3>A rising at Easter</h3>
+        <p>Spring returns in our history in 1916, on Easter Monday, the 24th of April. A few hundred members of the Irish Volunteers and the Irish Citizen Army seized buildings in Dublin, and Patrick Pearse read a proclamation of an Irish Republic outside the General Post Office. Militarily it was hopeless, and it was over within a week. Much of Dublin was initially hostile to the rebels.</p>
+        <p>What changed the public mood was the response. Sixteen men were executed, most of them at Kilmainham Gaol over a matter of days in May. Within a few years opinion had shifted dramatically. There followed the War of Independence, the Anglo-Irish Treaty of 1921, the Irish Free State in 1922, and a civil war that divided families for decades. The Republic was formally declared in 1949, while six northern counties remained in the United Kingdom, a division whose consequences are still being worked out.</p>
+        <p>It is significant that the rebels chose Easter. They understood the symbolism of sacrifice and resurrection, and they were using it.</p>
+        <h3>What spring teaches</h3>
+        <p>When I put these episodes side by side, I do not see a simple tale of victimhood or of triumph. I see a pattern of renewal that was never guaranteed. Brigid's cross is woven fresh every year because the old one has withered. The Irish language, pushed to the edges for centuries, is now taught in every school and heard again in Dublin cafés, imperfectly but stubbornly. A country that once exported its young people by necessity has, in recent decades, become a place others emigrate <em>to</em>.</p>
+        <p>We are not a people who believe spring is certain. Our history has taught us otherwise. But we have, for a very long time, made a habit of declaring it on the first of February anyway, and then doing the work to see it through.</p>
+      </details>
       </div>
     </details>
       </div>
