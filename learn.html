@@ -132,7 +132,12 @@ details[open] > summary .hs-more{display:none;}
   .hs-opts button{width:100%;text-align:left;}
   .lm-cat-ico{flex:0 0 34px;height:34px;font-size:17px;}
 }
-/* Essay reading inside Irish Heritage & History */
+/* Essay inside The Wheel of the Year */
+#art-earrach{
+  margin-top:18px;
+  padding-top:6px;
+  border-top:1px dashed rgba(168,128,28,.35);
+}
 #art-earrach h3{
   font-family:var(--display);
   color:var(--green-800);
@@ -140,6 +145,13 @@ details[open] > summary .hs-more{display:none;}
   letter-spacing:.3px;
   line-height:1.25;
   margin:1.15em 0 .35em;
+}
+#art-earrach .essay-title{margin:12px 0 .15em;}
+#art-earrach .essay-by{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-family:var(--fancy);
+  font-style:italic;
 }
 #art-earrach .essay-more{margin:2px 0 4px;}
 #art-earrach .essay-more > summary{
@@ -822,7 +834,7 @@ details[open] > summary .hs-more{display:none;}
     <details class="lm-cat" id="cat-heritage">
       <summary class="lm-cat-sum">
         <span class="lm-cat-ico" aria-hidden="true">📜</span>
-        <span class="lm-cat-t"><b>Irish Heritage &amp; History</b><small>6 modules</small></span>
+        <span class="lm-cat-t"><b>Irish Heritage &amp; History</b><small>5 modules</small></span>
         <span class="lm-cat-caret" aria-hidden="true">▾</span>
       </summary>
       <div class="lm-cat-body">
@@ -937,13 +949,10 @@ details[open] > summary .hs-more{display:none;}
       <p>Of course, the day we hold dearest is the 17th of March. Saint Patrick's Day began as a quiet feast
          and grew into the world's great celebration of all things Irish, and in Tampa Bay there's no
          finer place to wear your green than marching with the Krewe.</p>
-      </div>
-    </details>
-
-    <details class="lm-lesson lm-reading" id="art-earrach">
-      <summary><span class="hs-num">6</span><span class="hs-t"><b>Earrach: Spring and the Irish Memory</b><small>By Patrick MacGregor</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
-      <div class="hs-body lm-reading-body">
-      <p class="dropcap">People who come to Ireland usually expect our history to be a story of loss, and it is one. In my years of teaching it, though, I have found that the Irish story makes the most sense when you read it through the season we call <em>earrach</em>, spring. Our calendar says spring begins on the first of February, while most of the world is still shoveling snow. I think that says a good deal about us. We have always been a people inclined to announce spring before the evidence quite supports it.</p>
+      <div id="art-earrach">
+      <h3 class="essay-title">Earrach: Spring and the Irish Memory</h3>
+      <p class="essay-by">By Patrick MacGregor</p>
+      <p>People who come to Ireland usually expect our history to be a story of loss, and it is one. In my years of teaching it, though, I have found that the Irish story makes the most sense when you read it through the season we call <em>earrach</em>, spring. Our calendar says spring begins on the first of February, while most of the world is still shoveling snow. I think that says a good deal about us. We have always been a people inclined to announce spring before the evidence quite supports it.</p>
       <details class="essay-more">
         <summary><span class="when-closed">Read more</span><span class="when-open">Show less</span></summary>
         <h3>Brigid and the older year</h3>
