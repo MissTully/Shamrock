@@ -270,7 +270,7 @@
         <div id="plannedHoursWrap" style="display:none;">
           <label for="plannedHours">Volunteer hours you expect to work</label>
           <input id="plannedHours" type="number" min="0.5" max="24" step="0.5" placeholder="e.g. 2" />
-          <div class="hint">Optional. Signing up as a volunteer logs pending hours when a slot is open. A host or an officer confirms them. They count toward the 12-hour season goal after that.</div>
+          <div class="hint">Optional. Signing up as a volunteer logs those hours when a slot is open. They count toward the 12 hour season as soon as they are saved.</div>
         </div>
 
         <p id="ticketAside" hidden style="margin:12px 0;"></p>
@@ -872,8 +872,8 @@
           }
           const left = opt && opt.value ? volunteerSlotsLeft(opt) : null;
           const slotLine = left == null
-            ? "Volunteering is free. You will be signed up without ticket checkout. Pending hours are logged for the host or an officer to confirm."
-            : "Volunteering is free. " + left + (left === 1 ? " volunteer slot left." : " volunteer slots left.") + " Signing up logs pending hours for the host or an officer to confirm.";
+            ? "Volunteering is free. You will be signed up without ticket checkout. Your hours are logged when you sign up."
+            : "Volunteering is free. " + left + (left === 1 ? " volunteer slot left." : " volunteer slots left.") + " Signing up logs your hours.";
           showMessage(slotLine, "success");
           return;
         }
@@ -1250,8 +1250,8 @@
         const pendingHrs = data.volunteer_hours_pending;
         doneMsg = (doneMsg ? doneMsg + " " : "") + (
           pendingHrs
-            ? pendingHrs + " volunteer hours are pending approval."
-            : "Pending volunteer hours were logged for the host or an officer to confirm."
+            ? pendingHrs + " volunteer hours were logged."
+            : "Volunteer hours were logged."
         );
       }
       if (data.status !== "waitlisted" && data.meeting_url) {

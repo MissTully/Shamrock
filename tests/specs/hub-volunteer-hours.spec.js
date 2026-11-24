@@ -72,6 +72,8 @@ test.describe("Hub volunteer hours", () => {
     expect(text.toLowerCase()).not.toContain("trackitforward");
     expect(text.toLowerCase()).not.toContain("track it forward");
     expect(text.toLowerCase()).not.toContain("separate login");
+    expect(text).not.toContain("awaiting officer review");
+    expect(text.toLowerCase()).not.toContain("officer confirms");
     await shot(page, "volunteer-hours-card.png");
     assertHealthy(expect, report, "hours form");
   });
@@ -90,6 +92,8 @@ test.describe("Hub volunteer hours", () => {
     expect(text.toLowerCase()).not.toContain("trackitforward");
     expect(text.toLowerCase()).not.toContain("separate login");
     expect(text).not.toContain("\u2014");
+    expect(text.toLowerCase()).not.toContain("officer confirms");
+    expect(text).toContain("as soon as you save them");
     await block.locator("h3", { hasText: "How to record volunteer hours" }).scrollIntoViewIfNeeded();
     await shot(page, "faq-hours.png");
     assertHealthy(expect, report, "faq hours");
@@ -176,7 +180,7 @@ test.describe("Event Studio volunteer cap", () => {
     await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
     await openHomeShortcut(page, "event-studio");
     await expect(page.locator("#hubEventVolunteerCap")).toBeVisible();
-    await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("pending hours");
+    await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("logs those hours");
     await page.locator("#hubEventVolunteerCap").fill("2");
     await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("stops after 2 members");
     await expect(page.locator("#hubEventVolunteerCapHint")).toContainText("will not overbook");
@@ -236,13 +240,13 @@ test.describe("Volunteer signup hours", () => {
     await page.locator("#event").selectOption(OPEN_EVENT.id);
     await page.locator("#role").selectOption("volunteer");
     await expect(page.locator("#message")).toContainText("3 volunteer slots left");
-    await expect(page.locator("#message")).toContainText("pending hours");
+    await expect(page.locator("#message")).toContainText("logs your hours");
     await page.locator("#firstName").fill("Nia");
     await page.locator("#lastName").fill("Byrne");
     await page.locator("#email").fill("nia.byrne@example.com");
     await page.locator("#plannedHours").fill("3");
     await page.locator("#submitBtn").click();
-    await expect(page.locator("#message")).toContainText("3 volunteer hours are pending approval.");
+    await expect(page.locator("#message")).toContainText("3 volunteer hours were logged.");
     assertHealthy(expect, report, "volunteer signup pending hours");
   });
 });

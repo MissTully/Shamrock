@@ -4344,7 +4344,6 @@
     { code: "attend_event", label: "Attend an event (verified)", clovers: 20 },
     { code: "attend_meeting", label: "Attend a members' meeting", clovers: 15 },
     { code: "attend_ikc_event", label: "Attend another IKC krewe's event", clovers: 20 },
-    { code: "volunteer_event", label: "Volunteer at an event", clovers: 30 },
     { code: "volunteer_priority", label: "Priority shift bonus (officers flag hard-to-fill spots like security or float duty)", clovers: 60 },
     { code: "organize_event", label: "Organize an event", clovers: 50 },
     { code: "bring_guest", label: "Bring a guest (up to 3)", clovers: 5, perGuest: true },
@@ -7044,7 +7043,7 @@
       '<p class="hub-opt-hint" style="margin-top:6px;">Full address for signed-in members in the Member Hub and the RSVP confirmation email. Never shown on public pages.</p></div>' +
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div><label for="hubEventVolunteerCap">Volunteer slots</label><input id="hubEventVolunteerCap" type="number" min="0" step="1" placeholder="No cap" />' +
-      '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.</p></div>' +
+      '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs those hours. A full cap blocks more volunteer signups, including parade security.</p></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea>' +
       '<div class="hub-desc-preview" id="hubEventDescPreview" hidden></div></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
@@ -7297,7 +7296,7 @@
       return;
     }
     if (raw === "") {
-      hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.";
+      hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs those hours. A full cap blocks more volunteer signups, including parade security.";
       return;
     }
     var n = parseInt(raw, 10);
@@ -7309,7 +7308,7 @@
       hint.textContent = "Zero volunteer slots. Volunteer signup is blocked for this event.";
       return;
     }
-    hint.textContent = "Volunteer signup stops after " + n + (n === 1 ? " member" : " members") + ". Each signup logs pending hours. It will not overbook.";
+    hint.textContent = "Volunteer signup stops after " + n + (n === 1 ? " member" : " members") + ". Each signup logs the hours. It will not overbook.";
   }
 
   function resetEventEmailFields() {
@@ -10891,7 +10890,7 @@
     rememberCharityNoteDrafts(card);
     var api = charityHoursApi();
     var html = '<div class="app-head"><span class="ic">⏱</span><div><h2>Member volunteer hours</h2>' +
-      "<small>Approved hours, pending logs, and the shortfall toward 12 for full members.</small></div></div>" +
+      "<small>Logged hours this season, and the shortfall toward 12 for full members.</small></div></div>" +
       '<div class="app-body" id="hubCharityBody">';
     if (!api) {
       html += '<p class="empty">Could not load the hours roster.</p></div>';
@@ -10919,25 +10918,8 @@
     });
     if (!charityHoursState.season) charityHoursState.season = view.season;
 
-    html += '<h3 class="hub-charity-h" id="hubCharityPending">Pending approvals</h3>' +
-      '<p class="hub-charity-lead">Approve or reject a log for this season. Approving worked hours awards 30 Clovers. In-kind donations do not. Rejected hours do not count.</p>';
-    if (!view.pending.length) {
-      html += '<p class="empty">No hours are waiting for review this season.</p>';
-    } else {
-      view.pending.forEach(function (log) {
-        html += '<div class="hub-appr" data-charity-pending="' + esc(log.id) + '">' +
-          "<div><b>" + esc(log.member_name || "Member") + "</b>" +
-          '<span class="hub-charity-status pending">Pending</span>' +
-          '<div class="muted">' + esc(charityLogLine(api, log)) + "</div>" +
-          (log.notes ? '<div class="hub-charity-note">Member note: ' + esc(log.notes) + "</div>" : "") +
-          (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "") +
-          charityNoteField(log.id) +
-          "</div>" + charityDecisionButtons(log.id) + "</div>";
-      });
-    }
-
     html += '<h3 class="hub-charity-h" id="hubCharityRoster">Roster</h3>' +
-      '<p class="hub-charity-lead">' + esc(view.seasonLabel) + ". Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count at $12 per hour. Approved logs are what count.</p>" +
+      '<p class="hub-charity-lead">' + esc(view.seasonLabel) + ". Hours count when a member logs them. Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count at $12 per hour. Rejected logs stay off the total.</p>" +
       '<div class="hub-charity-controls">' +
       '<div class="fld"><label for="hubCharitySearch">Search by name</label>' +
       '<input id="hubCharitySearch" type="search" value="' + esc(charityHoursState.query) + '" placeholder="Name" autocomplete="off" /></div>' +
@@ -10949,12 +10931,12 @@
       "</select></div>" +
       '<div class="fld"><label for="hubCharitySort">Sort</label><select id="hubCharitySort">' +
       '<option value="name"' + (charityHoursState.sort === "name" ? " selected" : "") + ">Name</option>" +
-      '<option value="hours"' + (charityHoursState.sort === "hours" ? " selected" : "") + ">Approved hours</option>" +
+      '<option value="hours"' + (charityHoursState.sort === "hours" ? " selected" : "") + ">Logged hours</option>" +
       "</select></div>" +
       '<div class="fld-btn"><button type="button" class="btn" id="hubCharityCsv">Download CSV</button></div>' +
       "</div>" +
       '<div class="hub-app-filters" role="group" aria-label="Roster filters">' +
-      [["all", "All"], ["met", "Met 12"], ["under", "Under 12"], ["pending", "Has pending"]].map(function (pair) {
+      [["all", "All"], ["met", "Met 12"], ["under", "Under 12"], ["duplicate", "Possible duplicate"]].map(function (pair) {
         return '<button type="button" data-charity-filter="' + pair[0] + '"' +
           (charityHoursState.filter === pair[0] ? ' class="on"' : "") + ">" + pair[1] + "</button>";
       }).join("") +
@@ -10979,17 +10961,17 @@
           html += '<p class="empty">No logs for this season.</p>';
         }
         member.logs.forEach(function (log) {
-          var key = api.statusKey(log);
+          var rejected = api.statusKey(log) === "rejected";
           var who = charityApproverLine(api, log);
           html += '<div class="hub-charity-log" data-charity-log="' + esc(log.id) + '">' +
             "<b>" + esc(charityLogLine(api, log)) + "</b>" +
-            '<span class="hub-charity-status ' + esc(key) + '">' + esc(api.statusLabel(log)) + "</span>" +
+            '<span class="hub-charity-status ' + (rejected ? "rejected" : "approved") + '">' +
+            (rejected ? "Rejected" : "Logged") + "</span>" +
             (who ? '<div class="muted">' + esc(who) + "</div>" : "") +
             (log.notes ? '<div class="hub-charity-note">Member note: ' + esc(log.notes) + "</div>" : "") +
             (log.review_note ? '<div class="hub-charity-note">Review note: ' + esc(log.review_note) + "</div>" : "") +
-            (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "");
-          if (key === "pending") html += charityNoteField(log.id) + charityDecisionButtons(log.id);
-          html += "</div>";
+            (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "") +
+            "</div>";
         });
         html += "</div>";
       }
@@ -11055,26 +11037,6 @@
       a.download = "member-volunteer-hours-" + all.season + ".csv";
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
-    });
-    card.querySelectorAll("[data-charity-note]").forEach(function (el) {
-      el.addEventListener("input", function () {
-        var id = el.getAttribute("data-charity-note");
-        var value = el.value || "";
-        if (id) charityHoursState.noteDrafts[id] = value;
-        card.querySelectorAll("[data-charity-note]").forEach(function (other) {
-          if (other !== el && other.getAttribute("data-charity-note") === id) other.value = value;
-        });
-      });
-    });
-    card.querySelectorAll("[data-charity-approve]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        decideCharityHours(btn.getAttribute("data-charity-approve"), true, btn);
-      });
-    });
-    card.querySelectorAll("[data-charity-reject]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        decideCharityHours(btn.getAttribute("data-charity-reject"), false, btn);
-      });
     });
   }
 
@@ -11240,7 +11202,7 @@
     hubRolesAccess: { title: "Member roles and access", desc: "Set a title and choose which Officer Desk tools a member can use.", icon: "🎖", section: "Membership" },
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
-    hubCharityHours: { title: "Member volunteer hours", desc: "Every member's approved and pending hours for this season.", icon: "⏱", section: "Charity" },
+    hubCharityHours: { title: "Member volunteer hours", desc: "Every member's logged hours for this season.", icon: "⏱", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },

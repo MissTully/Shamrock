@@ -2,10 +2,16 @@
 -- oazwkwflgbthojvnclfc. The website does not run this file.
 -- Safe to re-run.
 --
--- Charity desk: every active member's volunteer hours for a June-May season,
--- plus approve / reject for the same people who can open that roster.
+-- Charity desk: every active member's volunteer hours for a June-May season.
+-- Hours a member logs are for tracking. They count as soon as they are saved.
+-- There is no officer review. Existing pending logs are marked approved.
+-- Rejected logs stay rejected.
 --
--- Who can read the roster and decide pending logs (kos_can_review_charity_hours):
+-- New logs do not earn Craic Cup Clovers. This file drops the
+-- kos_volunteer_hours_clover_bonus trigger. It does not delete existing
+-- volunteer_bonus rows in clover_ledger.
+--
+-- Who can read the roster (kos_can_review_charity_hours):
 --   * Charity chair and co-chair titles (Committee Chair of Charity,
 --     Chair of Charity, Co-Chair of Charity, Charity/Fundraising, and the
 --     chair_charity title key / kos_member_chairs_committee helper)
@@ -25,10 +31,8 @@
 -- policy. The roster is a security definer RPC that returns nothing unless
 -- the check above passes.
 --
--- Approvals reuse decide_volunteer_hours. The update still sets status and
--- approved, which is what kos_volunteer_hours_clover_bonus watches. Worked
--- hours that become approved earn volunteer_bonus. In-kind and rejected
--- logs do not. This file does not replace that trigger.
+-- The roster is read-only. Chairs can see a possible duplicate when two
+-- counted logs share a member, a date, and an activity or an event.
 --
 -- Depends on: members, profiles, volunteer_hours, events, member_roles,
 --   kos_current_member_id(), krewe_volunteer_season_year(),
@@ -71,8 +75,8 @@ revoke all on function public.kos_volunteer_log_type(text, text, text) from publ
 grant execute on function public.kos_volunteer_log_type(text, text, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2) Pending row that repeats an approved log: same member, same date, and
---    the same activity text or the same event.
+-- 2) Counted log that repeats another counted log: same member, same date,
+--    and the same activity text or the same event. Rejected logs do not match.
 -- ---------------------------------------------------------------------------
 create or replace function public.kos_volunteer_hours_possible_duplicate(
   p_id uuid,
@@ -95,7 +99,7 @@ as $$
        where o.member_id = p_member
          and o.id is distinct from p_id
          and coalesce(o.is_demo, false) = false
-         and (o.status = 'approved' or (o.approved and o.status is distinct from 'rejected'))
+         and o.status is distinct from 'rejected'
          and o.worked_on = p_worked_on
          and (
            (
@@ -108,7 +112,7 @@ as $$
 $$;
 
 comment on function public.kos_volunteer_hours_possible_duplicate(uuid, uuid, date, text, uuid) is
-  'True when a pending log matches an approved log for the same member, date, and activity or event.';
+  'True when another counted log matches this member, date, and activity or event. Rejected logs are ignored.';
 
 revoke all on function public.kos_volunteer_hours_possible_duplicate(uuid, uuid, date, text, uuid) from public, anon, authenticated;
 
@@ -344,14 +348,15 @@ begin
         'name', nullif(btrim(coalesce(a.first_name, '') || ' ' || coalesce(a.last_name, '')), ''),
         'membership_level', a.membership_level,
         'membership_status', a.membership_status,
-        'hours_approved', coalesce(s.approved_hours, 0),
-        'hours_pending', coalesce(s.pending_hours, 0),
+        'hours_logged', coalesce(s.logged_hours, 0),
+        'hours_approved', coalesce(s.logged_hours, 0),
+        'hours_pending', 0,
         'hours_needed', case
-          when a.membership_level = 'full' then greatest(0, 12 - coalesce(s.approved_hours, 0))
+          when a.membership_level = 'full' then greatest(0, 12 - coalesce(s.logged_hours, 0))
           else null
         end,
         'buyout_estimate', case
-          when a.membership_level = 'full' then greatest(0, 12 - coalesce(s.approved_hours, 0)) * 12
+          when a.membership_level = 'full' then greatest(0, 12 - coalesce(s.logged_hours, 0)) * 12
           else null
         end,
         'log_count', coalesce(s.log_count, 0),
@@ -360,8 +365,7 @@ begin
     from active a
     left join lateral (
       select
-        sum(l.hours) filter (where l.norm_status = 'approved') as approved_hours,
-        sum(l.hours) filter (where l.norm_status = 'pending') as pending_hours,
+        sum(l.hours) filter (where l.norm_status is distinct from 'rejected') as logged_hours,
         count(*)::int as log_count,
         jsonb_agg(
           jsonb_build_object(
@@ -380,7 +384,7 @@ begin
             'status', l.norm_status,
             'approved_by', l.approved_by,
             'possible_duplicate', case
-              when l.norm_status = 'pending' then public.kos_volunteer_hours_possible_duplicate(
+              when l.norm_status is distinct from 'rejected' then public.kos_volunteer_hours_possible_duplicate(
                 l.id, l.member_id, l.worked_on, l.activity, l.event_id
               )
               else false
@@ -590,8 +594,6 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Keep the note under 500 characters.');
   end if;
 
-  -- status and approved are the columns kos_volunteer_hours_clover_bonus
-  -- listens to. Do not decide hours by writing a side table instead.
   update public.volunteer_hours
      set approved = coalesce(p_approved, false),
          status = case when coalesce(p_approved, false) then 'approved' else 'rejected' end,
@@ -613,5 +615,149 @@ comment on function public.decide_volunteer_hours(uuid, boolean, text) is
 
 revoke all on function public.decide_volunteer_hours(uuid, boolean, text) from public, anon;
 grant execute on function public.decide_volunteer_hours(uuid, boolean, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 7) Hours count immediately. Pending logs already on file become approved.
+--    Rejected logs stay rejected. New inserts that are not rejected are
+--    stored as approved, including event signup and door check-in.
+-- ---------------------------------------------------------------------------
+update public.volunteer_hours
+   set approved = true,
+       status = 'approved'
+ where status = 'pending';
+
+create or replace function public.kos_volunteer_hours_count_on_insert()
+returns trigger
+language plpgsql
+set search_path to public
+as $$
+begin
+  if new.status is distinct from 'rejected' then
+    new.status := 'approved';
+    new.approved := true;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.kos_volunteer_hours_count_on_insert() from public, anon, authenticated;
+
+drop trigger if exists kos_volunteer_hours_count_on_insert on public.volunteer_hours;
+create trigger kos_volunteer_hours_count_on_insert
+  before insert on public.volunteer_hours
+  for each row
+  execute function public.kos_volunteer_hours_count_on_insert();
+
+create or replace function public.log_my_volunteer_hours(
+  p_hours numeric,
+  p_activity text,
+  p_worked_on date default null,
+  p_kind text default 'shift'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path to public
+as $$
+declare
+  v_mid uuid := public.kos_current_member_id();
+  v_kind text := lower(coalesce(p_kind, 'shift'));
+  v_activity text;
+  v_source text;
+  v_notes text;
+  v_on date := coalesce(p_worked_on, current_date);
+  v_id uuid;
+begin
+  if auth.uid() is null or v_mid is null then
+    return jsonb_build_object('ok', false, 'message', 'Sign in with a linked member record to log hours.');
+  end if;
+  if p_hours is null or p_hours <= 0 or p_hours > 500 then
+    return jsonb_build_object('ok', false, 'message', 'Enter hours between 0.5 and 500.');
+  end if;
+  if v_kind not in ('shift', 'in_kind', 'season_file') then
+    v_kind := 'shift';
+  end if;
+
+  v_activity := nullif(btrim(coalesce(p_activity, '')), '');
+  if v_kind = 'season_file' then
+    v_activity := coalesce(v_activity, 'Season hours on file');
+    v_source := 'manual';
+    v_notes := 'One-time season balance entered in the Hub.';
+    if exists (
+      select 1 from public.volunteer_hours v
+      where v.member_id = v_mid
+        and v.season_year = public.krewe_volunteer_season_year(v_on)
+        and v.activity = 'Season hours on file'
+        and v.status <> 'rejected'
+    ) then
+      return jsonb_build_object('ok', false, 'message',
+        'Season hours on file are already saved for this season. Log new shifts as hours worked.');
+    end if;
+  elsif v_kind = 'in_kind' then
+    v_activity := coalesce(v_activity, 'In-kind donation');
+    v_source := 'in_kind';
+    v_notes := 'In-kind donation. $12 counts as 1 hour.';
+  else
+    v_activity := coalesce(v_activity, 'Volunteer shift');
+    v_source := 'manual';
+    v_notes := null;
+  end if;
+
+  insert into public.volunteer_hours (
+    member_id, season_year, activity, hours, worked_on,
+    approved, status, source, notes
+  ) values (
+    v_mid,
+    public.krewe_volunteer_season_year(v_on),
+    v_activity,
+    p_hours,
+    v_on,
+    true,
+    'approved',
+    v_source,
+    v_notes
+  )
+  returning id into v_id;
+
+  return jsonb_build_object('ok', true, 'id', v_id, 'status', 'approved');
+end;
+$$;
+
+revoke all on function public.log_my_volunteer_hours(numeric, text, date, text) from public, anon;
+grant execute on function public.log_my_volunteer_hours(numeric, text, date, text) to authenticated;
+
+-- Cancelling a volunteer signup still removes the hours row that signup
+-- created. Those rows are approved now, so this is not limited to pending.
+create or replace function public.kos_clear_event_signup_hours()
+returns trigger
+language plpgsql
+security definer
+set search_path to public
+as $$
+begin
+  if tg_op = 'UPDATE'
+     and not public.kos_volunteer_signup_occupies_slot(new.signup_role, new.status) then
+    delete from public.volunteer_hours
+     where signup_id = new.id
+       and source = 'event_signup';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.kos_clear_event_signup_hours() from public, anon, authenticated;
+
+drop trigger if exists kos_clear_event_signup_hours on public.event_signups;
+create trigger kos_clear_event_signup_hours
+  after update of signup_role, status
+  on public.event_signups
+  for each row
+  execute function public.kos_clear_event_signup_hours();
+
+-- ---------------------------------------------------------------------------
+-- 8) Stop new volunteer logs from earning 30 Clovers.
+--    Existing clover_ledger rows with reason volunteer_bonus stay in place.
+-- ---------------------------------------------------------------------------
+drop trigger if exists kos_volunteer_hours_clover_bonus on public.volunteer_hours;
 
 commit;

@@ -36,7 +36,7 @@ const FIXTURE = {
       logs: [
         { id: "p-ok", member_id: "m-patrick", season_year: 2027, worked_on: "2026-09-12", activity: "Basket packing", hours: 2, source: "manual", status: "approved", approved_by: "Moira Quinn" },
         { id: "p-shift", member_id: "m-patrick", season_year: 2027, worked_on: "2026-10-04", activity: "Float work day", hours: 4, source: "event_signup", status: "approved", event_name: "Float work day", event_id: "e1", approved_by: "Moira Quinn" },
-        { id: "p-dup", member_id: "m-patrick", season_year: 2027, worked_on: "2026-10-04", activity: "Float work day", hours: 3, source: "manual", status: "pending", event_name: "Float work day", event_id: "e1", notes: "Entered again after signup." },
+        { id: "p-dup", member_id: "m-patrick", season_year: 2027, worked_on: "2026-10-04", activity: "Float work day", hours: 3, source: "manual", status: "approved", event_name: "Float work day", event_id: "e1", notes: "Entered again after signup." },
         { id: "p-no", member_id: "m-patrick", season_year: 2027, worked_on: "2026-08-01", activity: "Gift cards for the food pantry", hours: 2, source: "in_kind", status: "rejected", approved_by: "Moira Quinn" }
       ]
     },
@@ -57,7 +57,7 @@ const FIXTURE = {
       name: "Sean Murphy",
       membership_level: "full",
       logs: [
-        { id: "s1", member_id: "m-sean", season_year: 2027, worked_on: "2026-11-02", activity: "Parade security", hours: 8, source: "door_checkin", status: "pending" }
+        { id: "s1", member_id: "m-sean", season_year: 2027, worked_on: "2026-11-02", activity: "Parade security", hours: 8, source: "door_checkin", status: "approved" }
       ]
     },
     {
@@ -94,7 +94,8 @@ async function openRoster(page) {
   await page.locator('[data-tool="tool:hubCharityHours"]').click();
   const card = page.locator("#hubCharityHours");
   await expect(card).toBeVisible();
-  await expect(card.locator("#hubCharityPending")).toBeVisible();
+  await expect(card.locator("#hubCharityRoster")).toBeVisible();
+  await expect(card.locator("[data-charity-approve]")).toHaveCount(0);
   return card;
 }
 
@@ -117,39 +118,34 @@ test.describe("Charity member volunteer hours", () => {
     assertHealthy(expect, report, "roster hidden without charity access");
   });
 
-  test("desktop roster, expanded member, and pending approvals", async ({ page }) => {
+  test("desktop roster shows logged hours and a possible duplicate", async ({ page }) => {
     const report = watchPage(page);
     await page.setViewportSize({ width: 1280, height: 900 });
     const card = await openRoster(page);
     await expect(card).toContainText("June 2026 through May 2027");
-    await expect(card).toContainText("Pending approvals");
+    await expect(card).not.toContainText("Pending approvals");
     await expect(card).toContainText("Patrick Doyle");
     await expect(card).toContainText("Sean Murphy");
-    await expect(card).toContainText("Possible duplicate of an approved log");
-    await expect(card.locator("[data-charity-pending='p-dup']")).toContainText("Approve");
-    await expect(card.locator("[data-charity-pending='p-dup']")).toContainText("Reject");
-    await expect(card.locator("[data-charity-pending='s1']")).toContainText("Shift");
+    await expect(card.locator("[data-charity-approve], [data-charity-reject]")).toHaveCount(0);
     const copy = await card.innerText();
     expect(copy).not.toContain("\u2014");
     expect(copy).not.toContain("\u2013");
 
-    await card.locator("[data-charity-pending='p-dup']").evaluate(function (el) {
-      el.scrollIntoView({ block: "start", inline: "nearest" });
-    });
-    await shot(page, "charity-hours-pending-desktop.png");
-
     await card.locator("#hubCharityRoster").evaluate(function (el) {
       el.scrollIntoView({ block: "start", inline: "nearest" });
     });
+    await expect(card.locator("[data-charity-member='m-nia']")).toContainText("14 logged");
     await expect(card.locator("[data-charity-member='m-nia']")).toContainText("12 hour goal met");
-    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("6 hours still needed");
-    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("$72");
-    await expect(card.locator("[data-charity-member='m-sean']")).toContainText("$144");
+    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("9 logged");
+    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("3 hours still needed");
+    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("$36");
+    await expect(card.locator("[data-charity-member='m-sean']")).toContainText("8 logged");
+    await expect(card.locator("[data-charity-member='m-sean']")).toContainText("$48");
     await expect(card.locator("[data-charity-member='m-aisling']")).toContainText("Associate");
     await expect(card.locator("[data-charity-member='m-aisling']")).toContainText("not required");
     await expect(card.locator("[data-charity-member='m-maeve']")).toContainText("Auxiliary");
     await expect(card.locator("[data-charity-member='m-liam']")).toContainText("LOA");
-    await shot(page, "charity-hours-roster-desktop.png");
+    await shot(page, "charity-roster-desktop.png");
 
     await card.locator("[data-charity-filter='under']").click();
     await expect(card.locator("[data-charity-member='m-nia']")).toHaveCount(0);
@@ -158,9 +154,9 @@ test.describe("Charity member volunteer hours", () => {
     await card.locator("[data-charity-filter='met']").click();
     await expect(card.locator("[data-charity-member='m-nia']")).toBeVisible();
     await expect(card.locator("[data-charity-member='m-patrick']")).toHaveCount(0);
-    await card.locator("[data-charity-filter='pending']").click();
+    await card.locator("[data-charity-filter='duplicate']").click();
     await expect(card.locator("[data-charity-member='m-patrick']")).toBeVisible();
-    await expect(card.locator("[data-charity-member='m-sean']")).toBeVisible();
+    await expect(card.locator("[data-charity-member='m-sean']")).toHaveCount(0);
     await expect(card.locator("[data-charity-member='m-liam']")).toHaveCount(0);
     await card.locator("[data-charity-filter='all']").click();
     await card.locator("#hubCharitySearch").fill("Maeve");
@@ -171,7 +167,7 @@ test.describe("Charity member volunteer hours", () => {
     const order = await card.locator(".hub-charity-summary .nm").allTextContents();
     expect(order[0]).toBe("Nia Byrne");
     await card.locator("#hubCharitySeason").selectOption("2026");
-    await expect(card.locator("[data-charity-member='m-nia']")).toContainText("0 approved");
+    await expect(card.locator("[data-charity-member='m-nia']")).toContainText("0 logged");
     await card.locator("#hubCharitySeason").selectOption("2027");
 
     const downloadPromise = page.waitForEvent("download");
@@ -192,23 +188,12 @@ test.describe("Charity member volunteer hours", () => {
     await expect(logs).toContainText("In-kind");
     await expect(logs).toContainText("Approved by Moira Quinn");
     await expect(logs).toContainText("Rejected by Moira Quinn");
-    await expect(logs).toContainText("Possible duplicate of an approved log");
-    await expect(logs.locator("[data-charity-approve='p-dup']")).toBeVisible();
+    await expect(logs).toContainText("Possible duplicate of another log");
+    await expect(logs.locator("[data-charity-approve], [data-charity-reject]")).toHaveCount(0);
     await logs.evaluate(function (el) {
       el.scrollIntoView({ block: "start", inline: "nearest" });
     });
-    await shot(page, "charity-hours-expanded-desktop.png");
-
-    await card.locator("[data-charity-pending='s1'] [data-charity-approve='s1']").click();
-    await expect(card.locator("#hubCharityFlash")).toContainText("Approved Sean Murphy");
-    await expect(card.locator("[data-charity-pending='s1']")).toHaveCount(0);
-    await expect(card.locator("[data-charity-member='m-sean']")).toContainText("8 approved");
-    await expect(card.locator("[data-charity-member='m-sean']")).toContainText("4 hours still needed");
-
-    await card.locator("[data-charity-reject='p-dup']").first().click();
-    await expect(card.locator("#hubCharityFlash")).toContainText("Rejected Patrick Doyle");
-    await expect(card.locator("[data-charity-pending='p-dup']")).toHaveCount(0);
-    await expect(logs).toContainText("Rejected");
+    await shot(page, "charity-roster-expanded-desktop.png");
     assertHealthy(expect, report, "desktop charity hours");
   });
 
@@ -218,23 +203,19 @@ test.describe("Charity member volunteer hours", () => {
     const card = await openRoster(page);
     const box = await card.boundingBox();
     expect(box.width).toBeLessThanOrEqual(390);
-    await card.locator("[data-charity-pending='p-dup']").evaluate(function (el) {
-      el.scrollIntoView({ block: "start", inline: "nearest" });
-    });
-    await expect(card.locator("[data-charity-approve='p-dup']").first()).toBeVisible();
-    await shot(page, "charity-hours-pending-phone.png");
     await card.locator("[data-charity-member='m-patrick']").evaluate(function (el) {
       el.scrollIntoView({ block: "center", inline: "nearest" });
     });
-    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("Full");
-    await shot(page, "charity-hours-roster-phone.png");
+    await expect(card.locator("[data-charity-member='m-patrick']")).toContainText("9 logged");
+    await expect(card.locator("[data-charity-approve], [data-charity-reject]")).toHaveCount(0);
+    await shot(page, "charity-roster-phone.png");
     await card.locator("[data-charity-toggle='m-patrick']").click();
     await card.locator("#hubCharityLogs").evaluate(function (el) {
       el.scrollIntoView({ block: "start", inline: "nearest" });
     });
     await expect(card.locator("#hubCharityLogs")).toContainText("Possible duplicate");
-    await expect(card.locator("[data-charity-reject='p-dup']").first()).toBeVisible();
-    await shot(page, "charity-hours-expanded-phone.png");
+    await expect(card.locator("[data-charity-reject]")).toHaveCount(0);
+    await shot(page, "charity-roster-expanded-phone.png");
     const overflow = await page.evaluate(() => {
       const el = document.getElementById("hubCharityHours");
       return el.scrollWidth <= document.documentElement.clientWidth + 1;
@@ -243,30 +224,36 @@ test.describe("Charity member volunteer hours", () => {
     assertHealthy(expect, report, "phone charity hours");
   });
 
-  test("the note next to the button is the one that is saved", async ({ page }) => {
+  test("member hours card and How to Play no longer ask for officer review", async ({ page }) => {
     const report = watchPage(page);
-    const card = await openRoster(page);
-    await card.locator("[data-charity-toggle='m-patrick']").click();
-    const pending = card.locator("[data-charity-pending='p-dup'] textarea");
-    const expanded = card.locator("[data-charity-log='p-dup'] textarea");
-    await pending.fill("Counted from the list");
-    await expect(expanded).toHaveValue("Counted from the list");
-    await expanded.evaluate(function (el) { el.value = "Stale expanded note"; });
-    await card.locator("[data-charity-pending='p-dup'] [data-charity-reject='p-dup']").click();
-    const log = card.locator("[data-charity-log='p-dup']");
-    await expect(log).toContainText("Review note: Counted from the list");
-    await expect(log).not.toContainText("Stale expanded note");
+    await page.route("**/rest/v1/badge_defs**", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: "[]" })
+    );
+    await unlockMemberHub(page);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const hours = page.locator("#hubHoursCard");
+    await hours.scrollIntoViewIfNeeded();
+    await expect(hours).toContainText("Hours count as soon as you save them");
+    await expect(hours).not.toContainText("awaiting officer review");
+    await expect(hours).not.toContainText("officer confirms");
+    await shot(page, "member-hours-card-desktop.png");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await hours.evaluate(function (el) { el.scrollIntoView({ block: "start", inline: "nearest" }); });
+    await shot(page, "member-hours-card-phone.png");
 
-    const sean = card.locator("[data-charity-pending='s1'] textarea");
-    await sean.fill("Temporary");
-    await sean.fill("");
-    await card.locator("[data-charity-pending='s1'] [data-charity-approve='s1']").click();
-    await card.locator("[data-charity-toggle='m-sean']").click();
-    const seanLog = card.locator("[data-charity-log='s1']");
-    await expect(seanLog).toBeVisible();
-    await expect(seanLog).not.toContainText("Temporary");
-    await expect(seanLog).not.toContainText("Review note");
-    assertHealthy(expect, report, "charity review note");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.evaluate(() => { window.openGame(); window.gameTab("howto"); });
+    const howto = page.locator("#gameBody");
+    await expect(howto).toContainText("How to earn Clovers");
+    await expect(howto).toContainText("Priority shift bonus");
+    await expect(howto).toContainText("Logging hours does not add Clovers");
+    await expect(howto).not.toContainText("Volunteer at an event");
+    await expect(howto).not.toContainText("30 Clovers");
+    await shot(page, "craic-howto-desktop.png");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await howto.evaluate(function (el) { el.scrollIntoView({ block: "start", inline: "nearest" }); });
+    await shot(page, "craic-howto-phone.png");
+    assertHealthy(expect, report, "hours card and how to play");
   });
 
   test("a slower season response does not replace the season on screen", async ({ page }) => {
@@ -323,11 +310,11 @@ test.describe("Charity member volunteer hours", () => {
     });
     await card.locator("#hubCharitySeason").selectOption("2026");
     await card.locator("#hubCharitySeason").selectOption("2027");
-    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 approved");
+    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 logged");
     await page.waitForTimeout(400);
     await expect(card.locator("#hubCharitySeason")).toHaveValue("2027");
-    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 approved");
-    await expect(card.locator("[data-charity-member='m-live']")).not.toContainText("0 approved");
+    await expect(card.locator("[data-charity-member='m-live']")).toContainText("9 logged");
+    await expect(card.locator("[data-charity-member='m-live']")).not.toContainText("0 logged");
     assertHealthy(expect, report, "charity season race");
   });
 });

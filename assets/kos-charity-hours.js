@@ -11,7 +11,7 @@
 
   var REQUIRED = 12;
   var RATE = 12;
-  var DUPLICATE_NOTE = "Possible duplicate of an approved log for the same day and the same activity or event.";
+  var DUPLICATE_NOTE = "Possible duplicate of another log on this day for the same activity or event.";
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   function seasonYear(date) {
@@ -139,13 +139,17 @@
     return String(a) === String(b);
   }
 
-  /* Pending log that matches an approved log: same member, same date, and
-     the same activity text or the same event. */
+  /* Counted log that matches another counted log: same member, same date,
+     and the same activity text or the same event. Rejected logs are skipped. */
+  function countsTowardTotal(log) {
+    return statusKey(log) !== "rejected";
+  }
+
   function isPossibleDuplicate(log, logs) {
-    if (!log || !isPending(log)) return false;
+    if (!log || !countsTowardTotal(log)) return false;
     return (logs || []).some(function (other) {
       if (!other || String(other.id) === String(log.id)) return false;
-      if (!isApproved(other)) return false;
+      if (!countsTowardTotal(other)) return false;
       if (log.member_id && other.member_id && String(log.member_id) !== String(other.member_id)) return false;
       if (!sameDay(log.worked_on, other.worked_on)) return false;
       return sameActivity(log.activity, other.activity) || sameEvent(log.event_id, other.event_id);
@@ -175,17 +179,14 @@
       if (day) return day;
       return String(a.id || "").localeCompare(String(b.id || ""));
     });
-    var approved = 0;
-    var pending = 0;
+    var logged = 0;
     logs.forEach(function (log) {
-      var hours = roundHours(log.hours);
-      if (isApproved(log)) approved += hours;
-      else if (isPending(log)) pending += hours;
+      if (!countsTowardTotal(log)) return;
+      logged += roundHours(log.hours);
     });
-    approved = roundHours(approved);
-    pending = roundHours(pending);
+    logged = roundHours(logged);
     var full = isFull(member.membership_level);
-    var needed = full ? roundHours(Math.max(0, REQUIRED - approved)) : null;
+    var needed = full ? roundHours(Math.max(0, REQUIRED - logged)) : null;
     var buyout = full ? roundHours(needed * RATE) : null;
     return {
       member_id: member.member_id,
@@ -196,8 +197,9 @@
       membership_status: member.membership_status || "active",
       level_label: levelLabel(member.membership_level),
       is_full: full,
-      hours_approved: approved,
-      hours_pending: pending,
+      hours_logged: logged,
+      hours_approved: logged,
+      hours_pending: 0,
       hours_needed: needed,
       buyout_estimate: buyout,
       log_count: logs.length,
@@ -215,7 +217,9 @@
   function matchesFilter(row, filter) {
     if (filter === "met") return !!(row.is_full && row.hours_needed === 0);
     if (filter === "under") return !!(row.is_full && row.hours_needed > 0);
-    if (filter === "pending") return row.hours_pending > 0;
+    if (filter === "duplicate" || filter === "pending") {
+      return (row.logs || []).some(function (log) { return !!log.possible_duplicate; });
+    }
     return true;
   }
 
@@ -223,7 +227,7 @@
     var copy = (rows || []).slice();
     copy.sort(function (a, b) {
       if (sort === "hours") {
-        var diff = (b.hours_approved || 0) - (a.hours_approved || 0);
+        var diff = (b.hours_logged || b.hours_approved || 0) - (a.hours_logged || a.hours_approved || 0);
         if (diff) return diff;
       }
       var last = String(a.last_name || a.name || "").toLowerCase().localeCompare(String(b.last_name || b.name || "").toLowerCase());
@@ -287,9 +291,9 @@
 
   function rosterLine(row) {
     var logs = Number(row.log_count) || 0;
+    var logged = row.hours_logged != null ? row.hours_logged : row.hours_approved;
     return [
-      formatHours(row.hours_approved) + " approved",
-      formatHours(row.hours_pending) + " pending",
+      formatHours(logged) + " logged",
       logs + (logs === 1 ? " log" : " logs")
     ].join(" · ");
   }
@@ -307,14 +311,14 @@
   }
 
   function toCsv(rows, seasonText) {
-    var headers = ["Name", "Membership", "Approved hours", "Pending hours", "Hours still needed", "Estimated shortfall buyout", "Logs", "Season"];
+    var headers = ["Name", "Membership", "Logged hours", "Hours still needed", "Estimated shortfall buyout", "Logs", "Season"];
     var lines = [headers.join(",")];
     (rows || []).forEach(function (row) {
+      var logged = row.hours_logged != null ? row.hours_logged : row.hours_approved;
       lines.push([
         row.name,
         row.level_label,
-        formatHours(row.hours_approved),
-        formatHours(row.hours_pending),
+        formatHours(logged),
         row.is_full ? formatHours(row.hours_needed) : "Not required",
         row.is_full ? formatMoney(row.buyout_estimate) : "Not required",
         row.log_count,
