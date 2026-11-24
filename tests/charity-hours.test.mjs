@@ -168,8 +168,9 @@ test("sql gates the roster and keeps the clover bonus trigger", () => {
   assert.equal(sql.includes("committee_interests"), false);
   assert.match(sql, /public\.kos_can_review_charity_hours\(\)/);
   assert.match(sql, /status = case when coalesce\(p_approved, false\) then 'approved' else 'rejected' end/);
-  assert.match(sql, /drop trigger if exists kos_volunteer_hours_clover_bonus on public.volunteer_hours/);
-  assert.match(sql, /set approved = true/);
+  const dropAt = sql.indexOf("drop trigger if exists kos_volunteer_hours_clover_bonus on public.volunteer_hours");
+  const backfillAt = sql.indexOf("set approved = true");
+  assert.ok(dropAt !== -1 && backfillAt !== -1 && dropAt < backfillAt, "drop the Clover trigger before approving pending logs");
   assert.match(sql, /where status = 'pending'/);
   assert.equal(sql.includes("delete from public.clover_ledger"), false);
   assert.equal(sql.includes("kos_remove_volunteer_bonus_rows"), false);

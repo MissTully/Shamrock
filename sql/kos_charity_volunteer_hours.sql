@@ -611,7 +611,7 @@ end;
 $$;
 
 comment on function public.decide_volunteer_hours(uuid, boolean, text) is
-  'Approve or reject a pending volunteer log. Officers, Approvals holders, Charity reviewers, and event hosts. The volunteer_hours status update keeps the Clover volunteer_bonus trigger.';
+  'Legacy pending-log decision. New logs are stored approved and do not earn volunteer_bonus. The Clover trigger is dropped before any backfill.';
 
 revoke all on function public.decide_volunteer_hours(uuid, boolean, text) from public, anon;
 grant execute on function public.decide_volunteer_hours(uuid, boolean, text) to authenticated;
@@ -620,7 +620,13 @@ grant execute on function public.decide_volunteer_hours(uuid, boolean, text) to 
 -- 7) Hours count immediately. Pending logs already on file become approved.
 --    Rejected logs stay rejected. New inserts that are not rejected are
 --    stored as approved, including event signup and door check-in.
+--
+--    Drop the Clover trigger before the backfill. That trigger awards 30
+--    Clovers when a worked-hours row becomes approved. Existing
+--    volunteer_bonus rows stay in clover_ledger. New logs earn none.
 -- ---------------------------------------------------------------------------
+drop trigger if exists kos_volunteer_hours_clover_bonus on public.volunteer_hours;
+
 update public.volunteer_hours
    set approved = true,
        status = 'approved'
@@ -753,11 +759,5 @@ create trigger kos_clear_event_signup_hours
   on public.event_signups
   for each row
   execute function public.kos_clear_event_signup_hours();
-
--- ---------------------------------------------------------------------------
--- 8) Stop new volunteer logs from earning 30 Clovers.
---    Existing clover_ledger rows with reason volunteer_bonus stay in place.
--- ---------------------------------------------------------------------------
-drop trigger if exists kos_volunteer_hours_clover_bonus on public.volunteer_hours;
 
 commit;
