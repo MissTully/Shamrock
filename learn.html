@@ -84,6 +84,17 @@ details[open] > summary .hs-more{display:none;}
   object-fit:cover;
   object-position:center 34%;
 }
+/* Square lesson frame. The source is a tall portrait, so bias the crop
+   toward the lead marcher's face and saffron kilt. */
+[data-mod="revival"] .hs-body > img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  object-position:center 33.5%;
+  border-radius:12px;
+  box-shadow:var(--shadow-sm);
+  margin:8px 0;
+}
 
 .hs-learn h4{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:15px;text-transform:uppercase;letter-spacing:1px;}
 .hs-learn ul{margin:0 0 14px;padding-left:20px;}
@@ -890,7 +901,7 @@ details[open] > summary .hs-more{display:none;}
             <li>One more Irish distinction: unlike the back-pleated Scottish standard, Irish kilts in our krewe may feature side pleating, a subtle signature of the Irish silhouette.</li>
           </ul>
         </div>
-        <img loading="lazy" src="assets/img/pipers-saffron-kilts.jpg" alt="A pipe band in saffron kilts and green and gold tartan marching in a parade" style="width:100%;border-radius:12px;box-shadow:var(--shadow-sm);margin:8px 0;" />
+        <img loading="lazy" src="assets/img/saffron-kilt-marchers.webp" alt="Marchers in green jackets and saffron kilts on parade" />
         <small class="hs-credit">The revival made visible: pipes, kilts, and a heritage worn in public</small>
         <div class="hs-terms"><span class="lbl">Key terms</span><span>Gaelic Revival</span><span>Saffron</span><span>St. Enda's</span><span>County tartan</span><span>Side pleating</span></div>
         <p class="hs-fact">☘ <b>Fun fact:</b> The Ulster tartan is based on actual cloth found near Londonderry dating to the early 1600s; it was rediscovered and reproduced in 1958, making it the elder statesman of the Irish tartans.</p>
