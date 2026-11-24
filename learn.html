@@ -76,6 +76,14 @@ details[open] > summary .hs-more{display:none;}
 .lm-reading-body .dropcap{margin-top:8px;}
 .lm-reading .hs-num{background:rgba(20,83,45,.12);color:var(--green-800);}
 .lm-reading .hs-badge{opacity:.55;}
+/* Square reading frame, same proportion as the other lesson images.
+   Bias the crop toward the praying face and hands. */
+#art-festivals .hs-body > img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  object-position:center 34%;
+}
 
 .hs-learn h4{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:15px;text-transform:uppercase;letter-spacing:1px;}
 .hs-learn ul{margin:0 0 14px;padding-left:20px;}
@@ -941,7 +949,7 @@ details[open] > summary .hs-more{display:none;}
     <details class="lm-lesson lm-reading" id="art-festivals">
       <summary><span class="hs-num">5</span><span class="hs-t"><b>The Wheel of the Year</b><small>📖 Reading · Seasons &amp; celebrations</small></span><span class="hs-more">Open ▾</span><span class="hs-badge">📖</span></summary>
       <div class="hs-body lm-reading-body">
-<img src="assets/img/parade-crowd.jpg" alt="Crowd waving Irish tricolor flags at a parade" />
+<img src="assets/img/wheel-of-the-year.webp" alt="Veiled stone figure praying among Celtic crosses and red poppies" />
       <p class="dropcap">The Celtic calendar turns on four great fire-festivals. <b>Imbolc</b> in February greets
          the first stirrings of spring and Saint Brigid. <b>Bealtaine</b> in May lights the summer fires.
          <b>Lúnasa</b> in August gives thanks for the harvest. And <b>Samhain</b> at the end of October,
