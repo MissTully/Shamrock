@@ -632,6 +632,34 @@
     "body.hub-desk.app-ann.app-screen #appDrillActions{display:none !important;}",
     "@media (max-width:380px){.tidings-archive{font-size:13px;}.tidings-column{width:min(38rem,calc(100% - 28px));padding-top:26px;}}",
 
+    /* Charity hours roster. Dark green bars stay readable on parchment and on the phone app. */
+    ".hub-charity-lead{margin:0 0 12px;font-size:16px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-charity-h{font-family:var(--display);color:#f6efdc;background:linear-gradient(180deg,#1d6b3e,#14532d);margin:18px 0 10px;padding:10px 14px;border-radius:12px;font-size:18px;border:1px solid #d4af37;letter-spacing:.02em;}",
+    ".hub-charity-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0 0 12px;}",
+    ".hub-charity-controls .fld{flex:1 1 160px;min-width:0;}",
+    ".hub-charity-controls label{display:block;font-size:14px;color:#5c5848;margin:0 0 4px;}",
+    ".hub-charity-controls input,.hub-charity-controls select{width:100%;box-sizing:border-box;font:inherit;font-size:16px;min-height:44px;padding:8px 10px;border:1px solid rgba(168,128,28,.45);border-radius:10px;background:#fff;color:#14532d;}",
+    ".hub-charity-controls .fld-btn{flex:0 0 auto;}",
+    ".hub-charity-member{border:1px solid rgba(168,128,28,.35);border-radius:14px;background:#fffdf8;margin:0 0 10px;overflow:hidden;}",
+    ".hub-charity-summary{width:100%;text-align:left;background:transparent;border:0;padding:12px 14px;cursor:pointer;font:inherit;color:inherit;min-height:44px;}",
+    ".hub-charity-summary .nm{font-family:var(--display);color:#14532d;font-size:18px;line-height:1.25;}",
+    ".hub-charity-lvl{display:inline-block;margin-left:8px;font-size:13px;font-weight:700;color:#14532d;background:#e7f3ea;border:1px solid #1d6b3e;border-radius:999px;padding:2px 8px;vertical-align:middle;}",
+    ".hub-charity-stats{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:15px;color:#3a3a2e;line-height:1.4;}",
+    ".hub-charity-need{display:block;margin-top:2px;color:#14532d;font-weight:600;}",
+    ".hub-charity-logs{padding:0 14px 12px;border-top:1px solid rgba(168,128,28,.25);}",
+    ".hub-charity-log{padding:10px 0;border-top:1px solid rgba(168,128,28,.18);}",
+    ".hub-charity-log:first-child{border-top:0;}",
+    ".hub-charity-log b{color:#14532d;}",
+    ".hub-charity-status{display:inline-block;margin-left:6px;font-size:13px;font-weight:700;border-radius:999px;padding:2px 8px;border:1px solid transparent;vertical-align:middle;}",
+    ".hub-charity-status.approved{background:#e7f3ea;color:#14532d;border-color:#1d6b3e;}",
+    ".hub-charity-status.pending{background:#fff4c2;color:#6b4e00;border-color:#a67c00;}",
+    ".hub-charity-status.rejected{background:#f8e8e4;color:#7a2e1f;border-color:#a44;}",
+    ".hub-charity-warn{margin:8px 0 0;padding:8px 10px;background:#fff4c2;border:1px solid #a67c00;border-radius:10px;color:#3d3208;font-size:15px;line-height:1.4;}",
+    ".hub-charity-note{margin-top:6px;font-size:15px;color:#3a3a2e;}",
+    "#hubCharityBody .hub-app-filters button{min-height:44px;}",
+    "#hubCharityPending,#hubCharityRoster,#hubCharityLogs{scroll-margin-top:120px;}",
+    "@media (max-width:520px){.hub-charity-controls .fld,.hub-charity-controls .fld-btn{flex:1 1 100%;}.hub-charity-controls .fld-btn .btn{width:100%;}.hub-charity-summary .nm{font-size:17px;}}",
+
     /* Phone and Fold type. Desktop (960px and up) keeps the sizes above. */
     "@media (max-width:959px){",
     ".hub-board{padding:16px 14px;}",
@@ -651,6 +679,7 @@
   ].join("");
 
   var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "board", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  state.canReviewCharityHours = false;
   window.kosHubState = state;
   var feedLock = null;
   var applicationsFixture = null;
@@ -659,9 +688,21 @@
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
   var hourApprovalsFixture = false;
+  var charityHoursState = {
+    fixture: false,
+    payload: null,
+    season: null,
+    query: "",
+    filter: "all",
+    sort: "name",
+    openId: null,
+    flash: "",
+    error: "",
+    noteDrafts: {}
+  };
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
+    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours);
   }
 
   function newApplicationLabel(n) {
@@ -3442,6 +3483,10 @@
     if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
     if ("isChair" in flags) state.isChair = !!flags.isChair;
     if ("canAssignChairs" in flags) state.canAssignChairs = !!flags.canAssignChairs;
+    if ("canReviewCharityHours" in flags) state.canReviewCharityHours = !!flags.canReviewCharityHours;
+    if (flags.charityHours) {
+      try { window.__kosHubSetCharityHours(flags.charityHours); } catch (eCharityHours) {}
+    }
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
     if (Array.isArray(flags.paradeGuests)) {
@@ -3660,6 +3705,7 @@
     await refreshApplicationAccess(client);
     await refreshVolunteerInquiryAccess(client);
     applyToolKeyFlags();
+    await refreshCharityHoursAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canAssignChairs) loadChairDesk(client);
     if (state.canViewPayments) loadPaymentsCard(client);
@@ -6447,6 +6493,9 @@
       alert("Couldn't complete that: " + ((e && e.message) || e));
     }
     loadApprovals(client);
+    if (fn === "decide_volunteer_hours" && charityHoursState && (charityHoursState.payload || charityHoursState.fixture)) {
+      try { loadCharityHours(client); } catch (eHours) {}
+    }
   }
 
   function hourSourceLabel(source) {
@@ -6481,6 +6530,7 @@
         '<div class="muted"><b>' + esc(String(q.hours)) + " hours</b> · " + esc(q.activity || "Volunteer hours") + "</div>" +
         '<div class="muted">' + esc(bits.join(" · ")) + "</div>" +
         (q.notes ? '<div class="muted">' + esc(q.notes) + "</div>" : "") +
+        (q.possible_duplicate ? '<div class="hub-charity-warn">' + esc(q.duplicate_note || "Possible duplicate of an approved log for the same day and the same activity or event.") + "</div>" : "") +
         '<label class="muted" style="display:block;margin-top:8px;" for="hubHoursNote-' + esc(q.id) + '">Optional note</label>' +
         '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision">' + esc(hourNoteDrafts[String(q.id)] || "") + "</textarea>" +
         '</div><div class="hub-appr-btns">' +
@@ -10757,11 +10807,374 @@
     renderOfficerParadeGuests();
   };
 
+  function charityHoursApi() {
+    return window.kosCharityHours || null;
+  }
+
+  function rememberCharityNoteDrafts(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll("[data-charity-note]").forEach(function (el) {
+      var id = el.getAttribute("data-charity-note");
+      if (!id) return;
+      var value = el.value || "";
+      if (!charityHoursState.noteDrafts[id] || value) charityHoursState.noteDrafts[id] = value;
+    });
+  }
+
+  function charityNoteDraft(id) {
+    return charityHoursState.noteDrafts[String(id)] || "";
+  }
+
+  async function refreshCharityHoursAccess(client) {
+    if (charityHoursState.fixture) return;
+    if (roleFixture && ("canReviewCharityHours" in roleFixture)) {
+      state.canReviewCharityHours = !!roleFixture.canReviewCharityHours;
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") return;
+    try {
+      var can = await client.rpc("kos_can_review_charity_hours");
+      if (charityHoursState.fixture) return;
+      if (can && !can.error) state.canReviewCharityHours = !!can.data;
+    } catch (e) {}
+    if (!state.canReviewCharityHours) return;
+    var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+    if (officerBtn) officerBtn.style.display = "";
+    try { syncOfficerChip(); } catch (eSync) {}
+    try { wireOfficerDeskPicker(); } catch (eWire) {}
+  }
+
+  function charityLogLine(api, log) {
+    var bits = [api.formatDay(log.worked_on) || "No date", log.activity || "Volunteer hours"];
+    if (log.event_name && log.event_name !== log.activity) bits.push(log.event_name);
+    var hours = Number(log.hours);
+    bits.push(api.formatHours(log.hours) + (hours === 1 ? " hour" : " hours"));
+    bits.push(log.type_label || api.logType(log));
+    return bits.join(" · ");
+  }
+
+  function charityApproverLine(api, log) {
+    var name = String(log.approved_by || "").trim();
+    if (!name) return "";
+    var key = api.statusKey(log);
+    if (key === "rejected") return "Rejected by " + name;
+    if (key === "approved") return "Approved by " + name;
+    return "";
+  }
+
+  function charityDecisionButtons(id) {
+    return '<div class="hub-appr-btns">' +
+      '<button type="button" class="btn btn-primary" data-charity-approve="' + esc(id) + '">Approve</button>' +
+      '<button type="button" class="btn" data-charity-reject="' + esc(id) + '">Reject</button>' +
+      "</div>";
+  }
+
+  function charityNoteField(id) {
+    return '<label class="muted" style="display:block;margin-top:8px;">Review note (optional)' +
+      '<textarea class="hub-app-note" data-charity-note="' + esc(id) + '" maxlength="500" placeholder="Only if you want a short note saved with this decision">' +
+      esc(charityNoteDraft(id)) + "</textarea></label>";
+  }
+
+  function renderCharityHours() {
+    if (!canSeeCharityHours()) return;
+    var card = ensureOfficerToolCard("hubCharityHours");
+    if (!card) return;
+    rememberCharityNoteDrafts(card);
+    var api = charityHoursApi();
+    var html = '<div class="app-head"><span class="ic">⏱</span><div><h2>Member volunteer hours</h2>' +
+      "<small>Approved hours, pending logs, and the shortfall toward 12 for full members.</small></div></div>" +
+      '<div class="app-body" id="hubCharityBody">';
+    if (!api) {
+      html += '<p class="empty">Could not load the hours roster.</p></div>';
+      card.innerHTML = html;
+      return;
+    }
+    if (charityHoursState.flash) {
+      html += '<p class="hub-app-flash" id="hubCharityFlash">' + esc(charityHoursState.flash) + "</p>";
+    }
+    if (charityHoursState.error) {
+      html += '<p class="empty" id="hubCharityError">' + esc(charityHoursState.error) + "</p></div>";
+      card.innerHTML = html;
+      return;
+    }
+    if (!charityHoursState.payload) {
+      html += '<p class="empty">Loading member hours.</p></div>';
+      card.innerHTML = html;
+      return;
+    }
+    var view = api.prepare(charityHoursState.payload, {
+      season: charityHoursState.season,
+      query: charityHoursState.query,
+      filter: charityHoursState.filter,
+      sort: charityHoursState.sort
+    });
+    if (!charityHoursState.season) charityHoursState.season = view.season;
+
+    html += '<h3 class="hub-charity-h" id="hubCharityPending">Pending approvals</h3>' +
+      '<p class="hub-charity-lead">Approve or reject a log for this season. Approving worked hours awards 30 Clovers. In-kind donations do not. Rejected hours do not count.</p>';
+    if (!view.pending.length) {
+      html += '<p class="empty">No hours are waiting for review this season.</p>';
+    } else {
+      view.pending.forEach(function (log) {
+        html += '<div class="hub-appr" data-charity-pending="' + esc(log.id) + '">' +
+          "<div><b>" + esc(log.member_name || "Member") + "</b>" +
+          '<span class="hub-charity-status pending">Pending</span>' +
+          '<div class="muted">' + esc(charityLogLine(api, log)) + "</div>" +
+          (log.notes ? '<div class="hub-charity-note">Member note: ' + esc(log.notes) + "</div>" : "") +
+          (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "") +
+          charityNoteField(log.id) +
+          "</div>" + charityDecisionButtons(log.id) + "</div>";
+      });
+    }
+
+    html += '<h3 class="hub-charity-h" id="hubCharityRoster">Roster</h3>' +
+      '<p class="hub-charity-lead">' + esc(view.seasonLabel) + ". Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count at $12 per hour. Approved logs are what count.</p>" +
+      '<div class="hub-charity-controls">' +
+      '<div class="fld"><label for="hubCharitySearch">Search by name</label>' +
+      '<input id="hubCharitySearch" type="search" value="' + esc(charityHoursState.query) + '" placeholder="Name" autocomplete="off" /></div>' +
+      '<div class="fld"><label for="hubCharitySeason">Season</label><select id="hubCharitySeason">' +
+      view.seasons.map(function (year) {
+        return '<option value="' + esc(year) + '"' + (Number(year) === Number(view.season) ? " selected" : "") + ">" +
+          esc(api.seasonLabel(year)) + "</option>";
+      }).join("") +
+      "</select></div>" +
+      '<div class="fld"><label for="hubCharitySort">Sort</label><select id="hubCharitySort">' +
+      '<option value="name"' + (charityHoursState.sort === "name" ? " selected" : "") + ">Name</option>" +
+      '<option value="hours"' + (charityHoursState.sort === "hours" ? " selected" : "") + ">Approved hours</option>" +
+      "</select></div>" +
+      '<div class="fld-btn"><button type="button" class="btn" id="hubCharityCsv">Download CSV</button></div>' +
+      "</div>" +
+      '<div class="hub-app-filters" role="group" aria-label="Roster filters">' +
+      [["all", "All"], ["met", "Met 12"], ["under", "Under 12"], ["pending", "Has pending"]].map(function (pair) {
+        return '<button type="button" data-charity-filter="' + pair[0] + '"' +
+          (charityHoursState.filter === pair[0] ? ' class="on"' : "") + ">" + pair[1] + "</button>";
+      }).join("") +
+      "</div>" +
+      '<p class="hub-charity-lead" id="hubCharityCount">Showing ' + view.members.length + " of " + view.total + " members.</p>";
+
+    if (!view.members.length) {
+      html += '<p class="empty">No members match that search.</p>';
+    }
+    view.members.forEach(function (member) {
+      var open = String(charityHoursState.openId) === String(member.member_id);
+      html += '<article class="hub-charity-member" data-charity-member="' + esc(member.member_id) + '">' +
+        '<button type="button" class="hub-charity-summary" data-charity-toggle="' + esc(member.member_id) + '" aria-expanded="' + (open ? "true" : "false") + '">' +
+        '<span class="nm">' + esc(member.name) + "</span>" +
+        '<span class="hub-charity-lvl">' + esc(member.level_label) + "</span>" +
+        '<span class="hub-charity-stats"><span>' + esc(api.rosterLine(member)) + "</span>" +
+        '<span class="hub-charity-need">' + esc(api.needLine(member)) + "</span></span>" +
+        "</button>";
+      if (open) {
+        html += '<div class="hub-charity-logs" id="hubCharityLogs">';
+        if (!member.logs.length) {
+          html += '<p class="empty">No logs for this season.</p>';
+        }
+        member.logs.forEach(function (log) {
+          var key = api.statusKey(log);
+          var who = charityApproverLine(api, log);
+          html += '<div class="hub-charity-log" data-charity-log="' + esc(log.id) + '">' +
+            "<b>" + esc(charityLogLine(api, log)) + "</b>" +
+            '<span class="hub-charity-status ' + esc(key) + '">' + esc(api.statusLabel(log)) + "</span>" +
+            (who ? '<div class="muted">' + esc(who) + "</div>" : "") +
+            (log.notes ? '<div class="hub-charity-note">Member note: ' + esc(log.notes) + "</div>" : "") +
+            (log.review_note ? '<div class="hub-charity-note">Review note: ' + esc(log.review_note) + "</div>" : "") +
+            (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "");
+          if (key === "pending") html += charityNoteField(log.id) + charityDecisionButtons(log.id);
+          html += "</div>";
+        });
+        html += "</div>";
+      }
+      html += "</article>";
+    });
+    html += "</div>";
+    var search = document.getElementById("hubCharitySearch");
+    var caret = search && document.activeElement === search ? search.selectionStart : null;
+    card.innerHTML = html;
+    bindCharityHours(card, caret);
+  }
+
+  function bindCharityHours(card, caret) {
+    var search = document.getElementById("hubCharitySearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        charityHoursState.query = search.value || "";
+        renderCharityHours();
+      });
+      if (caret != null) {
+        search.focus();
+        try { search.setSelectionRange(caret, caret); } catch (eCaret) {}
+      }
+    }
+    var season = document.getElementById("hubCharitySeason");
+    if (season) season.addEventListener("change", function () {
+      charityHoursState.season = Number(season.value) || charityHoursState.season;
+      charityHoursState.openId = null;
+      if (charityHoursState.fixture) renderCharityHours();
+      else loadCharityHours(window.__kosSb || null);
+    });
+    var sort = document.getElementById("hubCharitySort");
+    if (sort) sort.addEventListener("change", function () {
+      charityHoursState.sort = sort.value === "hours" ? "hours" : "name";
+      renderCharityHours();
+    });
+    card.querySelectorAll("[data-charity-filter]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        charityHoursState.filter = btn.getAttribute("data-charity-filter") || "all";
+        renderCharityHours();
+      });
+    });
+    card.querySelectorAll("[data-charity-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-charity-toggle");
+        charityHoursState.openId = String(charityHoursState.openId) === String(id) ? null : id;
+        renderCharityHours();
+      });
+    });
+    var csvBtn = document.getElementById("hubCharityCsv");
+    if (csvBtn) csvBtn.addEventListener("click", function () {
+      var api = charityHoursApi();
+      if (!api || !charityHoursState.payload) return;
+      var all = api.prepare(charityHoursState.payload, {
+        season: charityHoursState.season,
+        query: "",
+        filter: "all",
+        sort: charityHoursState.sort
+      });
+      var blob = new Blob([api.toCsv(all.members, all.seasonLabel)], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "member-volunteer-hours-" + all.season + ".csv";
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+    });
+    card.querySelectorAll("[data-charity-approve]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        decideCharityHours(btn.getAttribute("data-charity-approve"), true, btn);
+      });
+    });
+    card.querySelectorAll("[data-charity-reject]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        decideCharityHours(btn.getAttribute("data-charity-reject"), false, btn);
+      });
+    });
+  }
+
+  function charityApplyFixtureDecision(id, approved, note) {
+    var payload = charityHoursState.payload || {};
+    var name = "";
+    (payload.members || []).forEach(function (member) {
+      (member.logs || []).forEach(function (log) {
+        if (String(log.id) !== String(id)) return;
+        name = member.name || name;
+        log.status = approved ? "approved" : "rejected";
+        log.approved = !!approved;
+        log.approved_by = log.approved_by || "Charity Chair";
+        log.review_note = note || "";
+        log.possible_duplicate = false;
+      });
+    });
+    charityHoursState.flash = (approved ? "Approved" : "Rejected") + (name ? " " + name : "") +
+      (approved ? ". Worked hours earn 30 Clovers. In-kind donations do not." : ". Those hours will not count.");
+    renderCharityHours();
+  }
+
+  async function decideCharityHours(id, approved, btn) {
+    rememberCharityNoteDrafts(document.getElementById("hubCharityHours"));
+    var note = charityNoteDraft(id);
+    if (btn) btn.disabled = true;
+    if (charityHoursState.fixture) {
+      charityApplyFixtureDecision(id, approved, note);
+      return;
+    }
+    var client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      alert("Still connecting. Try again in a moment.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc("decide_volunteer_hours", {
+        p_id: id,
+        p_approved: !!approved,
+        p_note: note || null
+      });
+      if (res && res.error) throw res.error;
+      var data = (res && res.data) || {};
+      if (data.ok === false) throw new Error(data.message || "Could not update that log.");
+      charityHoursState.flash = approved
+        ? "Approved. Worked hours earn 30 Clovers. In-kind donations do not."
+        : "Rejected. Those hours will not count.";
+    } catch (e) {
+      alert("Could not update that log. " + ((e && e.message) || "Try again in a moment."));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (state.officer || state.canReviewHours) {
+      try { loadApprovals(client); } catch (eAppr) {}
+    }
+    loadCharityHours(client);
+  }
+
+  async function loadCharityHours(client) {
+    if (!canSeeCharityHours()) return;
+    if (charityHoursState.fixture) {
+      renderCharityHours();
+      return;
+    }
+    client = client || window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      charityHoursState.error = "Still connecting. Try again in a moment.";
+      renderCharityHours();
+      return;
+    }
+    var args = {};
+    if (charityHoursState.season) args.p_season = charityHoursState.season;
+    try {
+      var res = await client.rpc("list_charity_volunteer_hours", args);
+      if (charityHoursState.fixture) return;
+      if (res && res.error) throw res.error;
+      var data = res && res.data;
+      if (!data || data.ok === false) {
+        charityHoursState.payload = null;
+        charityHoursState.error = (data && data.message) || "You cannot view other members' volunteer hours.";
+      } else {
+        charityHoursState.error = "";
+        charityHoursState.payload = data;
+        if (!charityHoursState.season && data.season_year) charityHoursState.season = data.season_year;
+      }
+    } catch (e) {
+      if (charityHoursState.fixture) return;
+      var msg = String((e && e.message) || e || "");
+      charityHoursState.payload = null;
+      charityHoursState.error = /could not find the function|schema cache|404|PGRST202/i.test(msg)
+        ? "Member hours are not available yet. Apply sql/kos_charity_volunteer_hours.sql, then refresh."
+        : "Could not load member hours. Try again in a moment.";
+    }
+    renderCharityHours();
+  }
+
+  window.__kosHubSetCharityHours = function (payload) {
+    charityHoursState.fixture = true;
+    charityHoursState.payload = payload || { members: [], seasons: [] };
+    charityHoursState.error = "";
+    charityHoursState.flash = "";
+    if (!charityHoursState.season && payload && payload.season_year) {
+      charityHoursState.season = payload.season_year;
+    }
+    state.canReviewCharityHours = true;
+    var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+    if (officerBtn && canOpenOfficerDesk()) officerBtn.style.display = "";
+    try { syncOfficerChip(); } catch (eSync) {}
+    try { wireOfficerDeskPicker(); } catch (eWire) {}
+    renderCharityHours();
+  };
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubOfficerDirectory",
     "hubRolesAccess",
     "hubVolunteerInbox",
+    "hubCharityHours",
     "hubApprovals",
     "hubPayments",
     "hubLockers",
@@ -10787,6 +11200,7 @@
     hubRolesAccess: { title: "Member roles and access", desc: "Set a title and choose which Officer Desk tools a member can use.", icon: "🎖", section: "Membership" },
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
+    hubCharityHours: { title: "Member volunteer hours", desc: "Every member's approved and pending hours for this season.", icon: "⏱", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
@@ -10823,7 +11237,7 @@
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for the check, send dues after it passes, then approve." },
-    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
+    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page, plus every member's hours for this season." },
     "Events": { icon: "📅", sub: "Event Studio, who's coming, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
@@ -10897,6 +11311,7 @@
     hubOfficerDirectory: "member_contacts",
     hubRolesAccess: "roles_access",
     hubVolunteerInbox: "volunteer_inquiries",
+    hubCharityHours: "volunteer_inquiries",
     hubApprovals: "approvals",
     hubPayments: "payments",
     hubLockers: "lockers",
@@ -11000,13 +11415,30 @@
     } catch (eWc) {}
   }
 
+  function canSeeCharityHours() {
+    if (state.canReviewCharityHours) return true;
+    if (Array.isArray(state.toolKeys) && hasToolKey("volunteer_inquiries")) return true;
+    if (state.canReviewVolunteerInquiries) return true;
+    return false;
+  }
+
+  function placeCharityHours(toolOrder) {
+    var next = (toolOrder || []).filter(function (id) { return id !== "hubCharityHours"; });
+    if (!canSeeCharityHours()) return next;
+    var at = next.indexOf("hubVolunteerInbox");
+    if (at === -1) next.unshift("hubCharityHours");
+    else next.splice(at + 1, 0, "hubCharityHours");
+    return next;
+  }
+
   function currentOfficerToolOrder() {
-    if (Array.isArray(state.toolKeys)) return placeWhosComing(toolOrderFromKeys());
+    if (Array.isArray(state.toolKeys)) return placeCharityHours(placeWhosComing(toolOrderFromKeys()));
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
+    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours)) {
       toolOrder = [];
       if (state.canReviewApplications) toolOrder.push("hubApplications");
       if (state.canReviewVolunteerInquiries) toolOrder.push("hubVolunteerInbox");
+      if (state.canReviewCharityHours) toolOrder.push("hubCharityHours");
       if (state.canReviewHours) toolOrder.push("hubApprovals");
     } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
@@ -11061,7 +11493,7 @@
     }
     toolOrder = placeWhosComing(placeRolesAccess(toolOrder));
     if (!renewalsAllowed()) toolOrder = toolOrder.filter(function (id) { return id !== "hubRenewals"; });
-    return toolOrder;
+    return placeCharityHours(toolOrder);
   }
 
   function ensureOfficerDeskChrome() {
@@ -11202,6 +11634,9 @@
       }
       if (id === "hubParadeSecurity") paintParadeSecurityShell();
       if (id === "hubWhosComing") openWhosComing();
+      if (id === "hubCharityHours") {
+        try { loadCharityHours(window.__kosSb || null); } catch (eCharity) {}
+      }
       if (id === "hubRenewals" && typeof window.kosLoadRenewals === "function") {
         try { window.kosLoadRenewals(); } catch (eRen) {}
       }
@@ -11330,7 +11765,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity" || card.id === "hubWhosComing")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubCharityHours" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity" || card.id === "hubWhosComing")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }
