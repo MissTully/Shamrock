@@ -2013,11 +2013,11 @@
           <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
-             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and claim <b>+20 🍀</b> for attending another IKC krewe's event. Season restarts every July 1 - good-natured competition only.</p>
+          <p>Who’s bringing the most energy this season? Show up and stack
+             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and claim <b>+20 🍀</b> for attending another IKC krewe's event. Season restarts every July 1 - good-natured competition only. Volunteer hours are tracked on your Volunteer hours card. No officer approval.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>📅 Upcoming events</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
-            <span>🤝 Volunteer bonuses</span><span>🔎 Find My Clovers</span>
+            <span>🔎 Find My Clovers</span>
           </div>
         </div>
       </section>
@@ -3730,13 +3730,12 @@
     async function renderStandings(){
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Tallying the Clovers…</p>';
-      const [{data:lb,error:e1},{data:vol,error:e2},{data:bdefs},{data:blb,error:e3}] = await Promise.all([
+      const [{data:lb,error:e1},{data:bdefs},{data:blb,error:e3}] = await Promise.all([
         sb.from("v_season_leaderboard").select("*").order("place",{ascending:true}),
-        sb.from("v_volunteer_leaderboard").select("*").order("volunteer_events",{ascending:false}),
         sb.from("badge_defs").select("id,name,icon,description,sort").order("sort",{ascending:true}),
         sb.from("v_badge_leaderboard").select("*").order("place",{ascending:true})
       ]);
-      if(e1||e2){ setConn(false); box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
+      if(e1){ setConn(false); box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       setConn(true);
       const defs={}; (bdefs||[]).forEach(d=>{ defs[d.id]=d; });
       const byMember={}; (blb||[]).forEach(r=>{ byMember[r.member_id]=r.badge_ids||[]; });
@@ -3746,7 +3745,8 @@
       const badgeCell=r=>{ const ids=byMember[r.member_id];
         if(ids&&ids.length) return `<span class="lb-badges lb-compact">${ids.map(id=>chip(id,false)).join("")}</span>`;
         return r.badge_count?`<span class="muted">${r.badge_count} badge${r.badge_count>1?"s":""}</span>`:"-"; };
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. The season runs <b>July 1 to June 30</b> and everyone restarts at zero, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up and pitch in. The season runs <b>July 1 to June 30</b> and everyone restarts at zero, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      html+=`<p class="rpt-note">Volunteer hours are tracked on your Volunteer hours card. No officer approval.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${cupSeasonLabel()} Season Standings <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">since July 1</small></h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -3765,10 +3765,6 @@
             `<td><span class="lb-badges">${(r.badge_ids||[]).map(id=>chip(id,true)).join("")}</span></td></tr>`).join("")
             || '<tr><td colspan="3" class="empty">No badges earned yet. RSVP to an event to grab your first!</td></tr>');
       }
-      html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">service gets its own podium</small></h3>`;
-      html+=rtable(["Member","Shifts","Volunteer 🍀"],
-        (vol||[]).map(r=>`<tr><td>${E(r.first_name)} ${E(r.last_name)}</td><td>${r.volunteer_events}</td><td><b>${r.volunteer_clovers}</b></td></tr>`).join("")
-          || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet. Be the first!</td></tr>');
       box.innerHTML=html;
       box.querySelectorAll(".lb-badge").forEach(el=>el.addEventListener("click",()=>{ const t=document.getElementById("lbTip"); if(t) t.textContent=el.getAttribute("title"); }));
     }
