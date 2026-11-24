@@ -6,6 +6,8 @@ const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub, openHomeShortcut } = require("./helpers");
 
 const SHOTS = "/opt/cursor/artifacts/screenshots";
+const ARTIFACTS = "/opt/cursor/artifacts";
+fs.mkdirSync(ARTIFACTS, { recursive: true });
 
 function shot(page, name) {
   fs.mkdirSync(SHOTS, { recursive: true });
@@ -74,7 +76,17 @@ test.describe("Hub volunteer hours", () => {
     expect(text.toLowerCase()).not.toContain("separate login");
     expect(text).not.toContain("awaiting officer review");
     expect(text.toLowerCase()).not.toContain("officer confirms");
-    await shot(page, "volunteer-hours-card.png");
+    expect(text.toLowerCase()).not.toContain("double hours");
+    expect(text.toLowerCase()).not.toContain("alcohol parade");
+    expect(text).toContain("Signing up to volunteer at an event logs those hours when a slot is open.");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await card.locator("#vhForm p").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(ARTIFACTS, "volunteer-hours-card-desktop.png"), fullPage: false });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await card.locator("#vhForm p").evaluate(function (el) {
+      el.scrollIntoView({ block: "center", inline: "nearest" });
+    });
+    await page.screenshot({ path: path.join(ARTIFACTS, "volunteer-hours-card-phone.png"), fullPage: false });
     assertHealthy(expect, report, "hours form");
   });
 
@@ -94,8 +106,19 @@ test.describe("Hub volunteer hours", () => {
     expect(text).not.toContain("\u2014");
     expect(text.toLowerCase()).not.toContain("officer confirms");
     expect(text).toContain("as soon as you save them");
-    await block.locator("h3", { hasText: "How to record volunteer hours" }).scrollIntoViewIfNeeded();
-    await shot(page, "faq-hours.png");
+    expect(text).toContain("Parade Security");
+    expect(text.toLowerCase()).not.toContain("double hours");
+    expect(text.toLowerCase()).not.toContain("alcohol parade");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await block.locator("h3", { hasText: "Ways to earn volunteer hours" }).evaluate(function (el) {
+      el.scrollIntoView({ block: "start", inline: "nearest" });
+    });
+    await page.screenshot({ path: path.join(ARTIFACTS, "faq-hours-desktop.png"), fullPage: false });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await block.locator("h3", { hasText: "Ways to earn volunteer hours" }).evaluate(function (el) {
+      el.scrollIntoView({ block: "start", inline: "nearest" });
+    });
+    await page.screenshot({ path: path.join(ARTIFACTS, "faq-hours-phone.png"), fullPage: false });
     assertHealthy(expect, report, "faq hours");
   });
 
