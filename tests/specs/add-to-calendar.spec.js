@@ -1,6 +1,6 @@
 // "Add to my calendar": Google, Outlook, and .ics choices from the Hub events
 // list and event detail. Offline fixtures only. No live database writes.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const BASKET = {

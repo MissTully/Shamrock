@@ -774,7 +774,13 @@ begin
 
   v_url := 'https://www.kreweofshamrock.com/membership-full-application.html?token=' || v_token;
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
-  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
+  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text,jsonb)') is not null then
+    v_html := public.kos_prospect_background_check_email_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_url,
+      jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))
+    );
+  elsif to_regprocedure('public.kos_prospect_background_check_email_html(text,text)') is not null then
     v_html := public.kos_prospect_background_check_email_html(
       coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
       v_url
@@ -831,7 +837,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'emailed', true,
-    'message', 'Full application sent. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver''s license number.'
+    'message', 'Full application sent. We emailed the background check fee ($50 individual or $75 couple) and a secure link to the full application. The email does not include a dues link, a Social Security number, or a driver''s license number.'
   );
 end;
 $$;
@@ -890,7 +896,14 @@ begin
     'already_submitted', v_link.used_at is not null,
     'fee_type', rec.application_fee_type,
     'applicant_first', rec.first_name,
-    'partner_first', case when rec.application_fee_type = 'dual' then rec.partner_first_name else null end
+    'partner_first', case when rec.application_fee_type = 'dual' then rec.partner_first_name else null end,
+    'partner_last', case when rec.application_fee_type = 'dual' then rec.partner_last_name else null end,
+    'partner_name', case
+      when rec.application_fee_type = 'dual' then nullif(btrim(
+        coalesce(rec.partner_first_name, '') || ' ' || coalesce(rec.partner_last_name, '')
+      ), '')
+      else null
+    end
   );
 end;
 $$;

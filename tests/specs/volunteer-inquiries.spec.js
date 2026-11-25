@@ -1,5 +1,5 @@
 // Public volunteer interest form and the Charity inbox on the Officer desk.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
@@ -56,7 +56,7 @@ test.describe("Volunteer interest", () => {
     await expect(band).toContainText("Members, friends from other krewes, and neighbors who want to help Tampa Bay kids and families.");
     await expect(band).toContainText("The Krewe welcomes volunteers for charity partner days, warehouse moves, drives, and event help.");
     await expect(band).toContainText("Tell us you\u2019re interested and the Charity committee will follow up.");
-    await expect(band).toContainText("Krewe members who already have Hub access can log completed hours below.");
+    await expect(band).toContainText("Krewe members log completed hours in the Hub. Those hours count as soon as they are saved.");
     await expect(band.locator("a[href^='mailto:']")).toHaveCount(0);
     const hours = band.locator("#volunteerHoursLink");
     await expect(hours).toHaveText("Log volunteer hours");

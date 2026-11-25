@@ -157,8 +157,9 @@
     ".hub-appr .muted{color:var(--muted);font-size:15px;}",
     ".hub-appr-main{flex:1 1 220px;min-width:0;}",
     ".hub-appr-btns{display:flex;gap:8px;flex-wrap:wrap;}",
-    ".hub-media-preview{margin-top:8px;max-width:min(100%,280px);}",
-    ".hub-media-preview img{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:8px;border:1px solid rgba(168,128,28,.35);}",
+    ".hub-media-preview{margin-top:8px;max-width:100%;--kos-photo-max-h:280px;--kos-photo-max-w:220px;}",
+    ".hub-media-preview.kos-photo-frame{margin-inline:0;}",
+    ".hub-media-preview img{display:block;width:100%;height:auto;object-fit:contain;image-orientation:from-image;border-radius:8px;border:1px solid rgba(168,128,28,.35);background:#f6f1e4;}",
     ".hub-media-cap-label{display:block;margin:8px 0 4px;font-size:14px;font-weight:600;color:var(--green-800);}",
     ".hub-media-caption{width:100%;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(168,128,28,.45);border-radius:8px;font:inherit;font-size:16px;background:#fff;}",
     ".hub-appr-h{font-family:var(--display);color:var(--green-800);margin:14px 0 6px;font-size:18px;}",
@@ -301,9 +302,44 @@
     ".hub-app-status{display:inline-block;margin-left:8px;border-radius:999px;padding:2px 8px;font-size:13px;font-family:var(--display);background:#f0e2bd;color:#7a5b00;border:1px solid #d4b45a;vertical-align:middle;}",
     ".hub-app-status.ok{background:var(--green-800);color:#f6efdc;border-color:var(--green-800);}",
     ".hub-app-fee{margin:6px 0 0;font-size:15px;line-height:1.4;color:#3a3a2e;}",
-    ".hub-app-id{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0;}",
+    ".hub-app-id{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;margin:4px 0;}",
     ".hub-app-id > span{min-width:0;}",
     ".hub-app-copy{min-height:36px;padding:6px 14px;}",
+    ".hub-pipe-help{margin:0 0 12px;font-size:16px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-pipe-tiles{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;}",
+    ".hub-pipe-tile{min-width:108px;text-align:left;cursor:pointer;border:1px solid rgba(168,128,28,.55);background:#fffdf6;color:#14532d;border-radius:14px;padding:8px 12px;font-family:var(--display);}",
+    ".hub-pipe-tile:focus-visible,.hub-pipe-col summary:focus-visible,.hub-app-confirm button:focus-visible{outline:3px solid #14532d;outline-offset:2px;}",
+    ".hub-pipe-tile .n{display:block;font-size:22px;font-weight:700;color:#14532d;}",
+    ".hub-pipe-tile .l{display:block;font-size:13px;line-height:1.3;color:#3d2e00;}",
+    ".hub-app-search{display:block;margin:0 0 12px;}",
+    ".hub-app-search span{display:block;font-size:15px;color:#3a3a2e;margin:0 0 4px;}",
+    ".hub-app-search input{width:100%;max-width:420px;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(20,83,45,.35);border-radius:8px;font:inherit;background:#fff;}",
+    ".hub-level-label{display:block;margin:8px 0 4px;font-size:15px;color:#3a3a2e;}",
+    ".hub-level-select{display:block;width:100%;box-sizing:border-box;margin:0 0 8px;padding:8px;font:inherit;border:1px solid rgba(20,83,45,.35);border-radius:8px;background:#fff;}",
+    ".hub-pipeline{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;}",
+    ".hub-pipe-col{flex:1 0 280px;max-width:340px;background:#f6efdc;border:1px solid rgba(168,128,28,.55);border-radius:16px;}",
+    ".hub-pipe-col summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;font-family:var(--display);color:#14532d;font-weight:700;font-size:16px;}",
+    ".hub-pipe-col summary::-webkit-details-marker{display:none;}",
+    ".hub-pipe-count{background:#14532d;color:#f6efdc;border-radius:999px;min-width:1.6em;text-align:center;padding:2px 8px;font-size:14px;}",
+    ".hub-pipe-cards{display:flex;flex-direction:column;gap:10px;padding:0 10px 12px;}",
+    ".hub-pipe-card{background:#fffdf6;border:1px solid rgba(20,83,45,.2);border-radius:14px;padding:12px;}",
+    ".hub-pipe-card h3{margin:0 0 4px;font-size:18px;color:#14532d;font-family:var(--display);}",
+    ".hub-pipe-meta{margin:0;color:#3a3a2e;font-size:15px;line-height:1.4;}",
+    ".hub-pipe-phone a{font-size:22px;font-weight:700;color:#14532d;}",
+    ".hub-induction-preview{margin:10px 0;padding:12px;background:#f6efdc;border:1px solid #14532d;border-radius:8px;font-size:15px;line-height:1.45;}",
+    ".hub-induction-preview a{color:#14532d;font-weight:700;}",
+    ".hub-chip{display:inline-block;border-radius:999px;padding:4px 10px;font-size:14px;line-height:1.35;margin:6px 6px 0 0;}",
+    ".hub-chip.paid{background:#14532d;color:#f6efdc;}",
+    ".hub-chip.wait{background:#fff4c2;color:#3d2e00;border:1px solid #a67c00;}",
+    ".hub-journey-done{margin:8px 0 0;font-size:14px;line-height:1.4;color:#14532d;}",
+    ".hub-pipe-empty{margin:0;color:#3a3a2e;font-size:15px;}",
+    ".hub-app-confirm{position:relative;margin:0 0 12px;background:#fffdf6;border:2px solid #14532d;border-radius:16px;padding:16px;}",
+    ".hub-app-confirm[hidden]{display:none !important;}",
+    ".hub-app-confirm h3{margin:0 0 8px;color:#14532d;font-family:var(--display);}",
+    ".hub-app-confirm p{margin:0 0 12px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-app-confirm input{display:block;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:10px;font-size:16px;border:1px solid #14532d;border-radius:8px;background:#fff;}",
+    "@media (min-width:801px){.hub-pipeline[data-layout='columns'] .hub-pipe-col > summary{pointer-events:none;}}",
+    "@media (max-width:800px){.hub-pipeline{display:block;overflow:visible;}.hub-pipe-col{max-width:none;margin:0 0 10px;}}",
     "@media (max-width:520px){.hub-apps-banner{flex-wrap:wrap;padding:14px;}.hub-apps-banner .go{margin-left:0;}.hub-apps-banner b{font-size:22px;}}",
     /* ---- Officer desk layout ---- */
     ".hub-officer-hero{background:#fff;border:1px solid rgba(168,128,28,.3);border-radius:18px;padding:18px 20px;margin:0 0 16px;}",
@@ -446,6 +482,9 @@
     ".hub-prof-form textarea,.hub-claim textarea,.hub-event-form textarea{min-height:88px;}",
     ".hub-appr{padding:12px 14px;border-radius:12px;gap:10px;}",
     ".hub-appr-btns .btn,.hub-appr-btns button{min-height:44px;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled{background:#e4dfd2;background-image:none;color:#4a453c;border-color:#b7b0a2;box-shadow:none;cursor:not-allowed;opacity:1;transform:none;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled:hover{background:#e4dfd2;background-image:none;box-shadow:none;transform:none;}",
+    ".hub-appr-btns button.btn.btn-primary[data-app-start]:disabled::after{content:none;display:none;animation:none;}",
     ".hub-event-row{padding:14px;border-radius:12px;}",
     ".dir-grid{grid-template-columns:1fr;gap:10px;}",
     ".dir-card{min-height:56px;padding:12px 14px;}",
@@ -593,6 +632,34 @@
     "body.hub-desk.app-ann.app-screen #appDrillActions{display:none !important;}",
     "@media (max-width:380px){.tidings-archive{font-size:13px;}.tidings-column{width:min(38rem,calc(100% - 28px));padding-top:26px;}}",
 
+    /* Charity hours roster. Dark green bars stay readable on parchment and on the phone app. */
+    ".hub-charity-lead{margin:0 0 12px;font-size:16px;line-height:1.45;color:#3a3a2e;}",
+    ".hub-charity-h{font-family:var(--display);color:#f6efdc;background:linear-gradient(180deg,#1d6b3e,#14532d);margin:18px 0 10px;padding:10px 14px;border-radius:12px;font-size:18px;border:1px solid #d4af37;letter-spacing:.02em;}",
+    ".hub-charity-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0 0 12px;}",
+    ".hub-charity-controls .fld{flex:1 1 160px;min-width:0;}",
+    ".hub-charity-controls label{display:block;font-size:14px;color:#5c5848;margin:0 0 4px;}",
+    ".hub-charity-controls input,.hub-charity-controls select{width:100%;box-sizing:border-box;font:inherit;font-size:16px;min-height:44px;padding:8px 10px;border:1px solid rgba(168,128,28,.45);border-radius:10px;background:#fff;color:#14532d;}",
+    ".hub-charity-controls .fld-btn{flex:0 0 auto;}",
+    ".hub-charity-member{border:1px solid rgba(168,128,28,.35);border-radius:14px;background:#fffdf8;margin:0 0 10px;overflow:hidden;}",
+    ".hub-charity-summary{width:100%;text-align:left;background:transparent;border:0;padding:12px 14px;cursor:pointer;font:inherit;color:inherit;min-height:44px;}",
+    ".hub-charity-summary .nm{font-family:var(--display);color:#14532d;font-size:18px;line-height:1.25;}",
+    ".hub-charity-lvl{display:inline-block;margin-left:8px;font-size:13px;font-weight:700;color:#14532d;background:#e7f3ea;border:1px solid #1d6b3e;border-radius:999px;padding:2px 8px;vertical-align:middle;}",
+    ".hub-charity-stats{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:15px;color:#3a3a2e;line-height:1.4;}",
+    ".hub-charity-need{display:block;margin-top:2px;color:#14532d;font-weight:600;}",
+    ".hub-charity-logs{padding:0 14px 12px;border-top:1px solid rgba(168,128,28,.25);}",
+    ".hub-charity-log{padding:10px 0;border-top:1px solid rgba(168,128,28,.18);}",
+    ".hub-charity-log:first-child{border-top:0;}",
+    ".hub-charity-log b{color:#14532d;}",
+    ".hub-charity-status{display:inline-block;margin-left:6px;font-size:13px;font-weight:700;border-radius:999px;padding:2px 8px;border:1px solid transparent;vertical-align:middle;}",
+    ".hub-charity-status.approved{background:#e7f3ea;color:#14532d;border-color:#1d6b3e;}",
+    ".hub-charity-status.pending{background:#fff4c2;color:#6b4e00;border-color:#a67c00;}",
+    ".hub-charity-status.rejected{background:#f8e8e4;color:#7a2e1f;border-color:#a44;}",
+    ".hub-charity-warn{margin:8px 0 0;padding:8px 10px;background:#fff4c2;border:1px solid #a67c00;border-radius:10px;color:#3d3208;font-size:15px;line-height:1.4;}",
+    ".hub-charity-note{margin-top:6px;font-size:15px;color:#3a3a2e;}",
+    "#hubCharityBody .hub-app-filters button{min-height:44px;}",
+    "#hubCharityPending,#hubCharityRoster,#hubCharityLogs{scroll-margin-top:120px;}",
+    "@media (max-width:520px){.hub-charity-controls .fld,.hub-charity-controls .fld-btn{flex:1 1 100%;}.hub-charity-controls .fld-btn .btn{width:100%;}.hub-charity-summary .nm{font-size:17px;}}",
+
     /* Phone and Fold type. Desktop (960px and up) keeps the sizes above. */
     "@media (max-width:959px){",
     ".hub-board{padding:16px 14px;}",
@@ -611,7 +678,8 @@
 
   ].join("");
 
-  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "new", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  var state = { officer: false, shopOnly: false, socialOnly: false, canViewPayments: false, canManageEvents: false, canReviewApplications: false, canReviewHours: false, canReviewVolunteerInquiries: false, toolKeys: null, volunteerInquiryStatus: "new", volunteerInquiryRows: [], volunteerInquiryCounts: { "new": 0, contacted: 0, done: 0 }, volunteerInquiryFlash: "", volunteerInquiryLoadError: "", pendingHours: [], hourDecisionFlash: "", applicationCount: 0, applicationBucket: "board", applicationRows: [], applicationCounts: { "new": 0, background: 0, dues: 0, approved: 0, declined: 0, archived: 0, renewal: 0, prospect: 0 }, applicationRecent: [], applicationFlash: "", joiningPacketEditor: false, joiningPacketDraft: null, joiningPacketTemplate: null, joiningPacketPreview: null, joiningPacketMessage: "", joiningPacketError: "", joiningPacketDirty: false, joiningPacketLoaded: false, parade: null, hoursApproved: 0, membershipStatus: null, game: null, nextEvent: null, nextEvents: [], hubEvents: [], announcements: [], birthdays: [], tidingsReady: false, birthdaysReady: false, paradeSeason: [], nextParade: null, rsvpByEvent: {} };
+  state.canReviewCharityHours = false;
   window.kosHubState = state;
   var feedLock = null;
   var applicationsFixture = null;
@@ -620,9 +688,21 @@
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
   var hourApprovalsFixture = false;
+  var charityHoursState = {
+    fixture: false,
+    payload: null,
+    season: null,
+    query: "",
+    filter: "all",
+    sort: "name",
+    openId: null,
+    flash: "",
+    error: "",
+    noteDrafts: {}
+  };
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries);
+    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours);
   }
 
   function newApplicationLabel(n) {
@@ -634,9 +714,9 @@
 
   function applicationsTileDesc() {
     var n = Number(state.applicationCount) || 0;
-    if (n === 1) return "1 new application. Call, then send the joining packet.";
+    if (n === 1) return "1 new application. Call, then send the joining packet. The dues link comes after the check passes.";
     if (n === 0) return "No new applications right now";
-    return n + " new applications. Call, then send the joining packet.";
+    return n + " new applications. Call, then send the joining packet. The dues link comes after the check passes.";
   }
 
   function volunteerInquiryCountOf(status) {
@@ -743,8 +823,6 @@
     phone: svgIcon('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18.2h2"/>')
   };
   var TAB_TITLES = { hub: "Home", events: "Events", parade: "Parade", krewe: "My Krewe", fun: "Craic Cup", officer: "Officer" };
-  var DUES_FULL_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-  var DUES_LOA_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
 
   function tabButton(id, label, icon, extra) {
     return '<button type="button" role="tab" data-hub-tab="' + id + '" aria-selected="false">' +
@@ -1167,12 +1245,135 @@
     });
   }
 
+  function stampParadeFields(row) {
+    if (!row) return row;
+    var match = null;
+    (state.hubEvents || []).forEach(function (ev) {
+      if (ev && String(ev.id) === String(row.id)) match = ev;
+    });
+    if (!match) return row;
+    if (!row.guest_payment_url && match.guest_payment_url) row.guest_payment_url = match.guest_payment_url;
+    if (!row.event_type && match.event_type) row.event_type = match.event_type;
+    if (!row.source && match.source) row.source = match.source;
+    if (row.collect_guests == null && match.collect_guests != null) row.collect_guests = match.collect_guests;
+    if (!row.registration_closes_at && match.registration_closes_at) row.registration_closes_at = match.registration_closes_at;
+    if (!row.end_time && match.end_time) row.end_time = match.end_time;
+    if (!row.ticket_payment_url && match.ticket_payment_url) row.ticket_payment_url = match.ticket_payment_url;
+    if (row.ticket_price_cents == null && match.ticket_price_cents != null) row.ticket_price_cents = match.ticket_price_cents;
+    return row;
+  }
+
+  function isKreweParadeEvent(ev) {
+    if (!ev) return false;
+    if (String(ev.source || "").toLowerCase() === "ikc") return false;
+    var type = String(ev.event_type || "").toLowerCase();
+    if (type === "parade" || type === "march") return true;
+    if (type) return false;
+    if (ev.parade_rsvpd != null || ev.parade_rsvp_status != null || ev.eligible != null) return true;
+    return isParadeLike(ev);
+  }
+
+  function paradeRsvpSlot(ev) {
+    if (!ev || !window.kosParadeRsvp || typeof window.kosParadeRsvp.slotHtml !== "function") return "";
+    return window.kosParadeRsvp.slotHtml(ev, { signedIn: true });
+  }
+
+  function homeParadeRows() {
+    var rows = [];
+    var seen = {};
+    function add(ev) {
+      if (!ev || !ev.id || seen[String(ev.id)] || !isKreweParadeEvent(ev)) return;
+      seen[String(ev.id)] = 1;
+      rows.push(ev);
+    }
+    (state.paradeSeason || []).forEach(add);
+    (state.hubEvents || []).forEach(function (ev) {
+      if (eventStaysListed(ev)) add(ev);
+    });
+    return rows;
+  }
+
+  function paradeRsvpCardHtml(row, kind) {
+    var slot = paradeRsvpSlot(row);
+    var where = row.location ? " · " + esc(row.location) : "";
+    return '<article class="' + kind + '" data-parade-card="' + esc(row.id) + '">' +
+      "<h3>" + esc(row.name || "Parade") + "</h3>" +
+      '<p class="muted">' + esc(whenLabel(row.start_time)) + where + "</p>" +
+      slot + "</article>";
+  }
+
+  // Parade RSVP lives on the Parade tab (the season card). My Krewe only
+  // points there. The same kosParadeRsvp widget is mounted on that card.
+  function kreweParadeJumpHtml() {
+    return '<p class="hub-krewe-parade-jump"><button type="button" class="hub-krewe-parade-link" data-hub-open-parade-rsvp>Parade RSVPs are in Parades</button></p>';
+  }
+
+  function openParadeRsvpSection() {
+    // Open the Parade tab at its root. showTab skips the hub router, so the
+    // My Krewe tab would not switch back. openTab restores a saved drill
+    // such as Carpool, and on a phone that drill hides the parade RSVP card.
+    if (appNavApi && typeof appNavApi.showParadeRoot === "function") appNavApi.showParadeRoot();
+    else if (appNavApi && typeof appNavApi.openTab === "function") appNavApi.openTab("parade");
+    else showTab("parade", { skipScroll: true });
+    var card = document.getElementById("hubParadeSeasonCard");
+    if (card && typeof card.scrollIntoView === "function") {
+      try { card.scrollIntoView({ block: "start", behavior: "auto" }); } catch (err) {}
+    }
+  }
+
+  function wireKreweParadeJump(host) {
+    if (!host || host.getAttribute("data-wired") === "1") return;
+    host.setAttribute("data-wired", "1");
+    host.addEventListener("click", function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest("[data-hub-open-parade-rsvp]") : null;
+      if (!btn || !host.contains(btn)) return;
+      openParadeRsvpSection();
+    });
+  }
+
+  function paintKreweParadeList() {
+    var host = document.getElementById("hubKreweParadeList");
+    if (!host) return;
+    host.innerHTML = kreweParadeJumpHtml();
+    wireKreweParadeJump(host);
+  }
+
+  function paintHomeParadeList() {
+    var existing = document.getElementById("hubHomeParadeList");
+    if (document.body.classList.contains("hub-app")) {
+      if (existing) existing.remove();
+      return;
+    }
+    var top = document.getElementById("hubHomeTop");
+    if (!top) return;
+    var rows = homeParadeRows();
+    if (!rows.length) {
+      if (existing) existing.remove();
+      return;
+    }
+    var host = existing;
+    if (!host) {
+      host = document.createElement("section");
+      host.id = "hubHomeParadeList";
+      host.className = "hub-home-parades";
+      host.setAttribute("aria-label", "Krewe parades");
+      var hours = document.getElementById("hubHomeHoursSlot") || document.getElementById("hubHoursCard");
+      if (hours && hours.parentNode === top) top.insertBefore(host, hours);
+      else top.appendChild(host);
+    }
+    host.innerHTML = "<h2>Krewe parades</h2>" + rows.map(function (row) {
+      return paradeRsvpCardHtml(row, "hub-home-parade");
+    }).join("");
+    mountParadeRsvps(host);
+  }
+
   function renderHubParadeSeason(list) {
     if (feedLock && Array.isArray(feedLock.parades)) list = feedLock.parades;
     var rows = (list || []).filter(function (row) {
       if (feedLock && Array.isArray(feedLock.parades)) return true;
       return eventStaysListed(row);
     });
+    rows.forEach(stampParadeFields);
     state.paradeSeason = rows;
     var html = rows.length
       ? rows.map(paradeSeasonCardHtml).join("")
@@ -1182,6 +1383,8 @@
       wireParadeSeasonList(target, rows);
       prepareShare(target);
     });
+    paintKreweParadeList();
+    paintHomeParadeList();
   }
   window.__kosRenderParadeSeason = renderHubParadeSeason;
 
@@ -1475,6 +1678,8 @@
         id: e.id,
         name: e.name,
         description: e.description,
+        event_type: e.event_type || "parade",
+        source: e.source || "krewe",
         start_time: e.start_time,
         end_time: e.end_time,
         location: e.location,
@@ -1482,6 +1687,12 @@
         members_only: e.members_only,
         notes: e.notes || "",
         linked_meeting_id: e.linked_meeting_id,
+        guest_payment_url: e.guest_payment_url || "",
+        collect_guests: e.collect_guests,
+        registration_closes_at: e.registration_closes_at || "",
+        external_url: e.external_url || "",
+        ticket_payment_url: e.ticket_payment_url || "",
+        ticket_price_cents: e.ticket_price_cents,
         parade_rsvpd: !!paradeStatus,
         parade_checked_in: paradeStatus === "attended",
         parade_rsvp_status: paradeStatus || null,
@@ -1516,7 +1727,7 @@
     } catch (e) {}
     try {
       var evs = await client.from("events")
-        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes")
+        .select("id,name,description,start_time,end_time,location,member_address,members_only,event_type,linked_meeting_id,status,source,notes,guest_payment_url,collect_guests,registration_closes_at,external_url,ticket_payment_url,ticket_price_cents")
         .eq("source", "krewe")
         .order("start_time", { ascending: true })
         .limit(40);
@@ -1671,8 +1882,10 @@
       '<section class="app-card"><div class="app-head"><span class="ic">☘</span><div><h2>My Krewe</h2><small>Profile and member directory</small></div></div>' +
       '<div class="app-body">' +
       '<div id="hubMyParadeGuests"></div>' +
+      '<div id="hubKreweParadeList">' + kreweParadeJumpHtml() + "</div>" +
       '<div class="hub-profile" id="hubProfileCard"><h3>Your profile</h3><p class="empty">Loading…</p></div>' +
       "</div></div></section>";
+    wireKreweParadeJump(document.getElementById("hubKreweParadeList"));
     ensureMyParadeGuests();
 
     var events = document.getElementById("hubEvents");
@@ -1929,31 +2142,8 @@
 
   function profileDuesExempt(profile) {
     var p = profile || window.kosProfile || {};
-    var roles = [];
-    if (p.member_role) roles.push(p.member_role);
-    var grants = p.roles || p.member_roles || [];
-    if (Array.isArray(grants)) {
-      grants.forEach(function (g) {
-        if (typeof g === "string") roles.push(g);
-        else if (g && g.role) roles.push(g.role);
-      });
-    }
-    var L = window.KOS_LEADERSHIP;
-    if (L && typeof L.highestMemberRole === "function") {
-      var top = L.highestMemberRole(roles);
-      if (top === "officer" || top === "board") return true;
-      if (p.officer_title && typeof L.splitTitles === "function" && typeof L.rolesForTitle === "function") {
-        var fromTitles = [];
-        L.splitTitles(p.officer_title).forEach(function (title) {
-          fromTitles = fromTitles.concat(L.rolesForTitle(title) || []);
-        });
-        var titled = L.highestMemberRole(fromTitles);
-        if (titled === "officer" || titled === "board") return true;
-      }
-      return false;
-    }
-    return roles.some(function (r) {
-      return /^(officer|captain|board|treasurer|secretary)$/i.test(String(r || ""));
+    return String(p.officer_title || "").split(/\s*·\s*/).some(function (part) {
+      return /^(president|vice president|secretary|treasurer)$/i.test(part.trim());
     });
   }
 
@@ -2576,6 +2766,7 @@
     body.innerHTML = html;
     sheet.hidden = false;
   }
+  window.kosOpenHubSheet = openSheet;
 
   var toastTimer = null;
   function showToast(text) {
@@ -2630,12 +2821,18 @@
   }
 
   function openPayDues() {
+    if (window.kosRenew && typeof window.kosRenew.open === "function") {
+      window.kosRenew.open({
+        paid: !!(state.parade && state.parade.dues_paid),
+        membership_level: (state.parade && state.parade.membership_level) || (window.kosProfile && window.kosProfile.membership_level),
+        membership_status: state.membershipStatus || (state.parade && state.parade.membership_status) || (window.kosProfile && window.kosProfile.membership_status),
+        parade: state.parade || null
+      });
+      return;
+    }
     openSheet(
-      '<div class="app-dues"><h2 id="appSheetTitle">Pay dues</h2>' +
-      "<p>These links are membership dues. They are not the join application fee ($50 single or $75 couple).</p>" +
-      "<p>Dues are collected on Zeffy. Choose the membership you are paying.</p>" +
-      '<p><a class="btn btn-primary" href="' + DUES_FULL_URL + '" target="_blank" rel="noopener noreferrer">Pay full krewe dues</a></p>' +
-      '<p><a class="btn" href="' + DUES_LOA_URL + '" target="_blank" rel="noopener noreferrer">Pay leave of absence</a></p></div>'
+      '<div class="app-dues"><h2 id="appSheetTitle">Renew my membership</h2>' +
+      "<p>Membership renewal is still loading. Refresh the page and try again.</p></div>"
     );
   }
 
@@ -2755,7 +2952,8 @@
         (loc ? '<p class="app-event-loc">' + esc(loc) + "</p>" : "") +
         '</div><button type="button" class="app-rsvp' + (goingNext ? " is-going" : "") + '" data-app-event="' + esc(ev.id || "") + '">' +
         (goingNext ? "Already RSVP'd" : (closedNext ? "Closed" : "RSVP")) + "</button>" +
-        eventShareHtml(ev) + "</article>";
+        eventShareHtml(ev) + "</article>" +
+        (isKreweParadeEvent(ev) ? paradeRsvpSlot(ev) : "");
     }
     return '<div id="appDash">' +
       tartanDeadlineHtml("appTartanDeadline") +
@@ -2766,7 +2964,7 @@
       '<div class="app-tiles" aria-label="Member shortcuts">' +
       appTile("card", "Member Card", APP_ICO.card) +
       appTile("events", "RSVP", APP_ICO.cal) +
-      (profileDuesExempt() ? "" : appTile("dues", "Pay Dues", APP_ICO.dues)) +
+      (profileDuesExempt() ? "" : appTile("dues", "Renew", APP_ICO.dues)) +
       appTile("chat", "Chat", APP_ICO.chat) +
       appTile("carpool", "Carpool", APP_ICO.car) +
       appTile("volunteer", "Volunteer", APP_ICO.heart) +
@@ -2865,7 +3063,7 @@
     if (go === "faq") { openMemberFaq(""); return; }
     if (go === "directory") { openDirectoryFromHome(); return; }
     if (go === "card") { appNavApi.openCard(); return; }
-    if (go === "dues") { openPayDues(); return; }
+    if (go === "dues" || go === "renew") { openPayDues(); return; }
     if (go === "email") {
       if (typeof window.kosOpenEmailMembers === "function") window.kosOpenEmailMembers();
       else showToast("Email members is still loading. Please try again in a moment.");
@@ -3086,6 +3284,7 @@
       quickTile("directory", "trinity", "My Krewe", "Your member directory: faces and profiles of the whole krewe.") +
       quickTile("events", "harp", "Events & RSVPs", "See what's coming up and RSVP. Attendance feeds Parade Ready.") +
       quickTile("desk", "shield", "Member desk", "Parade Ready, rides, and your locker.") +
+      (profileDuesExempt() ? "" : quickTile("renew", "shamrock", "Renew my membership", "Pick your level for this June through May season and pay on Zeffy.")) +
       quickTile("faq", "book", "Member FAQ", "Events, beads, volunteer hours, parades, and krewe gear.") +
       quickTile("share", "triskele", "Share your media", "Upload photos and videos for the public site (an officer approves them), plus artwork, poems, and recipes.") +
       quickTile("fun", "chalice", "Craic Cup", "Claim clovers, check the leaderboard, and join the fun.") +
@@ -3126,6 +3325,8 @@
     }
     placeHomeHours(hoursCard);
     prepareShare(top);
+    paintHomeParadeList();
+    mountParadeRsvps(top);
 
     renderProfileCard();
     ensureMyParadeGuests();
@@ -3149,6 +3350,7 @@
         else if (go === "docs") revealDocsCard();
         else if (go === "events") gotoHubTabFromHome("events", "events");
         else if (go === "desk") gotoHubTabFromHome("parade", "desk");
+        else if (go === "renew") openPayDues();
         else if (go === "share") revealShareGroup();
         else if (go === "faq") openMemberFaq("");
         else if (go === "fun") gotoHubTabFromHome("fun", "fun");
@@ -3281,6 +3483,10 @@
     if ("socialOnly" in flags) state.socialOnly = !!flags.socialOnly;
     if ("isChair" in flags) state.isChair = !!flags.isChair;
     if ("canAssignChairs" in flags) state.canAssignChairs = !!flags.canAssignChairs;
+    if ("canReviewCharityHours" in flags) state.canReviewCharityHours = !!flags.canReviewCharityHours;
+    if (flags.charityHours) {
+      try { window.__kosHubSetCharityHours(flags.charityHours); } catch (eCharityHours) {}
+    }
     applyApplicationFixture();
     applyVolunteerInquiryFixture();
     if (Array.isArray(flags.paradeGuests)) {
@@ -3499,6 +3705,7 @@
     await refreshApplicationAccess(client);
     await refreshVolunteerInquiryAccess(client);
     applyToolKeyFlags();
+    await refreshCharityHoursAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canAssignChairs) loadChairDesk(client);
     if (state.canViewPayments) loadPaymentsCard(client);
@@ -3543,7 +3750,7 @@
       state.birthdaysReady = true;
     }
     try {
-      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,external_url,is_online,meeting_url,registration_closes_at";
+      var evSelect = "id,name,start_time,end_time,location,member_address,member_notes,members_only,status,source,event_type,linked_meeting_id,description,flyer_url,ticket_payment_url,ticket_price_cents,ticket_label,guest_payment_url,collect_guests,external_url,is_online,meeting_url,registration_closes_at";
       var sinceIso = eventListSinceIso();
       var listWindow = "start_time.gte." + sinceIso + ",end_time.gte." + sinceIso;
       var evs = await client.from("events")
@@ -3914,7 +4121,7 @@
     var facts = [];
     if (p.officer_title) facts.push("🎖 " + esc(p.officer_title));
     else if (p.member_role) facts.push("Role: " + esc(p.member_role));
-    if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(p.membership_status || state.membershipStatus));
+    if (p.membership_status || state.membershipStatus) facts.push("Status: " + esc(shownMembershipStatus(p.membership_status || state.membershipStatus)));
     if (p.phone) facts.push('📞 <a href="tel:' + esc(String(p.phone).replace(/[^0-9+]/g, "")) + '" style="color:inherit;">' + esc(p.phone) + "</a>");
     if (p.hometown) facts.push("🏠 " + esc(p.hometown));
     if (p.street_address || p.city) {
@@ -4137,7 +4344,6 @@
     { code: "attend_event", label: "Attend an event (verified)", clovers: 20 },
     { code: "attend_meeting", label: "Attend a members' meeting", clovers: 15 },
     { code: "attend_ikc_event", label: "Attend another IKC krewe's event", clovers: 20 },
-    { code: "volunteer_event", label: "Volunteer at an event", clovers: 30 },
     { code: "volunteer_priority", label: "Priority shift bonus (officers flag hard-to-fill spots like security or float duty)", clovers: 60 },
     { code: "organize_event", label: "Organize an event", clovers: 50 },
     { code: "bring_guest", label: "Bring a guest (up to 3)", clovers: 5, perGuest: true },
@@ -4269,11 +4475,11 @@
   var APP_BUCKET_STATUS = {
     "new": "pending-new",
     background: "background-check",
+    bg_paid: "bg_paid",
     dues: "dues-pending",
     approved: "active",
     declined: "declined",
     archived: "archived",
-    renewal: "pending-renewal",
     prospect: "prospect"
   };
 
@@ -4338,11 +4544,11 @@
     state.applicationCounts = {
       "new": countStatus(rows, "pending-new"),
       background: countStatus(rows, "background-check"),
+      bg_paid: countStatus(rows, "bg_paid"),
       dues: countStatus(rows, "dues-pending"),
       approved: countStatus(rows, "active"),
       declined: countStatus(rows, "declined"),
       archived: countStatus(rows, "archived"),
-      renewal: countStatus(rows, "pending-renewal"),
       prospect: countStatus(rows, "prospect")
     };
     state.applicationCount = state.applicationCounts["new"];
@@ -4355,9 +4561,11 @@
       return;
     }
     var asked = state.applicationBucket || "new";
-    if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "renewal" && asked !== "prospect" && data.bucket === "new") {
+    if (data.bucket && data.bucket !== asked && asked !== "new" && asked !== "prospect" && data.bucket === "new") {
       state.applicationRows = [];
-      state.applicationLoadError = "This stage needs the database update in sql/kos_membership_application_pipeline.sql.";
+      state.applicationLoadError = asked === "board"
+        ? "This pipeline needs the database update in sql/kos_membership_pipeline_dashboard.sql."
+        : "This stage needs the database update in sql/kos_membership_application_pipeline.sql.";
       return;
     }
     state.applicationLoadError = "";
@@ -4415,16 +4623,35 @@
     return [street, line2].filter(Boolean).join(", ");
   }
 
+  function applicationPhoneHtml(phone) {
+    var raw = String(phone || "").trim();
+    if (!raw) return "";
+    var href = raw.replace(/[^0-9+]/g, "");
+    if (!href) return '<p class="hub-pipe-meta">Phone: ' + esc(raw) + "</p>";
+    return '<p class="hub-pipe-meta hub-pipe-phone">Phone: <a href="tel:' + esc(href) + '">' + esc(raw) + "</a></p>";
+  }
+
+  function shownMembershipStatus(status) {
+    if (status === "pending-renewal") return "Pending dues";
+    if (status === "lapsed") return "Delinquent";
+    if (status === "inactive") return "Inactive";
+    return status || "";
+  }
+
   function applicationStatusLabel(status) {
-    if (status === "pending-new") return "New";
-    if (status === "background-check") return "Background check in progress";
-    if (status === "dues-pending") return "Dues pending";
-    if (status === "active") return "Approved";
+    if (status === "pending-new") return "New interest";
+    if (status === "background-check") return "Background check fee pending";
+    if (status === "bg_paid") return "Background check fee paid";
+    if (status === "bg_in_process") return "Background check in process";
+    if (status === "dues-pending") return "Induction pending";
+    if (status === "active") return "Member";
     if (status === "declined") return "Declined";
-    if (status === "archived") return "Archived";
-    if (status === "pending-renewal") return "Renewal";
+    if (status === "archived") return "Withdrawn";
+    if (status === "lapsed") return "Delinquent";
+    if (status === "inactive") return "Inactive";
+    if (status === "pending-renewal") return "Pending dues";
     if (status === "prospect") return "Event prospect";
-    return "New";
+    return "New interest";
   }
 
   function applicationBucketRows() {
@@ -4443,15 +4670,118 @@
   function applicationActionWord(action) {
     if (action === "decline") return "Declined";
     if (action === "archive") return "Archived";
-    if (action === "background_check") return "Background check in progress";
-    if (action === "dues_pending") return "Dues pending";
+    if (action === "background_check") return "Called, background check email sent";
+    if (action === "background_check_paid") return "Background check fee paid";
+    if (action === "start_background_check") return "Background check in process";
+    if (action === "dues_pending") return "Induction pending";
+    if (action === "dues_paid") return "Dues paid";
     if (action === "next_step_sent") return "Next step sent";
     if (action === "full_application_sent") return "Full application sent";
     if (action === "full_application_received") return "Full application received";
     if (action === "id_revealed") return "Background-check number opened";
     if (action === "approve") return "Approved";
     if (action === "note") return "Note";
+    if (action === "level_set") return "Membership level";
+    if (action === "background_check_fee_included") return "Auxiliary fee included";
     return "Updated";
+  }
+
+  function applicationBgPaid(row) {
+    return !!(row && (row.background_check_paid === true || row.background_check_paid === "true"));
+  }
+
+  function applicationDuesPaid(row) {
+    return !!(row && (row.dues_paid === true || row.dues_paid === "true"));
+  }
+
+  function applicationMoney(cents, fallback) {
+    var n = Number(cents);
+    if (!isFinite(n) || n <= 0) return fallback || "";
+    var dollars = Math.round(n) / 100;
+    if (Math.abs(dollars - Math.round(dollars)) < 0.001) return "$" + Math.round(dollars);
+    return "$" + dollars.toFixed(2);
+  }
+
+  function applicationPayDate(iso) {
+    if (!iso) return "";
+    // dues_payments.paid_date is a calendar date. The list sends it as midnight
+    // UTC, which is the evening before in New York. Show that calendar day.
+    var dateOnly = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]00:00:00(?:\.0+)?(?:Z|[+-]00(?::?00)?)?)?$/.exec(String(iso));
+    if (dateOnly) iso = dateOnly[1] + "-" + dateOnly[2] + "-" + dateOnly[3] + "T12:00:00-05:00";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var nowYear = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(new Date());
+    var thatYear = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(d);
+    var opts = { timeZone: "America/New_York", month: "short", day: "numeric" };
+    if (thatYear !== nowYear) opts.year = "numeric";
+    try { return new Intl.DateTimeFormat("en-US", opts).format(d); }
+    catch (e) { return ""; }
+  }
+
+  function applicationDaysInStage(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days < 1) return "Today";
+    if (days === 1) return "1 day in this stage";
+    return days + " days in this stage";
+  }
+
+  function applicationLevelLabel(row) {
+    var level = String((row && row.membership_level) || "").toLowerCase();
+    if (level === "full") return "Full Krewe";
+    if (level === "associate") return "Associate";
+    if (level === "auxiliary") return "Auxiliary";
+    if (level === "loa") return "Leave of absence";
+    return "";
+  }
+
+  function applicationPersonName(row) {
+    return ((row && row.first_name || "") + " " + (row && row.last_name || "")).trim();
+  }
+
+  function applicationFindPartner(row, rows) {
+    if (!row) return null;
+    var i;
+    if (row.partner_member_id) {
+      for (i = 0; i < rows.length; i++) {
+        if (rows[i] && String(rows[i].id) === String(row.partner_member_id)) return rows[i];
+      }
+    }
+    var want = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim().toLowerCase();
+    var fee = String(row.application_fee_type || "").toLowerCase();
+    if (!want || (fee !== "dual" && fee !== "couple" && !row.background_check_couple)) return null;
+    for (i = 0; i < rows.length; i++) {
+      if (!rows[i] || String(rows[i].id) === String(row.id)) continue;
+      if (applicationPersonName(rows[i]).toLowerCase() === want) return rows[i];
+    }
+    return null;
+  }
+
+  function applicationStageKey(row) {
+    var status = row && row.membership_status || "";
+    if (status === "pending-new") return "new";
+    if (status === "prospect") return "prospect";
+    if (status === "declined") return "declined";
+    if (status === "archived") return "archived";
+    if (status === "active") return "active";
+    if (status === "dues-pending") return "induction";
+    if (status === "bg_in_process") return "bg_process";
+    if (status === "bg_paid" || (status === "background-check" && applicationBgPaid(row))) return "bg_paid";
+    if (status === "background-check") return "fee_pending";
+    return "new";
+  }
+
+  function applicationEarlierStage(a, b) {
+    var order = ["new", "fee_pending", "bg_paid", "bg_process", "induction", "active", "prospect", "renewal", "declined", "archived"];
+    var ia = order.indexOf(a);
+    var ib = order.indexOf(b);
+    if (ia < 0) return b;
+    if (ib < 0) return a;
+    if (a === "active") return b;
+    if (b === "active") return a;
+    return ia <= ib ? a : b;
   }
 
   function applicationFeeLine(row) {
@@ -4520,6 +4850,35 @@
       return "";
     }
     return label + ": " + (kind === "dl" ? "••••" : "•••-••-") + last;
+  }
+
+  function applicationLinkedShowsOwn(row, kind) {
+    if (!row) return false;
+    if (kind === "dob") return !!formatApplicationDob(row.birthday);
+    if (kind === "dl") return !!(applicationTail4(row.dl_last4) || row.has_dl);
+    return !!(applicationTail4(row.ssn_last4) || row.has_ssn);
+  }
+
+  function applicationCoupleIdHtml(row, partner) {
+    var html = applicationIdMarkup(row, "applicant", "dl")
+      + applicationIdMarkup(row, "applicant", "ssn")
+      + applicationDobMarkup(row, "applicant");
+    if (partner && applicationLinkedShowsOwn(partner, "dl")) {
+      html += applicationIdMarkup(partner, "applicant", "dl");
+    } else {
+      html += applicationIdMarkup(row, "partner", "dl");
+    }
+    if (partner && applicationLinkedShowsOwn(partner, "ssn")) {
+      html += applicationIdMarkup(partner, "applicant", "ssn");
+    } else {
+      html += applicationIdMarkup(row, "partner", "ssn");
+    }
+    if (partner && applicationLinkedShowsOwn(partner, "dob")) {
+      html += applicationDobMarkup(partner, "applicant");
+    } else {
+      html += applicationDobMarkup(row, "partner");
+    }
+    return html;
   }
 
   function applicationIdMarkup(row, which, kind) {
@@ -4607,13 +4966,13 @@
     var got = !!(row.has_ssn || row.has_dl || row.has_partner_ssn || row.has_partner_dl
       || applicationTail4(row.ssn_last4) || applicationTail4(row.dl_last4)
       || applicationTail4(row.partner_ssn_last4) || applicationTail4(row.partner_dl_last4));
-    if (got) return "Full application received. Lists show the last 4 only.";
-    if (row.full_application_sent_at) return "Full application link sent. Waiting for the applicant.";
-    return "Full application: not sent yet.";
+    if (got) return "Full application submitted. Lists show the last 4 only.";
+    if (row.full_application_sent_at) return "Full application not submitted yet.";
+    return "Full application not submitted yet.";
   }
 
   function applicationOpenStatus(status) {
-    return status === "pending-new" || status === "background-check" || status === "dues-pending" || status === "prospect" || status === "pending-renewal";
+    return status === "pending-new" || status === "background-check" || status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "prospect";
   }
 
   function fixtureActor() {
@@ -4651,15 +5010,16 @@
 
   function applicationFlashFor(action) {
     if (action === "approve") {
-      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership.";
+      return "Approved. They are an active member now. We emailed them a welcome note with steps to create a Member Hub login: open the Member Hub, tap Create or reset your password, and use the email on this application. Signing up with that email links their login to this membership. The note includes the training video.";
     }
     if (action === "decline") return "Declined. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "archive") return "Archived. Their record stays on file and is off the new-application list. Nothing was deleted.";
-    if (action === "background_check") return "Moved to background check. Joining packet sent when prospect emails are on: a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. Membership dues are invoiced when they submit that form and begin the check.";
-    if (action === "dues_pending") return "Moved to dues pending. This is membership dues, not the application fee. The dues invoice is emailed when they submit the full application and begin the background check.";
+    if (action === "archive") return "Withdrawn. Their record stays on file and is off the new-application list. Nothing was deleted.";
+    if (action === "background_check") return "Called. We emailed the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number.";
+    if (action === "start_background_check") return "Background check in process. Copy the driver's license and Social Security number into the background check site. No email was sent.";
+    if (action === "dues_pending") return "Induction pending. We emailed the dues link, the meeting, and the invitation to share why they want to join. Membership dues are not the application fee.";
     if (action === "next_step_sent") return "Next step sent. The note is on the application history.";
     if (action === "full_application_sent") return "Full application sent. We emailed them a secure link to finish the background check. The email does not include a Social Security number or a driver's license number.";
-    if (action === "note") return "Note saved on the record. Their stage is the same, and the joining packet was not sent.";
+    if (action === "note") return "Note saved on the record. Their stage is the same, and the background check email was not sent.";
     return "Saved.";
   }
 
@@ -4668,11 +5028,131 @@
     if (action === "decline") return "declined";
     if (action === "archive") return "archived";
     if (action === "background_check") return "background-check";
+    if (action === "start_background_check") return "bg_in_process";
     if (action === "dues_pending") return "dues-pending";
     return from;
   }
 
   var lastDecisionStamp = { key: "", at: 0 };
+
+  function applicationLevelOpen(status) {
+    return status === "pending-new" || status === "prospect" || status === "background-check" || status === "bg_paid" || status === "bg_in_process";
+  }
+
+  function applicationFixtureRow(id) {
+    var found = null;
+    (applicationsFixture || []).forEach(function (row) {
+      if (row && String(row.id) === String(id)) found = row;
+    });
+    return found;
+  }
+
+  function rememberFixtureApplications() {
+    if (roleFixture) {
+      roleFixture.applications = applicationsFixture;
+      roleFixture.applicationRecent = state.applicationRecent;
+    }
+    state.applicationRows = applicationsFixture.slice();
+    syncApplicationFixtureCounts();
+  }
+
+  async function setApplicationLevel(client, id, level, sel) {
+    var allowed = { full: 1, associate: 1, auxiliary: 1, loa: 1 };
+    if (!allowed[level]) return;
+    if (applicationsFixture) {
+      var row = applicationFixtureRow(id);
+      if (!row || !applicationLevelOpen(row.membership_status)) {
+        renderApplicationsFromState();
+        return;
+      }
+      row.membership_level = level;
+      if (row.partner_member_id) {
+        var partner = applicationFixtureRow(row.partner_member_id);
+        if (partner && applicationLevelOpen(partner.membership_status)) partner.membership_level = level;
+      }
+      rememberFixtureApplications();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Could not save that membership level.");
+      return;
+    }
+    if (sel) sel.disabled = true;
+    try {
+      var res = await client.rpc("set_application_membership_level", {
+        p_member_id: id,
+        p_level: level
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not save that membership level.");
+      state.applicationFlash = payload.message || "Membership level saved.";
+    } catch (e) {
+      alert("Could not save that membership level: " + ((e && e.message) || e));
+    }
+    reloadApplications(client);
+  }
+
+  async function markAuxiliaryFeeIncluded(client, id, note, btn) {
+    var message = "Moved to Background check fee paid. Auxiliary dues ($200) include the background check fee. No email was sent.";
+    if (btn) btn.disabled = true;
+    if (applicationsFixture) {
+      var row = applicationFixtureRow(id);
+      if (!row || row.membership_status !== "background-check" || String(row.membership_level || "").toLowerCase() !== "auxiliary") {
+        if (btn) btn.disabled = false;
+        return;
+      }
+      var actor = fixtureActor();
+      var recent = state.applicationRecent || [];
+      row.membership_status = "bg_paid";
+      recent.unshift({
+        id: "act-aux-" + Date.now(),
+        member_id: row.id,
+        action: "background_check_fee_included",
+        note: "Auxiliary: background check fee included in the $200 dues.",
+        from_status: "background-check",
+        to_status: "bg_paid",
+        actor_name: actor.actor_name,
+        actor_email: actor.actor_email,
+        created_at: actor.created_at,
+        applicant: applicationPersonName(row)
+      });
+      if (row.partner_member_id) {
+        var partner = applicationFixtureRow(row.partner_member_id);
+        if (partner && partner.membership_status === "background-check") partner.membership_status = "bg_paid";
+      }
+      state.applicationRecent = recent.slice(0, 12);
+      rememberFixtureApplications();
+      state.applicationFlash = message;
+      renderHome();
+      renderApplicationsFromState();
+      openOfficerTool("tool:hubApplications", false);
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") {
+      alert("Could not move that application.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc("kos_mark_background_fee_included", {
+        p_member_id: id,
+        p_note: note || null
+      });
+      if (res && res.error) throw res.error;
+      var payload = (res && res.data) || {};
+      if (payload.ok === false) throw new Error(payload.message || "Could not move that application.");
+      state.applicationFlash = payload.message || message;
+    } catch (e) {
+      alert("Could not move that application: " + ((e && e.message) || e));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    reloadApplications(client);
+  }
+
 
   function applicationRecordNoteHtml(row) {
     var text = row && row.record_note ? String(row.record_note).trim() : "";
@@ -4764,7 +5244,7 @@
     reloadApplications(client);
   }
 
-  async function decideApplication(client, action, id, note, btn) {
+  async function decideApplication(client, action, id, note, btn, meeting) {
     // A status click rebuilds the card. A second click in the same moment
     // (a double tap, or the browser retrying after the first button is
     // replaced) would log an empty note on top of the real one.
@@ -4781,6 +5261,11 @@
       });
       if (!row) {
         if (btn) btn.disabled = false;
+        return;
+      }
+      if (action === "start_background_check" && !applicationFullIdsReady(row)) {
+        if (btn) btn.disabled = false;
+        alert("The full application is not in yet. Start the background check after they submit it.");
         return;
       }
       var from = row.membership_status;
@@ -4802,6 +5287,19 @@
         });
       }
       row.membership_status = applicationStatusFor(action, from);
+      if (row.partner_member_id && (action === "dues_pending" || action === "start_background_check" || action === "background_check" || action === "approve" || action === "decline" || action === "archive")) {
+        (applicationsFixture || []).forEach(function (other) {
+          if (!other || String(other.id) !== String(row.partner_member_id)) return;
+          var partnerFrom = other.membership_status;
+          var move = false;
+          if (action === "dues_pending" && (partnerFrom === "bg_in_process" || partnerFrom === "dues-pending")) move = true;
+          if (action === "start_background_check" && partnerFrom === "bg_paid" && applicationFullIdsReady(other)) move = true;
+          if (action === "background_check" && (partnerFrom === "pending-new" || partnerFrom === "prospect")) move = true;
+          if (action === "approve" && partnerFrom === "dues-pending") move = true;
+          if ((action === "decline" || action === "archive") && partnerFrom !== "active") move = true;
+          if (move) other.membership_status = applicationStatusFor(action, partnerFrom);
+        });
+      }
       recent.unshift({
         id: "act-" + Date.now(),
         member_id: row.id,
@@ -4827,7 +5325,7 @@
       openOfficerTool("tool:hubApplications", false);
       return;
     }
-    var args = { p_member_id: id, p_action: action, p_note: note || null };
+    var args = { p_member_id: id, p_action: action, p_note: note || null, p_meeting: meeting || null };
     try {
       var res = await client.rpc("set_membership_application_status", args);
       var missing = res && res.error && /function|schema cache|PGRST202|Could not find/i.test(String(res.error.message || res.error));
@@ -4860,8 +5358,8 @@
     { key: "finish_after", label: "After the application button", name: "note after the application button", hint: "Shown under the locked button. The button itself is added automatically.", max: 2000, kind: "area", lockBefore: "finish" },
     { key: "fee_heading", label: "Background check heading", name: "background check heading", hint: "Sits above the background check note.", max: 120, kind: "input" },
     { key: "fee_intro", label: "Background check note", name: "background check note", hint: "Shown above the locked background check pay buttons.", max: 2000, kind: "area" },
-    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the membership note.", max: 120, kind: "input", lockBefore: "fees" },
-    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Shown above the locked dues notes and pay buttons.", max: 2000, kind: "area" },
+    { key: "dues_heading", label: "Membership heading", name: "membership heading", hint: "Sits above the note that dues come later.", max: 120, kind: "input", lockBefore: "fees" },
+    { key: "dues_intro", label: "Membership note", name: "membership note", hint: "Tell them the dues link comes after the check passes.", max: 2000, kind: "area" },
     { key: "closing", label: "Closing", name: "closing", hint: "The paragraph before the sign-off.", max: 2000, kind: "area", lockBefore: "dues" },
     { key: "signoff", label: "Sign-off", name: "sign-off", hint: "You can use two lines.", max: 240, kind: "area" }
   ];
@@ -4873,14 +5371,14 @@
     return {
       subject: "We're glad you're joining the Krewe",
       greeting: "Dear {{first_name}},",
-      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you're ready.",
+      intro: "We're so glad you're joining the Krewe of Shamrock. We're excited to have you. The rest of this note is simply how to finish joining, whenever you're ready.",
       finish_heading: "Let's finish your application",
       finish_body: "When you have a quiet moment, open your private link and finish the full application. It asks for a driver's license number and a Social Security number. We use those only for the background check, and we hold them confidentially.",
       finish_after: "This email doesn't include those numbers. Your link expires in 21 days.",
       fee_heading: "Your background check fee",
       fee_intro: "This fee is separate from membership dues. Pick the one that matches your application.",
-      dues_heading: "Pick the membership that fits",
-      dues_intro: "Membership dues are separate from the background check fee. Read the short note for each level, then use that level's button when it feels right. If you choose Auxiliary, that fee already includes the background check and the membership portion, so you don't also pay the background check above. If you're not sure which level fits, write to treasurer@kreweofshamrock.com and we'll help before you pay.",
+      dues_heading: "Membership dues come later",
+      dues_intro: "Your dues link comes after the background check passes. If you are not sure which level fits, write to treasurer@kreweofshamrock.com and we will help before you pay.",
       closing: "Welcome to the Krewe. We can't wait to have you with us.",
       signoff: "Sláinte,\nKrewe of Shamrock"
     };
@@ -4942,9 +5440,13 @@
     }).join("");
   }
 
-  function buildJoiningPacketPreview(draft) {
+  function buildJoiningPacketPreview(draft, asLevel) {
     var name = "Nia";
+    var auxiliary = asLevel === "auxiliary";
     var locked = joiningPacketLockedBlocks();
+    var feeBlock = auxiliary
+      ? "<p>You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.</p>"
+      : "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>" + joiningPacketLevelHtml(locked.fees);
     var html = "<p>" + joiningPacketPlain(draft.greeting, name) + "</p>"
       + "<p>" + joiningPacketPlain(draft.intro, name) + "</p>"
       + "<h2>" + joiningPacketPlain(draft.finish_heading, name) + "</h2>"
@@ -4952,11 +5454,9 @@
       + joiningPacketButton(JOINING_PACKET_SAMPLE_URL, "Finish your application")
       + "<p>" + joiningPacketPlain(draft.finish_after, name) + "</p>"
       + "<h2>" + joiningPacketPlain(draft.fee_heading, name) + "</h2>"
-      + "<p>" + joiningPacketPlain(draft.fee_intro, name) + "</p>"
-      + joiningPacketLevelHtml(locked.fees)
+      + feeBlock
       + "<h2>" + joiningPacketPlain(draft.dues_heading, name) + "</h2>"
       + "<p>" + joiningPacketPlain(draft.dues_intro, name) + "</p>"
-      + joiningPacketLevelHtml(locked.dues)
       + "<p>" + joiningPacketPlain(draft.closing, name) + "</p>"
       + "<p>" + joiningPacketPlain(draft.signoff, name) + "</p>";
     return {
@@ -4974,7 +5474,7 @@
       return '<div class="hub-packet-lock" data-packet-locked="fees"><b>Locked: background check pay buttons</b><p>Individual and couple amounts, notes, and pay buttons come from the background check payment settings. They are not edited in this letter.</p></div>';
     }
     if (kind === "dues") {
-      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>Locked: dues notes and pay buttons</b><p>Each membership level note and pay button comes from the dues catalog. They are not edited in this letter.</p></div>';
+      return '<div class="hub-packet-lock" data-packet-locked="dues"><b>No dues pay buttons in this letter</b><p>The dues link is sent after the background check passes. It is not edited here.</p></div>';
     }
     return "";
   }
@@ -4990,7 +5490,7 @@
 
   function renderJoiningPacketEditor(card) {
     var draft = joiningPacketClone(state.joiningPacketDraft || joiningPacketDefaults());
-    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === JSON.stringify(draft));
+    var previewReady = !!(state.joiningPacketPreview && state.joiningPacketPreview.fingerprint === joiningPacketFingerprint(draft));
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
       "<small>Edit the joining packet letter. Send joining packet uses the saved draft.</small></div></div>" +
       '<div class="app-body hub-packet-editor" id="hubPacketEditor">';
@@ -5000,8 +5500,15 @@
     if (state.joiningPacketError) {
       html += '<div class="hub-packet-error" id="hubPacketError">' + esc(state.joiningPacketError) + "</div>";
     }
+    var previewAs = state.joiningPacketPreviewAs === "auxiliary" ? "auxiliary" : "standard";
     html += "<h3>Edit joining packet email</h3>" +
-      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button, the background check pay buttons, and the dues notes and pay buttons stay locked so the links stay correct. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>';
+      '<p class="lead">You can change the subject, the greeting, and the explanatory paragraphs. The finish-application button and the background check pay buttons stay locked. Preview uses the sample name Nia and a placeholder token. Preview does not send email.</p>' +
+      '<label for="hubPacketPreviewAs">Preview as</label>' +
+      '<select id="hubPacketPreviewAs">' +
+      '<option value="standard"' + (previewAs === "standard" ? " selected" : "") + ">Standard</option>" +
+      '<option value="auxiliary"' + (previewAs === "auxiliary" ? " selected" : "") + ">Auxiliary</option>" +
+      "</select>" +
+      '<p class="hub-packet-hint">Auxiliary shows the sentence that the $200 dues include the background check, with no fee intro and no fee buttons.</p>';
     JOINING_PACKET_FIELDS.forEach(function (field) {
       var value = draft[field.key] == null ? "" : String(draft[field.key]);
       if (field.lockBefore) html += joiningPacketLockCard(field.lockBefore);
@@ -5037,6 +5544,15 @@
         var box = document.getElementById("hubPacketPreview");
         if (box) box.hidden = true;
       });
+    });
+    var previewAsSelect = document.getElementById("hubPacketPreviewAs");
+    if (previewAsSelect) previewAsSelect.addEventListener("change", function () {
+      state.joiningPacketPreviewAs = previewAsSelect.value === "auxiliary" ? "auxiliary" : "standard";
+      state.joiningPacketPreview = null;
+      var save = document.getElementById("hubPacketSave");
+      if (save) save.disabled = true;
+      var box = document.getElementById("hubPacketPreview");
+      if (box) box.hidden = true;
     });
     var previewBtn = document.getElementById("hubPacketPreviewBtn");
     if (previewBtn) previewBtn.addEventListener("click", function () { previewJoiningPacket(); });
@@ -5080,10 +5596,18 @@
     } catch (e) {}
   }
 
+  function joiningPacketPreviewAs() {
+    return state.joiningPacketPreviewAs === "auxiliary" ? "auxiliary" : "standard";
+  }
+
+  function joiningPacketFingerprint(draft) {
+    return JSON.stringify({ draft: draft, as: joiningPacketPreviewAs() });
+  }
+
   async function previewJoiningPacket() {
     var draft = readJoiningPacketForm();
     var problem = joiningPacketProblem(draft);
-    var local, client, res, payload, message;
+    var local, client, res, payload, message, template;
     state.joiningPacketMessage = "";
     if (problem) {
       state.joiningPacketError = problem;
@@ -5091,11 +5615,13 @@
       renderApplicationsFromState();
       return;
     }
-    local = buildJoiningPacketPreview(draft);
+    local = buildJoiningPacketPreview(draft, joiningPacketPreviewAs());
     client = window.__kosSb;
     if (!applicationsFixture && client && typeof client.rpc === "function") {
       try {
-        res = await client.rpc("preview_joining_packet_email", { p_template: draft });
+        template = joiningPacketClone(draft);
+        if (joiningPacketPreviewAs() === "auxiliary") template.membership_level = "auxiliary";
+        res = await client.rpc("preview_joining_packet_email", { p_template: template });
         if (res && res.error) throw res.error;
         payload = (res && res.data) || {};
         if (payload.ok === false) throw new Error(payload.message || "Could not preview that letter.");
@@ -5113,7 +5639,7 @@
         }
       }
     }
-    local.fingerprint = JSON.stringify(draft);
+    local.fingerprint = joiningPacketFingerprint(draft);
     state.joiningPacketPreview = local;
     state.joiningPacketError = "";
     renderApplicationsFromState();
@@ -5123,7 +5649,7 @@
     var draft = readJoiningPacketForm();
     var problem = joiningPacketProblem(draft);
     var client, res, payload, message;
-    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== JSON.stringify(draft)) {
+    if (problem || !state.joiningPacketPreview || state.joiningPacketPreview.fingerprint !== joiningPacketFingerprint(draft)) {
       state.joiningPacketError = problem || "Preview the letter before you save.";
       state.joiningPacketPreview = null;
       renderApplicationsFromState();
@@ -5133,7 +5659,7 @@
     if (applicationsFixture) {
       state.joiningPacketTemplate = joiningPacketClone(draft);
       state.joiningPacketDraft = joiningPacketClone(draft);
-      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketMessage = "Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically.";
       state.joiningPacketError = "";
       renderApplicationsFromState();
       return;
@@ -5153,9 +5679,9 @@
       state.joiningPacketDraft = joiningPacketClone(payload.template || draft);
       state.joiningPacketLoaded = true;
       state.joiningPacketDirty = false;
-      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link, the background check pay buttons, and the dues notes and pay buttons stay filled in automatically.";
+      state.joiningPacketMessage = payload.message || "Draft template saved. Send joining packet uses this letter. The finish link and the background check pay buttons stay filled in automatically.";
       state.joiningPacketError = "";
-      state.joiningPacketPreview.fingerprint = JSON.stringify(state.joiningPacketDraft);
+      state.joiningPacketPreview.fingerprint = joiningPacketFingerprint(state.joiningPacketDraft);
     } catch (e) {
       message = (e && e.message) || "Could not save the draft template.";
       if (/function|schema cache|PGRST202|Could not find/i.test(message)) {
@@ -5180,9 +5706,10 @@
     var labels = [
       "1. Interest",
       "2. Call",
-      "3. Joining packet",
-      "4. Check and dues",
-      "5. Approve"
+      "3. Background check fee",
+      "4. Check in process",
+      "5. Induction",
+      "6. Member"
     ];
     var html = '<ol class="hub-app-journey" aria-label="Member journey for the Membership Chair">';
     labels.forEach(function (label, i) {
@@ -5195,52 +5722,351 @@
     return html + "</ol>";
   }
 
-  function applicationActionButtons(row) {
-    var id = esc(row.id);
-    var status = row.membership_status || "";
-    var primary = "";
-    var secondary = "";
-    var other = "";
-    if (status === "pending-new" || status === "prospect") {
-      primary = '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-      other =
-        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
-        '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>' +
-        '<button type="button" class="btn" data-app-approve="' + id + '">Approve</button>' +
-        "</div></details>";
-    } else if (status === "background-check") {
-      primary = '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Move to dues pending</button>';
-      secondary =
-        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>' +
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-    } else if (status === "dues-pending") {
-      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-      other =
-        '<details class="hub-app-other"><summary>Other actions</summary><div class="hub-appr-btns">' +
-        '<button type="button" class="btn" data-app-bg="' + id + '">Send joining packet again</button>' +
-        "</div></details>";
-    } else if (status === "pending-renewal") {
-      primary = '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
-    } else {
-      primary =
-        (status === "background-check" ? "" : '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Send joining packet</button>') +
-        (status === "dues-pending" ? "" : '<button type="button" class="btn" data-app-dues="' + id + '">Move to dues pending</button>') +
-        '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve</button>';
-      secondary =
-        '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
-        '<button type="button" class="btn" data-app-archive="' + id + '">Archive</button>';
+  var PIPELINE_STAGES = [
+    { key: "new", title: "New interest", hint: "Call, then send the background check email." },
+    { key: "fee_pending", title: "Background check fee pending", hint: "Waiting on the fee. Shows whether the full application is submitted." },
+    { key: "bg_paid", title: "Background check fee paid", hint: "Start the check when you are ready to paste the ID." },
+    { key: "bg_process", title: "Background check in process", hint: "When the check is clean, send the induction email." },
+    { key: "induction", title: "Induction pending", hint: "Dues link is out. Approval is subject to final ratification by the Board of Directors." },
+    { key: "active", title: "Members (complete)", hint: "On the roster." }
+  ];
+
+  function applicationRowsForView() {
+    var bucket = state.applicationBucket || "board";
+    if (bucket === "renewal") {
+      state.applicationBucket = "board";
+      bucket = "board";
     }
-    return '<div class="hub-appr-btns">' + primary + secondary + "</div>" + other;
+    var rows = (state.applicationRows || []).filter(function (r) {
+      return r && r.membership_status !== "pending-renewal";
+    });
+    if (bucket === "board") {
+      return rows.filter(function (r) {
+        var s = r && r.membership_status;
+        return s === "pending-new" || s === "background-check" || s === "bg_paid" || s === "bg_in_process" || s === "dues-pending" || s === "active";
+      });
+    }
+    var want = APP_BUCKET_STATUS[bucket];
+    return rows.filter(function (r) { return r && r.membership_status === want; });
+  }
+
+  function applicationCards(rows) {
+    var used = {};
+    var cards = [];
+    rows.forEach(function (row) {
+      if (!row || used[String(row.id)]) return;
+      var partner = applicationFindPartner(row, rows);
+      if (partner && String(partner.id) !== String(row.id)) {
+        var rowTime = new Date(row.created_at || 0).getTime();
+        var partnerTime = new Date(partner.created_at || 0).getTime();
+        var primary = rowTime <= partnerTime ? row : partner;
+        var other = primary === row ? partner : row;
+        used[String(primary.id)] = true;
+        used[String(other.id)] = true;
+        cards.push({ primary: primary, partner: other });
+      } else {
+        used[String(row.id)] = true;
+        cards.push({ primary: row, partner: null });
+      }
+    });
+    return cards;
+  }
+
+  function applicationCardStage(card) {
+    var a = applicationStageKey(card.primary);
+    if (!card.partner) return a;
+    return applicationEarlierStage(a, applicationStageKey(card.partner));
+  }
+
+  function applicationAuxFeeIncluded(row) {
+    if (!row || String(row.membership_level || "").toLowerCase() !== "auxiliary") return false;
+    if (applicationBgPaid(row)) return false;
+    var status = row.membership_status;
+    return status === "bg_paid" || status === "bg_in_process" || status === "dues-pending" || status === "active";
+  }
+
+  function applicationBgChip(card) {
+    var row = card.primary;
+    var partner = card.partner;
+    var paid = applicationBgPaid(row) || applicationBgPaid(partner);
+    if (!paid && (applicationAuxFeeIncluded(row) || applicationAuxFeeIncluded(partner))) {
+      return '<span class="hub-chip paid">Included with Auxiliary</span>';
+    }
+    if (!paid) return '<span class="hub-chip wait">Not paid yet</span>';
+    var src = applicationBgPaid(row) ? row : partner;
+    var cents = src.background_check_amount_cents;
+    var couple = !!(src.background_check_couple || String(row.application_fee_type || "").toLowerCase() === "dual" || String(row.application_fee_type || "").toLowerCase() === "couple" || Number(cents) >= 7000);
+    var amount = applicationMoney(cents, couple ? "$75" : "$50");
+    var when = applicationPayDate(src.background_check_paid_at);
+    return '<span class="hub-chip paid">' + esc("Background check paid " + amount + " " + (couple ? "couple" : "individual") + (when ? ", " + when : "")) + "</span>";
+  }
+
+  function applicationDuesChip(card) {
+    var row = card.primary;
+    var partner = card.partner;
+    var aPaid = applicationDuesPaid(row);
+    var bPaid = partner ? applicationDuesPaid(partner) : true;
+    if (!aPaid || !bPaid) return '<span class="hub-chip wait">Dues not paid</span>';
+    var amount = applicationMoney(row.dues_amount_cents, "");
+    var when = applicationPayDate(row.dues_paid_at || (partner && partner.dues_paid_at));
+    var text;
+    if (partner && amount && applicationMoney(partner.dues_amount_cents, "") === amount) {
+      text = "Dues paid " + amount + " each" + (when ? " on " + when : "");
+    } else if (partner && amount) {
+      text = "Dues paid " + amount + " and " + (applicationMoney(partner.dues_amount_cents, "dues") || "dues") + (when ? " on " + when : "");
+    } else {
+      text = "Dues paid" + (amount ? " " + amount : "") + (when ? " on " + when : "");
+    }
+    return '<span class="hub-chip paid">' + esc(text) + "</span>";
+  }
+
+  function applicationJourneyLine(card) {
+    var row = card.primary;
+    if (applicationStageKey(row) !== "active" && (!card.partner || applicationStageKey(card.partner) !== "active")) {
+      if (applicationCardStage(card) !== "active") return "";
+    }
+    if (applicationCardStage(card) === "active" && (applicationBgPaid(row) || applicationBgPaid(card.partner)) && applicationDuesPaid(row) && (!card.partner || applicationDuesPaid(card.partner))) {
+      return '<p class="hub-journey-done">Journey complete: interest, call, background check fee, check in process, induction, member.</p>';
+    }
+    return "";
+  }
+
+  function applicationFeeHint(row) {
+    var t = String(row.application_fee_type || row.fee_type || "").toLowerCase();
+    if (t === "dual" || t === "couple") return "Applying as: Couple. Background check fee: $75 couple. This is not membership dues.";
+    if (t === "single") return "Applying as: Single. Background check fee: $50 individual. This is not membership dues.";
+    return "Background check fee: $50 individual or $75 couple. This is not membership dues.";
+  }
+
+  function applicationActionRow(card, stage) {
+    if (applicationStageKey(card.primary) === stage) return card.primary;
+    if (card.partner && applicationStageKey(card.partner) === stage) return card.partner;
+    return card.primary;
+  }
+
+  function applicationFullIdsReady(row) {
+    if (!row || row.has_ssn !== true || row.has_dl !== true) return false;
+    var fee = String(row.application_fee_type || row.fee_type || "").toLowerCase();
+    var partnerName = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+    var couple = fee === "dual" || fee === "couple" || !!partnerName;
+    if (couple && (row.has_partner_ssn !== true || row.has_partner_dl !== true)) return false;
+    return true;
+  }
+
+  function applicationPrimaryButton(card, stage) {
+    var row = applicationActionRow(card, stage);
+    var id = esc(row.id);
+    if (stage === "new" || stage === "prospect") {
+      return '<button type="button" class="btn btn-primary" data-app-bg="' + id + '">Called, send background check email</button>';
+    }
+    if (stage === "fee_pending") {
+      return '<button type="button" class="btn btn-primary" data-app-resend="' + id + '">Send background check email again</button>';
+    }
+    if (stage === "bg_paid") {
+      if (!applicationFullIdsReady(row)) {
+        return '<button type="button" class="btn btn-primary" data-app-start="' + id + '" disabled>Start background check</button>' +
+          '<p class="hub-pipe-meta" data-app-start-wait>Waiting for the full application</p>';
+      }
+      return '<button type="button" class="btn btn-primary" data-app-start="' + id + '">Start background check</button>';
+    }
+    if (stage === "bg_process") {
+      return '<button type="button" class="btn btn-primary" data-app-dues="' + id + '">Proceed with induction, send dues link</button>';
+    }
+    if (stage === "induction") {
+      return '<button type="button" class="btn btn-primary" data-app-approve="' + id + '">Approve membership (subject to Board ratification)</button>';
+    }
+    return "";
+  }
+
+  function applicationLevelChoices() {
+    return [
+      ["full", "Full Krewe, $375"],
+      ["associate", "Associate, $450"],
+      ["auxiliary", "Auxiliary, $200"],
+      ["loa", "Leave of absence, $100"]
+    ];
+  }
+
+  function applicationLevelStage(stage) {
+    return stage === "new" || stage === "prospect" || stage === "fee_pending" || stage === "bg_paid" || stage === "bg_process";
+  }
+
+  function applicationLevelSelectHtml(card, stage) {
+    if (!applicationLevelStage(stage)) return "";
+    var row = applicationActionRow(card, stage);
+    var level = String((row && row.membership_level) || "full").toLowerCase();
+    if (level !== "full" && level !== "associate" && level !== "auxiliary" && level !== "loa") level = "full";
+    var html = '<label class="hub-level-label" for="hubLevel-' + esc(row.id) + '">Membership level</label>' +
+      '<select class="hub-level-select" id="hubLevel-' + esc(row.id) + '" data-app-level="' + esc(row.id) + '">';
+    applicationLevelChoices().forEach(function (opt) {
+      html += '<option value="' + opt[0] + '"' + (opt[0] === level ? " selected" : "") + ">" + esc(opt[1]) + "</option>";
+    });
+    return html + "</select>";
+  }
+
+  function applicationAuxFeeButton(card, stage) {
+    if (stage !== "fee_pending") return "";
+    var row = applicationActionRow(card, stage);
+    if (String((row && row.membership_level) || "").toLowerCase() !== "auxiliary") return "";
+    return '<button type="button" class="btn" data-app-aux-fee="' + esc(row.id) + '">Auxiliary: fee included</button>';
+  }
+
+  function applicationSecondaryButtons(card, stage) {
+    if (stage === "active" || stage === "declined" || stage === "archived") return "";
+    var id = esc(applicationActionRow(card, stage).id);
+    return '<button type="button" class="btn" data-app-decline="' + id + '">Decline</button>' +
+      '<button type="button" class="btn" data-app-archive="' + id + '">Withdraw</button>';
+  }
+
+  function applicationCardHtml(card, stage) {
+    var row = card.primary;
+    var partner = card.partner;
+    var name = applicationPersonName(row) || "Applicant";
+    if (partner) {
+      var partnerName = applicationPersonName(partner);
+      if (partnerName) name = name + " and " + partnerName;
+    } else {
+      var named = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+      if (named) name = name + " and " + named;
+    }
+    var level = applicationLevelLabel(row) || (partner && applicationLevelLabel(partner));
+    var whenStage = applicationDaysInStage(row.stage_at || row.created_at);
+    var id = esc(row.id);
+    var actionId = esc(applicationActionRow(card, stage).id);
+    var search = [name, row.email, partner && partner.email, level, row.phone].filter(Boolean).join(" ");
+    var html = '<article class="hub-pipe-card hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '" data-search="' + esc(search) + '">' +
+      "<h3>" + esc(name) + "</h3>" +
+      '<p class="hub-pipe-meta">' + esc(applicationStatusLabel(row.membership_status)) +
+      (level ? " · " + esc(level) : "") +
+      (whenStage ? " · " + esc(whenStage) : "") + "</p>";
+    if (row.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></p>";
+    if (partner && partner.email) html += '<p class="hub-pipe-meta"><a href="mailto:' + esc(partner.email) + '">' + esc(partner.email) + "</a></p>";
+    html += applicationPhoneHtml(row.phone);
+    if (partner && partner.phone && partner.phone !== row.phone) html += applicationPhoneHtml(partner.phone);
+    var addr = applicationAddress(row);
+    html += '<p class="hub-pipe-meta">' + (addr ? "Address: " + esc(addr) : "Address: not provided") + "</p>";
+    html += '<p class="hub-pipe-meta">' + esc(applicationFeeHint(row)) + "</p>";
+    html += "<div>" + applicationBgChip(card) + applicationDuesChip(card) + "</div>";
+    html += applicationJourneyLine(card);
+    html += '<p class="hub-pipe-meta" data-app-packet>' + esc(applicationPacketLine(row)) + "</p>";
+    html += applicationCoupleIdHtml(row, partner);
+    var applied = formatAppliedEt(row.created_at);
+    if (applied) html += '<p class="hub-pipe-meta">Applied: ' + esc(applied) + "</p>";
+    if (row.interests && String(row.interests).trim()) html += '<p class="hub-pipe-meta">Interests: ' + esc(redactDisplayedId(row.interests)) + "</p>";
+    html += '<p class="hub-pipe-meta">Their note: ' + (row.notes && String(row.notes).trim() ? esc(redactDisplayedId(row.notes)) : "none") + "</p>";
+    html += applicationRecordNoteHtml(row);
+    var open = applicationOpenStatus(row.membership_status) || (partner && applicationOpenStatus(partner.membership_status));
+    if (open && stage !== "active") {
+      var noteLabel = (stage === "new" || stage === "prospect") ? "Call notes" : "Note for the record";
+      html += '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + actionId + '">' + noteLabel + "</label>" +
+        '<textarea class="hub-app-note" id="hubAppNote-' + actionId + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
+        '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
+        '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + actionId + '">Save note</button></div>';
+    }
+    html += applicationLevelSelectHtml(card, stage);
+    var primary = applicationPrimaryButton(card, stage);
+    var auxFee = applicationAuxFeeButton(card, stage);
+    var secondary = applicationSecondaryButtons(card, stage);
+    if (primary || auxFee || secondary) html += '<div class="hub-appr-btns">' + primary + auxFee + secondary + "</div>";
+    html += "</article>";
+    return html;
+  }
+
+  function applicationCoupleNames(row) {
+    var partner = applicationFindPartner(row, state.applicationRows || []);
+    var names = applicationPersonName(row) || "This applicant";
+    if (partner) names += " and " + (applicationPersonName(partner) || "their partner");
+    else {
+      var named = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
+      if (named) names += " and " + named;
+    }
+    return names;
+  }
+
+  function applicationDuesAmount(row) {
+    var level = String((row && row.membership_level) || "").toLowerCase();
+    if (level === "associate") return "450.00";
+    if (level === "auxiliary") return "200.00";
+    if (level === "loa") return "100.00";
+    return "375.00";
+  }
+
+  function applicationDuesUrl(row) {
+    var level = String((row && row.membership_level) || "full").toLowerCase();
+    if (level === "associate") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership";
+    if (level === "auxiliary") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership";
+    if (level === "loa") return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+    return "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
+  }
+
+  function applicationDuesBlock(person) {
+    var name = applicationPersonName(person);
+    var level = applicationLevelLabel(person) || "Full Krewe";
+    var amount = applicationDuesAmount(person);
+    if (applicationDuesPaid(person)) {
+      return "<p>" + esc(name || "Dues") + ": membership dues are already paid.</p>";
+    }
+    return "<p><strong>" + esc(level) + "</strong>"
+      + (name ? " for " + esc(name) : "")
+      + ": $" + esc(amount) + ". This is membership dues, not the background check fee.</p>"
+      + '<p><a href="' + esc(applicationDuesUrl(person)) + '">Pay dues on Zeffy</a></p>';
+  }
+
+  function applicationInductionPeople(row) {
+    var people = [row];
+    var partner = applicationFindPartner(row, state.applicationRows || []);
+    if (partner && String(partner.id) !== String(row.id)) people.push(partner);
+    return people;
+  }
+
+  function applicationUnpaidDuesNames(row) {
+    var names = [];
+    applicationInductionPeople(row).forEach(function (person) {
+      if (!applicationDuesPaid(person)) names.push(applicationPersonName(person) || "This applicant");
+    });
+    return names.join(" and ");
+  }
+
+  function applicationInductionPreview(row, whenText, place) {
+    var when = whenText || "Date and time go here";
+    var where = place || "Place goes here";
+    var people = applicationInductionPeople(row);
+    var dues = "";
+    var urls = {};
+    var shared = false;
+    people.forEach(function (person) {
+      if (!applicationDuesPaid(person)) {
+        var url = applicationDuesUrl(person);
+        if (urls[url]) shared = true;
+        urls[url] = true;
+      }
+      dues += applicationDuesBlock(person);
+    });
+    if (shared) {
+      dues += "<p>On Zeffy, add one ticket for each person and put each person's name and email on their own ticket.</p>";
+    }
+    return "<p>Dear " + esc((row && row.first_name) || "friend") + ",</p>"
+      + "<p>Your background check is complete. We would like to welcome you in person.</p>"
+      + "<p>You are invited to your in-person induction at our next membership meeting.</p>"
+      + "<p><strong>Date and time:</strong> " + esc(when) + "</p>"
+      + "<p><strong>Place:</strong> " + esc(where) + "</p>"
+      + "<p>At that meeting we will ask you to share a little about why you want to join the Krewe. A sentence or two is plenty.</p>"
+      + dues
+      + "<p>We are glad you are joining us.</p><p>Sláinte!</p>";
+  }
+
+  function applicationSyncInductionPreview() {
+    var box = document.getElementById("hubAppConfirm");
+    var preview = document.getElementById("hubInductionPreview");
+    var send = document.getElementById("hubAppConfirmYes");
+    if (!box || box.dataset.mode !== "induction") return;
+    var whenEl = document.getElementById("hubInductionWhen");
+    var placeEl = document.getElementById("hubInductionPlace");
+    var when = whenEl ? whenEl.value.trim() : "";
+    var place = placeEl ? placeEl.value.trim() : "";
+    var row = applicationRowById(box.dataset.id);
+    if (preview && row) preview.innerHTML = applicationInductionPreview(row, when, place);
+    if (send) send.disabled = !(when && place);
   }
 
   function renderApplicationsFromState() {
@@ -5253,122 +6079,95 @@
       renderJoiningPacketEditor(card);
       return;
     }
-    var bucket = state.applicationBucket || "new";
-    var rows = applicationBucketRows();
-    var intro = {
-      renewal: "These are renewals, not new join-form applications. Approve when dues are settled.",
-      prospect: "These are event RSVP prospects, not new join-form applications.",
-      background: "You already sent the joining packet. They should finish the full application and pay the background check fee. The dues invoice is emailed when they submit that form and begin the check. The application fee is separate from membership dues.",
-      dues: "You are waiting on membership dues, not the application fee. The dues invoice was emailed when they submitted the full application and began the background check.",
-      approved: "Approved. These people are active members.",
-      declined: "Declined applications stay on file. Nothing was deleted.",
-      archived: "Archived applications stay on file. Nothing was deleted.",
-      "new": "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check."
-    }[bucket] || "These people asked to join. Newest first. Call them first. Then send the joining packet. That email includes the private full-application link, the background check fee, and each membership level with its pay link. The dues invoice is sent when they finish the full application and begin the check.";
-    var empty = {
-      renewal: "No pending renewals.",
-      prospect: "No event prospects in this list.",
-      background: "Nobody is in background check right now.",
-      dues: "Nobody is waiting on membership dues right now.",
-      approved: "No approved applications in this list yet.",
-      declined: "No declined applications.",
-      archived: "No archived applications.",
-      "new": "No new applications right now. When someone submits the join form, they will show up here."
-    }[bucket] || "No new applications right now. When someone submits the join form, they will show up here.";
+    applicationRowsForView();
+    var bucket = state.applicationBucket || "board";
+    var rows = applicationRowsForView();
+    var cards = applicationCards(rows);
+    var wide = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 801px)").matches : true;
     function filterBtn(key, label) {
-      return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on"' : "") + ">" +
-        label + " (" + applicationCountOf(key) + ")</button>";
+      var countKey = key === "board" ? "new" : key;
+      var n = key === "board" ? "" : " (" + applicationCountOf(countKey) + ")";
+      return '<button type="button" data-app-bucket="' + key + '"' + (bucket === key ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + ">" +
+        label + n + "</button>";
     }
-    var nextStep = {
-      "new": "Next step: call the prospect, then send the joining packet.",
-      background: "Next step: wait for the full application and background check fee, then move to dues pending when ready.",
-      dues: "Next step: confirm dues, then Approve.",
-      approved: "These members are active.",
-      declined: "No next step. Records stay on file.",
-      archived: "No next step. Records stay on file.",
-      renewal: "Next step: Approve when the renewal is ready.",
-      prospect: "Event prospects are not the join-form pipeline."
-    }[bucket] || "Next step: call the prospect, then send the joining packet.";
     var html = '<div class="app-head"><span class="ic">📝</span><div><h2>Membership Applications</h2>' +
-      '<small>Guide each person from interest to active member. Call first. Then send the joining packet. Wait for the check and dues. Approve when they are ready.</small></div></div>' +
+      "<small>New interest, background check, induction, then membership.</small></div></div>" +
       '<div class="app-body" id="hubApplicationsBody">';
-    if (state.applicationFlash) {
-      html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
-    }
-    html += '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
-      '<span class="muted">Change the greeting and the notes. The finish link and pay buttons stay locked.</span></p>' +
+    if (state.applicationFlash) html += '<div class="hub-app-flash" id="hubAppFlash">' + esc(state.applicationFlash) + "</div>";
+    var help = bucket === "prospect"
+      ? "These are event RSVP prospects, not the join pipeline. Send the joining packet when they are ready to apply."
+      : "Call first. The card shows the phone number and a Call notes field. Called, send background check email sends the fee link and the full application. It does not include a dues link. After the fee is paid, start the background check. When it is clean, send the induction email with the dues link and the next membership meeting. Approval is subject to final ratification by the Board of Directors.";
+    html += '<p class="hub-pipe-help">' + esc(help) + "</p>" +
+      '<p class="hub-packet-launch"><button type="button" class="btn" id="hubEditJoiningPacket">Edit joining packet email</button>' +
+      '<span class="muted">Change the greeting and the notes. The finish link and the background check pay buttons stay locked. The dues link is not in this letter.</span></p>' +
       '<div class="hub-app-filters" role="tablist" aria-label="Application lists">' +
-      filterBtn("new", "New applications") +
-      filterBtn("background", "Background check") +
-      filterBtn("dues", "Dues pending") +
-      filterBtn("approved", "Approved") +
+      filterBtn("board", "Pipeline") +
+      filterBtn("prospect", "Event prospects") +
       filterBtn("declined", "Declined") +
       filterBtn("archived", "Archived") +
-      filterBtn("renewal", "Renewals") +
-      filterBtn("prospect", "Event prospects") +
-      "</div>" +
-      applicationJourneyHtml(bucket) +
-      '<p class="hub-app-next">' + esc(nextStep) + "</p>" +
-      '<p style="margin:0 0 12px;font-size:16px;color:var(--muted);line-height:1.45;">' + esc(intro) + "</p>";
+      "</div>";
+    html += '<div id="hubAppConfirm" class="hub-app-confirm" role="alertdialog" aria-modal="true" aria-labelledby="hubAppConfirmTitle" hidden>' +
+      '<h3 id="hubAppConfirmTitle">Proceed with induction, send dues link</h3>' +
+      '<p id="hubAppConfirmBody"></p>' +
+      '<div id="hubInductionFields">' +
+      '<p id="hubInductionNeed" class="muted">Enter the meeting date, time, and place. There is no upcoming membership meeting on the calendar.</p>' +
+      '<label class="muted" for="hubInductionWhen">Meeting date and time</label>' +
+      '<input id="hubInductionWhen" type="text" autocomplete="off" placeholder="Tuesday, January 6, 2026 at 7:00 PM">' +
+      '<label class="muted" for="hubInductionPlace">Meeting place</label>' +
+      '<input id="hubInductionPlace" type="text" autocomplete="off" placeholder="Krewe hall">' +
+      '<h4>Email preview</h4>' +
+      '<div id="hubInductionPreview" class="hub-induction-preview"></div></div>' +
+      '<div class="hub-appr-btns"><button type="button" class="btn btn-primary" id="hubAppConfirmYes">Send induction email</button>' +
+      '<button type="button" class="btn" id="hubAppConfirmNo">Cancel</button></div></div>';
+    html += '<label class="hub-app-search"><span>Search applications</span>' +
+      '<input id="hubAppSearch" type="search" autocomplete="off" placeholder="Name, email, or level"></label>';
+
     if (state.applicationLoadError && !rows.length) {
       html += '<p class="empty">' + esc(state.applicationLoadError) + "</p>";
-    } else if (!rows.length) {
-      html += '<p class="empty">' + esc(empty) + "</p>";
-    } else {
-      rows.forEach(function (row) {
-        var name = ((row.first_name || "") + " " + (row.last_name || "")).trim() || "Applicant";
-        var addr = applicationAddress(row);
-        var when = formatAppliedEt(row.created_at);
-        var partner = ((row.partner_first_name || "") + " " + (row.partner_last_name || "")).trim();
-        var open = applicationOpenStatus(row.membership_status);
-        var id = esc(row.id);
-        html += '<div class="hub-appr" data-app-id="' + id + '" data-app-status="' + esc(row.membership_status || "") + '">' +
-          "<div><b>" + esc(name) + "</b>" +
-          '<span class="hub-app-status' + (row.membership_status === "active" ? " ok" : "") + '">' + esc(applicationStatusLabel(row.membership_status)) + "</span>" +
-          (row.email ? ' <span class="muted"><a href="mailto:' + esc(row.email) + '">' + esc(row.email) + "</a></span>" : "") +
-          (row.phone ? '<div class="muted">Phone: ' + esc(row.phone) + "</div>" : "") +
-          (addr ? '<div class="muted">Address: ' + esc(addr) + "</div>" : '<div class="muted">Address: not provided</div>') +
-          (partner ? '<div class="muted">Second applicant: ' + esc(partner) + "</div>" : "") +
-          '<div class="hub-app-fee">' + esc(applicationFeeLine(row)) + "</div>" +
-          '<div class="muted">Membership dues are not the application fee. The joining packet lists each level: Full Krewe $375, Associate $450, Auxiliary $200, and Leave of Absence $100. The dues invoice is emailed when they submit the full application and begin the background check.</div>' +
-          '<div class="muted" data-app-packet>' + esc(applicationPacketLine(row)) + "</div>" +
-          applicationIdMarkup(row, "applicant", "dl") +
-          applicationIdMarkup(row, "applicant", "ssn") +
-          applicationDobMarkup(row, "applicant") +
-          applicationIdMarkup(row, "partner", "dl") +
-          applicationIdMarkup(row, "partner", "ssn") +
-          applicationDobMarkup(row, "partner") +
-          (when ? '<div class="muted">Applied: ' + esc(when) + "</div>" : "") +
-          (row.interests && String(row.interests).trim() ? '<div class="muted">Interests: ' + esc(redactDisplayedId(row.interests)) + "</div>" : "") +
-          (row.notes && String(row.notes).trim() ? '<div class="muted">Their note: ' + esc(redactDisplayedId(row.notes)) + "</div>" : '<div class="muted">Their note: none</div>') +
-          applicationRecordNoteHtml(row) +
-          (open
-            ? '<label class="muted" style="display:block;margin-top:8px;" for="hubAppNote-' + id + '">Note for the record</label>' +
-              '<textarea class="hub-app-note" id="hubAppNote-' + id + '" data-app-note maxlength="1000" placeholder="Short note other officers can see"></textarea>' +
-              '<p class="muted hub-app-note-hint">Save note writes this on the record for other officers and leaves their stage as it is.</p>' +
-              '<div class="hub-app-note-save"><button type="button" class="btn" data-app-save-note="' + id + '">Save note</button></div>'
-            : "") +
-          "</div>";
-        if (open) {
-          html += applicationActionButtons(row);
-        }
-        html += "</div>";
+    } else if (bucket === "board") {
+      var counts = {};
+      PIPELINE_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
+      cards.forEach(function (item) { counts[applicationCardStage(item)] = (counts[applicationCardStage(item)] || 0) + 1; });
+      html += '<div class="hub-pipe-tiles" role="list">';
+      PIPELINE_STAGES.forEach(function (stage) {
+        html += '<button type="button" class="hub-pipe-tile" data-pipe-jump="' + stage.key + '">' +
+          '<span class="n">' + (counts[stage.key] || 0) + '</span><span class="l">' + esc(stage.title) + "</span></button>";
       });
+      html += '</div><div class="hub-pipeline"' + (wide ? ' data-layout="columns"' : "") + ">";
+      var opened = false;
+      PIPELINE_STAGES.forEach(function (stage) {
+        var mine = cards.filter(function (item) { return applicationCardStage(item) === stage.key; });
+        var open = wide || (!opened && mine.length);
+        if (!wide && mine.length && !opened) opened = true;
+        html += '<details class="hub-pipe-col" id="hubPipe-' + stage.key + '" data-pipe="' + stage.key + '"' + (open ? " open" : "") + ">" +
+          "<summary>" + esc(stage.title) + ' <span class="hub-pipe-count">' + mine.length + "</span></summary>" +
+          '<div class="hub-pipe-cards">';
+        if (!mine.length) html += '<p class="hub-pipe-empty">None right now.</p>';
+        mine.forEach(function (item) { html += applicationCardHtml(item, stage.key); });
+        html += "</div></details>";
+      });
+      html += "</div>";
+    } else if (!cards.length) {
+      html += '<p class="empty">' + (bucket === "prospect"
+        ? "No event prospects in this list."
+        : "No applications in this list.") + "</p>";
+    } else {
+      html += '<div class="hub-pipe-cards">';
+      cards.forEach(function (item) { html += applicationCardHtml(item, applicationCardStage(item)); });
+      html += "</div>";
     }
+
     var recent = state.applicationRecent || [];
     if (recent.length) {
       html += '<h3 class="hub-appr-h">Recent decisions</h3>';
       recent.forEach(function (r) {
         var when = formatAppliedEt(r.created_at);
+        var fromLabel = applicationStatusLabel(r.from_status);
+        var toLabel = applicationStatusLabel(r.to_status);
         html += '<div class="hub-appr" data-app-history="' + esc(r.action || "") + '"><div><b>' + esc(applicationActionWord(r.action)) + "</b>" +
           (r.applicant ? " · " + esc(r.applicant) : "") +
-          '<div class="muted">' + (function () {
-            var fromLabel = applicationStatusLabel(r.from_status);
-            var toLabel = applicationStatusLabel(r.to_status);
-            return esc(fromLabel === toLabel ? fromLabel : fromLabel + " to " + toLabel);
-          })() + "</div>" +
-          '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") +
-          (when ? " · " + esc(when) : "") + "</div>" +
+          '<div class="muted">' + esc(fromLabel === toLabel ? fromLabel : fromLabel + " to " + toLabel) + "</div>" +
+          '<div class="muted">by ' + esc(r.actor_name || r.actor_email || "Officer") + (when ? " · " + esc(when) : "") + "</div>" +
           (r.note ? '<div class="muted">Note: ' + esc(redactDisplayedId(r.note)) + "</div>" : "") +
           "</div></div>";
       });
@@ -5381,12 +6180,29 @@
     if (editPacket) editPacket.addEventListener("click", function () { openJoiningPacketEditor(); });
     body.querySelectorAll("[data-app-bucket]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        state.applicationBucket = btn.getAttribute("data-app-bucket") || "new";
+        state.applicationBucket = btn.getAttribute("data-app-bucket") || "board";
         state.applicationFlash = "";
         if (applicationsFixture) renderApplicationsFromState();
         else reloadApplications(window.__kosSb || null);
       });
     });
+    body.querySelectorAll("[data-pipe-jump]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = document.getElementById("hubPipe-" + btn.getAttribute("data-pipe-jump"));
+        if (!target) return;
+        target.open = true;
+        target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+    var search = document.getElementById("hubAppSearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        var q = search.value.trim().toLowerCase();
+        body.querySelectorAll("[data-search]").forEach(function (el) {
+          el.hidden = !!(q && String(el.getAttribute("data-search") || "").toLowerCase().indexOf(q) < 0);
+        });
+      });
+    }
     function noteFor(id) {
       var el = document.getElementById("hubAppNote-" + id);
       return el ? (el.value || "").trim() : "";
@@ -5399,8 +6215,27 @@
     });
     body.querySelectorAll("[data-app-approve]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        if (!confirm("Approve this application? They become an active member, and we email them how to create a Member Hub login.")) return;
-        decideApplication(window.__kosSb || null, "approve", btn.getAttribute("data-app-approve"), noteFor(btn.getAttribute("data-app-approve")), btn);
+        var id = btn.getAttribute("data-app-approve");
+        var row = applicationRowById(id);
+        if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
+        var bodyText = document.getElementById("hubAppConfirmBody");
+        var fields = document.getElementById("hubInductionFields");
+        var yes = document.getElementById("hubAppConfirmYes");
+        var unpaid = applicationUnpaidDuesNames(row);
+        if (title) title.textContent = "Approve membership (subject to Board ratification)";
+        if (bodyText) {
+          bodyText.textContent = "Approve " + applicationCoupleNames(row) + "? Approval is subject to final ratification by the Board of Directors. They become active members and we email a welcome note with the Member Hub login link and the training video."
+            + (unpaid ? " Dues are not paid yet for: " + unpaid + ". You can still approve." : "");
+        }
+        if (fields) fields.hidden = true;
+        if (yes) {
+          yes.textContent = "Approve membership";
+          yes.disabled = false;
+        }
+        confirmBox.dataset.mode = "approve";
+        confirmBox.dataset.id = id;
+        confirmBox.hidden = false;
       });
     });
     body.querySelectorAll("[data-app-decline]").forEach(function (btn) {
@@ -5413,7 +6248,7 @@
     body.querySelectorAll("[data-app-archive]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-archive");
-        if (!confirm("Archive this application? Their record stays on file. Nothing is deleted.")) return;
+        if (!confirm("Withdraw this application? Their record stays on file. Nothing is deleted.")) return;
         decideApplication(window.__kosSb || null, "archive", id, noteFor(id), btn);
       });
     });
@@ -5425,16 +6260,101 @@
     body.querySelectorAll("[data-app-bg]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-bg");
-        if (!confirm("Send the joining packet and move this application to background check? When prospect emails are on, we email them a secure link to finish the full application, background check payment ($50 individual or $75 couple), and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
+        if (!confirm("Called this prospect? We will email the background check fee ($50 individual or $75 couple) and the link to the full application. The email does not include a dues link, a Social Security number, or a driver's license number. While prospect emails are paused, the stage still changes and nothing is emailed.")) return;
         decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
+    var confirmBox = document.getElementById("hubAppConfirm");
+    function closePassConfirm() {
+      if (!confirmBox) return;
+      confirmBox.hidden = true;
+      confirmBox.removeAttribute("data-id");
+    }
+    body.querySelectorAll("[data-app-resend]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-resend");
+        if (!confirm("Send the background check email again? This sends a new link to the full application and the background check fee ($50 individual or $75 couple). It does not include a dues link. Use this when the first email was paused or the link expired. If prospect email is still paused, the card stays here and nothing is emailed.")) return;
+        decideApplication(window.__kosSb || null, "background_check", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-start]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (btn.disabled) return;
+        var id = btn.getAttribute("data-app-start");
+        var startRow = applicationRowById(id);
+        if (startRow && !applicationFullIdsReady(startRow)) return;
+        if (!confirm("Start the background check? The card moves to Background check in process. Copy the driver's license and Social Security number from the card into the background check site. No email is sent.")) return;
+        decideApplication(window.__kosSb || null, "start_background_check", id, noteFor(id), btn);
+      });
+    });
+    body.querySelectorAll("[data-app-level]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        setApplicationLevel(window.__kosSb || null, sel.getAttribute("data-app-level"), sel.value, sel);
+      });
+    });
+    body.querySelectorAll("[data-app-aux-fee]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-app-aux-fee");
+        var row = applicationRowById(id);
+        var name = applicationPersonName(row) || "this applicant";
+        if (!confirm("Auxiliary dues ($200) include the background check fee. Move " + name + " to Background check fee paid without a fee payment? No email is sent.")) return;
+        markAuxiliaryFeeIncluded(window.__kosSb || null, id, noteFor(id), btn);
       });
     });
     body.querySelectorAll("[data-app-dues]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-app-dues");
-        if (!confirm("Move this application to dues pending? That marks membership dues as the next stage. This button does not send another invoice. The dues invoice is emailed when they submit the full application.")) return;
-        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), btn);
+        var row = applicationRowById(id);
+        if (!confirmBox || !row) return;
+        var title = document.getElementById("hubAppConfirmTitle");
+        var bodyText = document.getElementById("hubAppConfirmBody");
+        var fields = document.getElementById("hubInductionFields");
+        var yesBtn = document.getElementById("hubAppConfirmYes");
+        var whenEl = document.getElementById("hubInductionWhen");
+        var placeEl = document.getElementById("hubInductionPlace");
+        if (title) title.textContent = "Proceed with induction, send dues link";
+        if (bodyText) bodyText.textContent = "Send the induction email to " + applicationCoupleNames(row) + "? It includes the dues link for " + (applicationLevelLabel(row) || "Full Krewe") + ", the next membership meeting, and a note that we will ask them to share why they want to join. Membership dues are not the background check fee.";
+        if (fields) fields.hidden = false;
+        if (whenEl) whenEl.value = "";
+        if (placeEl) placeEl.value = "";
+        if (yesBtn) yesBtn.textContent = "Send induction email";
+        confirmBox.dataset.mode = "induction";
+        confirmBox.dataset.id = id;
+        confirmBox.hidden = false;
+        applicationSyncInductionPreview();
+        var cancel = document.getElementById("hubAppConfirmNo");
+        if (cancel) cancel.focus();
       });
+    });
+    var whenInput = document.getElementById("hubInductionWhen");
+    var placeInput = document.getElementById("hubInductionPlace");
+    if (whenInput) whenInput.addEventListener("input", applicationSyncInductionPreview);
+    if (placeInput) placeInput.addEventListener("input", applicationSyncInductionPreview);
+    var yes = document.getElementById("hubAppConfirmYes");
+    var no = document.getElementById("hubAppConfirmNo");
+    if (yes) yes.addEventListener("click", function () {
+      var id = confirmBox && confirmBox.dataset.id;
+      var mode = confirmBox && confirmBox.dataset.mode;
+      var meeting = null;
+      if (mode === "induction") {
+        var whenValue = (document.getElementById("hubInductionWhen") || {}).value || "";
+        var placeValue = (document.getElementById("hubInductionPlace") || {}).value || "";
+        whenValue = String(whenValue).trim();
+        placeValue = String(placeValue).trim();
+        if (!whenValue || !placeValue) return;
+        meeting = whenValue + "\n" + placeValue;
+      }
+      closePassConfirm();
+      if (!id) return;
+      if (mode === "approve") {
+        decideApplication(window.__kosSb || null, "approve", id, noteFor(id), yes);
+      } else {
+        decideApplication(window.__kosSb || null, "dues_pending", id, noteFor(id), yes, meeting);
+      }
+    });
+    if (no) no.addEventListener("click", closePassConfirm);
+    if (confirmBox) confirmBox.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closePassConfirm();
     });
   }
 
@@ -5572,6 +6492,9 @@
       alert("Couldn't complete that: " + ((e && e.message) || e));
     }
     loadApprovals(client);
+    if (fn === "decide_volunteer_hours" && charityHoursState && (charityHoursState.payload || charityHoursState.fixture)) {
+      try { loadCharityHours(client); } catch (eHours) {}
+    }
   }
 
   function hourSourceLabel(source) {
@@ -5581,6 +6504,16 @@
     if (s === "in_kind") return "In-kind";
     if (s === "trackitforward_import") return "Imported";
     return "Logged in the Hub";
+  }
+
+  var hourNoteDrafts = {};
+
+  function rememberHourNoteDrafts(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll("textarea[data-hours-note]").forEach(function (el) {
+      var id = String(el.id || "").replace(/^hubHoursNote-/, "");
+      if (id) hourNoteDrafts[id] = el.value || "";
+    });
   }
 
   function renderHourApprovalsHtml(rows) {
@@ -5596,8 +6529,9 @@
         '<div class="muted"><b>' + esc(String(q.hours)) + " hours</b> · " + esc(q.activity || "Volunteer hours") + "</div>" +
         '<div class="muted">' + esc(bits.join(" · ")) + "</div>" +
         (q.notes ? '<div class="muted">' + esc(q.notes) + "</div>" : "") +
+        (q.possible_duplicate ? '<div class="hub-charity-warn">' + esc(q.duplicate_note || "Possible duplicate of an approved log for the same day and the same activity or event.") + "</div>" : "") +
         '<label class="muted" style="display:block;margin-top:8px;" for="hubHoursNote-' + esc(q.id) + '">Optional note</label>' +
-        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision"></textarea>' +
+        '<textarea class="hub-app-note" id="hubHoursNote-' + esc(q.id) + '" data-hours-note maxlength="500" placeholder="Only if you want a short note saved with this decision">' + esc(hourNoteDrafts[String(q.id)] || "") + "</textarea>" +
         '</div><div class="hub-appr-btns">' +
         '<button type="button" class="btn btn-primary" data-hours-approve="' + esc(q.id) + '">Approve</button>' +
         '<button type="button" class="btn" data-hours-decline="' + esc(q.id) + '">Decline</button>' +
@@ -5747,6 +6681,7 @@
       card.id = "hubApprovals";
       panel.insertBefore(card, panel.firstChild);
     }
+    rememberHourNoteDrafts(card);
     var hostOnlyQueue = state.canReviewHours && !state.officer;
     card.innerHTML =
       '<div class="app-head"><span class="ic">✅</span><div><h2>Approvals</h2><small>' +
@@ -5837,7 +6772,9 @@
         var kind = (q.type === "video") ? "Video" : "Photo";
         var preview = "";
         if (q.url && q.type === "photo") {
-          preview = '<div class="hub-media-preview"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
+          preview = '<div class="hub-media-preview kos-photo-frame"><a href="' + esc(q.url) + '" target="_blank" rel="noopener"><img src="' + esc(q.url) + '" alt="Photo submitted for review" /></a></div>';
+        } else if (q.url && window.kosVideoFrameHtml) {
+          preview = window.kosVideoFrameHtml(q.url, "hub-media-preview");
         } else if (q.url) {
           preview = '<div class="muted" style="margin-top:4px;"><a href="' + esc(q.url) + '" target="_blank" rel="noopener">Open / preview video</a></div>';
         }
@@ -5915,6 +6852,7 @@
     }
     if (mediaLog.length) html += mediaLogHtml(mediaLog);
     body.innerHTML = html;
+    if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(body);
     body.querySelectorAll("[data-hours-approve]").forEach(function (b) {
       b.addEventListener("click", function () {
         applyHourDecision(client, b.getAttribute("data-hours-approve"), true, b);
@@ -6014,7 +6952,7 @@
       data = res.data;
     } catch (e) {}
     if (!data || !data.length) {
-      body.innerHTML = '<p class="empty">No online payments yet. They appear here automatically once the payment system is connected (see PAYMENTS_SETUP.md).</p>';
+      body.innerHTML = '<p class="empty">No online payments yet. They appear here once payments are connected.</p>';
       return;
     }
     var html = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:16px;">' +
@@ -6109,7 +7047,7 @@
       '<p class="hub-opt-hint" style="margin-top:6px;">Full address for signed-in members in the Member Hub and the RSVP confirmation email. Never shown on public pages.</p></div>' +
       '<div><label for="hubEventCapacity">Capacity</label><input id="hubEventCapacity" type="number" min="0" step="1" /></div>' +
       '<div><label for="hubEventVolunteerCap">Volunteer slots</label><input id="hubEventVolunteerCap" type="number" min="0" step="1" placeholder="No cap" />' +
-      '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.</p></div>' +
+      '<p class="hub-opt-hint" id="hubEventVolunteerCapHint" style="margin-top:6px;">Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs those hours. A full cap blocks more volunteer signups, including parade security.</p></div>' +
       '<div class="wide"><label for="hubEventDescription">Description</label><textarea id="hubEventDescription"></textarea>' +
       '<div class="hub-desc-preview" id="hubEventDescPreview" hidden></div></div></div>' +
       '<div class="hub-event-checks"><label><input type="checkbox" id="hubEventPublic" checked /> Public event</label>' +
@@ -6362,7 +7300,7 @@
       return;
     }
     if (raw === "") {
-      hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs pending hours for the host or an officer to confirm. A full cap blocks more volunteer signups, including parade security.";
+      hint.textContent = "Leave blank for no cap. When a member signs up as volunteer and a slot remains, the Hub logs those hours. A full cap blocks more volunteer signups, including parade security.";
       return;
     }
     var n = parseInt(raw, 10);
@@ -6374,7 +7312,7 @@
       hint.textContent = "Zero volunteer slots. Volunteer signup is blocked for this event.";
       return;
     }
-    hint.textContent = "Volunteer signup stops after " + n + (n === 1 ? " member" : " members") + ". Each signup logs pending hours. It will not overbook.";
+    hint.textContent = "Volunteer signup stops after " + n + (n === 1 ? " member" : " members") + ". Each signup logs the hours. It will not overbook.";
   }
 
   function resetEventEmailFields() {
@@ -8757,6 +9695,13 @@
       row.actor_name = ((window.kosProfile || {}).display_name || "Charity Chair");
       row.updated_at = new Date().toISOString();
       state.volunteerInquiryRows = volunteerInquiriesFixture.slice();
+      if (roleFixture && Array.isArray(roleFixture.volunteerInquiries)) {
+        roleFixture.volunteerInquiries = volunteerInquiriesFixture.map(function (item) {
+          var copy = {};
+          Object.keys(item || {}).forEach(function (key) { copy[key] = item[key]; });
+          return copy;
+        });
+      }
       syncVolunteerInquiryCounts();
       state.volunteerInquiryFlash = status === "done" ? "Marked done." : "Marked contacted.";
       renderHome();
@@ -8954,7 +9899,7 @@
           "<td>" + (r.email ? '<a href="mailto:' + cAttr(r.email) + '">' + esc(r.email) + "</a>" : "-") + "</td>" +
           "<td>" + (r.phone ? '<a href="tel:' + cAttr(String(r.phone).replace(/[^0-9+]/g, "")) + '">' + esc(r.phone) + "</a>" : "-") + "</td>" +
           "<td>" + esc((r.committee_interests || []).join(", ") || "-") + "</td>" +
-          "<td>" + esc(r.membership_status || "") + "</td></tr>";
+          "<td>" + esc(shownMembershipStatus(r.membership_status)) + "</td></tr>";
       }).join("") + "</tbody></table></div>";
   }
 
@@ -9087,7 +10032,7 @@
   function outreachRosterLabel(row) {
     if (!row || !row.on_roster) return "Not on roster";
     if (row.membership_status === "prospect") return "Prospect";
-    return "On roster · " + (row.membership_status || "member");
+    return "On roster · " + (shownMembershipStatus(row.membership_status) || "member");
   }
 
   function outreachSourceHtml(row) {
@@ -9865,11 +10810,377 @@
     renderOfficerParadeGuests();
   };
 
+  function charityHoursApi() {
+    return window.kosCharityHours || null;
+  }
+
+  function rememberCharityNoteDrafts(root) {
+    if (!root || !root.querySelectorAll) return;
+    var grouped = {};
+    root.querySelectorAll("[data-charity-note]").forEach(function (el) {
+      var id = el.getAttribute("data-charity-note");
+      if (!id) return;
+      if (!grouped[id]) grouped[id] = [];
+      grouped[id].push(el.value || "");
+    });
+    Object.keys(grouped).forEach(function (id) {
+      var values = grouped[id];
+      var prev = charityHoursState.noteDrafts[id] || "";
+      var changed = values.filter(function (value) { return value !== prev; });
+      // A cleared box is a real edit. Do not put the previous text back
+      // because another copy of the same note still holds it.
+      charityHoursState.noteDrafts[id] = changed.length ? changed[changed.length - 1] : (values[0] || "");
+    });
+  }
+
+  function charityNoteDraft(id) {
+    return charityHoursState.noteDrafts[String(id)] || "";
+  }
+
+  async function refreshCharityHoursAccess(client) {
+    if (charityHoursState.fixture) return;
+    if (roleFixture && ("canReviewCharityHours" in roleFixture)) {
+      state.canReviewCharityHours = !!roleFixture.canReviewCharityHours;
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") return;
+    try {
+      var can = await client.rpc("kos_can_review_charity_hours");
+      if (charityHoursState.fixture) return;
+      if (can && !can.error) state.canReviewCharityHours = !!can.data;
+    } catch (e) {}
+    if (!state.canReviewCharityHours) return;
+    var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+    if (officerBtn) officerBtn.style.display = "";
+    try { syncOfficerChip(); } catch (eSync) {}
+    try { wireOfficerDeskPicker(); } catch (eWire) {}
+  }
+
+  function charityLogLine(api, log) {
+    var bits = [api.formatDay(log.worked_on) || "No date", log.activity || "Volunteer hours"];
+    if (log.event_name && log.event_name !== log.activity) bits.push(log.event_name);
+    var hours = Number(log.hours);
+    bits.push(api.formatHours(log.hours) + (hours === 1 ? " hour" : " hours"));
+    bits.push(log.type_label || api.logType(log));
+    return bits.join(" · ");
+  }
+
+  function charityApproverLine(api, log) {
+    var name = String(log.approved_by || "").trim();
+    if (!name) return "";
+    var key = api.statusKey(log);
+    if (key === "rejected") return "Rejected by " + name;
+    if (key === "approved") return "Approved by " + name;
+    return "";
+  }
+
+  function charityDecisionButtons(id) {
+    return '<div class="hub-appr-btns">' +
+      '<button type="button" class="btn btn-primary" data-charity-approve="' + esc(id) + '">Approve</button>' +
+      '<button type="button" class="btn" data-charity-reject="' + esc(id) + '">Reject</button>' +
+      "</div>";
+  }
+
+  function charityNoteField(id) {
+    return '<label class="muted" style="display:block;margin-top:8px;">Review note (optional)' +
+      '<textarea class="hub-app-note" data-charity-note="' + esc(id) + '" maxlength="500" placeholder="Only if you want a short note saved with this decision">' +
+      esc(charityNoteDraft(id)) + "</textarea></label>";
+  }
+
+  function renderCharityHours() {
+    if (!canSeeCharityHours()) return;
+    var card = ensureOfficerToolCard("hubCharityHours");
+    if (!card) return;
+    rememberCharityNoteDrafts(card);
+    var api = charityHoursApi();
+    var html = '<div class="app-head"><span class="ic">⏱</span><div><h2>Member volunteer hours</h2>' +
+      "<small>Logged hours this season, and the shortfall toward 12 for full members.</small></div></div>" +
+      '<div class="app-body" id="hubCharityBody">';
+    if (!api) {
+      html += '<p class="empty">Could not load the hours roster.</p></div>';
+      card.innerHTML = html;
+      return;
+    }
+    if (charityHoursState.flash) {
+      html += '<p class="hub-app-flash" id="hubCharityFlash">' + esc(charityHoursState.flash) + "</p>";
+    }
+    if (charityHoursState.error) {
+      html += '<p class="empty" id="hubCharityError">' + esc(charityHoursState.error) + "</p></div>";
+      card.innerHTML = html;
+      return;
+    }
+    if (!charityHoursState.payload) {
+      html += '<p class="empty">Loading member hours.</p></div>';
+      card.innerHTML = html;
+      return;
+    }
+    var view = api.prepare(charityHoursState.payload, {
+      season: charityHoursState.season,
+      query: charityHoursState.query,
+      filter: charityHoursState.filter,
+      sort: charityHoursState.sort
+    });
+    if (!charityHoursState.season) charityHoursState.season = view.season;
+
+    html += '<h3 class="hub-charity-h" id="hubCharityRoster">Roster</h3>' +
+      '<p class="hub-charity-lead">' + esc(view.seasonLabel) + ". Hours count when a member logs them. Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count at $12 per hour. Rejected logs stay off the total.</p>" +
+      '<div class="hub-charity-controls">' +
+      '<div class="fld"><label for="hubCharitySearch">Search by name</label>' +
+      '<input id="hubCharitySearch" type="search" value="' + esc(charityHoursState.query) + '" placeholder="Name" autocomplete="off" /></div>' +
+      '<div class="fld"><label for="hubCharitySeason">Season</label><select id="hubCharitySeason">' +
+      view.seasons.map(function (year) {
+        return '<option value="' + esc(year) + '"' + (Number(year) === Number(view.season) ? " selected" : "") + ">" +
+          esc(api.seasonLabel(year)) + "</option>";
+      }).join("") +
+      "</select></div>" +
+      '<div class="fld"><label for="hubCharitySort">Sort</label><select id="hubCharitySort">' +
+      '<option value="name"' + (charityHoursState.sort === "name" ? " selected" : "") + ">Name</option>" +
+      '<option value="hours"' + (charityHoursState.sort === "hours" ? " selected" : "") + ">Logged hours</option>" +
+      "</select></div>" +
+      '<div class="fld-btn"><button type="button" class="btn" id="hubCharityCsv">Download CSV</button></div>' +
+      "</div>" +
+      '<div class="hub-app-filters" role="group" aria-label="Roster filters">' +
+      [["all", "All"], ["met", "Met 12"], ["under", "Under 12"], ["duplicate", "Possible duplicate"]].map(function (pair) {
+        return '<button type="button" data-charity-filter="' + pair[0] + '"' +
+          (charityHoursState.filter === pair[0] ? ' class="on"' : "") + ">" + pair[1] + "</button>";
+      }).join("") +
+      "</div>" +
+      '<p class="hub-charity-lead" id="hubCharityCount">Showing ' + view.members.length + " of " + view.total + " members.</p>";
+
+    if (!view.members.length) {
+      html += '<p class="empty">No members match that search.</p>';
+    }
+    view.members.forEach(function (member) {
+      var open = String(charityHoursState.openId) === String(member.member_id);
+      html += '<article class="hub-charity-member" data-charity-member="' + esc(member.member_id) + '">' +
+        '<button type="button" class="hub-charity-summary" data-charity-toggle="' + esc(member.member_id) + '" aria-expanded="' + (open ? "true" : "false") + '">' +
+        '<span class="nm">' + esc(member.name) + "</span>" +
+        '<span class="hub-charity-lvl">' + esc(member.level_label) + "</span>" +
+        '<span class="hub-charity-stats"><span>' + esc(api.rosterLine(member)) + "</span>" +
+        '<span class="hub-charity-need">' + esc(api.needLine(member)) + "</span></span>" +
+        "</button>";
+      if (open) {
+        html += '<div class="hub-charity-logs" id="hubCharityLogs">';
+        if (!member.logs.length) {
+          html += '<p class="empty">No logs for this season.</p>';
+        }
+        member.logs.forEach(function (log) {
+          var rejected = api.statusKey(log) === "rejected";
+          var who = charityApproverLine(api, log);
+          html += '<div class="hub-charity-log" data-charity-log="' + esc(log.id) + '">' +
+            "<b>" + esc(charityLogLine(api, log)) + "</b>" +
+            '<span class="hub-charity-status ' + (rejected ? "rejected" : "approved") + '">' +
+            (rejected ? "Rejected" : "Logged") + "</span>" +
+            (who ? '<div class="muted">' + esc(who) + "</div>" : "") +
+            (log.notes ? '<div class="hub-charity-note">Member note: ' + esc(log.notes) + "</div>" : "") +
+            (log.review_note ? '<div class="hub-charity-note">Review note: ' + esc(log.review_note) + "</div>" : "") +
+            (log.possible_duplicate ? '<div class="hub-charity-warn">' + esc(api.DUPLICATE_NOTE) + "</div>" : "") +
+            "</div>";
+        });
+        html += "</div>";
+      }
+      html += "</article>";
+    });
+    html += "</div>";
+    var search = document.getElementById("hubCharitySearch");
+    var caret = search && document.activeElement === search ? search.selectionStart : null;
+    card.innerHTML = html;
+    bindCharityHours(card, caret);
+  }
+
+  function bindCharityHours(card, caret) {
+    var search = document.getElementById("hubCharitySearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        charityHoursState.query = search.value || "";
+        renderCharityHours();
+      });
+      if (caret != null) {
+        search.focus();
+        try { search.setSelectionRange(caret, caret); } catch (eCaret) {}
+      }
+    }
+    var season = document.getElementById("hubCharitySeason");
+    if (season) season.addEventListener("change", function () {
+      charityHoursState.season = Number(season.value) || charityHoursState.season;
+      charityHoursState.openId = null;
+      if (charityHoursState.fixture) renderCharityHours();
+      else loadCharityHours(window.__kosSb || null);
+    });
+    var sort = document.getElementById("hubCharitySort");
+    if (sort) sort.addEventListener("change", function () {
+      charityHoursState.sort = sort.value === "hours" ? "hours" : "name";
+      renderCharityHours();
+    });
+    card.querySelectorAll("[data-charity-filter]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        charityHoursState.filter = btn.getAttribute("data-charity-filter") || "all";
+        renderCharityHours();
+      });
+    });
+    card.querySelectorAll("[data-charity-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-charity-toggle");
+        charityHoursState.openId = String(charityHoursState.openId) === String(id) ? null : id;
+        renderCharityHours();
+      });
+    });
+    var csvBtn = document.getElementById("hubCharityCsv");
+    if (csvBtn) csvBtn.addEventListener("click", function () {
+      var api = charityHoursApi();
+      if (!api || !charityHoursState.payload) return;
+      var all = api.prepare(charityHoursState.payload, {
+        season: charityHoursState.season,
+        query: "",
+        filter: "all",
+        sort: charityHoursState.sort
+      });
+      var blob = new Blob([api.toCsv(all.members, all.seasonLabel)], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "member-volunteer-hours-" + all.season + ".csv";
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+    });
+  }
+
+  function charityApplyFixtureDecision(id, approved, note) {
+    var payload = charityHoursState.payload || {};
+    var name = "";
+    (payload.members || []).forEach(function (member) {
+      (member.logs || []).forEach(function (log) {
+        if (String(log.id) !== String(id)) return;
+        name = member.name || name;
+        log.status = approved ? "approved" : "rejected";
+        log.approved = !!approved;
+        log.approved_by = log.approved_by || "Charity Chair";
+        log.review_note = note || "";
+        log.possible_duplicate = false;
+      });
+    });
+    charityHoursState.flash = (approved ? "Approved" : "Rejected") + (name ? " " + name : "") +
+      (approved ? ". Worked hours earn 30 Clovers. In-kind donations do not." : ". Those hours will not count.");
+    renderCharityHours();
+  }
+
+  function charityNoteFromButton(id, btn) {
+    var scope = btn && btn.closest ? btn.closest(".hub-appr, .hub-charity-log") : null;
+    var area = scope && scope.querySelector ? scope.querySelector("[data-charity-note]") : null;
+    if (area && area.getAttribute("data-charity-note") === String(id)) return area.value || "";
+    return null;
+  }
+
+  async function decideCharityHours(id, approved, btn) {
+    rememberCharityNoteDrafts(document.getElementById("hubCharityHours"));
+    var typed = charityNoteFromButton(id, btn);
+    if (typed !== null) charityHoursState.noteDrafts[String(id)] = typed;
+    var note = (typed !== null ? typed : charityNoteDraft(id)).trim();
+    if (btn) btn.disabled = true;
+    if (charityHoursState.fixture) {
+      charityApplyFixtureDecision(id, approved, note);
+      return;
+    }
+    var client = window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      alert("Still connecting. Try again in a moment.");
+      if (btn) btn.disabled = false;
+      return;
+    }
+    try {
+      var res = await client.rpc("decide_volunteer_hours", {
+        p_id: id,
+        p_approved: !!approved,
+        p_note: note || null
+      });
+      if (res && res.error) throw res.error;
+      var data = (res && res.data) || {};
+      if (data.ok === false) throw new Error(data.message || "Could not update that log.");
+      charityHoursState.flash = approved
+        ? "Approved. Worked hours earn 30 Clovers. In-kind donations do not."
+        : "Rejected. Those hours will not count.";
+    } catch (e) {
+      alert("Could not update that log. " + ((e && e.message) || "Try again in a moment."));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (state.officer || state.canReviewHours) {
+      try { loadApprovals(client); } catch (eAppr) {}
+    }
+    loadCharityHours(client);
+  }
+
+  var charityHoursLoadGen = 0;
+
+  async function loadCharityHours(client) {
+    if (!canSeeCharityHours()) return;
+    if (charityHoursState.fixture) {
+      renderCharityHours();
+      return;
+    }
+    client = client || window.__kosSb;
+    if (!client || typeof client.rpc !== "function") {
+      charityHoursState.error = "Still connecting. Try again in a moment.";
+      renderCharityHours();
+      return;
+    }
+    var requestedSeason = charityHoursState.season || null;
+    var gen = ++charityHoursLoadGen;
+    var args = {};
+    if (requestedSeason) args.p_season = requestedSeason;
+    try {
+      var res = await client.rpc("list_charity_volunteer_hours", args);
+      if (gen !== charityHoursLoadGen || charityHoursState.fixture) return;
+      if (res && res.error) throw res.error;
+      var data = res && res.data;
+      if (!data || data.ok === false) {
+        charityHoursState.payload = null;
+        charityHoursState.error = (data && data.message) || "You cannot view other members' volunteer hours.";
+      } else if (requestedSeason && Number(data.season_year) !== Number(requestedSeason)) {
+        return;
+      } else {
+        charityHoursState.error = "";
+        charityHoursState.payload = data;
+        if (!charityHoursState.season && data.season_year) charityHoursState.season = data.season_year;
+      }
+    } catch (e) {
+      if (gen !== charityHoursLoadGen || charityHoursState.fixture) return;
+      var msg = String((e && e.message) || e || "");
+      charityHoursState.payload = null;
+      charityHoursState.error = /could not find the function|schema cache|404|PGRST202/i.test(msg)
+        ? "Member hours are not available yet. Apply sql/kos_charity_volunteer_hours.sql, then refresh."
+        : "Could not load member hours. Try again in a moment.";
+    }
+    if (gen !== charityHoursLoadGen) return;
+    renderCharityHours();
+  }
+
+  window.__kosHubCharityHoursLive = function () {
+    charityHoursState.fixture = false;
+    charityHoursLoadGen += 1;
+  };
+
+  window.__kosHubSetCharityHours = function (payload) {
+    charityHoursState.fixture = true;
+    charityHoursState.payload = payload || { members: [], seasons: [] };
+    charityHoursState.error = "";
+    charityHoursState.flash = "";
+    if (!charityHoursState.season && payload && payload.season_year) {
+      charityHoursState.season = payload.season_year;
+    }
+    state.canReviewCharityHours = true;
+    var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+    if (officerBtn && canOpenOfficerDesk()) officerBtn.style.display = "";
+    try { syncOfficerChip(); } catch (eSync) {}
+    try { wireOfficerDeskPicker(); } catch (eWire) {}
+    renderCharityHours();
+  };
+
   var OFFICER_TOOL_ORDER = [
     "hubApplications",
     "hubOfficerDirectory",
     "hubRolesAccess",
     "hubVolunteerInbox",
+    "hubCharityHours",
     "hubApprovals",
     "hubPayments",
     "hubLockers",
@@ -9885,6 +11196,7 @@
     "hubAllKrewe",
     "hubEmailMembers",
     "hubSendInvoices",
+    "hubRenewals",
     "hubDuesWaivers"
   ];
 
@@ -9894,8 +11206,9 @@
     hubRolesAccess: { title: "Member roles and access", desc: "Set a title and choose which Officer Desk tools a member can use.", icon: "🎖", section: "Membership" },
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
+    hubCharityHours: { title: "Member volunteer hours", desc: "Every member's logged hours for this season.", icon: "⏱", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
-    hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the payments ledger", icon: "💳", section: "Money" },
+    hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubWhosComing: { title: "Who's coming", desc: "RSVP list for one event, including public signups, with headcount and CSV.", icon: "👥", section: "Events" },
@@ -9909,6 +11222,7 @@
     hubAllKrewe: { title: "All Krewe Messages", desc: "Email the full membership", icon: "✉️", section: "Reports" },
     hubEmailMembers: { title: "Email members", desc: "Choose audience, including event prospects, then write, preview, and send", icon: "✉️", section: "Email & invoices" },
     hubSendInvoices: { title: "Send invoices", desc: "Level-based dues invoices and Zeffy pay links", icon: "🧾", section: "Email & invoices" },
+    hubRenewals: { title: "Renewals", desc: "Who still owes this season. Mark cash or check, or send a reminder.", icon: "☘", section: "Email & invoices" },
     hubDuesWaivers: { title: "Dues waivers", desc: "Request, approve, or batch-apply elected-officer exemptions", icon: "🎖", section: "Email & invoices" }
   };
 
@@ -9928,15 +11242,15 @@
   /* Masthead chips and illuminated headers for each launcher section. The
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
-    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for check and dues, then approve." },
-    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page: new, contacted, and done." },
+    "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for the check, send dues after it passes, then approve." },
+    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page, plus every member's hours for this season." },
     "Events": { icon: "📅", sub: "Event Studio, who's coming, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
     "Gear": { icon: "🔑", sub: "Locker inventory, the reservation list, and who has paid." },
     "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, and the online payments ledger." },
-    "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, and record dues waivers." },
+    "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, see who still needs to renew, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
     "More tools": { icon: "☘", sub: "Everything else on the desk." }
   };
@@ -9975,6 +11289,7 @@
     panel.appendChild(card);
     return card;
   }
+  window.kosEnsureOfficerToolCard = ensureOfficerToolCard;
 
   function officerReportDefs() {
     var list = window.REPORTS;
@@ -10002,6 +11317,7 @@
     hubOfficerDirectory: "member_contacts",
     hubRolesAccess: "roles_access",
     hubVolunteerInbox: "volunteer_inquiries",
+    hubCharityHours: "volunteer_inquiries",
     hubApprovals: "approvals",
     hubPayments: "payments",
     hubLockers: "lockers",
@@ -10016,6 +11332,7 @@
     hubAllKrewe: "all_krewe",
     hubEmailMembers: "email_members",
     hubSendInvoices: "send_invoices",
+    hubRenewals: "renewals",
     hubDuesWaivers: "dues_waivers"
   };
 
@@ -10054,10 +11371,17 @@
     };
   }
 
+  function renewalsAllowed() {
+    if (hasToolKey("renewals")) return true;
+    if (typeof window.kosCanManageRenewals === "function") return !!window.kosCanManageRenewals();
+    return false;
+  }
+
   function toolOrderFromKeys() {
     publishReportAccess();
     return OFFICER_TOOL_ORDER.filter(function (id) {
       if (id === "hubChairDesk") return false;
+      if (id === "hubRenewals") return renewalsAllowed();
       if (id === "hubReports") {
         var access = window.kosReportAccess || {};
         return !!(access.all || access.events || access.merch || access.parades || access.members || access.finance);
@@ -10097,13 +11421,30 @@
     } catch (eWc) {}
   }
 
+  function canSeeCharityHours() {
+    if (state.canReviewCharityHours) return true;
+    if (Array.isArray(state.toolKeys) && hasToolKey("volunteer_inquiries")) return true;
+    if (state.canReviewVolunteerInquiries) return true;
+    return false;
+  }
+
+  function placeCharityHours(toolOrder) {
+    var next = (toolOrder || []).filter(function (id) { return id !== "hubCharityHours"; });
+    if (!canSeeCharityHours()) return next;
+    var at = next.indexOf("hubVolunteerInbox");
+    if (at === -1) next.unshift("hubCharityHours");
+    else next.splice(at + 1, 0, "hubCharityHours");
+    return next;
+  }
+
   function currentOfficerToolOrder() {
-    if (Array.isArray(state.toolKeys)) return placeWhosComing(toolOrderFromKeys());
+    if (Array.isArray(state.toolKeys)) return placeCharityHours(placeWhosComing(toolOrderFromKeys()));
     var toolOrder = OFFICER_TOOL_ORDER.slice();
-    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries)) {
+    if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours)) {
       toolOrder = [];
       if (state.canReviewApplications) toolOrder.push("hubApplications");
       if (state.canReviewVolunteerInquiries) toolOrder.push("hubVolunteerInbox");
+      if (state.canReviewCharityHours) toolOrder.push("hubCharityHours");
       if (state.canReviewHours) toolOrder.push("hubApprovals");
     } else if (state.shopOnly && state.socialOnly) {
       toolOrder = ["hubShopStudio", "hubEventStudio", "hubReports"];
@@ -10156,7 +11497,9 @@
       if (afterStudio !== -1) toolOrder.splice(afterStudio + 1, 0, "hubEventOutreach");
       else toolOrder.push("hubEventOutreach");
     }
-    return placeWhosComing(placeRolesAccess(toolOrder));
+    toolOrder = placeWhosComing(placeRolesAccess(toolOrder));
+    if (!renewalsAllowed()) toolOrder = toolOrder.filter(function (id) { return id !== "hubRenewals"; });
+    return placeCharityHours(toolOrder);
   }
 
   function ensureOfficerDeskChrome() {
@@ -10297,6 +11640,12 @@
       }
       if (id === "hubParadeSecurity") paintParadeSecurityShell();
       if (id === "hubWhosComing") openWhosComing();
+      if (id === "hubCharityHours") {
+        try { loadCharityHours(window.__kosSb || null); } catch (eCharity) {}
+      }
+      if (id === "hubRenewals" && typeof window.kosLoadRenewals === "function") {
+        try { window.kosLoadRenewals(); } catch (eRen) {}
+      }
     }
     try { if (raw) sessionStorage.setItem("kosOfficerTool", raw); } catch (e2) {}
   }
@@ -10422,7 +11771,7 @@
     cards.forEach(function (card) {
       if (!card || !card.id) return;
       var limited = state.shopOnly || state.socialOnly;
-      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity" || card.id === "hubWhosComing")) {
+      if (toolOrder.indexOf(card.id) === -1 && (limited || card.id === "hubApplications" || card.id === "hubVolunteerInbox" || card.id === "hubCharityHours" || card.id === "hubEventOutreach" || card.id === "hubChairDesk" || card.id === "hubRolesAccess" || card.id === "hubParadeGuests" || card.id === "hubParadeSecurity" || card.id === "hubWhosComing")) {
         card.style.display = "none";
         card.classList.add("hub-officer-hidden");
       }

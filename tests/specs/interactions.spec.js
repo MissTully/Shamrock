@@ -1,6 +1,6 @@
 // Regression: interactive behavior — navigation dropdowns, the mobile
 // drawer, and the music player toggle.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 test.describe("desktop navigation", () => {

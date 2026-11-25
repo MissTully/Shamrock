@@ -1,7 +1,7 @@
 // Narrow phones and the Galaxy Fold inner glass must not scroll sideways.
 // The phone Hub used to sit in a 460px column, so a wider layout viewport
 // left a dark gutter and clipped the announcements card and the bottom nav.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, PAGES, unlockMemberHub } = require("./helpers");
 
 const WIDTHS = [344, 360, 390, 412, 673, 884];

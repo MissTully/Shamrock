@@ -1,6 +1,6 @@
 // Castle door: first-time helper wrap, sign-in errors, and the reset-mail note.
 // Roster and password calls are stubbed. Nothing here writes to Supabase.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 const NOT_ON_ROSTER =

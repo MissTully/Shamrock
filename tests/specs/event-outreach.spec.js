@@ -1,6 +1,6 @@
 // Event outreach officer tool. Role and row fixtures drive the Hub offline
 // so this does not read or write the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const ROWS = [
@@ -87,6 +87,14 @@ async function openOutreach(page, role) {
   await expect(page.locator("#hubOutreachTable")).toBeVisible();
 }
 
+async function setOutreachFilter(locator, value, kind) {
+  await locator.evaluate((el, detail) => {
+    if (detail.kind === "check") el.checked = detail.value;
+    else el.value = detail.value;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }, { kind, value });
+}
+
 test.describe("Event outreach", () => {
   test("event managers see prospects, Zeffy buyers, and legacy emails, then filter and export", async ({ page }) => {
     const report = watchPage(page);
@@ -127,15 +135,13 @@ test.describe("Event outreach", () => {
     await expect(tool).toContainText("Patrick Doyle");
 
     await page.locator("#hubOutreachSource").selectOption("all");
-    await page.locator("#hubOutreachMin").fill("4");
-    await page.locator("#hubOutreachMin").dispatchEvent("change");
+    await setOutreachFilter(page.locator("#hubOutreachMin"), "4", "value");
     await expect(tool).toContainText("Siobhan Walsh");
     await expect(tool).not.toContainText("Owen Byrne");
     await expect(tool).not.toContainText("Niamh Kelly");
 
-    await page.locator("#hubOutreachMin").fill("0");
-    await page.locator("#hubOutreachMin").dispatchEvent("change");
-    await page.locator("#hubOutreachNever").uncheck();
+    await setOutreachFilter(page.locator("#hubOutreachMin"), "0", "value");
+    await setOutreachFilter(page.locator("#hubOutreachNever"), false, "check");
     await expect(tool).toContainText("Maeve Collins");
     await expect(tool).toContainText("On roster · active");
 

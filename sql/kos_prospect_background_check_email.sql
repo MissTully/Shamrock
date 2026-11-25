@@ -153,7 +153,7 @@ begin
 
   v_html :=
     '<p>Dear ' || public.kos_email_plain(v_name) || ',</p>'
-    || '<p>We''re so glad you''re joining the Krewe of Shamrock. We''re excited to have you. The Membership Chair has opened the background check, and the rest of this note is simply how to finish joining, whenever you''re ready.</p>'
+    || '<p>We''re so glad you''re joining the Krewe of Shamrock. We''re excited to have you. The rest of this note is simply how to finish joining, whenever you''re ready.</p>'
     || '<h2 style="font-size:18px;margin:22px 0 8px;color:#14532d;">Let''s finish your application</h2>'
     || '<p>When you have a quiet moment, open your private link and finish the full application. It asks for a driver''s license number and a Social Security number. We use those only for the background check, and we hold them confidentially.</p>';
 
@@ -350,10 +350,18 @@ begin
 
   v_url := 'https://www.kreweofshamrock.com/membership-full-application.html?token=' || v_token;
   v_name := btrim(coalesce(rec.first_name, '') || ' ' || coalesce(rec.last_name, ''));
-  v_html := public.kos_prospect_background_check_email_html(
-    coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
-    v_url
-  );
+  if to_regprocedure('public.kos_prospect_background_check_email_html(text,text,jsonb)') is not null then
+    v_html := public.kos_prospect_background_check_email_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_url,
+      jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))
+    );
+  else
+    v_html := public.kos_prospect_background_check_email_html(
+      coalesce(nullif(btrim(rec.first_name), ''), 'friend'),
+      v_url
+    );
+  end if;
   if to_regprocedure('public.kos_joining_packet_email_subject()') is not null then
     v_subject := coalesce(nullif(btrim(public.kos_joining_packet_email_subject()), ''), v_subject);
   end if;
@@ -393,7 +401,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'emailed', true,
-    'message', 'Full application sent. We emailed them a secure link to finish the full application, the background check payment, and each membership level with a short note and a pay link. The email does not include a Social Security number or a driver''s license number.'
+    'message', 'Full application sent. We emailed the background check fee ($50 individual or $75 couple) and a secure link to the full application. The email does not include a dues link, a Social Security number, or a driver''s license number.'
   );
 end;
 $send$;

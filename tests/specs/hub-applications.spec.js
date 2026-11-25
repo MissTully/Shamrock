@@ -1,7 +1,14 @@
 // Membership Applications officer tool. Role fixtures drive the Hub offline
 // so this does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
+const fs = require("fs");
+const path = require("path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
+
+const PREVIEW = path.join(__dirname, "../../docs/preview/membership-training-fixes");
+const V6 = path.join(__dirname, "../../previews/v6");
+fs.mkdirSync(PREVIEW, { recursive: true });
+fs.mkdirSync(V6, { recursive: true });
 
 const APPLICATIONS = [
   {
@@ -109,11 +116,34 @@ test.describe("Membership Applications", () => {
 
   test("reviewers open the list from home, see address and escaped notes, and approve", async ({ page }) => {
     const report = watchPage(page);
+    const ready = APPLICATIONS.concat([{
+      id: "app-riley",
+      first_name: "Riley",
+      last_name: "Chen",
+      email: "riley.chen@example.com",
+      phone: "813-555-0144",
+      street_address: "8 Palm Way",
+      city: "Tampa",
+      state: "FL",
+      zip: "33602",
+      notes: "Ready to approve.",
+      membership_status: "dues-pending",
+      membership_level: "full",
+      application_fee_type: "single",
+      background_check_paid: true,
+      background_check_amount_cents: 5000,
+      background_check_paid_at: "2026-10-31T19:00:00.000Z",
+      dues_paid: true,
+      dues_amount_cents: 37500,
+      dues_paid_at: "2026-11-03T20:00:00.000Z",
+      stage_at: "2026-11-03T20:00:00.000Z",
+      created_at: "2026-10-01T15:00:00.000Z"
+    }]);
     await unlockMemberHub(page, {
       role: {
         officer: true,
         canReviewApplications: true,
-        applications: APPLICATIONS
+        applications: ready
       }
     });
 
@@ -126,8 +156,8 @@ test.describe("Membership Applications", () => {
     await expect(tool).toBeVisible();
     await expect(tool.locator("h2")).toHaveText("Membership Applications");
     await expect(tool).toContainText("Call first");
-    await expect(tool.locator(".hub-app-journey")).toContainText("Joining packet");
-    await expect(tool).toContainText("Next step: call the prospect");
+    await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Background check fee pending");
+    await expect(tool).toContainText("Call first. The card shows the phone number");
     await expect(tool).toContainText("Nia Byrne");
     await expect(tool).toContainText("nia.byrne@example.com");
     await expect(tool).toContainText("813-555-0199");
@@ -138,12 +168,13 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("img")).toHaveCount(0);
     await expect(tool).toContainText("<img src=x onerror=alert(1)>");
     await expect(tool.locator("[data-app-status='pending-new']").first()).toContainText("New");
-    await expect(tool).toContainText("Application fee: single applicant, $50");
+    await expect(tool).toContainText("Background check fee: $50 individual");
     await expect(tool).toContainText("not membership dues");
     await expect(tool).toContainText("Driver's license on file, last 4 only: ••••9012");
     await expect(tool).toContainText("SSN on file, last 4 only: •••-••-6789");
-    await expect(tool).toContainText("Full application received. Lists show the last 4 only.");
-    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Send joining packet");
+    await expect(tool).toContainText("Full application submitted. Lists show the last 4 only.");
+    await expect(tool.locator("[data-app-bg='app-nia']")).toHaveText("Called, send background check email");
+    await expect(tool.locator("[data-app-id='app-nia'] a[href='tel:8135550199']")).toHaveText("813-555-0199");
     await expect(tool.locator("[data-app-send]")).toHaveCount(0);
     await expect(tool).not.toContainText("Send full application");
     await expect(tool).not.toContainText("Mark next step sent");
@@ -152,23 +183,21 @@ test.describe("Membership Applications", () => {
     await expect(tool).not.toContainText("F123456789012");
     await expect(tool).not.toContainText("Rowan Hale");
     await expect(tool).not.toContainText("Casey Prospect");
-
-    await tool.locator("[data-app-bucket='renewal']").click();
-    await expect(tool).toContainText("Rowan Hale");
-    await expect(tool).toContainText("renewals");
-    await expect(tool).not.toContainText("Nia Byrne");
-
-    await tool.locator("[data-app-bucket='new']").click();
+    await expect(tool.locator("[data-app-bucket='renewal']")).toHaveCount(0);
+    await expect(tool).not.toContainText("Approve renewal");
+    await expect(tool.locator("[data-app-bucket='board']")).toBeVisible();
     await expect(tool).toContainText("Nia Byrne");
 
-    await tool.locator(".hub-app-other summary").first().click();
-    page.once("dialog", (dialog) => dialog.accept());
-    await tool.locator("[data-app-approve='app-nia']").click();
+    await tool.locator("[data-app-approve='app-riley']").click();
+    await expect(tool.locator("#hubAppConfirm")).toBeVisible();
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("final ratification by the Board of Directors");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
+    await tool.locator("#hubAppConfirmYes").click();
     await expect(tool).toContainText("Approved.");
     await expect(tool).toContainText("Create or reset your password");
-    await expect(tool.locator("[data-app-id='app-nia']")).toHaveCount(0);
-    await expect(tool.locator("[data-app-history='approve']")).toContainText("Nia Byrne");
-    await expect(page.locator("#appOfficerBadge")).toHaveText("2");
+    await expect(tool.locator("[data-app-id='app-riley']")).toHaveAttribute("data-app-status", "active");
+    await expect(tool.locator("[data-app-history='approve']")).toContainText("Riley Chen");
+    await expect(page.locator("#appOfficerBadge")).toHaveText("3");
     assertHealthy(expect, report, "applications review");
   });
 
@@ -184,7 +213,20 @@ test.describe("Membership Applications", () => {
         officer: false,
         canReviewApplications: true,
         canViewPayments: false,
-        applications: APPLICATIONS
+        applications: APPLICATIONS.concat([{
+          id: "app-sam",
+          first_name: "Sam",
+          last_name: "Patel",
+          email: "sam.patel@example.com",
+          membership_status: "bg_in_process",
+          membership_level: "full",
+          application_fee_type: "single",
+          background_check_paid: true,
+          background_check_amount_cents: 5000,
+          background_check_paid_at: "2026-10-31T19:00:00.000Z",
+          stage_at: "2026-10-31T19:00:00.000Z",
+          created_at: "2026-10-12T15:00:00.000Z"
+        }])
       }
     });
     await page.evaluate(() => {
@@ -201,40 +243,46 @@ test.describe("Membership Applications", () => {
     });
     await openApplicationsTile(page);
     const tool = page.locator("#hubApplications");
-    await expect(tool.locator("[data-app-bucket='background']")).toContainText("Background check");
-    await expect(tool.locator("[data-app-bucket='dues']")).toContainText("Dues pending");
+    await expect(tool.locator("[data-pipe='fee_pending']")).toContainText("Background check fee pending");
+    await expect(tool.locator("[data-pipe='induction']")).toContainText("Induction pending");
     await expect(page.locator('[data-tool="tool:hubPayments"]')).toHaveCount(0);
 
     await tool.locator("#hubAppNote-app-nia").fill("Sent the background check form.");
     await tool.locator("[data-app-bg='app-nia']").click();
-    expect(confirmMessage).toContain("finish the full application");
+    expect(confirmMessage).toContain("full application");
     expect(confirmMessage).toContain("$50");
     expect(confirmMessage).toContain("$75");
     expect(confirmMessage).toContain("paused");
+    expect(confirmMessage).toContain("does not include a dues link");
     expect(confirmMessage).not.toContain("—");
-    await expect(tool).toContainText("Moved to background check.");
-    await expect(tool).toContainText("secure link");
-    await expect(tool).toContainText("does not include a Social Security number");
-    await expect(tool.locator("[data-app-id='app-nia']")).toHaveCount(0);
-
-    await tool.locator("[data-app-bucket='background']").click();
+    await expect(tool).toContainText("Called.");
+    await expect(tool).toContainText("a Social Security number");
     const card = tool.locator("[data-app-id='app-nia']");
-    await expect(card).toContainText("Background check in progress");
-    await expect(card).toContainText("Full application received. Lists show the last 4 only.");
+    await expect(card).toContainText("Background check fee pending");
+    await expect(card).toContainText("Full application submitted. Lists show the last 4 only.");
     await expect(card).not.toContainText("123-45-6789");
     await expect(card.locator("[data-app-send]")).toHaveCount(0);
-    await expect(card.locator("[data-app-bg]")).toHaveCount(0);
+    await expect(card.locator("[data-app-resend]")).toHaveText("Send background check email again");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Lisa Sugrue");
     await expect(tool.locator("[data-app-history='background_check']")).toContainText("Sent the background check form.");
     await expect(tool.locator("[data-app-history='full_application_sent']")).toContainText("Sent the background check form.");
     await expect(card).toHaveAttribute("data-app-status", "background-check");
     await expect(tool).not.toContainText("token=");
 
-    await tool.locator("[data-app-dues='app-nia']").click();
-    await expect(tool).toContainText("Moved to dues pending.");
-    await tool.locator("[data-app-bucket='dues']").click();
-    await expect(tool.locator("[data-app-id='app-nia']")).toContainText("Dues pending");
-    await expect(tool.locator("[data-app-id='app-nia']")).toContainText("not the application fee");
+    await tool.locator("[data-app-dues='app-sam']").click();
+    await expect(tool.locator("#hubAppConfirm")).toBeVisible();
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("Full Krewe");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("why they want to join");
+    await expect(tool.locator("#hubAppConfirmBody")).not.toContainText("—");
+    await tool.locator("#hubInductionWhen").fill("Tuesday, January 6, 2026 at 7:00 PM");
+    await tool.locator("#hubInductionPlace").fill("Krewe hall");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Tuesday, January 6, 2026 at 7:00 PM");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Krewe hall");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Pay dues on Zeffy");
+    await tool.locator("#hubAppConfirmYes").click();
+    await expect(tool).toContainText("Induction pending.");
+    await expect(tool).toContainText("not the application fee");
+    await expect(tool.locator("[data-app-id='app-sam']")).toHaveAttribute("data-app-status", "dues-pending");
     await expect(tool).not.toContainText("123456789");
     assertHealthy(expect, report, "application stages");
   });
@@ -377,7 +425,7 @@ test.describe("Membership Applications", () => {
         };
         return builder;
       }
-      window.__kosSb = {
+      const stub = {
         from: () => query(),
         rpc: async (name, args) => {
           window.__revealArgs = args;
@@ -386,6 +434,13 @@ test.describe("Membership Applications", () => {
           return { data: { ok: true, ssn: "123456789" } };
         }
       };
+      // A later Hub load used to replace this stub, so the copy succeeded
+      // from a different client and __revealArgs stayed empty.
+      Object.defineProperty(window, "__kosSb", {
+        configurable: true,
+        get: function () { return stub; },
+        set: function () {}
+      });
     }, { officer: true, canReviewApplications: true, applications: masked });
     const nia = page.locator("#hubApplications [data-app-id='app-nia']");
     await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
@@ -421,7 +476,7 @@ test.describe("Membership Applications", () => {
     await expect(tool.locator("#hubPacketField-intro")).toHaveValue(/We're so glad you're joining the Krewe of Shamrock/);
     await expect(tool.locator("[data-packet-locked='finish']")).toContainText("Finish your application");
     await expect(tool.locator("[data-packet-locked='fees']")).toContainText("background check pay buttons");
-    await expect(tool.locator("[data-packet-locked='dues']")).toContainText("dues notes and pay buttons");
+    await expect(tool.locator("[data-packet-locked='dues']")).toContainText("No dues pay buttons");
     await expect(tool.locator("[data-packet-locked] input, [data-packet-locked] textarea")).toHaveCount(0);
     await expect(tool.locator("#hubPacketSave")).toBeDisabled();
 
@@ -448,15 +503,15 @@ test.describe("Membership Applications", () => {
     const html = await preview.innerHTML();
     expect(html.indexOf("Just you on the application.")).toBeGreaterThan(-1);
     expect(html.indexOf("Just you on the application.")).toBeLessThan(html.indexOf("Pay the individual fee"));
-    expect(html.indexOf("12/12 volunteer commitment")).toBeGreaterThan(-1);
-    expect(html.indexOf("12/12 volunteer commitment")).toBeLessThan(html.indexOf("Pay Full Krewe dues"));
+    expect(html.indexOf("Your dues link comes after the background check passes")).toBeGreaterThan(-1);
+    expect(html).not.toContain("Pay Full Krewe dues");
     await expect(preview.locator("a", { hasText: "Pay the individual fee" })).toHaveAttribute(
       "href",
       "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"
     );
-    await expect(preview.locator("a", { hasText: "Pay Full Krewe dues" })).toHaveAttribute(
+    await expect(preview.locator("a", { hasText: "Pay the couple fee" })).toHaveAttribute(
       "href",
-      "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"
+      "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"
     );
     expect(html).not.toContain("—");
     expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
@@ -476,6 +531,10 @@ test.describe("Membership Applications", () => {
     await tool.locator("#hubPacketSave").click();
     await expect(tool.locator("#hubPacketFlash")).toContainText("Draft template saved");
     await expect(tool.locator("#hubPacketFlash")).toContainText("stay filled in automatically");
+    await tool.screenshot({
+      path: "/opt/cursor/artifacts/joining-packet-editor-saved.png",
+      animations: "disabled"
+    });
 
     await tool.locator("#hubPacketClose").click();
     await expect(tool.locator("#hubEditJoiningPacket")).toBeVisible();
@@ -522,7 +581,7 @@ test.describe("Membership Applications", () => {
     await expect(casey).toContainText("Event prospect");
     await expect(casey).toContainText("Their note: Signed up for an event.");
     await expect(casey.locator("[data-app-save-note='app-casey']")).toHaveText("Save note");
-    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Called, send background check email");
     await expect(casey).toContainText("leaves their stage as it is");
 
     await casey.locator("#hubAppNote-app-casey").fill("   ");
@@ -540,7 +599,7 @@ test.describe("Membership Applications", () => {
     await casey.locator("#hubAppNote-app-casey").fill("Called about Tartan Ball. Badge 123456789");
     await casey.locator("[data-app-save-note='app-casey']").click();
     await expect(tool.locator("#hubAppFlash")).toContainText("Note saved on the record.");
-    await expect(tool.locator("#hubAppFlash")).toContainText("joining packet was not sent");
+    await expect(tool.locator("#hubAppFlash")).toContainText("background check email was not sent");
     await expect(casey).toHaveAttribute("data-app-status", "prospect");
     await expect(casey.locator("[data-app-record-note]")).toContainText("Record note:");
     await expect(casey.locator("[data-app-record-note]")).toContainText("Called about Tartan Ball.");
@@ -548,7 +607,7 @@ test.describe("Membership Applications", () => {
     await expect(casey.locator("[data-app-record-note]")).toContainText("Lisa Sugrue");
     await expect(casey).toContainText("Their note: Signed up for an event.");
     await expect(casey).not.toContainText("123456789");
-    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Send joining packet");
+    await expect(casey.locator("[data-app-bg='app-casey']")).toHaveText("Called, send background check email");
     await expect(tool.locator("[data-app-bucket='prospect']")).toContainText("Event prospects (1)");
     await expect(tool.locator("[data-app-history='note']")).toContainText("Casey Prospect");
     await expect(tool.locator("[data-app-history='note']")).toContainText("Called about Tartan Ball.");
@@ -559,18 +618,470 @@ test.describe("Membership Applications", () => {
       fullPage: true
     });
 
-    await tool.locator("[data-app-bucket='new']").click();
+    await tool.locator("[data-app-bucket='board']").click();
     const nia = tool.locator("[data-app-id='app-nia']");
     await expect(nia.locator("[data-app-save-note='app-nia']")).toBeVisible();
     await nia.locator("#hubAppNote-app-nia").fill("Left a voicemail.");
     await nia.locator("[data-app-save-note='app-nia']").click();
     await expect(nia).toHaveAttribute("data-app-status", "pending-new");
     await expect(nia.locator("[data-app-record-note]")).toContainText("Left a voicemail.");
-    await expect(tool.locator("[data-app-bucket='new']")).toContainText("New applications (3)");
+    await expect(tool.locator("[data-pipe='new']")).toContainText("New interest");
+    await expect(tool.locator("[data-pipe='new'] .hub-pipe-count")).toHaveText("3");
     await expect(page.locator("#appOfficerBadge")).toHaveText("3");
 
-    await tool.locator("[data-app-bucket='renewal']").click();
-    await expect(tool.locator("[data-app-save-note='app-rowan']")).toHaveText("Save note");
+    await expect(tool.locator("[data-app-bucket='renewal']")).toHaveCount(0);
+    await expect(tool.locator("[data-app-id='app-rowan']")).toHaveCount(0);
     assertHealthy(expect, report, "save record note");
+  });
+
+  test("pipeline has no renewals tab and does not list pending dues", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            phone: "813-555-0100",
+            street_address: "1 Sample Street",
+            city: "Tampa",
+            state: "FL",
+            zip: "33602",
+            membership_status: "pending-new",
+            application_fee_type: "single",
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-pat",
+            first_name: "Pat",
+            last_name: "Example",
+            email: "pat.example@example.com",
+            membership_status: "pending-renewal",
+            membership_level: "full",
+            created_at: "2026-11-01T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await expect(tool.locator("[data-app-bucket='renewal']")).toHaveCount(0);
+    await expect(tool).not.toContainText("Approve renewal");
+    await expect(tool).not.toContainText("Pat Example");
+    await expect(tool).toContainText("Jane Sample");
+    await expect(tool.locator("[data-app-bucket='board']")).toContainText("Pipeline");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.screenshot({
+      path: path.join(__dirname, "../../previews/v6/01-applications-pipeline.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "no renewal approval");
+  });
+
+  test("start background check waits for the full application", async ({ page }) => {
+    const report = watchPage(page);
+    const waiting = {
+      id: "app-jane",
+      first_name: "Jane",
+      last_name: "Sample",
+      email: "jane.sample@example.com",
+      membership_status: "bg_paid",
+      membership_level: "full",
+      application_fee_type: "single",
+      background_check_paid: true,
+      has_ssn: false,
+      has_dl: false,
+      created_at: "2026-11-02T15:00:00.000Z"
+    };
+    await unlockMemberHub(page, {
+      role: { officer: true, canReviewApplications: true, applications: [waiting] }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    const card = tool.locator("[data-app-id='app-jane']");
+    const waitingBtn = card.locator("[data-app-start]");
+    await expect(waitingBtn).toBeDisabled();
+    await expect(waitingBtn).toHaveAttribute("disabled", "");
+    const waitingStyle = await waitingBtn.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        cursor: style.cursor,
+        backgroundImage: style.backgroundImage,
+        boxShadow: style.boxShadow
+      };
+    });
+    expect(waitingStyle.cursor).toBe("not-allowed");
+    expect(waitingStyle.backgroundImage).toBe("none");
+    expect(waitingStyle.boxShadow).toBe("none");
+    await expect(card.locator("[data-app-start-wait]")).toHaveText("Waiting for the full application");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await card.screenshot({
+      path: path.join(__dirname, "../../previews/v6/02-bg-paid-waiting.png"),
+      animations: "disabled"
+    });
+
+    await page.evaluate(() => {
+      window.__kosHubSetRole({
+        officer: true,
+        canReviewApplications: true,
+        applications: [{
+          id: "app-jane",
+          first_name: "Jane",
+          last_name: "Sample",
+          email: "jane.sample@example.com",
+          membership_status: "bg_paid",
+          membership_level: "full",
+          application_fee_type: "single",
+          background_check_paid: true,
+          has_ssn: true,
+          has_dl: true,
+          ssn_last4: "0000",
+          dl_last4: "0000",
+          created_at: "2026-11-02T15:00:00.000Z"
+        }]
+      });
+    });
+    const ready = page.locator("#hubApplications [data-app-id='app-jane']");
+    const readyBtn = ready.locator("[data-app-start]");
+    await expect(readyBtn).toBeEnabled();
+    const readyStyle = await readyBtn.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(readyStyle).toContain("gradient");
+    await expect(ready.locator("[data-app-start-wait]")).toHaveCount(0);
+    await expect(ready).toContainText("0000");
+    await expect(ready).not.toContainText("123-45-6789");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await ready.screenshot({
+      path: path.join(__dirname, "../../previews/v6/03-bg-paid-ready.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "background check gate");
+  });
+
+  test("induction approve warns when dues are unpaid and does not block", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-john",
+            partner_first_name: "John",
+            partner_last_name: "Sample",
+            dues_paid: false,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-jane",
+            dues_paid: false,
+            created_at: "2026-11-01T16:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            dues_paid: true,
+            created_at: "2026-11-04T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("[data-app-approve='app-jane']").click();
+    const body = tool.locator("#hubAppConfirmBody");
+    await expect(body).toContainText("Dues are not paid yet for: Jane Sample and John Sample.");
+    await expect(body).toContainText("You can still approve.");
+    await expect(body).toContainText("final ratification by the Board of Directors");
+    await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.locator("#hubAppConfirm").screenshot({
+      path: path.join(PREVIEW, "04-approve-unpaid-warning.png"),
+      animations: "disabled"
+    });
+    await tool.locator("#hubAppConfirmNo").click();
+    await tool.locator("[data-app-approve='app-nia']").click();
+    await expect(tool.locator("#hubAppConfirmBody")).not.toContainText("Dues are not paid yet");
+    await expect(tool.locator("#hubAppConfirmBody")).toContainText("training video");
+    await expect(tool.locator("#hubAppConfirmYes")).toBeEnabled();
+    assertHealthy(expect, report, "unpaid dues warning");
+  });
+
+  test("couple induction preview shows one dues block per person", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-john",
+            partner_first_name: "John",
+            partner_last_name: "Sample",
+            dues_paid: false,
+            background_check_paid: true,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "dual",
+            partner_member_id: "app-jane",
+            dues_paid: false,
+            background_check_paid: true,
+            created_at: "2026-11-01T16:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("[data-app-dues='app-jane']").click();
+    await tool.locator("#hubInductionWhen").fill("Tuesday, January 6, 2026 at 7:00 PM");
+    await tool.locator("#hubInductionPlace").fill("Krewe hall");
+    const preview = tool.locator("#hubInductionPreview");
+    await expect(preview).toContainText("Full Krewe");
+    await expect(preview).toContainText("Jane Sample");
+    await expect(preview).toContainText("John Sample");
+    const html = await preview.innerHTML();
+    expect(html.match(/\$375\.00/g)).toHaveLength(2);
+    expect(html.match(/Pay dues on Zeffy/g)).toHaveLength(2);
+    expect(html).toContain("On Zeffy, add one ticket for each person and put each person's name and email on their own ticket.");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.locator("#hubAppConfirm").screenshot({
+      path: path.join(PREVIEW, "05-couple-induction-preview.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "couple induction preview");
+  });
+
+  test("membership level select is hidden from induction and prices the preview", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            phone: "813-555-0140",
+            membership_status: "pending-new",
+            membership_level: "full",
+            application_fee_type: "single",
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "bg_in_process",
+            membership_level: "full",
+            application_fee_type: "single",
+            background_check_paid: true,
+            dues_paid: false,
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "dues-pending",
+            membership_level: "full",
+            dues_paid: true,
+            created_at: "2026-11-03T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    const jane = tool.locator("[data-app-id='app-jane']");
+    await expect(jane.locator("[data-app-level]")).toBeVisible();
+    await expect(jane.locator("label[for='hubLevel-app-jane']")).toHaveText("Membership level");
+    await expect(jane.locator("[data-app-level] option")).toHaveText([
+      "Full Krewe, $375",
+      "Associate, $450",
+      "Auxiliary, $200",
+      "Leave of absence, $100"
+    ]);
+    await expect(tool.locator("[data-app-id='app-john'] [data-app-level]")).toBeVisible();
+    await expect(tool.locator("[data-app-id='app-nia'] [data-app-level]")).toHaveCount(0);
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await jane.screenshot({
+      path: path.join(PREVIEW, "03-level-picker.png"),
+      animations: "disabled"
+    });
+    await tool.locator("[data-app-id='app-john'] [data-app-level]").selectOption("associate");
+    await tool.locator("[data-app-dues='app-john']").click();
+    await expect(tool.locator("#hubInductionPreview")).toContainText("Associate");
+    await expect(tool.locator("#hubInductionPreview")).toContainText("$450.00");
+    await tool.locator("#hubAppConfirmNo").click();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await tool.locator("[data-app-bucket='board']").click();
+    const phoneCard = tool.locator("[data-app-id='app-jane']");
+    await expect(phoneCard.locator("[data-app-level]")).toBeVisible();
+    await phoneCard.screenshot({
+      path: path.join(PREVIEW, "03-level-picker-phone.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "membership level picker");
+  });
+
+  test("auxiliary fee included is only on an auxiliary fee-pending card", async ({ page }) => {
+    const report = watchPage(page);
+    let confirmMessage = "";
+    page.on("dialog", (dialog) => {
+      confirmMessage = dialog.message();
+      dialog.accept();
+    });
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [
+          {
+            id: "app-jane",
+            first_name: "Jane",
+            last_name: "Sample",
+            email: "jane.sample@example.com",
+            membership_status: "background-check",
+            membership_level: "auxiliary",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-01T15:00:00.000Z"
+          },
+          {
+            id: "app-john",
+            first_name: "John",
+            last_name: "Sample",
+            email: "john.sample@example.com",
+            membership_status: "background-check",
+            membership_level: "full",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-02T15:00:00.000Z"
+          },
+          {
+            id: "app-nia",
+            first_name: "Nia",
+            last_name: "Test",
+            email: "nia.test@example.com",
+            membership_status: "bg_paid",
+            membership_level: "auxiliary",
+            application_fee_type: "single",
+            background_check_paid: false,
+            created_at: "2026-11-03T15:00:00.000Z"
+          }
+        ]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    const jane = tool.locator("[data-app-id='app-jane']");
+    await expect(jane.locator("[data-app-aux-fee]")).toHaveText("Auxiliary: fee included");
+    await expect(jane).toContainText("Not paid yet");
+    await expect(tool.locator("[data-app-id='app-john'] [data-app-aux-fee]")).toHaveCount(0);
+    await expect(tool.locator("[data-app-id='app-nia'] [data-app-aux-fee]")).toHaveCount(0);
+    await expect(tool.locator("[data-app-id='app-nia']")).toContainText("Included with Auxiliary");
+    await expect(tool.locator("[data-app-start='app-nia']")).toHaveText("Start background check");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await jane.screenshot({
+      path: path.join(PREVIEW, "06-auxiliary-fee-included.png"),
+      animations: "disabled"
+    });
+    await jane.locator("[data-app-aux-fee]").click();
+    expect(confirmMessage).toBe("Auxiliary dues ($200) include the background check fee. Move Jane Sample to Background check fee paid without a fee payment? No email is sent.");
+    await expect(tool.locator("[data-app-id='app-jane']")).toHaveAttribute("data-app-status", "bg_paid");
+    await expect(tool.locator("[data-app-id='app-jane']")).toContainText("Included with Auxiliary");
+    await expect(tool.locator("[data-app-start='app-jane']")).toHaveText("Start background check");
+    await expect(tool.locator("[data-app-aux-fee='app-jane']")).toHaveCount(0);
+    await expect(tool.locator("#hubAppFlash")).toContainText("No email was sent.");
+    assertHealthy(expect, report, "auxiliary fee included");
+  });
+
+  test("joining packet preview shows the auxiliary background check line", async ({ page }) => {
+    const report = watchPage(page);
+    await unlockMemberHub(page, {
+      role: {
+        officer: true,
+        canReviewApplications: true,
+        applications: [{
+          id: "app-nia",
+          first_name: "Nia",
+          last_name: "Test",
+          email: "nia.test@example.com",
+          membership_status: "pending-new",
+          membership_level: "auxiliary",
+          created_at: "2026-11-01T15:00:00.000Z"
+        }]
+      }
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openApplicationsTile(page);
+    const tool = page.locator("#hubApplications");
+    await tool.locator("#hubEditJoiningPacket").click();
+    await tool.locator("#hubPacketPreviewAs").selectOption("auxiliary");
+    await tool.locator("#hubPacketPreviewBtn").click();
+    const preview = tool.locator("#hubPacketPreview");
+    await expect(tool.locator("#hubPacketPreviewAs")).toHaveValue("auxiliary");
+    await expect(preview).toContainText("You chose Auxiliary membership. Your $200 Auxiliary dues include the background check, so you do not pay this fee.");
+    await expect(preview).not.toContainText("Pay the individual fee");
+    await expect(preview).not.toContainText("Pay the couple fee");
+    await expect(preview).toContainText("Nia");
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await tool.screenshot({
+      path: path.join(__dirname, "../../previews/v6/04-joining-packet-auxiliary.png"),
+      animations: "disabled"
+    });
+    await page.addStyleTag({ content: ".krewe-nav,.krewe-music{display:none !important}" });
+    await preview.screenshot({
+      path: path.join(PREVIEW, "07-bg-email-auxiliary.png"),
+      animations: "disabled"
+    });
+    assertHealthy(expect, report, "auxiliary background email preview");
   });
 });

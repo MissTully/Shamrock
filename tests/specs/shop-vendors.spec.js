@@ -1,4 +1,4 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 

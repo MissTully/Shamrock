@@ -48,6 +48,34 @@ External services (Supabase, CDNs, Google Fonts) are treated as optional:
 the suite passes offline, and only same-origin failures or genuine script
 errors fail a test.
 
+Browser specs import `{ test, expect }` from `specs/kos-fixtures.js`, not
+from `@playwright/test`. That shared fixture stubs `*.supabase.co/storage/*`
+so CI never downloads live videos or images from the production project.
+Storage images are fulfilled with a 1x1 PNG. Videos and audio are aborted.
+Local fixture files under `tests/fixtures/` still load as usual. A static
+check fails if a new spec imports Playwright's `test` directly.
+
+## Membership training SQL harness
+
+`tests/sql/membership-training-fixes-harness.sql` checks the four training-fix
+functions on a local Postgres only. It builds a tiny schema, applies
+
+1. `sql/kos_renewal_approve_no_welcome.sql`
+2. `sql/kos_join_level_interest.sql`
+3. `sql/kos_induction_letter_couple_note.sql`
+4. `sql/kos_auxiliary_fee_included.sql`
+
+then inserts mock rows inside `BEGIN` and ends with `ROLLBACK`. Do not point
+it at the live Supabase project `oazwkwflgbthojvnclfc`. No email is sent.
+
+```sh
+createdb kos_membership_training_test
+psql -v ON_ERROR_STOP=1 -d kos_membership_training_test -f tests/sql/membership-training-fixes-harness.sql
+```
+
+Run it from the repository root so the `\ir` paths resolve. It is not part of
+`npm test`.
+
 ## Running
 
 ```sh

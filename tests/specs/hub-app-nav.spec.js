@@ -1,6 +1,6 @@
 // In-hub navigation: tab stacks, system back, and one event detail screen.
 // Offline fixtures only. This does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const PARADE = {

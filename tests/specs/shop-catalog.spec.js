@@ -1,6 +1,6 @@
 // Public shop catalog. Logged-out visitors see live items and open the
 // shared KOS Shop in the same tab. No site cart.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 const KOS = "https://www.zeffy.com/en-US/ticketing/kos-shop";
@@ -48,7 +48,7 @@ const WAITING = {
   status: "awaiting_zeffy",
 };
 
-async function mockShop(page, checkout) {
+async function mockShop(page, checkout, products) {
   await page.route("**/rest/v1/rpc/**", async (route) => {
     const req = route.request();
     if (req.method() === "OPTIONS") {
@@ -57,7 +57,7 @@ async function mockShop(page, checkout) {
     }
     const name = req.url().split("/rpc/")[1].split("?")[0];
     if (name === "list_public_shop_products") {
-      await route.fulfill(cors([LIVE, SOON, DRAFT, WAITING]));
+      await route.fulfill(cors(products || [LIVE, SOON, DRAFT, WAITING]));
       return;
     }
     if (name === "list_public_shop_checkout") {
@@ -88,7 +88,7 @@ test("catalog renders live items logged out and opens the KOS Shop in this tab",
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/store.html");
 
-  await expect(page.locator("#shopNote")).toContainText("Tap any item to open the Krewe shop on Zeffy, add everything you want, and check out once.");
+  await expect(page.locator("#shopNote")).toContainText("Tap an in-stock item to open the Krewe shop on Zeffy, add everything you want, and check out once.");
   const grid = page.locator("#shopGrid");
   await expect(grid.locator(".product")).toHaveCount(2);
   await expect(grid).toContainText("Krewe of Shamrock Tartan Ball Pin 2026");
@@ -148,4 +148,34 @@ test("mobile catalog keeps the item tappable and does not cover the page", async
   expect(covered).toBe(false);
   await expect(page.locator(".cartbar, #cartPanel")).toHaveCount(0);
   assertHealthy(expect, report, "shop catalog mobile");
+});
+
+test("sold out items are not linked and low stock is labeled", async ({ page }) => {
+  const sold = Object.assign({}, LIVE, { id: "pin-sold", name: "Sold Out Pin", stock_on_hand: 0 });
+  const low = Object.assign({}, LIVE, { id: "pin-low", name: "Low Stock Pin", stock_on_hand: 3 });
+  const open = Object.assign({}, LIVE, { id: "pin-open", name: "Open Stock Pin", stock_on_hand: 12 });
+  const untracked = Object.assign({}, LIVE, { id: "pin-free", name: "Untracked Pin", stock_on_hand: null });
+  await mockShop(page, null, [sold, low, open, untracked, SOON]);
+  await page.goto("/store.html");
+  const grid = page.locator("#shopGrid");
+  await expect(grid.locator(".product")).toHaveCount(5);
+  await expect(grid).toContainText("Sold out");
+  await expect(grid).toContainText("Only 3 left");
+  await expect(grid).not.toContainText("Only 12 left");
+  const soldCard = grid.locator("article.product-soldout");
+  await expect(soldCard).toHaveCount(1);
+  await expect(soldCard).toContainText("Sold Out Pin");
+  await expect(soldCard.locator("a")).toHaveCount(0);
+  await expect(grid.locator("a.product")).toHaveCount(3);
+  await expect(grid.locator("a.product", { hasText: "Low Stock Pin" })).toHaveAttribute("href", KOS);
+  await expect(page.locator("#shopNote")).toContainText("Tap an in-stock item to open the Krewe shop on Zeffy");
+});
+
+test("the shop note changes when every live item is sold out", async ({ page }) => {
+  const sold = Object.assign({}, LIVE, { stock_on_hand: 0 });
+  await mockShop(page, null, [sold, SOON]);
+  await page.goto("/store.html");
+  await expect(page.locator("#shopNote")).toContainText("listed below is sold out");
+  await expect(page.locator("#shopGrid article.product-soldout")).toHaveCount(1);
+  await expect(page.locator("#shopGrid a.product")).toHaveCount(0);
 });

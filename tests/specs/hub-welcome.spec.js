@@ -1,7 +1,7 @@
 // Hub welcome ("Fáilte, new friend!") is onboarding until My Krewe profile
 // has any directory detail. Roster name, phone, and address do not count.
 // Offline: this never signs in or writes to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const EMPTY = {

@@ -1184,6 +1184,26 @@
   .app-detail .app-pass h2, .app-detail .app-pass p, .app-detail .app-pass li{ color:#14532d; }
   .hub-ev-section-title{ margin:18px 0 8px; font-family:var(--display); font-size:18px; letter-spacing:.04em; color:#e2c15a; }
   body.hub-desk .hub-ev-section-title{ color:#14532d; }
+  .hub-home-parades{ margin:8px 0 16px; }
+  .hub-home-parades h2, .hub-krewe-parade-title{
+    margin:0 0 8px; font-family:var(--display); font-size:22px; color:#14532d;
+  }
+  .hub-home-parade, .hub-krewe-parade{
+    background:#fffdf8; color:#23291f; border:1px solid rgba(168,128,28,.45);
+    border-radius:14px; padding:12px 14px; margin:10px 0;
+  }
+  .hub-home-parade h3, .hub-krewe-parade h3{
+    margin:0; font-family:var(--display); font-size:20px; color:#14532d;
+  }
+  .hub-home-parade p, .hub-krewe-parade p{ margin:4px 0 0; }
+  .hub-krewe-parade-jump{ margin:0 0 12px; }
+  .hub-krewe-parade-link{
+    display:inline-flex; align-items:center; min-height:44px; padding:0; margin:0;
+    background:none; border:0; color:#14532d; font:inherit; font-weight:700;
+    text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+  }
+  .hub-krewe-parade-link:hover{ color:#0f3d22; }
+  .hub-krewe-parade-link:focus-visible{ outline:2px solid #14532d; outline-offset:3px; }
   .hub-ev-card{ margin:10px 0 16px; border-radius:18px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); overflow:hidden; }
   .hub-ev-card > .app-event-hit{ margin:0; border:0; border-radius:0; }
   .hub-ev-detail{ padding:4px 14px 14px; font-size:15px; line-height:1.45; }
@@ -1810,18 +1830,18 @@
             <p>You will have the opportunity to volunteer at a Krewe of Shamrock organized event or other sponsored events. Details will be on the Krewe of Shamrock website, <a href="https://www.kreweofshamrock.com">www.kreweofshamrock.com</a> (<a href="volunteer.html">Service &amp; Charity</a> and <a href="event-signup.html">Upcoming Events</a>), or the Facebook page.</p>
             <ul>
               <li><b>Float Work Day</b>: Krewe members are encouraged to volunteer to clean the float after a parade. This is usually scheduled on the Sunday after the parade. Cleaning supplies are on the float and a group of people is required for this.</li>
-              <li><b>Parade Security</b> (will receive double hours if an alcohol parade)</li>
+              <li><b>Parade Security</b></li>
               <li>In kind donation of $12 per hour (liquor, raffle items, cash, etc.)</li>
             </ul>
             <h3>How to record volunteer hours</h3>
             <p>Please keep in mind, even if you have all 12 hours completed, it is good to still keep track of all additional hours going forward.</p>
-            <p>Log hours only in the Member Hub. The season runs June through May. A host or an officer confirms them before they count.</p>
+            <p>Log hours only in the Member Hub. The season runs June through May. Hours count as soon as you save them.</p>
             <ol>
               <li><a href="members.html">Log in</a>.</li>
               <li>Open Member desk.</li>
               <li><a href="members.html?hub=hours#hours">Log volunteer hours</a>.</li>
             </ol>
-            <p>Signing up as a volunteer for an event logs pending hours when a volunteer slot is open. If you already have hours from earlier this season, enter them once as season hours on file. New hours stay in the Hub.</p>
+            <p>Signing up as a volunteer for an event logs those hours when a volunteer slot is open. If you already have hours from earlier this season, enter them once as season hours on file. New hours stay in the Hub.</p>
             <h3>What charities do we support? This does change year to year.</h3>
             <ul>
               <li>No More Umbrellas</li>
@@ -1961,7 +1981,7 @@
           <h4 style="font-family:var(--display);color:var(--green-800);margin:16px 0 8px;">Volunteer hours</h4>
           <div id="prHours"></div>
           <div id="vhIntro" style="font-size:14px;color:#3a3a2e;background:#fbf6e9;border:1px solid rgba(168,128,28,.35);border-radius:12px;padding:12px 14px;margin:10px 0 0;line-height:1.45;">
-            <b>Log hours in the Hub.</b> The season runs June through May. Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count: every $12 is one hour. A host or an officer confirms each log before it counts.
+            <b>Log hours in the Hub.</b> The season runs June through May. Full members need 12 hours. Shortfall buyout is $12 per hour. In-kind donations count: every $12 is one hour. Hours count as soon as you save them.
             <span style="display:block;margin-top:8px;">Already have hours from earlier this season? Enter them once as <b>Season hours on file</b>. New shifts stay here. Officers can import a past export later if the roster still needs it.</span>
           </div>
           <form id="vhForm" class="krewe-form" style="margin-top:10px;">
@@ -1977,7 +1997,7 @@
             <input id="vhHours" type="number" min="0.5" max="500" step="0.5" required placeholder="2" />
             <label for="vhDate" style="margin-top:8px;">Date</label>
             <input id="vhDate" type="date" />
-            <p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Parade security on an alcohol parade is logged at double hours. Enter the hours that should count. Event signups log pending hours on their own when a volunteer slot is open.</p>
+            <p style="font-size:15px;color:var(--muted);margin:6px 0 0;">Signing up to volunteer at an event logs those hours when a slot is open.</p>
             <button class="btn btn-primary" type="submit">☘ Save hours</button>
             <div class="msg" id="vhMsg"></div>
           </form>
@@ -1993,11 +2013,11 @@
           <span class="dash-go">Play →</span>
         </div>
         <div class="app-body dash-body">
-          <p>Who’s bringing the most energy this season? Show up, volunteer, and stack
-             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and claim <b>+20 🍀</b> for attending another IKC krewe's event. Season restarts every July 1 - good-natured competition only.</p>
+          <p>Who’s bringing the most energy this season? Show up and stack
+             <b>Clovers 🍀</b>. They fuel your <b>rank</b> and unlock <b>badges</b>. RSVP to upcoming events right inside the Cup, and claim <b>+20 🍀</b> for attending another IKC krewe's event. Season restarts every July 1 - good-natured competition only. Volunteer hours are tracked on your Volunteer hours card. No officer approval.</p>
           <div class="dash-chips">
             <span>🏆 Leaderboard</span><span>📅 Upcoming events</span><span>🌱 → 👑 Ranks</span><span>🎖️ Badges</span>
-            <span>🤝 Volunteer bonuses</span><span>🔎 Find My Clovers</span>
+            <span>🔎 Find My Clovers</span>
           </div>
         </div>
       </section>
@@ -2203,7 +2223,7 @@
           <div class="tour-item"><span>1️⃣</span><div><b>Member desk</b><br>Begin here. Your checklist for the season lives on this tab.</div></div>
           <div class="tour-item"><span>2️⃣</span><div><b>Parade Ready + Photo Release</b><br>Sign the liability waiver and the Photo &amp; Image Release so you are parade-safe and can share media.</div></div>
           <div class="tour-item"><span>3️⃣</span><div><b>My Krewe profile</b><br>Add your photo and a few friendly details so the directory feels like people, not a spreadsheet.</div></div>
-          <div class="tour-item"><span>4️⃣</span><div><b>Volunteer hours</b><br>Log this season's hours on Member desk. A host or an officer confirms them.</div></div>
+          <div class="tour-item"><span>4️⃣</span><div><b>Volunteer hours</b><br>Log this season's hours on Member desk. They count as soon as you save them.</div></div>
           <div class="tour-item"><span>🍀</span><div><b>Then play</b><br>Craic Cup, events, raffles, lockers, carpools, and Share unlock as you go. Cheer loud, climb kind.</div></div>
         </div>
         <div style="text-align:center;margin-top:18px;"><button class="btn btn-primary" onclick="kosCloseTour(); if(window.showHubTab) window.showHubTab('parade');">☘ Open Member desk</button></div>
@@ -2593,8 +2613,17 @@
 
 
     /* ================= PARADE READY ================= */
-    const SEASON = new Date().getFullYear();
-    // Bylaws volunteer season is Jun-May; season_year is the ending calendar year (e.g. Jun 2026-may 2027 → 2027).
+    // Bylaws volunteer season is Jun-May; season_year is the ending calendar year (e.g. Jun 2026-May 2027 → 2027).
+    // Dues and waivers use the start year of that same window (Jun 2026-May 2027 → 2026).
+    function duesSeasonNow(){
+      if(window.kosDuesSeason){
+        const year = window.kosDuesSeason.duesSeasonYear(new Date());
+        return { year: year, label: window.kosDuesSeason.seasonLabel(year) };
+      }
+      const d = new Date();
+      const year = (d.getMonth() + 1) >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+      return { year: year, label: year + "-" + String(year + 1).slice(-2) };
+    }
     function kreweVolunteerSeasonYear(d = new Date()){
       const mo = d.getMonth() + 1;
       return mo >= 6 ? d.getFullYear() + 1 : d.getFullYear();
@@ -2631,19 +2660,15 @@
         ? [me.waiver_signed, me.meeting_attended, mediaOk]
         : [me.dues_paid, me.waiver_signed, me.meeting_attended, mediaOk];
       const ready = gates.every(Boolean);
-      const DUES_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership";
-      const LOA_PAY_URL = "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2";
+      const season = duesSeasonNow();
       const gate = (ok, label, hint) =>
         `<div class="pr-gate ${ok?"ok":"need"}"><span class="pr-mark">${ok?"✅":"⬜"}</span><span class="pr-label">${label}</span>${ok||!hint?"":` <span class="pr-hint">· ${hint}</span>`}</div>`;
-      const duesGate = (ok) => ok
-        ? `<div class="pr-gate ok" id="prDuesGate"><span class="pr-mark">✅</span><span class="pr-label">${SEASON} membership dues paid</span></div>`
-        : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${SEASON} membership dues</span>
-            <a class="pr-pay" href="${DUES_PAY_URL}" target="_blank" rel="noopener">☘ Pay member dues</a>
-            <div class="pr-pay-alt">This is membership dues, not the join application fee ($50 single or $75 couple). On leave of absence? <a href="${LOA_PAY_URL}" target="_blank" rel="noopener">Pay LOA ($100)</a>
-            · questions: <a href="mailto:treasurer@kreweofshamrock.com">treasurer@kreweofshamrock.com</a></div>
-          </div>`;
+      const duesGate = (ok) => (ok
+        ? `<div class="pr-gate ok" id="prDuesGate"><span class="pr-mark">✅</span><span class="pr-label">${season.label} season dues paid</span></div>`
+        : `<div class="pr-gate need" id="prDuesGate"><span class="pr-mark">⬜</span><span class="pr-label">${season.label} season dues</span></div>`)
+        + `<div id="prRenewMount"></div>`;
       const duesHtml = duesExempt
-        ? `<div class="pr-gate ok" id="prDuesExempt"><span class="pr-mark">✅</span><span class="pr-label">Membership dues</span> <span class="pr-hint">· officers and board are not invoiced for dues</span></div>`
+        ? `<div class="pr-gate ok" id="prDuesExempt"><span class="pr-mark">✅</span><span class="pr-label">Membership dues</span> <span class="pr-hint">· elected officers are exempt from dues under the bylaws</span></div>`
         : duesGate(!!me.dues_paid);
       const mediaGate = mediaOk
         ? `<div class="pr-gate ok"><span class="pr-mark">✅</span><span class="pr-label">Photo &amp; Image Release signed</span> <span class="pr-hint">· version 2026.1</span></div>`
@@ -2661,6 +2686,14 @@
         + `</div>`
         + `<div id="waiverBlock" style="margin-top:4px;"></div>`
         + `<div id="mediaConsentBlock" style="margin-top:14px;"></div>`;
+      if(!duesExempt && window.kosRenew){
+        window.kosRenew.mount(document.getElementById("prRenewMount"), {
+          paid: !!me.dues_paid,
+          membership_level: me.membership_level,
+          membership_status: me.membership_status,
+          parade: me
+        });
+      }
     }
     window.__kosPreviewParadeReady = function(me, mediaOk){
       window.__kosParadePreviewLock = true;
@@ -2674,7 +2707,7 @@
         const { data } = await supabase.from("waivers")
           .select("signed_name,signed_at,season_year")
           .eq("member_id", me.member_id)
-          .eq("season_year", SEASON)
+          .eq("season_year", duesSeasonNow().year)
           .order("signed_at", { ascending: false })
           .limit(1);
         rec = (data && data[0]) || null;
@@ -2699,10 +2732,10 @@
       const nm = esc(kosLegalName());
       return `<div class="pr-waiver">
         <p style="font-size:14px;color:var(--muted);margin:0 0 8px;"><b>Read before you sign.</b> Scroll the waiver language, then type your name.</p>
-        ${waiverReadBlock(SEASON)}
+        ${waiverReadBlock(duesSeasonNow().label)}
         <label for="wvName">Type your full legal name to sign</label>
         <input id="wvName" value="${nm}" />
-        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${SEASON} waiver</button>
+        <button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="kosSignWaiver()">✍️ Sign the ${duesSeasonNow().label} waiver</button>
         <div class="msg" id="wvMsg"></div>
       </div>`;
     }
@@ -2710,16 +2743,16 @@
       const when = rec && rec.signed_at ? new Date(rec.signed_at).toLocaleString() : "on file";
       const who = rec && rec.signed_name ? esc(rec.signed_name) : "your name";
       return `<div class="pr-waiver" style="margin-top:12px;">
-        <p style="margin:0 0 8px;font-size:14px;color:var(--green-800);"><b>Your ${SEASON} liability waiver is signed</b></p>
+        <p style="margin:0 0 8px;font-size:14px;color:var(--green-800);"><b>Your ${duesSeasonNow().label} liability waiver is signed</b></p>
         <p style="margin:0 0 8px;font-size:16px;color:var(--muted);">Signed as <b>${who}</b> · ${when}</p>
-        ${waiverReadBlock(SEASON)}
+        ${waiverReadBlock(duesSeasonNow().label)}
         <p style="margin:0;font-size:15px;color:var(--muted);">Need a different season or a correction? Contact <a href="mailto:secretary@kreweofshamrock.com">secretary@kreweofshamrock.com</a>.</p>
       </div>`;
     }
     window.kosSignWaiver = async function(){
       const nm = (document.getElementById("wvName").value||"").trim();
       if(nm.length < 2){ show("wvMsg","Please type your full name to sign.","error"); return; }
-      const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:SEASON, signed_name:nm });
+      const { error } = await supabase.from("waivers").insert({ member_id:_prMe.member_id, season_year:duesSeasonNow().year, signed_name:nm });
       if(error){ show("wvMsg","Could not record your signature. "+(error.message||""),"error"); return; }
       loadParadeReady();
     };
@@ -2776,9 +2809,9 @@
       const goal = 12;
       const pct = Math.min(100, Math.round(done/goal*100));
       const buyout = Math.max(0, goal - done) * 12;
-      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours approved (season ending ${VH_SEASON})${logged>done?` · ${logged-done} awaiting officer review`:""}</div>
+      el.innerHTML = `<div class="pr-hrs"><b>${done}</b> of ${goal} hours logged (season ending ${VH_SEASON})</div>
         <div class="prog"><i style="width:${pct}%"></i></div>
-        <p style="font-size:15px;color:var(--muted);margin:8px 0 0;">Event volunteer hours count after the host or an officer confirms them. Logs you enter here stay pending until then. Shortfall buyout is $12/hr (about $${buyout} if you stop here).</p>`;
+        <p style="font-size:15px;color:var(--muted);margin:8px 0 0;">Hours you log count right away. Shortfall buyout is $12/hr (about $${buyout} if you stop here).</p>`;
     }
     document.getElementById("vhForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -2814,7 +2847,7 @@
           return;
         }
       }
-      show("vhMsg","Saved. A host or an officer will confirm these hours.","success");
+      show("vhMsg","Saved. These hours count toward this season.","success");
       document.getElementById("vhForm").reset();
       const kindEl = document.getElementById("vhKind");
       if(kindEl) kindEl.value = "shift";
@@ -2839,7 +2872,7 @@
         const note = document.createElement("div");
         note.textContent = ok
           ? "✅ Checked in to " + (data.event||"the meeting") + ". Fáilte!"
-            + (data.hours_pending ? " " + data.hours_pending + " volunteer hours logged — pending officer review." : "")
+            + (data.hours_pending ? " " + data.hours_pending + " volunteer hours logged." : "")
           : ((data && data.soft_gated)
             ? "⚠️ " + ((data && data.error) || "Parade Door Check-In is waiting on the mandatory meeting. RSVP is still open.")
             : "⚠️ Check-in failed: " + ((data && data.error) || (error && error.message) || "unknown error"));
@@ -2937,6 +2970,34 @@
         rows.map(r=>`<tr>${r.map(c=>`<td>${c==null?"":esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     }
     function rStats(items){ return `<div class="stat-row">${items.map(s=>`<div class="stat"><div class="num">${esc(String(s.v))}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div>`; }
+    function duesSeasonYear(){
+      if(window.kosDuesSeason && typeof window.kosDuesSeason.duesSeasonYear==="function"){
+        return window.kosDuesSeason.duesSeasonYear();
+      }
+      const fmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"numeric"});
+      const map={};
+      fmt.formatToParts(new Date()).forEach(p=>{ if(p.type!=="literal") map[p.type]=Number(p.value); });
+      return map.month>=6 ? map.year : map.year-1;
+    }
+    function nyDateISO(iso){
+      if(!iso) return "";
+      const d=new Date(iso);
+      if(isNaN(d)) return "";
+      return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+    }
+    function fmtDay(iso){
+      if(!iso) return "-";
+      const s=String(iso).slice(0,10);
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+        const [y,m,d]=s.split("-").map(Number);
+        return new Date(y,m-1,d).toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"});
+      }
+      return fmtDate(iso);
+    }
+    function isOpenRosterStatus(st){
+      const s=String(st||"");
+      return s!=="merged" && s!=="declined" && s!=="archived";
+    }
     let _isOfficer=null;
     async function isOfficer(){
       if(_isOfficer!==null) return _isOfficer;
@@ -2955,13 +3016,61 @@
       { id:"wristband_pickup", cat:"Parade Readiness", icon:"🎗️", title:"Wristband Pickup List", secure:true,
         desc:"Who is Parade Ready (dues + waiver + meeting), and exactly what everyone else is missing.",
         run: async()=>{
-          const { data, error } = await supabase.from("v_parade_ready").select("*").order("last_name",{ascending:true});
-          if(error) throw error;
-          const rows=data||[];
+          const season=duesSeasonYear();
+          const volunteerSeason=season+1;
+          const seasonStart=season+"-06-01";
+          const seasonEnd=(season+1)+"-06-01";
+          const memRes=await supabase.from("members")
+            .select("id,first_name,last_name,membership_status,membership_level,merged_into")
+            .is("merged_into",null)
+            .order("last_name",{ascending:true});
+          if(memRes.error) throw memRes.error;
+          const rows=(memRes.data||[]).filter(m=>isOpenRosterStatus(m.membership_status));
+          const [{data:dues,error:eDues},{data:waivers,error:eWav},{data:hours,error:eHrs},{data:meetings,error:eMt}]=await Promise.all([
+            supabase.from("dues_payments").select("member_id,paid").eq("membership_year",season).eq("paid",true),
+            supabase.from("waivers").select("member_id").eq("season_year",season),
+            supabase.from("volunteer_hours").select("member_id,hours,approved,is_demo").eq("season_year",volunteerSeason),
+            supabase.from("events").select("id,start_time,event_type,is_mandatory").eq("event_type","meeting").eq("is_mandatory",true)
+          ]);
+          if(eDues) throw eDues; if(eWav) throw eWav; if(eHrs) throw eHrs; if(eMt) throw eMt;
+          const meetingIds=(meetings||[]).filter(e=>{
+            const day=nyDateISO(e.start_time);
+            return day>=seasonStart && day<seasonEnd;
+          }).map(e=>e.id);
+          let signups=[];
+          if(meetingIds.length){
+            const sg=await supabase.from("event_signups").select("member_id,event_id,status").eq("status","attended").in("event_id",meetingIds);
+            if(sg.error) throw sg.error;
+            signups=sg.data||[];
+          }
+          const duesSet=new Set((dues||[]).map(r=>r.member_id));
+          const wavSet=new Set((waivers||[]).map(r=>r.member_id));
+          const meetSet=new Set((signups||[]).map(r=>r.member_id));
+          const hoursBy={};
+          (hours||[]).forEach(v=>{
+            if(v.is_demo) return;
+            const rec=hoursBy[v.member_id]||(hoursBy[v.member_id]={approved:0,logged:0});
+            const n=Number(v.hours||0);
+            rec.logged+=n;
+            if(v.approved) rec.approved+=n;
+          });
+          const decorated=rows.map(r=>{
+            const h=hoursBy[r.id]||{approved:0,logged:0};
+            return {
+              first_name:r.first_name,
+              last_name:r.last_name,
+              membership_status:r.membership_status,
+              dues_paid:duesSet.has(r.id),
+              waiver_signed:wavSet.has(r.id),
+              meeting_attended:meetSet.has(r.id),
+              hours_approved:h.approved,
+              volunteer_hours_approved:h.approved
+            };
+          });
           const isReady=r=>r.dues_paid&&r.waiver_signed&&r.meeting_attended;
-          const ready=rows.filter(isReady), not=rows.filter(r=>!isReady(r));
+          const ready=decorated.filter(isReady), not=decorated.filter(r=>!isReady(r));
           const mark=v=>v?"✅":"-";
-          return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:rows.length}])
+          return rStats([{l:"Parade Ready",v:ready.length},{l:"Not yet",v:not.length},{l:"Roster",v:decorated.length}])
             + '<h3 class="rpt-cat">🎗️ Ready for wristbands</h3>'
             + rTable(["Name","Status","Volunteer hrs"], ready.map(r=>[`${r.first_name} ${r.last_name}`, r.membership_status||"-", `${Number(r.hours_approved??r.volunteer_hours_approved??0)}/12`]))
             + '<h3 class="rpt-cat">⏳ Missing requirements</h3>'
@@ -3208,21 +3317,40 @@
           ]) + rTable(["Role","Count"], Object.keys(byRole).sort().map(k=>[k, byRole[k]]));
         }},
       { id:"officer_roster", cat:"Membership", icon:"🎖️", title:"Officer & Captain Roster",
-        desc:"Who holds leadership roles in the krewe (names only).",
+        desc:"Who holds leadership roles in the krewe, with membership status.",
         run: async()=>{
-          const { data, error } = await supabase.from("member_directory")
-            .select("first_name,last_name,member_role,membership_status").order("last_name",{ascending:true});
+          const { data, error } = await supabase.from("members")
+            .select("first_name,last_name,member_role,membership_status,merged_into")
+            .is("merged_into",null)
+            .order("last_name",{ascending:true});
           if(error) throw error;
-          const rows=(data||[]).filter(m=>["captain","officer"].includes((m.member_role||"").toLowerCase()));
+          const rows=(data||[]).filter(m=>isOpenRosterStatus(m.membership_status) && ["captain","officer"].includes((m.member_role||"").toLowerCase()));
           return rTable(["Name","Role","Status"], rows.map(m=>[`${m.first_name} ${m.last_name}`, m.member_role, m.membership_status||"-"]));
         }},
-      { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Year",
-        desc:"Count of members who joined since January 1.",
+      { id:"new_members", cat:"Membership", icon:"🌱", title:"New Members This Season",
+        desc:"Members who joined this season (June through May), with contact details.",
+        secure:true,
         run: async()=>{
-          const { data, error } = await supabase.from("v_report_membership").select("new_this_year,total_members").single();
+          const season=duesSeasonYear();
+          const seasonStart=season+"-06-01";
+          const seasonEnd=(season+1)+"-06-01";
+          const seasonLbl=window.kosDuesSeason && typeof window.kosDuesSeason.seasonLabel==="function"
+            ? window.kosDuesSeason.seasonLabel(season)
+            : (season+"-"+String(season+1).slice(-2));
+          const { data, error } = await supabase.from("members")
+            .select("first_name,last_name,email,phone,join_date,membership_status,merged_into")
+            .is("merged_into",null)
+            .order("join_date",{ascending:false});
           if(error) throw error;
-          return rStats([{l:"Joined this year",v:data.new_this_year},{l:"Total members",v:data.total_members}]) +
-            `<p class="rpt-note">A full welcome list with contact details is available once secure member login is added.</p>`;
+          const roster=(data||[]).filter(m=>isOpenRosterStatus(m.membership_status));
+          const joined=roster.filter(m=>m.join_date && String(m.join_date).slice(0,10)>=seasonStart && String(m.join_date).slice(0,10)<seasonEnd);
+          if(!joined.length){
+            return rStats([{l:"Joined this season",v:0},{l:"Total members",v:roster.length}]) +
+              '<p class="empty">No members have a join date in the '+esc(seasonLbl)+' season (June through May) yet.</p>';
+          }
+          return rStats([{l:"Joined this season",v:joined.length},{l:"Total members",v:roster.length}]) +
+            rTable(["Name","Joined","Email","Phone"],
+              joined.map(m=>[`${m.first_name||""} ${m.last_name||""}`.trim(), fmtDay(m.join_date), m.email||"-", m.phone||"-"]));
         }},
       { id:"member_directory_full", cat:"Membership", icon:"📒", title:"Member Contact Directory", secure:true,
         desc:"Full roster with email and phone for each member.",
@@ -3474,7 +3602,6 @@
       ["Attend an event (verified)","20"],
       ["Attend a members' meeting","15"],
       ["Attend another IKC krewe's event (submit a claim after you go)","20"],
-      ["Volunteer at an event","+30"],
       ["Priority shift bonus (officers flag hard-to-fill spots like security or float duty)","+60"],
       ["Organize an event","+50"],
       ["Bring a guest (up to 3)","5 each"],
@@ -3603,13 +3730,12 @@
     async function renderStandings(){
       const box=document.getElementById("gameBody");
       box.innerHTML='<p class="empty">Tallying the Clovers…</p>';
-      const [{data:lb,error:e1},{data:vol,error:e2},{data:bdefs},{data:blb,error:e3}] = await Promise.all([
+      const [{data:lb,error:e1},{data:bdefs},{data:blb,error:e3}] = await Promise.all([
         sb.from("v_season_leaderboard").select("*").order("place",{ascending:true}),
-        sb.from("v_volunteer_leaderboard").select("*").order("volunteer_events",{ascending:false}),
         sb.from("badge_defs").select("id,name,icon,description,sort").order("sort",{ascending:true}),
         sb.from("v_badge_leaderboard").select("*").order("place",{ascending:true})
       ]);
-      if(e1||e2){ setConn(false); box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
+      if(e1){ setConn(false); box.innerHTML='<p class="msg error">Could not load the standings just now.</p>'; return; }
       setConn(true);
       const defs={}; (bdefs||[]).forEach(d=>{ defs[d.id]=d; });
       const byMember={}; (blb||[]).forEach(r=>{ byMember[r.member_id]=r.badge_ids||[]; });
@@ -3619,7 +3745,8 @@
       const badgeCell=r=>{ const ids=byMember[r.member_id];
         if(ids&&ids.length) return `<span class="lb-badges lb-compact">${ids.map(id=>chip(id,false)).join("")}</span>`;
         return r.badge_count?`<span class="muted">${r.badge_count} badge${r.badge_count>1?"s":""}</span>`:"-"; };
-      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up, volunteer, and pitch in. The season runs <b>July 1 to June 30</b> and everyone restarts at zero, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      let html=`<p style="margin:0 0 12px;color:#3a3a2e;">Welcome to the race for the craic. Earn <b>Clovers 🍀</b> when you show up and pitch in. The season runs <b>July 1 to June 30</b> and everyone restarts at zero, so last year’s champ still has to earn it again. Cheer your krewe, then try to catch them.</p>`;
+      html+=`<p class="rpt-note">Volunteer hours are tracked on your Volunteer hours card. No officer approval.</p>`;
       html+=`<h3 class="rpt-cat" style="margin-top:6px;">🍀 ${cupSeasonLabel()} Season Standings <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">since July 1</small></h3>`;
       html+=rtable(["#","Member","Rank","Season 🍀","Badges"],
         (lb||[]).map(r=>`<tr><td class="medal">${medal(r.place)}</td><td>${E(r.first_name)} ${E(r.last_name)}</td>`+
@@ -3638,10 +3765,6 @@
             `<td><span class="lb-badges">${(r.badge_ids||[]).map(id=>chip(id,true)).join("")}</span></td></tr>`).join("")
             || '<tr><td colspan="3" class="empty">No badges earned yet. RSVP to an event to grab your first!</td></tr>');
       }
-      html+=`<h3 class="rpt-cat">🤝 Top Volunteers <small style="font-family:var(--fancy);font-style:italic;text-transform:none;letter-spacing:0;color:var(--muted);">service gets its own podium</small></h3>`;
-      html+=rtable(["Member","Shifts","Volunteer 🍀"],
-        (vol||[]).map(r=>`<tr><td>${E(r.first_name)} ${E(r.last_name)}</td><td>${r.volunteer_events}</td><td><b>${r.volunteer_clovers}</b></td></tr>`).join("")
-          || '<tr><td colspan="3" class="empty">No volunteer shifts logged yet. Be the first!</td></tr>');
       box.innerHTML=html;
       box.querySelectorAll(".lb-badge").forEach(el=>el.addEventListener("click",()=>{ const t=document.getElementById("lbTip"); if(t) t.textContent=el.getAttribute("title"); }));
     }
@@ -3661,7 +3784,7 @@
       let s=d.toLocaleString([], {weekday:"short", month:"long", day:"numeric", hour:"numeric", minute:"2-digit"});
       if(ev.end_time){
         const e2=new Date(ev.end_time);
-        if(!isNaN(e2.getTime())) s+=" – "+e2.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+        if(!isNaN(e2.getTime())) s+=" to "+e2.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
       }
       return s;
     }
@@ -3681,7 +3804,7 @@
         : new Date(Date.now()-3*24*60*60*1000).toISOString();
       const cupWindow=`start_time.gte.${sinceIso},end_time.gte.${sinceIso}`;
       let evs = await sb.from("events")
-        .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
+        .select("id,name,description,event_type,start_time,end_time,location,member_address,member_notes,members_only,status,source,ticket_price_cents,ticket_label,ticket_payment_url,guest_payment_url,collect_guests,external_url,flyer_url,is_online,meeting_url,registration_closes_at")
         .or(cupWindow)
         .order("start_time",{ascending:true})
         .limit(60);
@@ -3756,13 +3879,13 @@
         POINTS.map(p=>`<tr><td>${E(p[0])}</td><td>${E(p[1])} 🍀</td></tr>`).join("")+'</tbody></table></div>';
       html+=`<p class="rpt-note">RSVPs earn a little; <b>showing up</b> earns the real Clovers; an officer confirms who attended after each event.</p>`;
       html+=`<p class="rpt-note">🧾 Missed some Clovers? Use the <a href="#craic-missed" onclick="gameTab('missed');return false;"><b>Missed Clovers</b></a> form and an officer will review it.</p>`;
-      html+=`<h3 class="rpt-cat">🙌 Volunteer and earn Clovers</h3>`;
-      html+=`<p style="margin:0 0 8px;color:#3a3a2e;">Lending a hand is one of the best ways to climb the board. Here's how it works:</p><ol style="margin:0 0 8px 20px;color:#3a3a2e;"><li>Submit your volunteer hours in the <b>Member Hub</b>.</li><li>An officer reviews and approves them.</li><li>You earn <b>30 Clovers 🍀</b> for each event you worked.</li></ol>`;
+      html+=`<h3 class="rpt-cat">🙌 Volunteer hours</h3>`;
+      html+=`<p style="margin:0 0 8px;color:#3a3a2e;">Log volunteer hours on Member desk. They count toward the 12 hour season as soon as you save them. Logging hours does not add Clovers.</p>`;
       html+=`<p class="rpt-note">Officers may offer a bonus for high-priority shifts like security or float duty. In-kind donations are deeply appreciated, but they don't earn Clovers. Clovers are for the hours you put in.</p>`;
       html+=`<h3 class="rpt-cat">🏅 The Rank Ladder</h3>`;
       html+='<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr><th>Rank</th><th>Lifetime Clovers</th></tr></thead><tbody>'+
         RANKS.map((r,i)=>`<tr><td style="font-family:var(--display);font-size:16px;">${r.icon} ${E(r.name)}</td><td>${r.min}${RANKS[i+1]?(" - "+(RANKS[i+1].min-1)):"+"}</td></tr>`).join("")+'</tbody></table></div>';
-      html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><p class="rpt-note">Badges show up on your card on their own: your first RSVP, your first event, your first approved volunteer shift, and the day you're Parade Ready. Officers hand out the Host badge to members who host an event.</p><div class="badge-gallery">`+
+      html+=`<h3 class="rpt-cat">🎖️ Badges to collect</h3><p class="rpt-note">Badges show up on your card on their own: your first RSVP, your first event, your first volunteer shift, and the day you're Parade Ready. Officers hand out the Host badge to members who host an event.</p><div class="badge-gallery">`+
         (badges||[]).map(b=>`<div class="badge-chip"><div class="ic">${b.icon}</div><div class="nm">${E(b.name)}</div><div class="ds">${E(b.description||"")}</div></div>`).join("")+'</div>';
       box.innerHTML=html;
     }
@@ -3772,7 +3895,7 @@
            for duplicates, submit once. Officers review it in Approvals. ---- */
     const MISSED_ACTS=[
       ["rsvp","RSVP to an event",5],["attend_event","Attend an event",20],["attend_meeting","Attend a members' meeting",15],
-      ["attend_ikc_event","Attend another IKC krewe's event",20],["volunteer_event","Volunteer at an event",30],
+      ["attend_ikc_event","Attend another IKC krewe's event",20],
       ["volunteer_priority","Priority shift bonus",60],["organize_event","Organize an event",50],
       ["bring_guest","Bring a guest (up to 3)",5],["dues_on_time","Pay your dues on time",25],
       ["dues_early","Pay your dues early",15],["refer_member","Refer a member who joins",40],["other","Other (officer review)",0]
@@ -4831,19 +4954,26 @@
 <script src="assets/kos-roles-access.js?v=20261120search3" defer></script>
 <script src="assets/kos-parade-security.js?v=20261116security2" defer></script>
 <script src="assets/kos-whos-coming.js?v=20261119whos1" defer></script>
-<script src="assets/kos-parade-rsvp.js?v=20261120rsvp2" defer></script>
-<script src="assets/members-desk.js?v=20261121caption2" defer></script>
+<script src="assets/kos-parade-rsvp.js?v=20261121parade1" defer></script>
+<script src="assets/kos-photo-frame.js?v=20261121frame3" defer></script>
+<script src="assets/kos-video-frame.js?v=20261121vid1" defer></script>
+<script src="assets/kos-dues-season.js?v=20261121renew1" defer></script>
+<script src="assets/kos-renew.js?v=20261121renew1" defer></script>
+<script src="assets/kos-charity-hours.js?v=20261124charity1" defer></script>
+<script src="assets/members-desk.js?v=20261125caption1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
   <script src="assets/kos-event-studio.js?v=20261116listday1" defer></script>
-  <script src="assets/kos-shop-studio.js?v=20261119catalog1" defer></script>
+  <script src="assets/kos-shop-studio.js?v=20261122stock2" defer></script>
 <script src="assets/kos-qr-studio.js?v=20260918qrpick1"></script>
-  <script src="assets/kos-reports.js?v=20261114roles1" defer></script>
+  <script src="assets/kos-reports.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-all-krewe-messages.js" defer></script>
-  <script src="assets/kos-email-invoices.js?v=20261105memail3" defer></script>
-  <script src="assets/kos-dues-waivers.js?v=20260930wav1" defer></script>
-  <script src="assets/kos-dues-reporting.js?v=20260930rep1" defer></script>
+  <script src="assets/kos-email-invoices.js?v=20261122ledger1" defer></script>
+  <script src="assets/kos-dues-receipts.js?v=20261122ledger1" defer></script>
+  <script src="assets/kos-renewals.js?v=20261122ledger1" defer></script>
+  <script src="assets/kos-dues-waivers.js?v=20261122ledger1" defer></script>
+  <script src="assets/kos-dues-reporting.js?v=20261123wa2" defer></script>
 <script src="assets/kos-lockers.js?v=20261105lockerexist1" defer></script>
 </body>
 </html>

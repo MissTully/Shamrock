@@ -151,7 +151,8 @@
     selected: {},
     roster: [],
     duesByMember: {},
-    catalog: {}
+    catalog: {},
+    canInvoice: true
   };
 
   function injectCss() {
@@ -295,6 +296,8 @@
       if (cActive) cActive.textContent = emailState.counts.active != null ? "(" + emailState.counts.active + ")" : "";
       if (cOff) cOff.textContent = emailState.counts.officers != null ? "(" + emailState.counts.officers + ")" : "";
       if (cCh) cCh.textContent = emailState.counts.chairs != null ? "(" + emailState.counts.chairs + ")" : "";
+      var cUnpaid = document.getElementById("hubEmCountUnpaid");
+      if (cUnpaid) cUnpaid.textContent = emailState.counts.unpaid_season != null ? "(" + emailState.counts.unpaid_season + ")" : "";
       paintProspectCount();
       paintProspectNote();
     } catch (e) {}
@@ -325,7 +328,7 @@
 
   function setAudience(aud) {
     emailState.audience = aud;
-    ["active", "officers", "chairs", "committees", "selected", "prospects"].forEach(function (a) {
+    ["active", "officers", "chairs", "committees", "selected", "prospects", "unpaid_season"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.classList.toggle("on", a === aud);
     });
@@ -369,12 +372,14 @@
       emailState.audience === "committees" ? ids.length + " member(s) in " + committeeLabel :
       audienceKey === "prospects" ? "event prospects (website RSVP and unmatched Zeffy emails, not the active roster)" :
       audienceKey === "prospects_legacy" ? "event prospects plus legacy Wild Apricot emails (not the active roster)" :
+      audienceKey === "unpaid_season" ? "members with no paid dues row for this season" :
       ids.length + " selected member(s)";
     var n = null;
     if (emailState.audience === "active" && emailState.counts.active != null) n = Number(emailState.counts.active);
     else if (emailState.audience === "officers" && emailState.counts.officers != null) n = Number(emailState.counts.officers);
     else if (emailState.audience === "chairs" && emailState.counts.chairs != null) n = Number(emailState.counts.chairs);
     else if (emailState.audience === "committees" || emailState.audience === "selected") n = ids.length;
+    else if (emailState.audience === "unpaid_season" && emailState.counts.unpaid_season != null) n = Number(emailState.counts.unpaid_season);
     else if (emailState.audience === "prospects") {
       var el = document.getElementById("hubEmCountProspects");
       var raw = el ? String(el.textContent || "").replace(/[^\d]/g, "") : "";
@@ -509,6 +514,7 @@
       '<button type="button" class="hub-ei-pill" id="hubEmAud_committees">By committee</button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_selected">Pick from roster</button>' +
       '<button type="button" class="hub-ei-pill" id="hubEmAud_prospects">Event prospects <span id="hubEmCountProspects"></span></button>' +
+      '<button type="button" class="hub-ei-pill" id="hubEmAud_unpaid_season">Unpaid this season <span id="hubEmCountUnpaid"></span></button>' +
       "</div></div>" +
       '<div id="hubEmLegacyWrap" style="display:none;">' +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubEmLegacy" />' +
@@ -535,7 +541,7 @@
       '<div class="hub-ei-history"><h3>Recent emails</h3><div id="hubEmHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
 
-    ["active", "officers", "chairs", "committees", "selected", "prospects"].forEach(function (a) {
+    ["active", "officers", "chairs", "committees", "selected", "prospects", "unpaid_season"].forEach(function (a) {
       var btn = document.getElementById("hubEmAud_" + a);
       if (btn) btn.addEventListener("click", function () { setAudience(a); });
     });
@@ -570,6 +576,8 @@
     } else {
       var prosp = document.getElementById("hubEmAud_prospects");
       if (prosp) prosp.hidden = true;
+      var unpaid = document.getElementById("hubEmAud_unpaid_season");
+      if (unpaid) unpaid.hidden = true;
       var leg = document.getElementById("hubEmLegacyWrap");
       if (leg) leg.hidden = true;
       if (limitNote) limitNote.hidden = false;
@@ -596,9 +604,18 @@
     return "$" + n.toFixed(2);
   }
 
+  function duesSeasonYearNow() {
+    if (window.kosDuesSeason && typeof window.kosDuesSeason.duesSeasonYear === "function") {
+      return window.kosDuesSeason.duesSeasonYear(new Date());
+    }
+    var d = new Date();
+    return (d.getMonth() + 1) >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+  }
+
   function invoiceYear() {
-    var n = parseInt(val("hubInvYear") || "2026", 10);
-    if (!n || n < 2000 || n > 2100) return 2026;
+    var fallback = duesSeasonYearNow();
+    var n = parseInt(val("hubInvYear") || String(fallback), 10);
+    if (!n || n < 2000 || n > 2100) return fallback;
     return n;
   }
 
@@ -626,10 +643,12 @@
     };
   }
 
-  function dueDateIso(dues, year) {
+  function dueDateIso(dues) {
     var raw = dues && dues.due_date ? String(dues.due_date).slice(0, 10) : "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-    return year + "-06-30";
+    if (window.kosDuesSeason && typeof window.kosDuesSeason.noticeDueDate === "function") {
+      return window.kosDuesSeason.noticeDueDate(raw, new Date());
+    }
+    return raw || "";
   }
 
   function formatDue(iso) {
@@ -928,7 +947,7 @@
       if (invState.duesByMember[d.member_id] && invState.duesByMember[d.member_id].paid) return;
       var level = d.membership_level || member.membership_level || "full";
       var quote = quoteFor(level);
-      var dueIso = dueDateIso(d.result === "created" ? null : invState.duesByMember[d.member_id], year);
+      var dueIso = dueDateIso(d.result === "created" ? null : invState.duesByMember[d.member_id]);
       var amount = d.amount;
       var key = [level, amount, dueIso, quote.zeffy_url || ""].join("|");
       if (!groups[key]) {
@@ -1079,7 +1098,8 @@
       '<p class="hub-ei-warn" id="hubInvUrlWarn"></p>' +
       '<div class="hub-ei-grid">' +
       "<div><label for=\"hubInvYear\">Membership year</label>" +
-      '<input id="hubInvYear" type="number" min="2000" max="2100" value="2026" /></div>' +
+      '<input id="hubInvYear" type="number" min="2000" max="2100" /></div>' +
+      '<p class="hub-ei-note">The year is the season that starts in June. 2026 means the 2026-27 season, June through May. New invoices are due 30 days after you create them, so they are not already overdue.</p>' +
       "<div><label>Who to invoice</label>" +
       '<div class="hub-ei-pills">' +
       '<button type="button" class="hub-ei-pill on" id="hubInvFilt_unpaid">Unpaid</button>' +
@@ -1112,7 +1132,9 @@
       "<span>Also email a notice with level, amount, due date, and the catalog Zeffy link</span></label>" +
       '<label class="hub-ei-confirm"><input type="checkbox" id="hubInvConfirm" />' +
       "<span>I confirm these invoice records and any emails look right.</span></label>" +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubInvSend">Create invoices</button></div>' +
+      (invState.canInvoice === false
+        ? '<p class="hub-ei-note" id="hubInvLocked">Invoices are for the Treasurer, President, or Membership Chair.</p>'
+        : '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubInvSend">Create invoices</button></div>') +
       '<p class="hub-ei-msg" id="hubInvMsg" aria-live="polite"></p>' +
       '<div class="hub-ei-history"><h3>Recent invoice batches</h3><div id="hubInvHistory"><p class="empty">Loading…</p></div></div>' +
       "</div>";
@@ -1148,7 +1170,10 @@
       invState.selected = {};
       renderInvoiceList(client);
     });
-    document.getElementById("hubInvSend").addEventListener("click", function () { sendInvoices(client); });
+    var sendBtn = document.getElementById("hubInvSend");
+    if (sendBtn) sendBtn.addEventListener("click", function () { sendInvoices(client); });
+    var yearInput = document.getElementById("hubInvYear");
+    if (yearInput && !yearInput.value) yearInput.value = String(duesSeasonYearNow());
     setInvFilter("unpaid");
     try {
       await loadInvoiceData(client);
@@ -1181,6 +1206,13 @@
       await loadEmailCard(client || { rpc: function () { return Promise.resolve({ data: { ok: true, items: [] }, error: null }); } });
     }
     if (isOfficer && client) {
+      invState.canInvoice = true;
+      try {
+        var gate = await client.rpc("kos_can_manage_invoices");
+        if (gate && !gate.error && gate.data === false) invState.canInvoice = false;
+      } catch (e2) {
+        invState.canInvoice = true;
+      }
       await loadInvoiceCard(client);
       if (typeof window.kosRefreshOfficerDesk === "function") window.kosRefreshOfficerDesk();
     }

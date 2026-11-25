@@ -1,4 +1,4 @@
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy } = require("./helpers");
 
 test("home page highlights a live featured event and skips one that has ended", async ({ page }) => {

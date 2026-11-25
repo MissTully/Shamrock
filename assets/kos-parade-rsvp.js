@@ -51,6 +51,12 @@
     if (ev.ticket_price_cents == null && el.getAttribute("data-ticket-cents")) {
       ev.ticket_price_cents = Number(el.getAttribute("data-ticket-cents"));
     }
+    if (ev.guest_fee_cents == null && el.getAttribute("data-guest-fee-cents")) {
+      ev.guest_fee_cents = Number(el.getAttribute("data-guest-fee-cents"));
+    }
+    if (ev.guest_fee_family_cents == null && el.getAttribute("data-guest-fee-family-cents")) {
+      ev.guest_fee_family_cents = Number(el.getAttribute("data-guest-fee-family-cents"));
+    }
     return ev;
   }
 
@@ -71,6 +77,12 @@
     var dollars = n / 100;
     if (Math.abs(dollars - Math.round(dollars)) < 0.001) return "$" + String(Math.round(dollars));
     return "$" + dollars.toFixed(2);
+  }
+
+  function guestFeeCopy(ev) {
+    var adult = priceText(ev && ev.guest_fee_cents) || "$25";
+    var family = priceText(ev && ev.guest_fee_family_cents) || "$10";
+    return "Guests are " + adult + " per guest. Immediate family or under 12 are " + family + ". Guest fees are paid on Zeffy.";
   }
 
   function resolveTicketUrl(ev) {
@@ -174,7 +186,7 @@
         '<label>Guests you\'re bringing' +
         '<input class="kos-pr-count" type="number" min="0" max="20" inputmode="numeric" value="' + guestCount(ev) + '" aria-label="Guests you are bringing">' +
         "</label>" +
-        '<p class="kos-pr-fee">' + esc(FEE_COPY) + "</p>" +
+        '<p class="kos-pr-fee">' + esc(guestFeeCopy(ev)) + "</p>" +
         '<a class="kos-pr-pay" href="' + esc(payUrl(ev)) + '" target="_blank" rel="noopener noreferrer">Pay guest fees on Zeffy</a>' +
         "</div>";
     }
@@ -211,7 +223,9 @@
       ' data-collect-guests="' + (paradeGuestUi(ev) ? "1" : "0") + '"' +
       ' data-parade-pay="' + esc(safeHttp(ev.guest_payment_url) || "") + '"' +
       ' data-ticket-url="' + esc(ticket) + '"' +
-      ' data-ticket-cents="' + esc(cents) + '">' +
+      ' data-ticket-cents="' + esc(cents) + '"' +
+      ' data-guest-fee-cents="' + esc(ev.guest_fee_cents == null || ev.guest_fee_cents === "" ? "" : String(ev.guest_fee_cents)) + '"' +
+      ' data-guest-fee-family-cents="' + esc(ev.guest_fee_family_cents == null || ev.guest_fee_family_cents === "" ? "" : String(ev.guest_fee_family_cents)) + '">' +
       inner + "</div>";
   }
 
@@ -235,9 +249,10 @@
       ".kos-parade-rsvp .kos-pr-state,.kos-parade-rsvp .kos-pr-fee,.kos-parade-rsvp .kos-pr-msg,.kos-parade-rsvp .kos-pr-closed{margin:8px 0 0;font-size:16px;line-height:1.45;overflow-wrap:anywhere;}",
       ".kos-parade-rsvp .kos-pr-guests label{display:flex;flex-direction:column;gap:6px;font-weight:700;margin:10px 0 0;max-width:100%;}",
       ".kos-parade-rsvp input{width:6.5rem;max-width:100%;min-height:44px;font-size:16px;padding:8px 10px;border:1px solid rgba(168,128,28,.55);border-radius:10px;background:#fff;}",
-      ".kos-parade-rsvp .kos-pr-pay{display:inline-flex;align-items:center;min-height:44px;font-weight:700;}",
+      ".kos-parade-rsvp a.kos-pr-pay,.kos-parade-rsvp a.kos-pr-pay:visited,.kos-parade-rsvp a.kos-pr-pay:hover{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;padding:8px 16px;border-radius:999px;background:#14532d;color:#fffaf0;font-weight:700;text-decoration:none;}",
       ".kos-parade-rsvp a.kos-pr-tickets{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid #8a6a12;background:#fffdf8;color:#14532d;font-weight:700;text-decoration:none;}",
-      ".hub-event-row .kos-parade-rsvp,.hub-ev-detail .kos-parade-rsvp,.app-detail .kos-parade-rsvp{flex:1 1 100%;width:100%;}",
+      "body.hub-app .kos-parade-rsvp,#appNextUp .kos-parade-rsvp{background:#fffdf8;color:#23291f;border-radius:12px;padding:10px 12px;}",
+      ".hub-event-row .kos-parade-rsvp,.hub-ev-detail .kos-parade-rsvp,.app-detail .kos-parade-rsvp,.cup-event .kos-parade-rsvp,.hub-home-parade .kos-parade-rsvp,.hub-krewe-parade .kos-parade-rsvp,#appNextUp .kos-parade-rsvp{flex:1 1 100%;width:100%;}",
       ".kos-pr-hub .kos-pr-actions .btn,.kos-pr-hub .kos-pr-actions button,.kos-pr-hub .kos-pr-actions a.btn,.kos-pr-hub a.kos-pr-tickets{width:auto;flex:0 0 auto;min-height:44px;padding:8px 14px;font-size:15px;}"
     ].join("");
     document.head.appendChild(style);

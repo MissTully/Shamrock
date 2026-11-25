@@ -91,6 +91,22 @@ select public.kos_apply_elected_officer_exemptions(2026);
 - Officers can still edit `dues_payments` directly, the same as before this file. The functions are the path that also writes the event log.
 - `zeffy-webhook` / `kos_record_payment`, `v_outstanding_dues`, and parade-ready are unchanged. They still treat `dues_payments.paid = true` as settled, including a waiver at $0. Reminder mail must keep skipping paid rows.
 
+## Lapse, pending dues, and active
+
+Returning members do not use `dues-pending`. That status is only the new-applicant induction step.
+
+The cycle is active, then lapsed, then `pending-renewal` (shown in the Hub as Pending dues), then active again.
+
+- Someone is exempt when `kos_is_dues_exempt(member_id, year)` is true. That is the only exempt rule. `kos_renewal_rows`, `kos_list_renewals`, `kos_my_renewal`, the lapse list, and Mark delinquent all use it. It is true for an elected officer title (President, Vice President, Secretary, or Treasurer), or a `dues_payments` row for the year with `paid` true or `waiver_status` applied. There is no role test. Board, captains, and committee chairs owe dues.
+- The lapse date lives in `kos_dues_settings` (one row per season year). When there is no row, `kos_default_lapse_date` returns August 1 of that year. August 1 is the confirmed default. Change it in that one function. Officers with Renewals access read it with `kos_get_lapse_date` and save it with `kos_set_lapse_date`.
+- `kos_lapse_candidates` lists active members who would lapse: not merged, not exempt, no paid or applied-waiver row for the year, and `join_date` before June 1 of the season year. People inducted this season are skipped. A blank join date is skipped. It also returns `can_lapse_today` and `exemptions_missing`, a count of elected officers with no applied `elected_officer` waiver.
+- `kos_mark_lapsed` refuses before the lapse date. It checks each id again and skips anyone who no longer qualifies. It sets `lapsed`, writes action `lapsed`, and logs `member_lapsed`. It sends no email.
+- `kos_start_reactivation` is for lapsed members only. It upserts an unpaid dues row (amount from `kos_dues_quote`, or `kos_dues_fallback_amount`, due date from `kos_dues_invoice_due_date`, notes "Reactivation invoice.") and sets `pending-renewal`. It does not touch a paid row or an applied waiver. It writes action `reactivation_sent` and logs `reactivation_started`. It sends no email. The Renewals screen calls it after the reactivation letter is queued.
+- A lapsed member who picks a level on the Renew card runs that same reactivation for themselves, and for a lapsed partner when they check renew for both.
+- A Zeffy dues payment still sets lapsed and pending-renewal members to active and writes the note "Renewed via Zeffy dues payment". Cash or check uses Officer desk, Renewals, Mark renewed. Membership Applications does not approve renewals.
+
+`sql/kos_dues_renewal.sql` is applied in production (Nov 2026). `sql/kos_v6_renewal_lapse.sql` is not applied yet. Apply it with the Hub release. See docs/membership-process.md.
+
 ## What this phase does not do
 
 - The waiver queue is on the Hub: Officer desk → Email & invoices → **Dues waivers**. See OFFICER_DUES_WAIVERS.md. It reads `dues_payments`, `members`, and `kos_dues_events` with the officer policies already on the project. No new SQL is required for that screen.
