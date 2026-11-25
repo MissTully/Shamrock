@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { collectTicketHolders, inferKind, ledgerProductKind, membershipYearForPayment } from "./infer-kind.mjs";
+import { extractDonationNote } from "./donation-match.mjs";
 import { webhookAccess } from "./webhook-auth.mjs";
 
 type JsonObject = Record<string, unknown>;
@@ -594,6 +595,43 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error("kos_apply_parade_guest_payment error", err);
   }
+  let donationMatch: JsonObject | null = null;
+  if (productKind === "donation") {
+    const zeffyNote = extractDonationNote(payment) || extractDonationNote(envelope) || null;
+    try {
+      const donationResponse = await fetch(
+        `${supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/kos_apply_donation_payment`,
+        {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            authorization: `Bearer ${serviceRoleKey}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            p: {
+              payment_id: paymentRowId,
+              provider_payment_id: paymentId,
+              provider_event_id: providerEventId,
+              zeffy_note: zeffyNote,
+            },
+          }),
+        },
+      );
+      if (donationResponse.ok) {
+        donationMatch = asObject(await donationResponse.json().catch(() => ({})));
+      } else {
+        const detail = await donationResponse.text().catch(() => "");
+        console.error("kos_apply_donation_payment failed", donationResponse.status, detail);
+        if (donationResponse.status !== 404) {
+          return respond({ error: "Unable to match donation" }, 502);
+        }
+      }
+    } catch (err) {
+      console.error("kos_apply_donation_payment error", err);
+      return respond({ error: "Unable to match donation" }, 502);
+    }
+  }
   let lockerClaim: JsonObject | null = null;
   if (logicalKind === "locker") {
     if (!paymentRowId) {
@@ -632,6 +670,7 @@ Deno.serve(async (req: Request) => {
     recorded,
     guest_match: guestMatch,
     background_check: backgroundCheck,
+    donation: donationMatch,
     locker: lockerClaim,
   });
     })();

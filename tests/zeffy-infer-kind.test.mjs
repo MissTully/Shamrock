@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { collectTicketHolders, inferKind } from "../supabase/functions/zeffy-webhook/infer-kind.mjs";
+import { campaignKey, collectTicketHolders, inferKind } from "../supabase/functions/zeffy-webhook/infer-kind.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sql = readFileSync(join(root, "sql/kos_zeffy_dues_ticket_payments.sql"), "utf8");
@@ -118,6 +118,45 @@ test("inferKind classifies dues, the background check, events, and shop", () => 
   }, CATALOG), "locker");
 
   assert.equal(inferKind({}, { description: "2026 dues" }, []), "dues");
+});
+
+test("inferKind treats Give to the Krewe as a donation even on a ticket form", () => {
+  const url = "https://www.zeffy.com/en-US/donation-form/give-to-the-krewe-of-shamrock";
+  assert.equal(campaignKey(url), "give-to-the-krewe-of-shamrock");
+
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    form_type: "donation",
+    campaign_name: "Give to the Krewe of Shamrock",
+    url,
+    items: [{ type: "ticket", name: "Gift", amount: 2500 }],
+  }, CATALOG), "donation");
+
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    description: "2026 season",
+    url,
+    amount: 2500,
+  }, CATALOG), "donation");
+
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    campaign_title: "Give to the Krewe of Shamrock",
+    description: "A gift for Tampa Bay",
+    items: [{ type: "ticket", name: "Admission", amount: 5000 }],
+  }, CATALOG), "donation");
+
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    url: "https://www.zeffy.com/en-US/donation/give-to-the-krewe",
+    description: "Parade day",
+  }, CATALOG), "donation");
+
+  assert.equal(inferKind({}, {
+    campaign_type: "ticketing",
+    description: "Gasparilla parade",
+    url: "https://www.zeffy.com/en-US/ticketing/gasparilla-parade-ticket",
+  }, CATALOG), "event");
 });
 
 test("a couple order is two Full ticket holders, each for $375", () => {
