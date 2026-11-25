@@ -141,7 +141,7 @@ values
   ('qr_studio', 'QR Code Studio', 'Meeting check-in and link QR codes.', 'Events', 90, null, false),
   ('doc_studio', 'Document Studio', 'Upload, publish, and hide library documents.', 'Documents', 100, null, false),
   ('shop_studio', 'Shop Studio', 'Products, pay links, and the shop QR.', 'Shop', 110, null, false),
-  ('lockers', 'Locker rentals', 'Reservation list, inventory, and assigning a number.', 'Gear', 120, null, false),
+  ('lockers', 'Locker rentals', 'Assign lockers, match payments, and download the locker list.', 'Gear', 120, null, false),
   ('payments', 'Dues and Payments', 'Season dues, waivers, exports, and the payments ledger.', 'Money', 130, null, true),
   ('send_invoices', 'Send invoices', 'Level-based dues invoices and pay links.', 'Email and invoices', 140, null, true),
   ('dues_waivers', 'Dues waivers', 'Request, approve, or apply dues waivers.', 'Email and invoices', 150, null, true),

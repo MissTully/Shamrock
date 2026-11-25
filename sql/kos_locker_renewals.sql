@@ -98,6 +98,7 @@ begin
     end if;
   elsif tg_op = 'INSERT'
      and auth.uid() is not null
+     and current_setting('kos.locker_officer', true) is distinct from '1'
      and not public.is_krewe_officer() then
     new.member_id := public.kos_current_member_id();
     new.status := 'queued';
@@ -127,7 +128,13 @@ security definer
 set search_path to 'public'
 as $fn$
 begin
-  if auth.uid() is not null and not coalesce(public.is_krewe_officer(), false) then
+  if auth.uid() is not null
+     and current_setting('kos.locker_officer', true) is distinct from '1'
+     and not coalesce(public.is_krewe_officer(), false)
+     and (
+       to_regprocedure('public.kos_can_manage_lockers()') is null
+       or not coalesce(public.kos_can_manage_lockers(), false)
+     ) then
     raise exception 'Only an officer can change a locker';
   end if;
   if tg_op = 'DELETE' then
@@ -183,7 +190,7 @@ as $fn$
         and rr.is_renewal
         and rr.status <> 'cancelled'
     ) r on true
-    where l.status in ('paid', 'assigned')
+    where l.status in ('paid', 'assigned', 'pending_payment')
       and auth.uid() is not null
       and (
         (public.kos_current_member_id() is not null and l.member_id = public.kos_current_member_id())
@@ -245,7 +252,7 @@ begin
       into v_lock
     from public.lockers
     where id = v_id
-      and status in ('paid', 'assigned')
+      and status in ('paid', 'assigned', 'pending_payment')
       and (
         (v_member is not null and member_id = v_member)
         or (v_email <> '' and lower(btrim(coalesce(holder_email, ''))) = v_email)

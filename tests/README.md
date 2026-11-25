@@ -76,6 +76,18 @@ psql -v ON_ERROR_STOP=1 -d kos_membership_training_test -f tests/sql/membership-
 Run it from the repository root so the `\ir` paths resolve. It is not part of
 `npm test`.
 
+## Locker desk SQL harness
+
+`tests/sql/locker-desk-harness.sql` builds a throwaway schema and applies
+`sql/kos_locker_desk.sql`, `sql/kos_locker_desk_audit.sql`, and
+`sql/kos_locker_retire_legacy.sql`. It uses mock names only. Do not point it
+at the live Supabase project. From the repository root:
+
+```sh
+createdb kos_locker_desk_test
+psql -v ON_ERROR_STOP=1 -d kos_locker_desk_test -f tests/sql/locker-desk-harness.sql
+```
+
 ## Running
 
 ```sh

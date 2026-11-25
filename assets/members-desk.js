@@ -11205,7 +11205,7 @@
     hubCharityHours: { title: "Member volunteer hours", desc: "Every member's logged hours for this season.", icon: "⏱", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
-    hubLockers: { title: "Locker rentals", desc: "Reservation list, inventory, and assign a number", icon: "🔑", section: "Gear" },
+    hubLockers: { title: "Locker rentals", desc: "Assign lockers, match payments, and download the locker list", icon: "🔑", section: "Gear" },
     hubEventStudio: { title: "Event Studio", desc: "Add or edit events, RSVP QR, door check-in", icon: "📅", section: "Events" },
     hubWhosComing: { title: "Who's coming", desc: "RSVP list for one event, including public signups, with headcount and CSV.", icon: "👥", section: "Events" },
     hubParadeGuests: { title: "Parade guests", desc: "Guest march list per parade, with counts, status, and CSV.", icon: "🥁", section: "Events" },

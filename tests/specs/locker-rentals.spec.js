@@ -161,191 +161,151 @@ test("Joining the locker list inserts a reservation, not a locker row", async ({
   assertHealthy(expect, report, "locker join");
 });
 
-test("Officer locker desk lists the queue and the Zeffy links", async ({ page }) => {
+function lockerDeskFixture() {
+  return {
+    urls: {
+      small: SMALL_URL,
+      large: LARGE_URL,
+      smallCampaign: "Krewe locker rental – Small",
+      largeCampaign: "Krewe locker rental – Large"
+    },
+    roster: [
+      { id: "mem-avery", first_name: "Avery", last_name: "Quinn" },
+      { id: "mem-casey", first_name: "Casey", last_name: "Morgan" }
+    ],
+    payments: [],
+    lockers: [
+      { id: "ll1", locker_number: "LL1", size: "large", holder_name: "Avery Quinn", member_id: "mem-avery", status: "assigned", paid: true, paid_at: "2026-10-02T16:00:00.000Z", amount_cents: 20000, payment_id: "11111111-1111-4111-8111-111111111111", source: "Zeffy", assigned_at: "2026-09-12T15:00:00.000Z" },
+      { id: "ll2", locker_number: "LL2", size: "large", holder_name: null, status: "available", paid: false },
+      { id: "ll4", locker_number: "LL4", size: "large", holder_name: "Parade Comp", status: "comp", paid: false },
+      { id: "rl3", locker_number: "RL3", size: "large", holder_name: "Jordan Blake", member_id: "mem-jordan", status: "pending_payment", paid: false, unverified: true },
+      { id: "rl5", locker_number: "RL5", size: "large", holder_name: "Morgan Ellis", member_id: "mem-morgan", status: "pending_payment", paid: false, size_mismatch: true, reserved_size: "small" },
+      { id: "rs1", locker_number: "RS1", size: "small", holder_name: null, status: "available", paid: false },
+      { id: "rs7", locker_number: "RS7", size: "small", holder_name: "Riley Chen", status: "assigned", paid: true, paid_at: "2026-10-04T16:00:00.000Z", amount_cents: 7500, payment_id: "22222222-2222-4222-8222-222222222222", source: "Off Zeffy", assigned_at: "2026-10-01T16:00:00.000Z" }
+    ],
+    waiting: [
+      { id: "wait-casey", member_id: "mem-casey", holder_name: "Casey Morgan", size: "small", status: "waiting", paid: true, paid_at: "2026-10-06T16:00:00.000Z", amount_cents: 7500, payment_id: "33333333-3333-4333-8333-333333333333", source: "Zeffy" },
+      { id: "wait-quinn", holder_name: "Quinn Harper", size: "large", status: "waiting", paid: false }
+    ]
+  };
+}
+
+test("Officer locker desk is one list with payment facts", async ({ page }) => {
   const report = watchPage(page);
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
   await page.locator('[data-hub-tab="officer"]').click();
   await expect(page.locator("#hubLockers")).toBeAttached();
+  const fixture = lockerDeskFixture();
+  await page.evaluate((fx) => { window.kosPaintLockerOfficer(fx); }, fixture);
+  await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
+  const desk = page.locator("#hubLockers");
+  await expect(desk).toBeVisible();
+  await expect(desk).toContainText("Each locker is listed once");
+  await expect(desk.locator(".locker-subhead")).toHaveText("Waiting list");
+  await expect(page.locator("#hubLockerSmallUrl")).toHaveValue(SMALL_URL);
+  await expect(desk).not.toContainText("Add existing paid locker");
+  await expect(desk).not.toContainText("Reservation list");
+  await expect(desk).not.toContainText("Inventory");
+  await expect(desk).not.toContainText("Mark paid");
+  await expect(desk.locator("#hubLockerTable")).toContainText("Payment source");
+  await expect(desk.locator("#hubLockerTable")).not.toContainText("Email");
+  const large = desk.locator(".locker-desk-card").first();
+  await expect(large).toContainText("Large");
+  await expect(large.locator(".locker-desk-stat").nth(0)).toContainText("5");
+  await expect(large.locator(".locker-desk-stat").nth(1)).toContainText("3");
+  await expect(large.locator(".locker-desk-stat").nth(2)).toContainText("1");
+  await expect(large.locator(".locker-desk-stat").nth(3)).toContainText("1");
+  await expect(large.locator(".locker-desk-stat").nth(4)).toContainText("2");
+  await expect(large.locator(".locker-desk-stat").nth(5)).toContainText("1");
+  await expect(large.locator(".locker-desk-stat").nth(6)).toContainText("1");
+  const avery = desk.locator("#hubLockerRows tr").filter({ hasText: "Avery Quinn" });
+  await expect(avery).toContainText("Oct 2, 2026");
+  await expect(avery).toContainText("200.00");
+  await expect(avery).toContainText("Zeffy");
+  await expect(avery).not.toContainText("Sep 30");
+  const comp = desk.locator("#hubLockerRows tr").filter({ hasText: "Parade Comp" });
+  await expect(comp).toContainText("Comp");
+  await expect(comp.locator("td").nth(4)).toHaveText("");
+  await expect(comp.locator("td").nth(5)).toHaveText("");
+  const jordan = desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" });
+  await expect(jordan).toContainText("Pending payment, unverified");
+  await expect(desk.locator("#hubLockerRows")).toContainText("Asked for small");
+  const casey = desk.locator("#hubLockerWaiting tr").filter({ hasText: "Casey Morgan" });
+  await expect(casey).toContainText("Yes");
+  await expect(casey).toContainText("75.00");
+  await expect(page.locator("#hubLockerSettings")).toBeVisible();
+  expect(await page.locator("#hubLockerSettings").evaluate((el) => el.open)).toBe(false);
+  await expect(desk).not.toContainText("\u2014");
+  await expect(page.locator("#lockerCard").locator("button", { hasText: "Free" })).toHaveCount(0);
+  expect(await page.content()).not.toContain("locker_report");
+  expect(await page.content()).not.toContain("Locker Assignments");
   await page.evaluate(() => {
-    window.kosPaintLockerOfficer({
-      urls: {
-        small: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small",
-        large: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-large",
-        smallCampaign: "Krewe locker rental – Small",
-        largeCampaign: "Krewe locker rental – Large"
-      },
-      inventory: [
-        { id: "a", locker_number: "LL2", size: "large", holder_name: null, status: "available" },
-        { id: "b", locker_number: "LL1", size: "large", holder_name: "Lisa & Stephanie", status: "assigned" },
-        { id: "c", locker_number: "RS10", size: "small", holder_name: null, status: "available" },
-        { id: "d", locker_number: "RS1", size: "small", holder_name: "Tim Fitz", status: "paid" }
-      ],
-      reservations: [
-        {
-          id: "q1",
-          requester_name: "Queue Member",
-          requester_email: "queue.member@example.com",
-          size: "small",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-30T12:00:00Z"
-        }
-      ]
+    document.querySelectorAll("body *").forEach((el) => {
+      if (el.closest && el.closest("#hubLockers")) return;
+      const pos = getComputedStyle(el).position;
+      if (pos === "fixed" || pos === "sticky") el.style.visibility = "hidden";
     });
   });
-  await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
-  await expect(page.locator("#hubLockers")).toBeVisible();
-  await expect(page.locator("#hubLockerSmallUrl")).toHaveValue(SMALL_URL);
-  await expect(page.locator("#hubLockerLargeUrl")).toHaveValue(LARGE_URL);
-  await expect(page.locator("#hubLockerCampaigns")).toContainText("Krewe locker rental – Small");
-  await expect(page.locator("#hubLockerCounts")).toHaveText("1 large available, 1 small available.");
-  await expect(page.locator("#hubLockerQueue")).toContainText("Queue Member");
-  await expect(page.locator("#hubLockerQueue")).toContainText("Assign");
-  await expect(page.locator("#hubLockerInventory")).toContainText("LL2");
-  await expect(page.locator("#hubLockerInventory")).toContainText("Open");
-  await expect(page.locator("#hubLockerInventory")).toContainText("Tim Fitz");
-  await expect(page.locator("#hubLockerInventory").locator("button", { hasText: "Free" })).toHaveCount(2);
-  await expect(page.locator("#lockerCard").locator("button", { hasText: "Free" })).toHaveCount(0);
-  assertHealthy(expect, report, "officer locker queue");
+  await page.locator("#hubLockers").screenshot({ path: "/opt/cursor/artifacts/locker-desk-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator("#hubLockers").screenshot({ path: "/opt/cursor/artifacts/locker-desk-phone.png" });
+  assertHealthy(expect, report, "locker desk");
 });
 
-test("Reservation names come from the roster, and paid inventory hides the waiting actions", async ({ page }) => {
+test("Officer can assign, warn on size, record a payment, and download the CSV", async ({ page }) => {
   const report = watchPage(page);
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
   await page.locator('[data-hub-tab="officer"]').click();
   await expect(page.locator("#hubLockers")).toBeAttached();
-  await page.evaluate(() => {
-    window.kosPaintLockerOfficer({
-      urls: {
-        small: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small",
-        large: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-large",
-        smallCampaign: "Krewe locker rental – Small",
-        largeCampaign: "Krewe locker rental – Large"
-      },
-      members: [
-        { id: "doug", first_name: "Douglas", last_name: "Tully", email: "Dougtully@protonmail.com" },
-        { id: "jim", first_name: "Jim", last_name: "Sugrue", email: "jimsugruemtm@gmail.com" },
-        { id: "kim", first_name: "Kim", last_name: "Kelly", email: "kellykmk8@gmail.com" },
-        { id: "chuck", first_name: "Chuck", last_name: "Powers", email: "chuckpowers11@aol.com" }
-      ],
-      profiles: [
-        { member_id: "doug", full_name: null, first_name: "Douglas", last_name: "Tully" },
-        { member_id: "kim", full_name: "kellykmk8@gmail.com", first_name: null, last_name: null }
-      ],
-      inventory: [
-        { id: "ll1", locker_number: "LL1", size: "large", holder_name: "Lisa & Stephanie", status: "assigned" },
-        { id: "ll2", locker_number: "LL2", size: "large", holder_name: null, status: "available" },
-        { id: "rl7", locker_number: "RL7", size: "large", holder_name: "Doug Tully", status: "paid" },
-        { id: "rl4", locker_number: "RL4", size: "large", holder_name: "Chuck Powers", status: "assigned" },
-        { id: "rs6", locker_number: "RS6", size: "small", holder_name: "Jim & Lisa Sugrue", status: "paid" },
-        { id: "rs10", locker_number: "RS10", size: "small", holder_name: null, status: "available" }
-      ],
-      reservations: [
-        {
-          id: "doug",
-          requester_name: "dougtully@protonmail.com",
-          requester_email: "dougtully@protonmail.com",
-          member_id: "doug",
-          size: "small",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-13T01:17:08Z"
-        },
-        {
-          id: "jim",
-          requester_name: "jimsugruemtm@gmail.com",
-          requester_email: "jimsugruemtm@gmail.com",
-          member_id: "jim",
-          size: "small",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-14T23:18:08Z"
-        },
-        {
-          id: "kim",
-          requester_name: "kellykmk8@gmail.com",
-          requester_email: "kellykmk8@gmail.com",
-          member_id: "kim",
-          size: "large",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-15T18:27:43Z"
-        },
-        {
-          id: "chuck",
-          requester_name: "chuckpowers11@aol.com",
-          requester_email: "chuckpowers11@aol.com",
-          member_id: "chuck",
-          size: "large",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-12T12:00:00Z"
-        },
-        {
-          id: "noname",
-          requester_name: "noname@example.com",
-          requester_email: "noname@example.com",
-          member_id: null,
-          size: "small",
-          status: "queued",
-          paid_at: null,
-          locker_id: null,
-          created_at: "2026-09-16T00:00:00Z"
-        }
-      ]
-    });
-  });
+  await page.evaluate((fx) => { window.kosPaintLockerOfficer(fx); }, lockerDeskFixture());
   await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
-  const row = (email) => page.locator("#hubLockerQueue tr").filter({ hasText: email });
-  const doug = row("dougtully@protonmail.com");
-  await expect(doug.locator("td").nth(1)).toHaveText("Douglas Tully");
-  await expect(doug.locator("td").nth(0)).toHaveText("");
-  await expect(doug.locator("td").nth(4)).toHaveText("Yes");
-  await expect(doug.locator("td").nth(5)).toHaveText("RL7");
-  await expect(doug.locator("button")).toHaveCount(0);
-  await expect(doug.locator("select")).toHaveCount(0);
+  const desk = page.locator("#hubLockers");
+  await desk.locator("#hubLockerAssign").click();
+  await expect(desk.locator("#hubLockerPanel")).toBeVisible();
+  await desk.locator("#hubLockerWaitPick").selectOption("wait-casey");
+  await desk.locator("#hubLockerNumber").selectOption("LL2");
+  await expect(desk.locator("#hubLockerPanelWarn")).toContainText("asked for a small locker");
+  await expect(desk.locator("#hubLockerPanelWarn")).toContainText("LL2 is large");
+  await desk.locator("#hubLockerPanelSave").click();
+  await expect(desk.locator("#hubLockerMsg")).toContainText("Check the box");
+  await desk.locator("#hubLockerPanelConfirm").check();
+  await desk.locator("#hubLockerPanelSave").click();
+  await expect(desk.locator("#hubLockerMsg")).toContainText("Assigned LL2 to Casey Morgan");
+  const casey = desk.locator("#hubLockerRows tr").filter({ hasText: "Casey Morgan" });
+  await expect(casey).toContainText("Pending payment");
+  await expect(casey).toContainText("Asked for small");
+  await expect(desk.locator("#hubLockerWaiting")).not.toContainText("Casey Morgan");
+  await expect(desk.locator("#hubLockerRows")).toContainText("RS1");
 
-  const jim = row("jimsugruemtm@gmail.com");
-  await expect(jim.locator("td").nth(1)).toHaveText("Jim Sugrue");
-  await expect(jim.locator("td").nth(4)).toHaveText("Yes");
-  await expect(jim.locator("td").nth(5)).toHaveText("RS6");
-  await expect(jim.locator("button")).toHaveCount(0);
+  await desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" }).locator("button", { hasText: "Payment" }).click();
+  await desk.locator("#hubLockerPanelSave").click();
+  await expect(desk.locator("#hubLockerMsg")).toContainText("note is required");
+  await desk.locator("#hubLockerPaidOn").fill("2026-10-08");
+  await desk.locator("#hubLockerAmount").fill("200");
+  await desk.locator("#hubLockerPayNote").fill("Check received at the barn");
+  await desk.locator("#hubLockerPanelSave").click();
+  const jordan = desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" });
+  await expect(jordan).toContainText("Assigned");
+  await expect(jordan).toContainText("Off Zeffy");
+  await expect(jordan).toContainText("200.00");
+  await expect(jordan).not.toContainText("unverified");
 
-  const kim = row("kellykmk8@gmail.com");
-  await expect(kim.locator("td").nth(1)).toHaveText("Kim Kelly");
-  await expect(kim.locator("td").nth(0)).toHaveText("1");
-  await expect(kim.locator("td").nth(4)).toHaveText("No");
-  await expect(kim.locator("td").nth(5)).toHaveText("");
-  await expect(kim.locator("button", { hasText: "Mark paid" })).toBeVisible();
-  await expect(kim.locator("button", { hasText: "Assign" })).toBeVisible();
-  await expect(kim.locator("select")).toContainText("LL2");
-  await expect(kim.locator("select")).not.toContainText("LL1");
-  await expect(kim.locator("select")).not.toContainText("RL7");
+  page.once("dialog", (dialog) => dialog.accept());
+  await desk.locator("#hubLockerRows tr").filter({ hasText: "Parade Comp" }).locator("button", { hasText: "Free" }).click();
+  await expect(desk.locator("#hubLockerRows tr").filter({ hasText: "LL4" })).toContainText("Open");
 
-  const chuck = row("chuckpowers11@aol.com");
-  await expect(chuck.locator("td").nth(1)).toHaveText("Chuck Powers");
-  await expect(chuck.locator("td").nth(0)).toHaveText("");
-  await expect(chuck.locator("td").nth(4)).toHaveText("No");
-  await expect(chuck.locator("td").nth(5)).toHaveText("RL4");
-  await expect(chuck.locator("button", { hasText: "Mark paid" })).toHaveAttribute("data-mark-locker", "rl4");
-  await expect(chuck.locator("button", { hasText: "Assign" })).toHaveCount(0);
-  await expect(chuck.locator("select")).toHaveCount(0);
-
-  const noname = row("noname@example.com");
-  await expect(noname.locator("td").nth(1)).toHaveText("noname@example.com");
-  await expect(noname.locator("td").nth(0)).toHaveText("1");
-  await expect(noname.locator("td").nth(4)).toHaveText("No");
-  await expect(noname.locator("button", { hasText: "Assign" })).toBeVisible();
-
-  await expect(page.locator("#hubLockerInventory")).toContainText("Lisa & Stephanie");
-  await expect(page.locator("#hubLockerInventory")).toContainText("Doug Tully");
-  await expect(page.locator("#hubLockerQueue")).not.toContainText("\u2014");
-  assertHealthy(expect, report, "reservation name and inventory sync");
+  await desk.locator("#hubLockerCsv").click();
+  const csv = await page.evaluate(() => window.__kosLastLockerCsv || "");
+  expect(csv.split("\n")[0]).toBe("Locker,Member,Size,Status,Assigned date,Paid date,Amount,Payment id,Source");
+  expect(csv).toContain("Avery Quinn");
+  expect(csv).toContain("11111111-1111-4111-8111-111111111111");
+  expect(csv).toContain("Casey Morgan");
+  expect(csv).toContain("Quinn Harper");
+  expect(csv).not.toContain("@");
+  expect(csv).not.toContain("Sep 30");
+  expect(csv).not.toContain("\u2014");
+  await expect(desk).not.toContainText("\u2014");
+  assertHealthy(expect, report, "locker officer actions");
 });
 
 test("A member who holds lockers can renew them on the matching Zeffy link", async ({ page }) => {
@@ -527,7 +487,7 @@ test("One large locker renews on the large Zeffy link, and a paid renewal cannot
   assertHealthy(expect, report, "single locker renewal");
 });
 
-test("An unpaid renewal on a locker that is already paid still shows Mark paid", async ({ page }) => {
+test("An open renewal stays on the locker row and is not marked paid by itself", async ({ page }) => {
   const report = watchPage(page);
   await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
   await page.locator('[data-hub-tab="officer"]').click();
@@ -540,31 +500,19 @@ test("An unpaid renewal on a locker that is already paid still shows Mark paid",
         smallCampaign: "Krewe locker rental – Small",
         largeCampaign: "Krewe locker rental – Large"
       },
-      inventory: [
-        { id: "rs1", locker_number: "RS1", size: "small", holder_name: "Tim Fitz", status: "paid" },
-        { id: "rs10", locker_number: "RS10", size: "small", holder_name: null, status: "available" }
+      lockers: [
+        { id: "rs1", locker_number: "RS1", size: "small", holder_name: "Riley Chen", status: "assigned", paid: true, paid_at: "2026-10-04T16:00:00.000Z", amount_cents: 7500, payment_id: "22222222-2222-4222-8222-222222222222", source: "Zeffy", renewal_open: true },
+        { id: "rs10", locker_number: "RS10", size: "small", holder_name: null, status: "available", paid: false }
       ],
-      reservations: [
-        {
-          id: "renew1",
-          requester_name: "Tim Fitzpatrick",
-          requester_email: "tim@example.com",
-          size: "small",
-          status: "assigned",
-          is_renewal: true,
-          paid_at: null,
-          locker_id: "rs1",
-          created_at: "2026-10-29T12:00:00Z"
-        }
-      ]
+      waiting: []
     });
   });
   await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
-  const row = page.locator("#hubLockerQueue tr").filter({ hasText: "tim@example.com" });
-  await expect(row.locator("td").nth(3)).toHaveText("small renewal");
-  await expect(row.locator("td").nth(4)).toHaveText("No");
-  await expect(row.locator("td").nth(5)).toHaveText("RS1");
-  await expect(row.locator("button", { hasText: "Mark paid" })).toBeVisible();
-  await expect(row.locator("button", { hasText: "Assign" })).toHaveCount(0);
-  assertHealthy(expect, report, "unpaid renewal still markable");
+  const row = page.locator("#hubLockerRows tr").filter({ hasText: "Riley Chen" });
+  await expect(row).toContainText("Assigned, renewal open");
+  await expect(row).toContainText("Oct 4, 2026");
+  await expect(row.locator("button", { hasText: "Mark paid" })).toHaveCount(0);
+  await expect(page.locator("#hubLockerWaiting")).toContainText("Nobody is waiting");
+  await expect(page.locator("#hubLockers")).not.toContainText("\u2014");
+  assertHealthy(expect, report, "renewal stays on the locker");
 });
