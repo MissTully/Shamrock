@@ -262,10 +262,72 @@
   #hubLockers .locker-warn{ color:#7a1f2b; font-weight:700; }
   #hubLockers details.locker-settings{ margin-top:14px; }
   #hubLockers details.locker-settings summary{ cursor:pointer; font-weight:700; color:var(--green-800); }
+  /* Search and status filter above the locker list */
+  #hubLockers .locker-desk-filter{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:4px 0 6px; }
+  #hubLockers .locker-desk-filter input[type=search]{ flex:1 1 220px; min-width:0; }
+  #hubLockers .locker-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  #hubLockers .locker-chip{ border:1px solid rgba(168,128,28,.55); background:#fff; color:var(--green-800); border-radius:999px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; }
+  #hubLockers .locker-chip b{ margin-left:2px; }
+  #hubLockers .locker-chip.on{ background:var(--green-800); border-color:var(--green-800); color:#fff; }
+  #hubLockers .locker-chip:focus-visible{ outline:3px solid var(--gold, #c9a227); outline-offset:2px; }
+  /* Status colors: paid green, unpaid gold, comp blue, open gray */
+  #hubLockers .locker-status{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:13px; font-weight:700; white-space:nowrap; background:#eee; color:#333; }
+  #hubLockers .locker-status.paid{ background:#cfe6d4; color:#14532d; }
+  #hubLockers .locker-status.unpaid{ background:#f6e1a8; color:#5c4200; }
+  #hubLockers .locker-status.comp{ background:#d9e4f5; color:#1d3a66; }
+  #hubLockers .locker-status.open{ background:#ececec; color:#444; }
+  /* Rows open the locker window */
+  #hubLockers tr.locker-row{ cursor:pointer; }
+  #hubLockers tr.locker-row:hover td{ background:#f3f8f2; }
+  #hubLockers tr.locker-row:focus-visible{ outline:3px solid var(--green-700); outline-offset:-3px; }
+  #hubLockers tr.locker-flash td{ animation:lockerFlash 2.4s ease-out 1; }
+  @keyframes lockerFlash{ 0%,30%{ background:#fff1b8; } 100%{ background:transparent; } }
+  /* Locker window */
+  .locker-dialog{ border:0; padding:0; max-width:620px; width:calc(100% - 24px); max-height:min(92vh, 820px); overflow:auto;
+    border-radius:16px; background:#fff; color:var(--ink); box-shadow:0 18px 50px rgba(0,0,0,.35); }
+  .locker-dialog::backdrop{ background:rgba(8,42,24,.62); }
+  .locker-dialog [hidden]{ display:none !important; }
+  .locker-dialog .locker-desk-panel{ border:0; margin:0; padding:18px 20px 20px; }
+  #hubLockerDialog{ padding:18px 20px 20px; }
+  .locker-dialog .locker-dialog-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .locker-dialog h3{ margin:0; font-family:var(--display); color:var(--green-800); font-size:24px; }
+  .locker-dialog h4{ margin:0 0 6px; color:var(--green-800); font-size:17px; }
+  .locker-dialog .locker-dialog-sub{ margin:4px 0 0; color:var(--muted); }
+  .locker-dialog .locker-x{ border:1px solid rgba(168,128,28,.45); background:#fff; color:var(--green-800); width:40px; height:40px; flex:0 0 40px;
+    border-radius:999px; font-size:22px; line-height:1; cursor:pointer; }
+  .locker-dialog label{ display:block; margin-top:8px; font-weight:700; }
+  .locker-dialog input[type=text], .locker-dialog input[type=email], .locker-dialog input[type=search],
+  .locker-dialog input[type=number], .locker-dialog input[type=date], .locker-dialog select, .locker-dialog textarea{ width:100%; box-sizing:border-box; }
+  .locker-dialog .locker-dialog-msg{ margin:10px 0 0; min-height:0; }
+  .locker-dialog .locker-dialog-msg:empty{ display:none; }
+  .locker-dialog .locker-dialog-msg.ok, .locker-dialog .locker-dialog-msg.err{ padding:8px 12px; border-radius:10px; font-weight:700; }
+  .locker-dialog .locker-dialog-msg.ok{ background:#e3f3e6; color:#14532d; }
+  .locker-dialog .locker-dialog-msg.err{ background:#fbe4e4; color:#7a1f2b; }
+  .locker-dialog .locker-facts{ display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; margin:14px 0 6px; padding:12px; border-radius:12px; background:#fbf7ec; border:1px solid rgba(168,128,28,.3); }
+  .locker-dialog .locker-fact span{ display:block; font-size:13px; color:var(--muted); }
+  .locker-dialog .locker-fact b{ font-weight:600; }
+  .locker-dialog .locker-none{ color:var(--muted); font-weight:400; }
+  .locker-dialog .locker-sec{ margin:14px 0 0; padding:12px; border-radius:12px; border:2px solid rgba(43,139,81,.35); }
+  .locker-dialog .locker-sec-quiet{ border-width:1px; border-color:rgba(168,128,28,.35); }
+  .locker-dialog .locker-cash{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 10px; }
+  .locker-dialog details.locker-more{ margin:12px 0 0; border-top:1px solid rgba(168,128,28,.3); padding-top:10px; }
+  .locker-dialog details.locker-more > summary{ cursor:pointer; font-weight:700; color:var(--green-800); }
+  .locker-dialog .locker-picks{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .locker-dialog .locker-picks .btn.on{ outline:3px solid var(--green-700); }
+  .locker-dialog .locker-desk-actions{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0; }
+  .locker-dialog .locker-danger{ color:#7a1f2b; border-color:#7a1f2b; }
+  .locker-dialog .locker-warn{ color:#7a1f2b; font-weight:700; }
+  .locker-dialog .locker-history{ margin:8px 0 0; padding-left:18px; }
+  .locker-dialog .locker-history li{ margin:4px 0; }
+  .locker-dialog .locker-history-when{ color:var(--muted); font-size:14px; }
+  .locker-dialog .locker-history-by{ color:var(--muted); font-size:14px; }
+  .locker-dialog .btn[aria-busy=true]{ opacity:.75; cursor:progress; }
   @media (max-width:720px){
     #hubLockers .locker-desk-summary{ grid-template-columns:1fr; }
     #hubLockers .locker-desk-actions .btn,
     #hubLockers .locker-desk-panel .btn{ width:100%; }
+    .locker-dialog .locker-facts, .locker-dialog .locker-cash{ grid-template-columns:1fr; }
+    .locker-dialog .locker-desk-actions .btn{ width:100%; }
   }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
   .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
@@ -5003,7 +5065,7 @@
   <script src="assets/kos-renewals.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20261125give1" defer></script>
-<script src="assets/kos-lockers.js?v=20261125lockerdesk1" defer></script>
+<script src="assets/kos-lockers.js?v=20261125lockerwindow1" defer></script>
 </body>
 </html>
 

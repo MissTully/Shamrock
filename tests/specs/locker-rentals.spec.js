@@ -277,22 +277,35 @@ test("Officer can assign, warn on size, record a payment, and download the CSV",
   await expect(desk.locator("#hubLockerWaiting")).not.toContainText("Casey Morgan");
   await expect(desk.locator("#hubLockerRows")).toContainText("RS1");
 
-  await desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" }).locator("button", { hasText: "Payment" }).click();
-  await desk.locator("#hubLockerPanelSave").click();
-  await expect(desk.locator("#hubLockerMsg")).toContainText("note is required");
-  await desk.locator("#hubLockerPaidOn").fill("2026-10-08");
-  await desk.locator("#hubLockerAmount").fill("200");
-  await desk.locator("#hubLockerPayNote").fill("Check received at the barn");
-  await desk.locator("#hubLockerPanelSave").click();
+  // Clicking a locker opens its window. Check payment is taken there.
+  await desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" }).locator("button", { hasText: "Open" }).click();
+  const win = page.locator("#hubLockerDialog");
+  await expect(win).toBeVisible();
+  await expect(win.locator("#hubLockerDialogTitle")).toHaveText("Locker RL3");
+  await expect(win.locator("#hubLockerDAmount")).toHaveValue("200");
+  await win.locator("#hubLockerDMethod").selectOption("Check");
+  await expect(win.locator("#hubLockerDCashBtn")).toHaveText("Record check payment");
+  await win.locator("#hubLockerDDate").fill("2026-10-08");
+  await win.locator("#hubLockerDNote").fill("Check 1042 at the barn");
+  await win.locator("#hubLockerDCashBtn").click();
+  await expect(win.locator("#hubLockerDialogMsg")).toContainText("Check payment of $200.00 recorded for Jordan Blake. RL3 is paid.");
+  await expect(win.locator(".locker-facts")).toContainText("Paid");
   const jordan = desk.locator("#hubLockerRows tr").filter({ hasText: "Jordan Blake" });
   await expect(jordan).toContainText("Assigned");
   await expect(jordan).toContainText("Off Zeffy");
   await expect(jordan).toContainText("200.00");
   await expect(jordan).not.toContainText("unverified");
+  await win.locator('[data-act="close-detail"]').click();
+  await expect(win).toBeHidden();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await desk.locator("#hubLockerRows tr").filter({ hasText: "Parade Comp" }).locator("button", { hasText: "Free" }).click();
+  await desk.locator("#hubLockerRows tr").filter({ hasText: "Parade Comp" }).locator("td").first().click();
+  await expect(win).toBeVisible();
+  await win.locator("summary", { hasText: "Comp or free this locker" }).click();
+  await win.locator('[data-d-act="free"]').click();
+  await expect(win.locator("#hubLockerDialogMsg")).toContainText("LL4 is open.");
   await expect(desk.locator("#hubLockerRows tr").filter({ hasText: "LL4" })).toContainText("Open");
+  await win.locator('[data-act="close-detail"]').click();
 
   await desk.locator("#hubLockerCsv").click();
   const csv = await page.evaluate(() => window.__kosLastLockerCsv || "");
@@ -306,6 +319,60 @@ test("Officer can assign, warn on size, record a payment, and download the CSV",
   expect(csv).not.toContain("\u2014");
   await expect(desk).not.toContainText("\u2014");
   assertHealthy(expect, report, "locker officer actions");
+});
+
+test("The locker window moves a holder, corrects details, filters, and keeps history", async ({ page }) => {
+  const report = watchPage(page);
+  await unlockMemberHub(page, { role: { officer: true, canManageEvents: true } });
+  await page.locator('[data-hub-tab="officer"]').click();
+  await expect(page.locator("#hubLockers")).toBeAttached();
+  const fx = lockerDeskFixture();
+  fx.roster.push({ id: "mem-riley", first_name: "Riley", last_name: "Chen" });
+  await page.evaluate((f) => { window.kosPaintLockerOfficer(f); }, fx);
+  await page.locator('#deskOff-gear [data-tool="tool:hubLockers"]').click();
+  const desk = page.locator("#hubLockers");
+
+  // Filter chips and search
+  await desk.locator('[data-filter="unpaid"]').click();
+  await expect(desk.locator("#hubLockerRows tr")).toHaveCount(2);
+  await expect(desk.locator("#hubLockerRows")).toContainText("Jordan Blake");
+  await expect(desk.locator("#hubLockerRows")).not.toContainText("Avery Quinn");
+  await desk.locator('[data-filter="all"]').click();
+  await desk.locator("#hubLockerSearch").fill("riley");
+  await expect(desk.locator("#hubLockerRows tr")).toHaveCount(1);
+  await desk.locator("#hubLockerSearch").fill("");
+
+  // Correct an unlinked holder: link to the roster, add notes
+  await desk.locator('tr[data-locker-row="RS7"] td').first().click();
+  const win = page.locator("#hubLockerDialog");
+  await expect(win).toBeVisible();
+  await expect(win.locator(".locker-facts")).toContainText("Not linked");
+  await win.locator("summary", { hasText: "Correct the holder details" }).click();
+  await win.locator("#hubLockerDLinkSearch").fill("ril");
+  await win.locator("#hubLockerDLinkPick button", { hasText: "Riley Chen" }).click();
+  await win.locator("#hubLockerDEmail").fill("not an email");
+  await win.locator('[data-d-act="save-details"]').click();
+  await expect(win.locator("#hubLockerDialogMsg")).toContainText("does not look right");
+  await win.locator("#hubLockerDEmail").fill("");
+  await win.locator("#hubLockerDNotes").fill("Key 14 reissued");
+  await win.locator('[data-d-act="save-details"]').click();
+  await expect(win.locator("#hubLockerDialogMsg")).toContainText("Linked to roster member Riley Chen");
+  await expect(win.locator(".locker-facts")).toContainText("Linked to Riley Chen");
+  await expect(win.locator(".locker-facts")).toContainText("Key 14 reissued");
+  await win.locator("summary", { hasText: "History" }).click();
+  await expect(win.locator(".locker-history")).toContainText("Details corrected");
+
+  // Move to another locker of the same size; the window follows the holder
+  await win.locator("summary", { hasText: "Move to another locker" }).click();
+  await win.locator("#hubLockerDMoveTo").selectOption("RS1");
+  await expect(win.locator("#hubLockerDMoveWarn")).toBeHidden();
+  await win.locator('[data-d-act="move"]').click();
+  await expect(win.locator("#hubLockerDialogTitle")).toHaveText("Locker RS1");
+  await expect(win.locator("#hubLockerDialogMsg")).toContainText("Moved Riley Chen from RS7 to RS1");
+  await expect(desk.locator('tr[data-locker-row="RS7"]')).toContainText("Available");
+  await expect(desk.locator('tr[data-locker-row="RS1"]')).toContainText("Riley Chen");
+  await expect(desk).not.toContainText("—");
+  assertHealthy(expect, report, "locker window");
 });
 
 test("A member who holds lockers can renew them on the matching Zeffy link", async ({ page }) => {
