@@ -291,7 +291,13 @@ Deno.serve(async (req: Request) => {
     url.searchParams.get("token"),
   );
   if (access.status !== 200) {
-    return respond({ error: access.error ?? "Unauthorized" }, access.status, access.error ?? "Unauthorized");
+    // Log which place carried a token (never the value) so a key mismatch is visible.
+    const sent = [
+      req.headers.get("x-zeffy-token") ? "header" : "",
+      url.searchParams.get("token") ? "url" : "",
+    ].filter(Boolean).join("+") || "none";
+    const why = access.status === 401 ? `Unauthorized (token sent: ${sent})` : (access.error ?? "Unauthorized");
+    return respond({ error: access.error ?? "Unauthorized" }, access.status, why);
   }
 
   let envelope: JsonObject;
@@ -307,6 +313,11 @@ Deno.serve(async (req: Request) => {
   if (eventName.startsWith("contact.") || eventName === "payment.deleted") {
     console.log("zeffy webhook ignored", eventName);
     return respond({ received: true, ignored: eventName });
+  }
+  // Zeffy checks the endpoint when the webhook is saved. Answer OK so Zeffy keeps it enabled.
+  if (["healthcheck", "health_check", "ping", "test", "webhook.test"].includes(eventName.toLowerCase())) {
+    console.log("zeffy webhook health check", eventName);
+    return respond({ received: true, ok: true, event: eventName });
   }
   if (!RECORDABLE_EVENTS.has(eventName)) {
     console.log("zeffy webhook unexpected event", eventName || "(none)");
