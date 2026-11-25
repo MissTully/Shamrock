@@ -54,6 +54,8 @@
   var detailPendingId = "";
   var searchPending = false;
   var searchFocused = false;
+  var detailSeq = 0;
+  var detailPendingId = "";
 
   function injectCss() {
     if (document.getElementById("kosRolesCss")) return;
@@ -464,6 +466,8 @@
           draft = next ? blankDraft(next) : null;
           render();
         } else {
+          // A search row has no titles or grants. Leave the form closed until
+          // get_member_access returns, so a save cannot clear their access.
           draft = null;
           detailPendingId = id;
           render();
