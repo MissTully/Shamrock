@@ -702,7 +702,7 @@
   };
 
   function canOpenOfficerDesk() {
-    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours);
+    return !!(state.officer || state.isChair || state.canManageEvents || state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours || state.canViewCharityDonations);
   }
 
   function newApplicationLabel(n) {
@@ -2031,7 +2031,10 @@
       cards: ["prCard", "hubParadeSeasonCard", "hubParadeSecurityCard"] },
     { id: "deskTravel", icon: "🚐", chip: "Rides & locker", title: "Getting There & Your Gear",
       sub: "Carpools, seats on the krewe vans, and locker rentals.",
-      cards: ["carpoolCard", "vanCard", "lockerCard"] }
+      cards: ["carpoolCard", "vanCard", "lockerCard"] },
+    { id: "deskGiving", icon: "💚", chip: "Giving", title: "Giving",
+      sub: "A one-time gift to the Krewe. Zeffy sends the tax receipt.",
+      cards: ["hubDonations"] }
   ];
   var HOME_DESK_GROUPS = [
     { id: "deskShare", icon: "📸", chip: "Share your media", title: "Share Your Media & Creativity",
@@ -2120,7 +2123,7 @@
       '<p class="desk-kicker">Fáilte, a chara - welcome, friend</p>' +
       "<h2>☘ Your Member Desk</h2>" +
       "<p>Everything you need for parade season: get Parade Ready " +
-      "and find a ride, a van seat, or a locker. Volunteer hours, share your media, documents, and the FAQ are on the Home tab.</p>" +
+      "and find a ride, a van seat, or a locker. You can also make a one-time gift to the Krewe. Volunteer hours, share your media, documents, and the FAQ are on the Home tab.</p>" +
       deskGroupsHtml(DESK_GROUPS, "Member desk sections");
     panel.insertBefore(hero, grid);
 
@@ -3484,6 +3487,7 @@
     if ("isChair" in flags) state.isChair = !!flags.isChair;
     if ("canAssignChairs" in flags) state.canAssignChairs = !!flags.canAssignChairs;
     if ("canReviewCharityHours" in flags) state.canReviewCharityHours = !!flags.canReviewCharityHours;
+    if ("canViewCharityDonations" in flags) state.canViewCharityDonations = !!flags.canViewCharityDonations;
     if (flags.charityHours) {
       try { window.__kosHubSetCharityHours(flags.charityHours); } catch (eCharityHours) {}
     }
@@ -3706,6 +3710,7 @@
     await refreshVolunteerInquiryAccess(client);
     applyToolKeyFlags();
     await refreshCharityHoursAccess(client);
+    await refreshCharityDonationAccess(client);
     if (state.officer || state.canReviewHours) loadApprovals(client);
     if (state.canAssignChairs) loadChairDesk(client);
     if (state.canViewPayments) loadPaymentsCard(client);
@@ -11177,6 +11182,7 @@
     "hubRolesAccess",
     "hubVolunteerInbox",
     "hubCharityHours",
+    "hubCharityDonations",
     "hubApprovals",
     "hubPayments",
     "hubLockers",
@@ -11203,6 +11209,7 @@
     hubChairDesk: { title: "Committee chairs", desc: "Assign chairs, and review members who asked to chair.", icon: "🎖", section: "Membership" },
     hubVolunteerInbox: { title: "Volunteer inquiries", desc: "People who asked to help. Mark contacted or done.", icon: "🤝", section: "Charity" },
     hubCharityHours: { title: "Member volunteer hours", desc: "Every member's logged hours for this season.", icon: "⏱", section: "Charity" },
+    hubCharityDonations: { title: "Donations", desc: "Gifts to the Krewe, with the donor's note. Read only.", icon: "💚", section: "Charity" },
     hubApprovals: { title: "Approvals", desc: "Volunteer hours, roles, clover claims, media, and record merges", icon: "✅", section: "Approvals" },
     hubPayments: { title: "Dues & Payments", desc: "Season dues, waivers, exports, and the cash ledger", icon: "💳", section: "Money" },
     hubLockers: { title: "Locker rentals", desc: "Assign lockers, match payments, and download the locker list", icon: "🔑", section: "Gear" },
@@ -11239,13 +11246,13 @@
      sub line tells an officer what the counter holds before they open it. */
   var OFFICER_SECTION_META = {
     "Membership": { icon: "📝", sub: "Call, send the joining packet, wait for the check, send dues after it passes, then approve." },
-    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page, plus every member's hours for this season." },
+    "Charity": { icon: "🤝", sub: "Volunteer interest from the public page, member hours for this season, and gifts to the Krewe." },
     "Events": { icon: "📅", sub: "Event Studio, who's coming, the outreach list, QR check-in, and the calendar." },
     "Approvals": { icon: "✅", sub: "Volunteer hours, photos and videos, clover claims, roles, and record merges." },
     "Documents": { icon: "📜", sub: "Upload, publish, and hide library documents." },
     "Shop": { icon: "🛍️", sub: "Products, Zeffy links, and the shop QR." },
     "Gear": { icon: "🔑", sub: "Locker inventory, the reservation list, and who has paid." },
-    "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, and the online payments ledger." },
+    "Money": { icon: "💳", sub: "Season dues tracker, waiver report, exports, the cash ledger, and gifts to the Krewe." },
     "Email & invoices": { icon: "✉️", sub: "Write the membership, send dues invoices, see who still needs to renew, and record dues waivers." },
     "Reports": { icon: "📊", sub: "Attendance, fundraising, and live event numbers." },
     "More tools": { icon: "☘", sub: "Everything else on the desk." }
@@ -11424,6 +11431,29 @@
     return false;
   }
 
+  function canSeeCharityDonations() {
+    return !!state.canViewCharityDonations;
+  }
+
+  async function refreshCharityDonationAccess(client) {
+    if (roleFixture) {
+      if ("canViewCharityDonations" in roleFixture) state.canViewCharityDonations = !!roleFixture.canViewCharityDonations;
+      return;
+    }
+    if (!client || typeof client.rpc !== "function") return;
+    try {
+      var can = await client.rpc("kos_is_charity_chair");
+      if (roleFixture) return;
+      if (can && !can.error) state.canViewCharityDonations = !!can.data;
+    } catch (e) {}
+    if (state.canViewCharityDonations) {
+      var officerBtn = document.querySelector('[data-hub-tab="officer"]');
+      if (officerBtn) officerBtn.style.display = "";
+      try { syncOfficerChip(); } catch (eSync) {}
+      try { wireOfficerDeskPicker(); } catch (eWire) {}
+    }
+  }
+
   function placeCharityHours(toolOrder) {
     var next = (toolOrder || []).filter(function (id) { return id !== "hubCharityHours"; });
     if (!canSeeCharityHours()) return next;
@@ -11433,8 +11463,20 @@
     return next;
   }
 
+  function placeCharityDonations(toolOrder) {
+    var next = (toolOrder || []).filter(function (id) { return id !== "hubCharityDonations"; });
+    if (!canSeeCharityDonations()) return next;
+    var at = next.indexOf("hubCharityHours");
+    if (at === -1) at = next.indexOf("hubVolunteerInbox");
+    if (at === -1) next.unshift("hubCharityDonations");
+    else next.splice(at + 1, 0, "hubCharityDonations");
+    return next;
+  }
+
   function currentOfficerToolOrder() {
-    if (Array.isArray(state.toolKeys)) return placeCharityHours(placeWhosComing(toolOrderFromKeys()));
+    if (Array.isArray(state.toolKeys)) {
+      return placeCharityDonations(placeCharityHours(placeWhosComing(toolOrderFromKeys())));
+    }
     var toolOrder = OFFICER_TOOL_ORDER.slice();
     if (!state.officer && !state.canManageEvents && !state.shopOnly && !state.socialOnly && (state.canReviewApplications || state.canReviewHours || state.canReviewVolunteerInquiries || state.canReviewCharityHours)) {
       toolOrder = [];
@@ -11495,7 +11537,7 @@
     }
     toolOrder = placeWhosComing(placeRolesAccess(toolOrder));
     if (!renewalsAllowed()) toolOrder = toolOrder.filter(function (id) { return id !== "hubRenewals"; });
-    return placeCharityHours(toolOrder);
+    return placeCharityDonations(placeCharityHours(toolOrder));
   }
 
   function ensureOfficerDeskChrome() {
@@ -11638,6 +11680,9 @@
       if (id === "hubWhosComing") openWhosComing();
       if (id === "hubCharityHours") {
         try { loadCharityHours(window.__kosSb || null); } catch (eCharity) {}
+      }
+      if (id === "hubCharityDonations" && typeof window.kosLoadCharityDonations === "function") {
+        try { window.kosLoadCharityDonations(); } catch (eGifts) {}
       }
       if (id === "hubRenewals" && typeof window.kosLoadRenewals === "function") {
         try { window.kosLoadRenewals(); } catch (eRen) {}

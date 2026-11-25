@@ -96,7 +96,7 @@ const personName = (obj) => {
 export const campaignKey = (value) => {
   const raw = String(value || "").trim().toLowerCase().split(/[?#]/)[0];
   if (!raw) return "";
-  const match = raw.match(/\/(?:ticketing|donation|membership|online-store|embed|form)\/([a-z0-9-]+)/);
+  const match = raw.match(/\/(?:ticketing|donation-form|donation|membership|online-store|embed|form)\/([a-z0-9-]+)/);
   if (match) return match[1].replace(/\/+$/, "");
   if (/^[a-z0-9-]+$/.test(raw)) return raw;
   return "";
@@ -175,10 +175,14 @@ const ticketNameOf = (item) =>
 
 /**
  * Classify a Zeffy payment.
- * Order: explicit kind, locker, shop, background check, dues, then ticketing
- * as an event. Background check is before the membership category because
- * that $75 payment is also category membership. Dues is before ticketing
- * because every membership form is a Zeffy ticketing form.
+ * Order: explicit kind, locker, shop, background check, donation, dues, then
+ * ticketing as an event. Background check is before the membership category
+ * because that $75 payment is also category membership. Donation is before
+ * dues and before ticketing: a donation form type, a /donation/ or
+ * /donation-form/ URL, or a campaign titled like "Give to the Krewe" is a
+ * donation even when Zeffy marks the form as ticketing. Dues is before the
+ * general ticketing check because every membership form is a Zeffy ticketing
+ * form.
  * Locker is returned as locker. Call ledgerProductKind before insert.
  *
  * duesCatalogUrls are the live kos_dues_catalog.zeffy_url values.
@@ -284,6 +288,15 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = [], bac
   ) {
     return "background_check";
   }
+
+  // Give to the Krewe. A Zeffy Donation form can still arrive with a
+  // ticketing form type, so these signals win over dues text and over
+  // ticket form types. The live form is /donation-form/give-to-the-krewe-of-shamrock
+  // and the campaign title is "Give to the Krewe of Shamrock".
+  const donationForm = /(donation|donate)/.test(formType) || /(donation|donate)/.test(category);
+  const donationUrl = /\/donation-form\/|\/donation\//.test(linkBlob);
+  const giveTitle = /give to the krewe/.test(classifyBlob);
+  if (donationForm || donationUrl || giveTitle) return "donation";
 
   // Membership dues. Category, ticket or description text, then the catalog URL.
   // Full, Associate, Auxiliary, LOA, and Leave of absence are the dues products.

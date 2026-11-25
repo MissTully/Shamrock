@@ -2091,6 +2091,33 @@
         </div>
       </section>
 
+      <!-- GIVING -->
+      <section class="app-card" id="hubDonations" data-hub="parade">
+        <div class="app-head"><span class="ic">💚</span><div><h2>Donations</h2><small>A one-time gift to the Krewe</small></div></div>
+        <div class="app-body" id="hubDonationsBody">
+          <p class="kos-give-lead" id="hubDonationLead">Thank you for thinking of the Krewe. A gift of any size helps us show up for Tampa Bay kids and families. This is a one-time gift, and you can give again whenever you wish. Zeffy emails your tax receipt.</p>
+          <div class="kos-give-chips" role="group" aria-label="Suggested gift amounts">
+            <button type="button" data-give-amount="10">$10</button>
+            <button type="button" data-give-amount="25">$25</button>
+            <button type="button" data-give-amount="50">$50</button>
+            <button type="button" data-give-amount="100">$100</button>
+          </div>
+          <form id="hubDonationForm" class="krewe-form">
+            <label for="hubDonationAmount">Gift amount</label>
+            <input id="hubDonationAmount" name="amount" type="text" inputmode="decimal" autocomplete="transaction-amount" placeholder="25 or 25.50" required />
+            <label for="hubDonationNote">A note with your gift <span style="font-weight:500;color:var(--muted);">(optional)</span></label>
+            <textarea id="hubDonationNote" name="note" maxlength="500" placeholder="A few words, if you would like. The Charity committee can see this with your gift."></textarea>
+            <p class="kos-give-count" id="hubDonationCount">0 of 500</p>
+            <button class="btn btn-primary" type="submit" id="hubDonationSubmit">Donate</button>
+            <p class="kos-give-msg" id="hubDonationMsg" role="status"></p>
+          </form>
+          <div class="kos-give-gifts">
+            <h3>Your gifts</h3>
+            <div id="hubDonationGifts"><p class="empty">Loading your gifts…</p></div>
+          </div>
+        </div>
+      </section>
+
       <!-- LOCKERS -->
       <section class="app-card hub-tool tool-green" id="lockerCard" data-hub="parade">
         <div class="app-head"><span class="ic">🔑</span><div><h2>Locker Rentals</h2><small>Reserve a locker or renew yours</small></div></div>
@@ -2316,6 +2343,7 @@
 <a href="store.html">Shop</a>
 <a href="membership-application.html">Join</a>
 <a href="members.html">Members</a>
+<a href="https://www.zeffy.com/en-US/donation-form/give-to-the-krewe-of-shamrock" data-kos-donate="1" target="_blank" rel="noopener noreferrer">Donate</a>
 </div>
     <div class="flinks" style="margin-bottom:8px;"><a href="mailto:secretary@kreweofshamrock.com">Contact: secretary@kreweofshamrock.com</a></div>
     <div class="slainte">Sláinte! 🍀 Tampa Bay, Florida</div>
@@ -4959,7 +4987,9 @@
 <script src="assets/kos-dues-season.js?v=20261121renew1" defer></script>
 <script src="assets/kos-renew.js?v=20261121renew1" defer></script>
 <script src="assets/kos-charity-hours.js?v=20261124charity1" defer></script>
-<script src="assets/members-desk.js?v=20261124charity1" defer></script>
+<script src="assets/kos-donate.js?v=20261125give1" defer></script>
+<script src="assets/members-desk.js?v=20261125give1" defer></script>
+<script src="assets/kos-donations.js?v=20261125give1" defer></script>
 <script src="assets/kos-chat.js?v=20261104chat1" defer></script>
 <script src="assets/kos-doc-library.js?v=20260919eggs1" defer></script>
 <script src="assets/kos-doc-studio.js?v=20260919docstudio1" defer></script>
@@ -4972,7 +5002,7 @@
   <script src="assets/kos-dues-receipts.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-renewals.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20261122ledger1" defer></script>
-  <script src="assets/kos-dues-reporting.js?v=20261123wa2" defer></script>
+  <script src="assets/kos-dues-reporting.js?v=20261125give1" defer></script>
 <script src="assets/kos-lockers.js?v=20261125lockerdesk1" defer></script>
 </body>
 </html>
