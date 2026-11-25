@@ -115,7 +115,7 @@ test("inferKind classifies dues, the background check, events, and shop", () => 
     campaign_type: "ticketing",
     description: "Krewe locker rental small",
     url: "https://www.zeffy.com/en-US/ticketing/krewe-locker-rental-small",
-  }, CATALOG), "other");
+  }, CATALOG), "locker");
 
   assert.equal(inferKind({}, { description: "2026 dues" }, []), "dues");
 });

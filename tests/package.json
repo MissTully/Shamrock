@@ -4,7 +4,7 @@
   "description": "Regression test suite for the Krewe of Shamrock website",
   "scripts": {
     "test": "npm run test:static && npm run test:browser",
-    "test:static": "node static-check.mjs && node --test event-share.test.mjs linkify.test.mjs zeffy-infer-kind.test.mjs dues-season.test.mjs background-check-pipeline.test.mjs renewal-lapse.test.mjs treasurer-ledger.test.mjs charity-hours.test.mjs",
+    "test:static": "node static-check.mjs && node --test event-share.test.mjs linkify.test.mjs zeffy-infer-kind.test.mjs zeffy-webhook-auth.test.mjs dues-season.test.mjs background-check-pipeline.test.mjs renewal-lapse.test.mjs treasurer-ledger.test.mjs charity-hours.test.mjs",
     "test:browser": "playwright test"
   },
   "devDependencies": {

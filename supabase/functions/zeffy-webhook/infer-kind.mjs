@@ -179,6 +179,7 @@ const ticketNameOf = (item) =>
  * as an event. Background check is before the membership category because
  * that $75 payment is also category membership. Dues is before ticketing
  * because every membership form is a Zeffy ticketing form.
+ * Locker is returned as locker. Call ledgerProductKind before insert.
  *
  * duesCatalogUrls are the live kos_dues_catalog.zeffy_url values.
  * backgroundCampaigns is the background_check_payments flag (individual and
@@ -190,7 +191,7 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = [], bac
   const meta = asObject(metadata);
   const pay = asObject(payment);
   const explicit = text(meta.kind, meta.product_kind, pay.product_kind)?.toLowerCase();
-  if (explicit && ["store", "event", "dues", "donation", "raffle", "background_check", "other"].includes(explicit)) {
+  if (explicit && ["store", "event", "dues", "donation", "raffle", "background_check", "locker", "other"].includes(explicit)) {
     return explicit;
   }
 
@@ -229,14 +230,11 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = [], bac
   const ticketNames = items.map(ticketNameOf).filter(Boolean).join(" ").toLowerCase();
   const classifyBlob = `${description} ${ticketNames}`.trim();
 
-  // Locker rentals stay product_kind "other". payments has no locker kind.
-  // kos_claim_locker_from_payment matches the campaign text and the Zeffy URL.
-  if (
-    /\blocker/.test(description) ||
-    /\blocker/.test(linkBlob) ||
-    /krewe-locker-rental-(small|large)/.test(`${description} ${linkBlob}`)
-  ) {
-    return "other";
+  // A campaign name or URL that contains "locker" is a locker rental.
+  // payments_product_kind_check does not list locker, so ledgerProductKind
+  // stores other. The webhook still runs kos_claim_locker_from_payment.
+  if (classifyBlob.includes("locker") || linkBlob.includes("locker")) {
+    return "locker";
   }
 
   // Shared KOS Shop Online Store, plus legacy Shop Studio ticketing campaigns
@@ -310,6 +308,23 @@ export const inferKind = (metadata = {}, payment = {}, duesCatalogUrls = [], bac
   if (items.some((it) => text(it.type)?.toLowerCase() === "ticket")) return "event";
   return "other";
 };
+
+/**
+ * Kinds payments_product_kind_check allows today.
+ * locker is classified above and stored as other until that check allows it.
+ */
+export const LEDGER_PRODUCT_KINDS = [
+  "store",
+  "event",
+  "dues",
+  "donation",
+  "raffle",
+  "background_check",
+  "other",
+];
+
+export const ledgerProductKind = (kind) =>
+  LEDGER_PRODUCT_KINDS.includes(kind) ? kind : "other";
 
 const peopleOnItem = (item) => {
   const holders = [];
