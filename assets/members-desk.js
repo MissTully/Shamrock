@@ -6697,26 +6697,30 @@
     var missed = [];
     var media = [];
     var mediaLog = [];
-    try {
-      var res = await client.rpc("list_officer_approvals");
-      data = res.data || null;
-    } catch (e) {}
-    try {
-      var cr = await client.rpc("list_pending_clover_requests");
-      if (cr.data && Array.isArray(cr.data)) clovers = cr.data;
-    } catch (e2) {}
-    try {
-      var mc = await client.rpc("list_pending_missed_clovers");
-      if (mc.data && Array.isArray(mc.data)) missed = mc.data;
-    } catch (e2b) {}
-    try {
-      var mr = await client.rpc("list_pending_media_approvals");
-      if (mr.data && Array.isArray(mr.data)) media = mr.data;
-    } catch (e3) {}
-    try {
-      var lr = await client.rpc("list_content_approval_log", { p_limit: 25 });
-      if (lr.data && Array.isArray(lr.data)) mediaLog = lr.data;
-    } catch (e4) {}
+    // The hour fixture is for the offline suite. Do not wait on live approval
+    // RPCs, or a slow database leaves the card on "Loading approvals…".
+    if (!hourApprovalsFixture) {
+      try {
+        var res = await client.rpc("list_officer_approvals");
+        data = res.data || null;
+      } catch (e) {}
+      try {
+        var cr = await client.rpc("list_pending_clover_requests");
+        if (cr.data && Array.isArray(cr.data)) clovers = cr.data;
+      } catch (e2) {}
+      try {
+        var mc = await client.rpc("list_pending_missed_clovers");
+        if (mc.data && Array.isArray(mc.data)) missed = mc.data;
+      } catch (e2b) {}
+      try {
+        var mr = await client.rpc("list_pending_media_approvals");
+        if (mr.data && Array.isArray(mr.data)) media = mr.data;
+      } catch (e3) {}
+      try {
+        var lr = await client.rpc("list_content_approval_log", { p_limit: 25 });
+        if (lr.data && Array.isArray(lr.data)) mediaLog = lr.data;
+      } catch (e4) {}
+    }
     var hours = state.pendingHours || [];
     if (!hourApprovalsFixture && client && client.rpc) {
       try {

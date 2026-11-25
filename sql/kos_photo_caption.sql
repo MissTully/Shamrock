@@ -1,6 +1,9 @@
 -- Optional public caption for member gallery photos.
 -- NOT APPLIED. Paste this file into the Supabase SQL editor for project
 -- oazwkwflgbthojvnclfc (Krewe of Shamrock) and run it. Safe to re-run.
+-- The title-to-caption copy runs only when caption is a new column.
+-- A later run does not put a review title back under a photo whose
+-- caption was cleared on purpose.
 --
 -- Checked 2026-11-21: public.content_items has no caption column.
 -- Columns present: id, type, title, url, is_published, notes, is_demo,
@@ -29,8 +32,35 @@ create policy content_public_read on public.content_items
     )
   );
 
-alter table public.content_items
-  add column if not exists caption text;
+-- Copy titles into caption only on the run that adds the column.
+-- After that, a blank caption means the member or an officer chose no
+-- public line. Re-running this file must leave those blanks alone.
+-- The old Hub field was labeled "Photo Title / Caption", so the first
+-- copy keeps that line under photos that were already published.
+do $caption_col$
+declare
+  v_had_caption boolean;
+begin
+  select exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'content_items'
+      and column_name = 'caption'
+  ) into v_had_caption;
+
+  alter table public.content_items
+    add column if not exists caption text;
+
+  if not v_had_caption then
+    update public.content_items
+       set caption = left(nullif(btrim(title), ''), 240)
+     where type = 'photo'
+       and caption is null
+       and nullif(btrim(coalesce(title, '')), '') is not null;
+  end if;
+end
+$caption_col$;
 
 comment on column public.content_items.caption is
   'Optional public line under a member photo. Blank means the gallery shows the photo with no caption. Max 240 characters.';
@@ -41,15 +71,6 @@ alter table public.content_items
 alter table public.content_items
   add constraint content_items_caption_len
   check (caption is null or char_length(caption) <= 240);
-
--- One-time copy. The Hub field used to be labeled "Photo Title / Caption",
--- so existing photo titles are the line members expected on the gallery.
--- Later submissions store the optional caption on its own and do not copy title.
-update public.content_items
-   set caption = left(nullif(btrim(title), ''), 240)
- where type = 'photo'
-   and caption is null
-   and nullif(btrim(coalesce(title, '')), '') is not null;
 
 -- Submit: keep title required. Caption is optional.
 drop function if exists public.submit_krewe_photo(text, text, text);
