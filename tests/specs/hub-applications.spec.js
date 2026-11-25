@@ -410,7 +410,6 @@ test.describe("Membership Applications", () => {
     // never records the reveal call.
     await page.waitForFunction(() => !!(window.__kosSb && window.__kosSb.auth));
     await page.evaluate((role) => {
-      if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
       function query() {
         const builder = {
           select: () => builder,
@@ -441,9 +440,17 @@ test.describe("Membership Applications", () => {
         get: function () { return stub; },
         set: function () {}
       });
+      if (typeof window.__kosHubSetRole === "function") window.__kosHubSetRole(role);
     }, { officer: true, canReviewApplications: true, applications: masked });
     const nia = page.locator("#hubApplications [data-app-id='app-nia']");
-    await nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']").click();
+    // Remembering the fixture can keep a full number for Copy after the card
+    // is masked. Drop that cache in the same turn as the click, so Copy has
+    // to call reveal instead of pasting the cached value.
+    await page.evaluate(() => {
+      if (typeof window.__kosForgetApplicationIds === "function") window.__kosForgetApplicationIds();
+      const btn = document.querySelector("#hubApplications [data-app-id='app-nia'] [data-app-copy-slot='applicant'][data-app-copy-kind='ssn']");
+      btn.click();
+    });
     await expect(nia.locator("[data-app-copy-slot='applicant'][data-app-copy-kind='ssn']")).toHaveText("Copied");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("123-45-6789");
     expect(await page.evaluate(() => window.__revealArgs)).toMatchObject({
