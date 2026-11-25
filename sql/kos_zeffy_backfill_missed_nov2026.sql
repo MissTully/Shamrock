@@ -55,7 +55,7 @@ with planned (
     (1, 'zeffy-backfill:2026-11-11:charles-powers:37500', 'Charles Powers', 'Tricia Powers', 37500,
       timestamptz '2026-11-11 16:28:00-05', 'dues',
       'Insert dues row. Create or mark Tricia Powers 2026 dues paid.'),
-    (2, 'zeffy-backfill:2026-11-11:charles-powers:10000', 'Charles Powers', 'Charles Powers', 10000,
+    (2, 'zeffy-backfill:2026-11-11:charles-powers:10000', 'Charles Powers', 'Chuck Powers', 10000,
       timestamptz '2026-11-11 16:28:00-05', 'donation',
       'Insert donation row for the other $100 of the same $475 payment. No dues change.'),
     (3, 'zeffy-backfill:2026-11-11:robyn-thornburg:7500', 'Robyn Thornburg', 'Robyn Thornburg', 7500,
@@ -705,7 +705,7 @@ begin
   v_donation_kind := case when v_def ~* '''donation''' then 'donation' else 'other' end;
   raise notice 'Locker product_kind is %. Donation product_kind is %.', v_locker_kind, v_donation_kind;
 
-  v_charles := pg_temp.kos_bf_member('Charles Powers');
+  v_charles := pg_temp.kos_bf_member('Chuck Powers');
   v_tricia := pg_temp.kos_bf_member('Tricia Powers');
   v_robyn := pg_temp.kos_bf_member('Robyn Thornburg');
   v_gerry := pg_temp.kos_bf_member('Gerry Logan');
