@@ -687,6 +687,8 @@
   var volunteerInquiriesFixture = null;
   // Full DL and SSN for the offline fixture only. Never written into the card.
   var applicationIdVault = {};
+  // Tests drop this cache when they need Copy to call the reveal RPC.
+  window.__kosForgetApplicationIds = function () { applicationIdVault = {}; };
   var hourApprovalsFixture = false;
   var charityHoursState = {
     fixture: false,
