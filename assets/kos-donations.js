@@ -140,6 +140,22 @@
     msg.style.color = ok ? "#14532d" : "#8a1c12";
   }
 
+  function setGiftLink(url) {
+    var msg = document.getElementById("hubDonationMsg");
+    if (!msg) return;
+    msg.style.color = "#14532d";
+    msg.textContent = "";
+    msg.appendChild(document.createTextNode("Your gift is saved. A new tab did not open, so "));
+    var link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.id = "hubDonationFallback";
+    link.textContent = "open the giving form";
+    msg.appendChild(link);
+    msg.appendChild(document.createTextNode("."));
+  }
+
   function rpcMissing(error) {
     var blob = String((error && (error.message || error.details || error.code)) || "");
     return /PGRST202|404|does not exist|kos_create_donation_intent|schema cache/i.test(blob);
@@ -155,8 +171,10 @@
     }
     var opened = window.open(url, "_blank", "noopener");
     if (!opened) {
-      setMessage("Your gift is saved. If a new tab did not open, use this link: " + url, true);
+      setGiftLink(url);
+      return false;
     }
+    return true;
   }
 
   async function onSubmit(event) {
@@ -183,8 +201,9 @@
       if (preview) {
         preview.last = { amount_cents: parsed.amount_cents, note: note };
         window.__kosLastDonation = preview.last;
-        openGift(parsed.amount_cents);
-        setMessage("Thank you. Your giving form is open in a new tab.", true);
+        if (openGift(parsed.amount_cents)) {
+          setMessage("Thank you. Your giving form is open in a new tab.", true);
+        }
         await loadMine();
         return;
       }
@@ -199,8 +218,9 @@
       });
       if (res && res.error) {
         if (rpcMissing(res.error)) {
-          openGift(parsed.amount_cents);
-          setMessage("Your giving form is open. Hub gift records start once that step is turned on.", true);
+          if (openGift(parsed.amount_cents)) {
+            setMessage("Your giving form is open. Hub gift records start once that step is turned on.", true);
+          }
           return;
         }
         setMessage((res.error && res.error.message) || "We could not save your gift just yet. Please try again.", false);
@@ -211,8 +231,9 @@
         setMessage(data.message || "Please check the amount and try again.", false);
         return;
       }
-      openGift(parsed.amount_cents);
-      setMessage("Thank you. Your giving form is open in a new tab.", true);
+      if (openGift(parsed.amount_cents)) {
+        setMessage("Thank you. Your giving form is open in a new tab.", true);
+      }
       if (noteEl) noteEl.value = "";
       syncCount();
       await loadMine();

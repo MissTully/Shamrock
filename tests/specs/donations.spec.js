@@ -92,6 +92,27 @@ test("Member Desk donations card takes a gift and lists past gifts", async ({ pa
   assertHealthy(expect, report, "member donations card");
 });
 
+test("a blocked popup keeps a link to the giving form", async ({ page }) => {
+  const report = watchPage(page);
+  await page.addInitScript(() => {
+    window.__kosDonationPreview = { gifts: [] };
+  });
+  await unlockMemberHub(page);
+  await page.locator("[data-hub-tab='parade']").click();
+  await page.evaluate(() => {
+    window.open = () => null;
+  });
+  const card = page.locator("#hubDonations");
+  await card.locator("[data-give-amount='10']").click();
+  await card.locator("#hubDonationSubmit").click();
+  const link = card.locator("#hubDonationFallback");
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", GIFT_URL + "?amount=10");
+  await expect(card.locator("#hubDonationMsg")).toContainText("open the giving form");
+  await expect(card.locator("#hubDonationMsg")).not.toContainText("open in a new tab");
+  assertHealthy(expect, report, "blocked donation popup");
+});
+
 test("Charity chair sees a read-only donations list and the Vice President does not", async ({ page }) => {
   const report = watchPage(page);
   await page.addInitScript((rows) => {

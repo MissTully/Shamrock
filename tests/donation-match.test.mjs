@@ -152,6 +152,8 @@ test("donation SQL matches the Hub intent and queues one thank-you", () => {
   assert.match(sql, /can_view_payments/);
   assert.match(sql, /interval '24 hours'/);
   assert.match(sql, /status = 'paid'/);
+  assert.match(sql, /coalesce\(p\.amount_cents, i\.amount_cents\)/);
+  assert.match(sql, /when pay\.amount_cents between 100 and 100000000 then pay\.amount_cents/);
   assert.match(sql, /donation_thanks:/);
   assert.match(sql, /note with your gift/);
   assert.match(sql, /amount_param', 'amount'/);

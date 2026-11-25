@@ -300,13 +300,14 @@ begin
     'gifts', coalesce((
       select jsonb_agg(jsonb_build_object(
         'id', i.id,
-        'amount_cents', i.amount_cents,
+        'amount_cents', coalesce(p.amount_cents, i.amount_cents),
         'note', i.note,
         'status', i.status,
         'created_at', i.created_at,
         'matched', (i.status = 'paid' or i.payment_id is not null)
       ) order by i.created_at desc)
       from public.donation_intents i
+      left join public.payments p on p.id = i.payment_id
       where i.member_id = v_member
     ), '[]'::jsonb)
   );
@@ -518,6 +519,10 @@ begin
       update public.donation_intents
          set payment_id = pay.id,
              status = 'paid',
+             amount_cents = case
+               when pay.amount_cents between 100 and 100000000 then pay.amount_cents
+               else amount_cents
+             end,
              updated_at = now()
        where id = v_pick.id
          and payment_id is null
