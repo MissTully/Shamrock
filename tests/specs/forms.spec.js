@@ -33,7 +33,9 @@ test("join interest form: required fields block an empty submit", async ({ page 
   await expect(page.locator("#applySingle")).toBeChecked();
   await expect(page.locator("#partnerFields")).toBeHidden();
   await expect(page.locator("#appFeeBox, #duesFeeBox, #joinNextSteps")).toHaveCount(0);
-  await expect(page.locator('a[href*="zeffy.com"]')).toHaveCount(0);
+  const zeffy = page.locator('a[href*="zeffy.com"]');
+  await expect(zeffy).toHaveCount(1);
+  await expect(zeffy).toHaveAttribute("data-kos-donate", "1");
   await expect(page.locator("#appSsn, #partnerSsn")).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Membership at a Glance");
   await expect(page.locator("body")).not.toContainText("Submit application");

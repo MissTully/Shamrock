@@ -23,7 +23,9 @@ test("tartan ball page celebrates the night and does not sell tickets", async ({
   expect(text.toLowerCase()).not.toContain("cordially invited");
   expect(text.toLowerCase()).not.toContain("seats are limited");
   await expect(page.locator('a[href*="tampabaytartanball.com"]')).toHaveCount(0);
-  await expect(page.locator('a[href*="zeffy.com"]')).toHaveCount(0);
+  const zeffy = page.locator('a[href*="zeffy.com"]');
+  await expect(zeffy).toHaveCount(1);
+  await expect(zeffy).toHaveAttribute("data-kos-donate", "1");
 
   const dance = page.locator('img[src*="ball-2026-dance-floor.jpg"]');
   const stage = page.locator('img[src*="ball-2026-stage.jpg"]');
