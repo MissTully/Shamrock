@@ -100,6 +100,7 @@
     paymentsError: "",
     duesError: "",
     tab: "ledger",
+    donations: [],
     ledger: null,
     canRecord: false,
     methodFilter: "all",
@@ -455,7 +456,7 @@
 
   function showTab(id) {
     state.tab = id;
-    ["ledger", "season", "waivers", "zeffy", "export"].forEach(function (t) {
+    ["ledger", "season", "waivers", "zeffy", "export", "donations"].forEach(function (t) {
       var btn = document.getElementById("hubPayTab_" + t);
       var panel = document.getElementById("hubPayPanel_" + t);
       var on = t === id;
@@ -483,12 +484,14 @@
       '<button type="button" class="hub-pay-tab" id="hubPayTab_waivers" role="tab" aria-selected="false">Waivers</button>' +
       '<button type="button" class="hub-pay-tab" id="hubPayTab_zeffy" role="tab" aria-selected="false">Check Zeffy</button>' +
       '<button type="button" class="hub-pay-tab" id="hubPayTab_export" role="tab" aria-selected="false">Export</button>' +
+      '<button type="button" class="hub-pay-tab" id="hubPayTab_donations" role="tab" aria-selected="false">Donations</button>' +
       "</div>" +
       '<div id="hubPayPanel_ledger" role="tabpanel"><p class="empty">Loading payments…</p></div>' +
       '<div id="hubPayPanel_season" role="tabpanel" hidden><p class="empty">Loading season…</p></div>' +
       '<div id="hubPayPanel_waivers" role="tabpanel" hidden><p class="empty">Loading waivers…</p></div>' +
       '<div id="hubPayPanel_zeffy" role="tabpanel" hidden><p class="empty">Loading the Zeffy check…</p></div>' +
       '<div id="hubPayPanel_export" role="tabpanel" hidden></div>' +
+      '<div id="hubPayPanel_donations" role="tabpanel" hidden><p class="empty">Loading gifts…</p></div>' +
       '<p class="hub-pay-msg" id="hubPayMsg" aria-live="polite"></p>' +
       "</div>";
   }
@@ -998,11 +1001,57 @@
     downloadCsv("kos-season-report-" + (report.year || year()) + ".csv", ["section", "method", "level", "count", "amount"], rows);
   }
 
+  function renderDonations() {
+    var panel = document.getElementById("hubPayPanel_donations");
+    if (!panel) return;
+    var rows = state.donations || [];
+    var html = '<p class="hub-pay-note">Gifts recorded from Give to the Krewe. The note is the member\'s Hub note when we matched one, or the note they typed on Zeffy. This list is read only.</p>';
+    if (!rows.length) {
+      panel.innerHTML = html + '<p class="empty">No gifts have come in yet. When someone gives, their gift will show up here.</p>';
+      return;
+    }
+    html += '<div class="hub-pay-wrap"><table id="hubDonationLedger" class="hub-pay-stack"><thead><tr>'
+      + "<th>When</th><th class=\"num\">Amount</th><th>Donor</th><th>Member</th><th>Note</th></tr></thead><tbody>";
+    rows.forEach(function (row) {
+      html += "<tr><td data-label=\"When\">" + esc(String(row.created_at || row.when || "").slice(0, 10)) + "</td>"
+        + '<td class="num" data-label="Amount">' + esc(money(num(row.amount_cents) / 100)) + "</td>"
+        + "<td data-label=\"Donor\">" + esc(row.donor_name || row.payer_name || "Friend of the Krewe") + "</td>"
+        + "<td data-label=\"Member\">" + esc(row.member_name || "Not matched to a member") + "</td>"
+        + "<td data-label=\"Note\">" + esc(row.note || "No note") + "</td></tr>";
+    });
+    html += "</tbody></table></div>";
+    panel.innerHTML = html;
+  }
+
+  function donationRows(data) {
+    if (!data) return [];
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch (e) { return []; }
+    }
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.rows)) return data.rows;
+    return [];
+  }
+
+  async function loadDonations(client) {
+    if (Array.isArray(window.__kosDonationLedger)) {
+      state.donations = window.__kosDonationLedger;
+      return;
+    }
+    try {
+      var res = await client.rpc("kos_list_donations");
+      state.donations = donationRows(res && res.data);
+    } catch (e) {
+      state.donations = [];
+    }
+  }
+
   function renderAll() {
     renderLedger();
     renderSeason();
     renderWaivers();
     renderExport();
+    renderDonations();
     showTab(state.tab);
   }
 
@@ -1125,6 +1174,8 @@
     } catch (e6) {
       state.seasonReport = null;
     }
+    await loadDonations(client);
+    if (seq !== loadSeq) return;
     renderAll();
   }
 
