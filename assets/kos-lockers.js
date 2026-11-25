@@ -457,55 +457,45 @@
 
   function officerHtml() {
     return '' +
-      '<div class="app-head"><span class="ic">🔑</span><div><h2>Locker rentals</h2>' +
-      '<small>Queue, inventory, and assign a number</small></div></div>' +
+      '<div class="app-head"><span class="ic">🔑</span><div><h2>Lockers</h2>' +
+      '<small>One list of assignments, payments, and the waiting list</small></div></div>' +
       '<div class="app-body hub-ei" id="hubLockerBody">' +
-      '<p class="hub-ei-note">Members join the list first. A Zeffy payment for these campaigns marks the matching reservation paid and claims the next open locker of that size. A renewal stays on the locker they already hold. If they pay for more than one, that many lockers are marked paid. Assign a number here when none were open, or when the payer email did not match a reservation.</p>' +
-      '<p class="hub-ei-note" id="hubLockerCounts"></p>' +
-      '<h3>Zeffy pay links</h3>' +
+      '<p class="hub-ei-note">Each locker is listed once. Paid date and amount come from the linked payment. Comp is its own status. The waiting list is people who do not have a locker yet.</p>' +
+      '<div class="locker-desk-summary" id="hubLockerSummary"></div>' +
+      '<div class="locker-desk-actions">' +
+      '<button class="btn btn-primary" type="button" id="hubLockerAssign">Assign a locker</button> ' +
+      '<button class="btn btn-primary" type="button" id="hubLockerCsv">Download CSV</button> ' +
+      '<button class="btn" type="button" id="hubLockerPrint">Print</button></div>' +
+      '<div class="locker-desk-panel" id="hubLockerPanel" hidden>' +
+      '<h3 id="hubLockerPanelTitle">Assign a locker</h3>' +
+      '<div id="hubLockerPanelBody"></div>' +
+      '<p class="locker-warn" id="hubLockerPanelWarn" hidden></p>' +
+      '<label class="locker-confirm" id="hubLockerPanelConfirmWrap" hidden>' +
+      '<input type="checkbox" id="hubLockerPanelConfirm"> Assign this size anyway</label>' +
+      '<div class="locker-desk-actions"><button class="btn btn-primary" type="button" id="hubLockerPanelSave">Save</button> ' +
+      '<button class="btn" type="button" id="hubLockerPanelCancel">Cancel</button></div></div>' +
+      '<div class="rpt-tablewrap"><table class="rpt-table" id="hubLockerTable"><thead><tr>' +
+      '<th>Locker</th><th>Size</th><th>Holder</th><th>Status</th><th>Paid date</th><th>Amount</th><th>Payment source</th><th></th>' +
+      '</tr></thead><tbody id="hubLockerRows"></tbody></table></div>' +
+      '<h3 class="locker-subhead">Waiting list</h3>' +
+      '<p class="hub-ei-note">Paid is yes only when a payment is linked.</p>' +
+      '<div class="rpt-tablewrap"><table class="rpt-table" id="hubLockerWaitingTable"><thead><tr>' +
+      '<th>Name</th><th>Size</th><th>Paid</th><th>Paid date</th><th>Amount</th><th>Payment source</th><th></th>' +
+      '</tr></thead><tbody id="hubLockerWaiting"></tbody></table></div>' +
+      '<details class="locker-settings" id="hubLockerSettings">' +
+      '<summary>Zeffy pay links</summary>' +
       '<div class="hub-ei-grid">' +
-      '<div><label for="hubLockerSmallUrl">Small $75</label>' +
-      '<input id="hubLockerSmallUrl" type="url" /></div>' +
-      '<div><label for="hubLockerLargeUrl">Large $200</label>' +
-      '<input id="hubLockerLargeUrl" type="url" /></div></div>' +
+      '<div><label for="hubLockerSmallUrl">Small $75</label><input id="hubLockerSmallUrl" type="url"></div>' +
+      '<div><label for="hubLockerLargeUrl">Large $200</label><input id="hubLockerLargeUrl" type="url"></div></div>' +
       '<p class="hub-ei-note" id="hubLockerCampaigns"></p>' +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubLockerSaveUrls">Save pay links</button></div>' +
-      '<h3>Add existing paid locker</h3>' +
-      '<p class="hub-ei-note">For someone who already paid (for example last season) and is not on the queue. Pick an open locker so it will not be reassigned.</p>' +
-      '<div class="hub-ei-grid" id="hubLockerAddExisting">' +
-      '<div style="grid-column:1/-1"><label for="hubLockerExistSearch">Find a roster member</label>' +
-      '<input id="hubLockerExistSearch" type="search" placeholder="Name or email" autocomplete="off" />' +
-      '<div class="hub-ei-list" id="hubLockerExistPick" style="max-height:160px;overflow:auto;margin-top:6px"></div>' +
-      '<p class="hub-ei-note" id="hubLockerExistPicked" aria-live="polite">No roster member selected. You can still type a name and email below for a non-roster holder.</p></div>' +
-      '<div><label for="hubLockerExistName">Name</label><input id="hubLockerExistName" type="text" maxlength="120" placeholder="First and last name" /></div>' +
-      '<div><label for="hubLockerExistEmail">Email (optional)</label><input id="hubLockerExistEmail" type="email" maxlength="200" placeholder="member@email.com" /></div>' +
-      '<div><label for="hubLockerExistNumber">Open locker</label>' +
-      '<select id="hubLockerExistNumber"><option value="">Pick an open locker</option></select></div>' +
-      '<div><label for="hubLockerExistPaid">Paid date</label><input id="hubLockerExistPaid" type="date" /></div>' +
-      '<div><label for="hubLockerExistAmount">Amount paid (USD)</label><input id="hubLockerExistAmount" type="number" min="0" step="0.01" placeholder="75 or 200" /></div>' +
-      '<div style="grid-column:1/-1"><label for="hubLockerExistNote">Note (optional)</label>' +
-      '<input id="hubLockerExistNote" type="text" maxlength="500" placeholder="e.g. paid end of 2025" /></div></div>' +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubLockerExistSave">Save existing paid locker</button> ' +
-      '<button class="btn" type="button" id="hubLockerExistClear">Clear form</button></div>' +
-      '<h3>Locker report</h3>' +
-      '<p class="hub-ei-note">Every locker by number, who has it, email, size, status, paid date, amount, and note. Print it for the float barn or download a spreadsheet.</p>' +
-      '<div class="hub-ei-row"><button class="btn btn-primary" type="button" id="hubLockerPrint">Print report</button> ' +
-      '<button class="btn" type="button" id="hubLockerCsv">Download CSV</button></div>' +
-      '<div class="rpt-tablewrap"><table class="rpt-table" id="hubLockerReport"><thead><tr>' +
-      '<th>Locker</th><th>Member</th><th>Email</th><th>Size</th><th>Status</th><th>Paid date</th><th>Amount</th><th>Source / note</th>' +
-      '</tr></thead><tbody id="hubLockerReportBody"></tbody></table></div>' +
-      '<h3>Reservation list</h3>' +
-      '<p class="hub-ei-note">First come, first served. Place is by the time they joined, within each size.</p>' +
-      '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>' +
-      '<th>Place</th><th>Name</th><th>Email</th><th>Size</th><th>Paid</th><th>Locker</th><th></th>' +
-      '</tr></thead><tbody id="hubLockerQueue"></tbody></table></div>' +
-      '<h3>Inventory</h3>' +
-      '<div class="rpt-tablewrap"><table class="rpt-table"><thead><tr>' +
-      '<th>Locker</th><th>Size</th><th>Holder</th><th>Status</th><th></th>' +
-      '</tr></thead><tbody id="hubLockerInventory"></tbody></table></div>' +
+      '<button class="btn btn-primary" type="button" id="hubLockerSaveUrls">Save pay links</button></details>' +
       '<p class="hub-ei-msg" id="hubLockerMsg" aria-live="polite"></p>' +
       '</div>';
   }
+
+  var lockerFixture = null;
+  var board = null;
+  var panelMode = null;
 
   function ensureOfficerCard() {
     var panel = document.getElementById("hubOfficer");
@@ -517,536 +507,744 @@
       card.id = "hubLockers";
       panel.appendChild(card);
     }
-    if (card.getAttribute("data-locker-ready") === "1") return card;
+    if (card.getAttribute("data-locker-ready") === "1" && document.getElementById("hubLockerRows")) return card;
     card.setAttribute("data-locker-ready", "1");
     card.innerHTML = officerHtml();
-    var save = document.getElementById("hubLockerSaveUrls");
-    if (save) save.addEventListener("click", saveUrls);
-    var printBtn = document.getElementById("hubLockerPrint");
-    if (printBtn) printBtn.addEventListener("click", printLockerReport);
-    var csvBtn = document.getElementById("hubLockerCsv");
-    if (csvBtn) csvBtn.addEventListener("click", downloadLockerCsv);
-    var existSave = document.getElementById("hubLockerExistSave");
-    if (existSave) existSave.addEventListener("click", saveExistingPaid);
-    var existClear = document.getElementById("hubLockerExistClear");
-    if (existClear) existClear.addEventListener("click", clearExistingForm);
-    var existSearch = document.getElementById("hubLockerExistSearch");
-    if (existSearch) {
-      var existTimer = null;
-      existSearch.addEventListener("input", function () {
-        clearTimeout(existTimer);
-        existTimer = setTimeout(searchExistingRoster, 220);
-      });
-    }
+    document.getElementById("hubLockerAssign").addEventListener("click", function () { openPanel("assign"); });
+    document.getElementById("hubLockerCsv").addEventListener("click", downloadLockerCsv);
+    document.getElementById("hubLockerPrint").addEventListener("click", printLockerReport);
+    document.getElementById("hubLockerPanelSave").addEventListener("click", savePanel);
+    document.getElementById("hubLockerPanelCancel").addEventListener("click", closePanel);
+    document.getElementById("hubLockerSaveUrls").addEventListener("click", saveUrls);
     card.addEventListener("click", onOfficerClick);
+    card.addEventListener("change", onOfficerChange);
     return card;
   }
 
-  function notEmailName(v) {
-    v = (v == null ? "" : String(v)).trim();
-    return v && v.indexOf("@") === -1 ? v : "";
-  }
-
-  function joinedPersonName(first, last) {
-    return notEmailName([notEmailName(first), notEmailName(last)].filter(Boolean).join(" "));
-  }
-
-  // Roster and profile names win. An email is only the label when no real name exists.
-  function reservationDisplayName(r, member, profile) {
-    var profileFull = profile ? notEmailName(profile.full_name) : "";
-    var profileJoined = profile ? joinedPersonName(profile.first_name, profile.last_name) : "";
-    var memberJoined = member ? joinedPersonName(member.first_name, member.last_name) : "";
-    var stamped = notEmailName(r.display_name) || joinedPersonName(r.member_first_name, r.member_last_name);
-    var request = notEmailName(r.requester_name);
-    return profileFull || profileJoined || memberJoined || stamped || request || String(r.requester_email || r.requester_name || "");
-  }
-
-  function nameTokens(full) {
-    var parts = String(full || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
-    if (parts.length < 2) return null;
-    if (parts[0].length < 2 || parts[parts.length - 1].length < 2) return null;
-    return { first: parts[0], last: parts[parts.length - 1] };
-  }
-
-  // Same rule as kos_match_member_by_name: exact last name, and the first name
-  // is equal or one is a prefix of the other (Doug matches Douglas).
-  function namesMatch(holder, person) {
-    var h = nameTokens(holder);
-    var p = nameTokens(person);
-    if (!h || !p || h.last !== p.last) return false;
-    return h.first === p.first || h.first.indexOf(p.first) === 0 || p.first.indexOf(h.first) === 0;
-  }
-
-  function cleanEmail(v) {
-    return (v == null ? "" : String(v)).trim().toLowerCase();
-  }
-
-  function indexRows(rows, key) {
-    var map = {};
-    (rows || []).forEach(function (row) {
-      if (row && row[key] != null && row[key] !== "") map[row[key]] = row;
-    });
-    return map;
-  }
-
-  function personFromReservation(r, membersById, profilesById) {
-    var member = r.member_id ? membersById[r.member_id] : null;
-    var profile = r.member_id ? profilesById[r.member_id] : null;
-    var display = reservationDisplayName(r, member, profile);
-    return {
-      memberId: r.member_id || null,
-      email: cleanEmail(r.requester_email || (member && member.email) || ""),
-      name: notEmailName(display),
-      display: display,
-      size: r.size
+  function statusLabel(row) {
+    var map = {
+      available: "Available",
+      assigned: "Assigned",
+      pending_payment: "Pending payment",
+      comp: "Comp",
+      waiting: "Waiting"
     };
+    var label = map[row.status] || row.status || "";
+    if (row.unverified) label += ", unverified";
+    if (row.renewal_open) label += ", renewal open";
+    return label;
   }
 
-  function lockerHeld(l) {
-    return !!(l && (l.status === "assigned" || l.status === "paid"));
-  }
-
-  function matchScore(person, locker) {
-    if (!lockerHeld(locker)) return 0;
-    var score = 0;
-    if (person.memberId && locker.member_id && person.memberId === locker.member_id) score = 100;
-    else if (person.email && cleanEmail(locker.holder_email) && person.email === cleanEmail(locker.holder_email)) score = 80;
-    else if (person.name && namesMatch(locker.holder_name, person.name)) score = 40;
-    else return 0;
-    if (person.size && locker.size === person.size) score += 10;
-    if (locker.status === "paid") score += 5;
-    return score;
-  }
-
-  function reservationPaid(r, locker) {
-    // A renewal pays again for a locker that is already paid. The locker
-    // status alone does not mean this season's renewal is paid.
-    if (r && r.is_renewal) return !!r.paid_at;
-    return !!(r.paid_at || (locker && locker.status === "paid"));
-  }
-
-  // Inventory is the assignment of record. A reservation with no locker_id
-  // still shows the locker that member already holds.
-  function lockerForReservations(reservations, inventory, membersById, profilesById) {
-    var byId = {};
-    (inventory || []).forEach(function (l) { if (l && l.id != null) byId[l.id] = l; });
-    var used = {};
-    var direct = {};
-    (reservations || []).forEach(function (r) {
-      var linked = r.locker_id && byId[r.locker_id];
-      if (linked) {
-        direct[r.id] = linked;
-        used[linked.id] = r.id;
-      }
-    });
-    var pairs = [];
-    (reservations || []).forEach(function (r) {
-      if (direct[r.id]) return;
-      var person = personFromReservation(r, membersById, profilesById);
-      (inventory || []).forEach(function (l) {
-        if (!l || used[l.id]) return;
-        var score = matchScore(person, l);
-        if (score > 0) pairs.push({ id: r.id, locker: l, score: score, created: r.created_at || "" });
-      });
-    });
-    pairs.sort(function (a, b) {
-      return b.score - a.score
-        || String(a.created).localeCompare(String(b.created))
-        || String(a.locker.locker_number || "").localeCompare(String(b.locker.locker_number || ""));
-    });
-    var matched = {};
-    pairs.forEach(function (p) {
-      if (matched[p.id] || used[p.locker.id]) return;
-      matched[p.id] = p.locker;
-      used[p.locker.id] = p.id;
-    });
-    return function (r) {
-      return direct[r.id] || matched[r.id] || null;
-    };
-  }
-
-  function queuePlace(rows, row, lockerOf) {
-    var mine = lockerOf ? lockerOf(row) : null;
-    if (row.status !== "queued" || mine) return "";
-    var ahead = rows.filter(function (r) {
-      var taken = lockerOf ? lockerOf(r) : null;
-      return r.size === row.size && r.status === "queued" && !taken &&
-        (r.created_at < row.created_at || (r.created_at === row.created_at && String(r.id) <= String(row.id)));
-    });
-    return String(ahead.length);
-  }
-
-  function paintOfficer(model) {
-    ensureOfficerCard();
-    var urls = model.urls || defaultUrls();
-    var smallUrl = document.getElementById("hubLockerSmallUrl");
-    var largeUrl = document.getElementById("hubLockerLargeUrl");
-    if (smallUrl) smallUrl.value = urls.small;
-    if (largeUrl) largeUrl.value = urls.large;
-    var camps = document.getElementById("hubLockerCampaigns");
-    if (camps) camps.textContent = urls.smallCampaign + " · " + urls.largeCampaign;
-    var counts = document.getElementById("hubLockerCounts");
-    if (counts) {
-      var openLarge = (model.inventory || []).filter(function (l) { return l.size === "large" && l.status === "available"; }).length;
-      var openSmall = (model.inventory || []).filter(function (l) { return l.size === "small" && l.status === "available"; }).length;
-      counts.textContent = openLarge + " large available, " + openSmall + " small available.";
-    }
-    var available = (model.inventory || []).filter(function (l) { return l.status === "available"; }).sort(compareLockers);
-    var membersById = indexRows(model.members, "id");
-    var profilesById = indexRows(model.profiles, "member_id");
-    var queue = document.getElementById("hubLockerQueue");
-    if (queue) {
-      var reservations = (model.reservations || []).slice().sort(function (a, b) {
-        return String(a.created_at || "").localeCompare(String(b.created_at || "")) || String(a.id).localeCompare(String(b.id));
-      });
-      var lockerOf = lockerForReservations(reservations, model.inventory, membersById, profilesById);
-      if (!reservations.length) {
-        queue.innerHTML = '<tr><td colspan="7">No reservations yet.</td></tr>';
-      } else {
-        queue.innerHTML = reservations.map(function (r) {
-          var locker = lockerOf(r);
-          var person = personFromReservation(r, membersById, profilesById);
-          var paid = reservationPaid(r, locker);
-          var choices = available.filter(function (l) { return l.size === r.size; });
-          var options = '<option value="">Choose an open locker</option>' + choices.map(function (l) {
-            return '<option value="' + esc(l.locker_number) + '">' + esc(l.locker_number) + '</option>';
-          }).join("");
-          var actions = "";
-          if (!paid) {
-            actions += '<button type="button" class="btn btn-green" data-mark-paid="' + esc(r.id) + '"';
-            if (locker && locker.id !== r.locker_id) actions += ' data-mark-locker="' + esc(locker.id) + '"';
-            actions += ' style="padding:6px 10px">Mark paid</button> ';
-          }
-          if (!locker && r.status !== "cancelled") {
-            actions += '<select data-assign-for="' + esc(r.id) + '" aria-label="Locker number for ' + esc(person.display) + '">' + options + '</select> ';
-            actions += '<button type="button" class="btn btn-primary" data-assign="' + esc(r.id) + '" style="padding:6px 10px">Assign</button>';
-          }
-          return '<tr><td>' + esc(queuePlace(reservations, r, lockerOf)) + '</td><td>' + esc(person.display) +
-            '</td><td>' + esc(r.requester_email || "") + '</td><td>' + esc(r.size) + (r.is_renewal ? " renewal" : "") +
-            '</td><td>' + (paid ? "Yes" : "No") + '</td><td>' + esc(locker && locker.locker_number || "") +
-            '</td><td>' + actions + '</td></tr>';
-        }).join("");
-      }
-    }
-    var body = document.getElementById("hubLockerInventory");
-    if (body) {
-      var inventory = (model.inventory || []).slice().sort(compareLockers);
-      if (!inventory.length) {
-        body.innerHTML = '<tr><td colspan="5">No lockers yet. Apply sql/kos_locker_rentals.sql in Supabase.</td></tr>';
-      } else {
-        body.innerHTML = inventory.map(function (l) {
-          var actions = "";
-          if (l.status === "assigned") {
-            actions += '<button type="button" class="btn btn-green" data-mark-locker="' + esc(l.id) + '" style="padding:6px 10px">Mark paid</button> ';
-          }
-          if (l.status !== "available") {
-            actions += '<button type="button" class="btn" data-free="' + esc(l.id) + '" style="padding:6px 10px">Free</button>';
-          }
-          var holder = l.holder_name || (l.status === "available" ? "Open" : "");
-          return '<tr><td>' + esc(l.locker_number) + '</td><td>' + esc(l.size) + '</td><td>' + esc(holder) +
-            '</td><td><span class="badge ' + esc(l.status) + '">' + esc(l.status) + '</span></td><td>' + actions + '</td></tr>';
-        }).join("");
-      }
-    }
-  }
-
-  /* ---- Printable locker report (board request, Nov 2026) ---- */
-  var reportRows = [];
-
-  var existingPick = { memberId: null };
-
-  function dollarsFromCents(c) {
-    if (c == null || c === "") return "";
-    var n = Number(c);
+  function money(cents) {
+    if (cents == null || cents === "") return "";
+    var n = Number(cents);
     if (!isFinite(n)) return "";
     return (n / 100).toFixed(2);
   }
 
-  function formatPaidDate(iso) {
+  function formatWhen(iso) {
     if (!iso) return "";
     try {
       return new Date(iso).toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" });
-    } catch (e) { return String(iso).slice(0, 10); }
+    } catch (e) {
+      return String(iso).slice(0, 10);
+    }
   }
 
-  function sourceLabel(r) {
-    if (!r) return "";
-    var src = r.source || "";
-    var note = (r.notes || "").trim();
-    var map = { existing_paid: "Existing paid", zeffy: "Zeffy", renewal: "Renewal", manual: "Manual", import: "Import" };
-    var label = map[src] || src;
-    if (label && note) return label + " · " + note;
-    return label || note;
-  }
-
-  function buildReportRows(model) {
-    var membersById = indexRows(model.members, "id");
-    var resByLocker = {};
-    (model.reservations || []).forEach(function (r) { if (r.locker_id) resByLocker[r.locker_id] = r; });
-    return (model.inventory || []).slice().sort(compareLockers).map(function (l) {
-      var m = l.member_id ? membersById[l.member_id] : null;
-      var r = resByLocker[l.id];
-      var name = notEmailName(l.holder_name) || (m ? joinedPersonName(m.first_name, m.last_name) : "") ||
-        (r ? notEmailName(r.requester_name) : "") || "";
-      if (!name && l.status === "available") name = "Open";
-      var email = cleanEmail(l.holder_email) || (m && cleanEmail(m.email)) || (r && cleanEmail(r.requester_email)) || "";
-      var paidAt = r && r.paid_at ? r.paid_at : (l.status === "paid" ? l.created_at : null);
-      var amount = r && r.amount_cents != null ? r.amount_cents : null;
-      return {
-        locker: l.locker_number || "",
-        member: name,
-        email: l.status === "available" ? "" : email,
-        size: l.size || "",
-        status: l.status || "",
-        paidDate: l.status === "available" ? "" : formatPaidDate(paidAt),
-        amount: l.status === "available" ? "" : dollarsFromCents(amount),
-        sourceNote: l.status === "available" ? "" : (sourceLabel(r) || (l.notes || ""))
-      };
+  function summarize(lockers, waiting) {
+    function blank(size) {
+      return { size: size, total: 0, assigned: 0, available: 0, paid: 0, unpaid: 0, comp: 0, waiting: 0 };
+    }
+    var box = { large: blank("large"), small: blank("small") };
+    (lockers || []).forEach(function (row) {
+      var b = box[row.size];
+      if (!b) return;
+      b.total += 1;
+      if (row.status === "comp") b.comp += 1;
+      else if (row.status === "available") b.available += 1;
+      else if (row.status === "assigned" || row.status === "pending_payment") {
+        b.assigned += 1;
+        if (row.status === "assigned" || row.paid) b.paid += 1;
+        else b.unpaid += 1;
+      }
     });
+    (waiting || []).forEach(function (row) {
+      if (box[row.size]) box[row.size].waiting += 1;
+    });
+    return [box.large, box.small];
   }
 
-  function paintReport(model) {
-    reportRows = buildReportRows(model);
-    fillOpenLockerSelect(model);
-    var body = document.getElementById("hubLockerReportBody");
-    if (!body) return;
-    if (!reportRows.length) { body.innerHTML = '<tr><td colspan="8">No lockers yet.</td></tr>'; return; }
-    body.innerHTML = reportRows.map(function (r) {
-      return "<tr><td>" + esc(r.locker) + "</td><td>" + esc(r.member) + "</td><td>" + esc(r.email) +
-        "</td><td>" + esc(r.size) + "</td><td>" + esc(r.status) + "</td><td>" + esc(r.paidDate) +
-        "</td><td>" + esc(r.amount) + "</td><td>" + esc(r.sourceNote) + "</td></tr>";
+  function paintSummary(summary) {
+    var host = document.getElementById("hubLockerSummary");
+    if (!host) return;
+    var rows = summary && summary.length ? summary : [];
+    host.innerHTML = rows.map(function (row) {
+      var bits = [
+        ["Total", row.total],
+        ["Assigned", row.assigned],
+        ["Available", row.available],
+        ["Paid", row.paid],
+        ["Unpaid", row.unpaid],
+        ["Comp", row.comp],
+        ["Waiting", row.waiting]
+      ];
+      return '<section class="locker-desk-card"><h3>' + esc(row.size === "large" ? "Large" : "Small") + '</h3><div class="locker-desk-stats">' +
+        bits.map(function (bit) {
+          return '<div class="locker-desk-stat"><b>' + esc(bit[1] == null ? "0" : bit[1]) + '</b><span>' + esc(bit[0]) + '</span></div>';
+        }).join("") + '</div></section>';
     }).join("");
   }
 
-  function fillOpenLockerSelect(model) {
-    var sel = document.getElementById("hubLockerExistNumber");
-    if (!sel) return;
-    var cur = sel.value;
-    var open = (model.inventory || []).filter(function (l) { return l.status === "available"; }).slice().sort(compareLockers);
-    sel.innerHTML = '<option value="">Pick an open locker</option>' + open.map(function (l) {
-      return '<option value="' + esc(l.locker_number) + '">' + esc(l.locker_number) + " · " + esc(l.size) + "</option>";
-    }).join("");
-    if (cur) sel.value = cur;
+  function rowActions(row) {
+    if (row.status === "available") return "";
+    var html = '<div class="locker-row-actions">';
+    html += '<button type="button" class="btn" data-act="move" data-locker="' + esc(row.locker_number) + '">Change</button>';
+    if (row.status !== "comp") {
+      html += '<button type="button" class="btn" data-act="pay" data-locker="' + esc(row.locker_number) + '">Payment</button>';
+      html += '<button type="button" class="btn" data-act="comp" data-locker="' + esc(row.locker_number) + '" data-holder="' + esc(row.holder_name || "") + '">Comp</button>';
+    }
+    html += '<button type="button" class="btn" data-act="free" data-id="' + esc(row.id) + '">Free</button>';
+    return html + "</div>";
   }
 
-  function reportStamp() {
-    try { return new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" }); } catch (e) { return new Date().toDateString(); }
+  function paintBoard(model) {
+    ensureOfficerCard();
+    board = model || { lockers: [], waiting: [], urls: defaultUrls() };
+    var urls = board.urls || defaultUrls();
+    var smallUrl = document.getElementById("hubLockerSmallUrl");
+    var largeUrl = document.getElementById("hubLockerLargeUrl");
+    if (smallUrl) smallUrl.value = urls.small || "";
+    if (largeUrl) largeUrl.value = urls.large || "";
+    var camps = document.getElementById("hubLockerCampaigns");
+    if (camps) camps.textContent = (urls.smallCampaign || "") + " · " + (urls.largeCampaign || "");
+    paintSummary(board.summary && board.summary.length ? board.summary : summarize(board.lockers, board.waiting));
+    var lockers = (board.lockers || []).slice().sort(compareLockers);
+    var body = document.getElementById("hubLockerRows");
+    if (body) {
+      body.innerHTML = lockers.length ? lockers.map(function (row) {
+        var flags = "";
+        if (row.size_mismatch) flags += ' <span class="badge">Asked for ' + esc(row.reserved_size || "other") + '</span>';
+        return "<tr><td>" + esc(row.locker_number) + "</td><td>" + esc(row.size) + "</td><td>" +
+          esc(row.status === "available" ? "Open" : (row.holder_name || "")) + flags + "</td><td>" +
+          esc(statusLabel(row)) + "</td><td>" + esc(row.status === "comp" ? "" : formatWhen(row.paid_at)) + "</td><td>" +
+          esc(row.status === "comp" ? "" : money(row.amount_cents)) + "</td><td>" +
+          esc(row.status === "comp" ? "" : (row.source || "")) + "</td><td>" + rowActions(row) + "</td></tr>";
+      }).join("") : '<tr><td colspan="8">No lockers yet. Apply sql/kos_locker_desk.sql in Supabase.</td></tr>';
+    }
+    var wait = document.getElementById("hubLockerWaiting");
+    var waiting = board.waiting || [];
+    if (wait) {
+      wait.innerHTML = waiting.length ? waiting.map(function (row) {
+        return "<tr><td>" + esc(row.holder_name || "Name missing") + "</td><td>" + esc(row.size) + "</td><td>" +
+          (row.paid ? "Yes" : "No") + "</td><td>" + esc(formatWhen(row.paid_at)) + "</td><td>" +
+          esc(money(row.amount_cents)) + "</td><td>" + esc(row.source || "") + "</td><td>" +
+          '<button type="button" class="btn btn-primary" data-act="assign-wait" data-reservation="' + esc(row.id) + '">Assign</button></td></tr>';
+      }).join("") : '<tr><td colspan="7">Nobody is waiting.</td></tr>';
+    }
   }
 
-  function printLockerReport() {
-    var w = window.open("", "_blank");
-    if (!w) { setOfficerMsg("Your browser blocked the print window. Allow pop-ups for this site, then try again.", "err"); return; }
-    var taken = reportRows.filter(function (r) { return r.status !== "available"; }).length;
-    var rows = reportRows.map(function (r) {
-      return "<tr><td>" + esc(r.locker) + "</td><td>" + esc(r.member) + "</td><td>" + esc(r.email) + "</td><td>" + esc(r.size) +
-        "</td><td>" + esc(r.status) + "</td><td>" + esc(r.paidDate) + "</td><td>" + esc(r.amount) + "</td><td>" + esc(r.sourceNote) + "</td></tr>";
-    }).join("");
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Krewe of Shamrock Locker Report</title>' +
-      "<style>body{font-family:Georgia,serif;margin:28px;color:#14281d}h1{font-size:22px;margin:0 0 4px}p{margin:0 0 14px;color:#555}" +
-      "table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #999;padding:5px 6px;text-align:left}th{background:#e8f0e8}" +
-      "tr:nth-child(even) td{background:#f7f7f2}@media print{body{margin:8mm}}</style></head><body>" +
-      "<h1>Krewe of Shamrock Locker Report</h1><p>" + esc(reportStamp()) + " · " + reportRows.length + " lockers · " + taken + " taken</p>" +
-      "<table><thead><tr><th>Locker</th><th>Member</th><th>Email</th><th>Size</th><th>Status</th><th>Paid date</th><th>Amount</th><th>Source / note</th></tr></thead><tbody>" + rows + "</tbody></table>" +
-      "<script>window.onload=function(){window.print();}<\/script></body></html>");
-    w.document.close();
+  function csvValue(v) {
+    v = v == null ? "" : String(v);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+
+  function reportRows() {
+    var rows = [];
+    (board && board.lockers || []).slice().sort(compareLockers).forEach(function (row) {
+      rows.push([
+        row.locker_number || "",
+        row.status === "available" ? "" : (row.holder_name || ""),
+        row.size || "",
+        statusLabel(row),
+        row.status === "available" ? "" : formatWhen(row.assigned_at),
+        row.status === "comp" || row.status === "available" ? "" : formatWhen(row.paid_at),
+        row.status === "comp" || row.status === "available" ? "" : money(row.amount_cents),
+        row.status === "comp" || row.status === "available" ? "" : (row.payment_id || ""),
+        row.status === "comp" || row.status === "available" ? "" : (row.source || "")
+      ]);
+    });
+    (board && board.waiting || []).forEach(function (row) {
+      rows.push([
+        "",
+        row.holder_name || "",
+        row.size || "",
+        "Waiting",
+        "",
+        formatWhen(row.paid_at),
+        money(row.amount_cents),
+        row.payment_id || "",
+        row.source || ""
+      ]);
+    });
+    return rows;
   }
 
   function downloadLockerCsv() {
-    var lines = [["Locker", "Member", "Email", "Size", "Status", "Paid date", "Amount", "Source / note"]].concat(reportRows.map(function (r) {
-      return [r.locker, r.member, r.email, r.size, r.status, r.paidDate, r.amount, r.sourceNote];
-    })).map(function (row) {
-      return row.map(function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",");
-    });
-    var csvText = lines.join("\n");
+    var header = ["Locker", "Member", "Size", "Status", "Assigned date", "Paid date", "Amount", "Payment id", "Source"];
+    var csvText = [header].concat(reportRows()).map(function (row) {
+      return row.map(csvValue).join(",");
+    }).join("\n");
     window.__kosLastLockerCsv = csvText;
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csvText], { type: "text/csv" }));
     a.download = "kos-locker-report.csv";
-    document.body.appendChild(a); a.click(); a.remove();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
-
-  function clearExistingForm() {
-    existingPick.memberId = null;
-    ["hubLockerExistSearch", "hubLockerExistName", "hubLockerExistEmail", "hubLockerExistNote", "hubLockerExistAmount"].forEach(function (id) {
-      var el = document.getElementById(id); if (el) el.value = "";
-    });
-    var paid = document.getElementById("hubLockerExistPaid"); if (paid) paid.value = "";
-    var num = document.getElementById("hubLockerExistNumber"); if (num) num.value = "";
-    var pick = document.getElementById("hubLockerExistPick"); if (pick) pick.innerHTML = "";
-    var lab = document.getElementById("hubLockerExistPicked");
-    if (lab) lab.textContent = "No roster member selected. You can still type a name and email below for a non-roster holder.";
+  function printLockerReport() {
+    var w = window.open("", "_blank");
+    if (!w) {
+      setOfficerMsg("Your browser blocked the print window. Allow pop-ups for this site, then try again.", "err");
+      return;
+    }
+    var body = reportRows().map(function (row) {
+      return "<tr>" + row.map(function (cell) { return "<td>" + esc(cell) + "</td>"; }).join("") + "</tr>";
+    }).join("");
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Krewe of Shamrock lockers</title>' +
+      "<style>body{font-family:Georgia,serif;margin:28px;color:#14281d}h1{font-size:22px;margin:0 0 12px}" +
+      "table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #999;padding:5px 6px;text-align:left}th{background:#e8f0e8}</style></head><body>" +
+      "<h1>Krewe of Shamrock lockers</h1><table><thead><tr><th>Locker</th><th>Member</th><th>Size</th><th>Status</th><th>Assigned date</th><th>Paid date</th><th>Amount</th><th>Payment id</th><th>Source</th></tr></thead><tbody>" +
+      body + "</tbody></table><script>window.onload=function(){window.print();}</" + "script></body></html>");
+    w.document.close();
   }
 
-  function paintExistPick(members) {
-    var box = document.getElementById("hubLockerExistPick");
+  function openLockers(exceptNumber) {
+    return (board && board.lockers || []).filter(function (row) {
+      return row.status === "available" && row.locker_number !== exceptNumber;
+    }).slice().sort(compareLockers);
+  }
+
+  function waitingById(id) {
+    return (board && board.waiting || []).filter(function (row) { return String(row.id) === String(id); })[0] || null;
+  }
+
+  function lockerByNumber(num) {
+    return (board && board.lockers || []).filter(function (row) { return row.locker_number === num; })[0] || null;
+  }
+
+  function closePanel() {
+    panelMode = null;
+    var panel = document.getElementById("hubLockerPanel");
+    if (panel) panel.hidden = true;
+  }
+
+  function selectedSize() {
+    var wait = document.getElementById("hubLockerWaitPick");
+    var waiting = wait && wait.value ? waitingById(wait.value) : null;
+    if (waiting) return waiting.size;
+    var member = document.getElementById("hubLockerMemberId");
+    if (member && member.value && board) {
+      var mine = (board.waiting || []).filter(function (row) { return String(row.member_id) === String(member.value); });
+      if (mine.length === 1) return mine[0].size;
+    }
+    var from = lockerByNumber(panelMode && panelMode.from);
+    if (from) return from.size;
+    return "";
+  }
+
+  function refreshSizeWarning() {
+    var warn = document.getElementById("hubLockerPanelWarn");
+    var wrap = document.getElementById("hubLockerPanelConfirmWrap");
+    var box = document.getElementById("hubLockerPanelConfirm");
+    if (!warn || !wrap) return;
+    var pick = document.getElementById("hubLockerNumber");
+    var locker = pick && pick.value ? lockerByNumber(pick.value) : null;
+    var asked = selectedSize();
+    var mismatch = locker && asked && locker.size !== asked;
+    warn.hidden = !mismatch;
+    wrap.hidden = !mismatch;
+    if (!mismatch && box) box.checked = false;
+    if (mismatch) {
+      warn.textContent = "This person asked for a " + asked + " locker. " + locker.locker_number + " is " + locker.size + ".";
+    }
+  }
+
+  function lockerOptions(asked) {
+    var open = openLockers();
+    function opts(list) {
+      return list.map(function (row) {
+        return '<option value="' + esc(row.locker_number) + '">' + esc(row.locker_number) + " · " + esc(row.size) + "</option>";
+      }).join("");
+    }
+    var match = open.filter(function (row) { return !asked || row.size === asked; });
+    var other = open.filter(function (row) { return asked && row.size !== asked; });
+    return '<option value="">Choose an open locker</option>' +
+      (match.length ? '<optgroup label="Matching size">' + opts(match) + "</optgroup>" : "") +
+      (other.length ? '<optgroup label="Other size">' + opts(other) + "</optgroup>" : "") +
+      (!asked ? opts(open) : "");
+  }
+
+  function openPanel(mode, extra) {
+    extra = extra || {};
+    panelMode = { mode: mode, from: extra.locker || "", reservationId: extra.reservation || "", holder: extra.holder || "" };
+    var preset = waitingById(extra.reservation);
+    var presetSize = preset ? preset.size : "";
+    if (!presetSize && extra.locker) {
+      var presetLocker = lockerByNumber(extra.locker);
+      if (presetLocker) presetSize = presetLocker.size;
+    }
+    var panel = document.getElementById("hubLockerPanel");
+    var title = document.getElementById("hubLockerPanelTitle");
+    var body = document.getElementById("hubLockerPanelBody");
+    if (!panel || !body) return;
+    panel.hidden = false;
+    var html = "";
+    if (mode === "assign") {
+      title.textContent = "Assign a locker";
+      var waits = board && board.waiting || [];
+      html += '<label for="hubLockerWaitPick">Waiting list</label><select id="hubLockerWaitPick"><option value="">Choose a waiting list entry</option>' +
+        waits.map(function (row) {
+          var selected = String(row.id) === String(extra.reservation) ? " selected" : "";
+          return '<option value="' + esc(row.id) + '"' + selected + ">" + esc(row.holder_name) + " · " + esc(row.size) + (row.paid ? " · paid" : "") + "</option>";
+        }).join("") + "</select>";
+      html += '<label for="hubLockerRosterSearch">Or find a roster member</label><input id="hubLockerRosterSearch" type="search" placeholder="Name" autocomplete="off">';
+      html += '<div id="hubLockerRosterPick"></div><input type="hidden" id="hubLockerMemberId" value="">';
+      html += '<p id="hubLockerPicked">No roster member selected.</p>';
+      html += '<label for="hubLockerNumber">Open locker</label><select id="hubLockerNumber">' + lockerOptions(presetSize) + "</select>";
+    } else if (mode === "move") {
+      title.textContent = "Change locker";
+      html += "<p>Moving the holder of " + esc(extra.locker) + ".</p>";
+      html += '<label for="hubLockerNumber">New open locker</label><select id="hubLockerNumber">' + lockerOptions(presetSize) + "</select>";
+    } else if (mode === "comp") {
+      title.textContent = "Mark as comp";
+      html += '<label for="hubLockerCompName">Holder name</label><input id="hubLockerCompName" type="text" maxlength="120" value="' + esc(extra.holder || "") + '">';
+    } else if (mode === "pay") {
+      title.textContent = "Payment for " + (extra.locker || "the waiting list");
+      html += '<label for="hubLockerPaySearch">Find a Zeffy payment</label><input id="hubLockerPaySearch" type="search" placeholder="Name">';
+      html += '<div id="hubLockerPayPick"></div><input type="hidden" id="hubLockerPaymentId" value="">';
+      html += "<h4>Or record an off-Zeffy payment</h4>";
+      html += '<label for="hubLockerPaidOn">Date received</label><input id="hubLockerPaidOn" type="date">';
+      html += '<label for="hubLockerAmount">Amount (USD)</label><input id="hubLockerAmount" type="number" min="0.01" step="0.01">';
+      html += '<label for="hubLockerPayNote">Note (required)</label><input id="hubLockerPayNote" type="text" maxlength="500">';
+    }
+    body.innerHTML = html;
+    refreshSizeWarning();
+    var search = document.getElementById("hubLockerRosterSearch");
+    if (search) search.addEventListener("input", searchRoster);
+    var paySearch = document.getElementById("hubLockerPaySearch");
+    if (paySearch) paySearch.addEventListener("input", searchPayments);
+  }
+
+  function paintRoster(members) {
+    var box = document.getElementById("hubLockerRosterPick");
     if (!box) return;
     if (!members || !members.length) {
-      box.innerHTML = '<p class="empty" style="padding:8px">No matches.</p>';
+      box.innerHTML = "";
       return;
     }
     box.innerHTML = members.map(function (m) {
-      var nm = ((m.first_name || "") + " " + (m.last_name || "")).trim() || m.email || "Member";
-      return '<button type="button" class="hub-ei-pick" data-exist-mid="' + esc(m.id) + '" data-exist-name="' + esc(nm) + '" data-exist-email="' + esc(m.email || "") + '" style="display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-bottom:1px solid rgba(168,128,28,.25);background:#fff;cursor:pointer">' +
-        "<b>" + esc(nm) + "</b><br><span style=\"font-size:12.5px;color:#666\">" + esc(m.email || "") + "</span></button>";
-    }).join("");
-    box.querySelectorAll("[data-exist-mid]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        existingPick.memberId = btn.getAttribute("data-exist-mid");
-        document.getElementById("hubLockerExistName").value = btn.getAttribute("data-exist-name") || "";
-        document.getElementById("hubLockerExistEmail").value = btn.getAttribute("data-exist-email") || "";
-        document.getElementById("hubLockerExistPicked").textContent = "Selected: " + (btn.getAttribute("data-exist-name") || "member");
-      });
-    });
+      var name = ((m.first_name || "") + " " + (m.last_name || "")).trim() || "Member";
+      return '<button type="button" class="btn" data-roster-id="' + esc(m.id) + '" data-roster-name="' + esc(name) + '">' + esc(name) + "</button>";
+    }).join(" ");
   }
 
-  async function searchExistingRoster() {
-    var q = (document.getElementById("hubLockerExistSearch").value || "").trim();
+  async function searchRoster() {
+    var input = document.getElementById("hubLockerRosterSearch");
+    var q = (input && input.value || "").trim().toLowerCase();
     if (lockerFixture) {
-      var rows = (lockerFixture.roster || []).filter(function (m) {
-        if (!q) return true;
-        var hay = ((m.first_name || "") + " " + (m.last_name || "") + " " + (m.email || "")).toLowerCase();
-        return hay.indexOf(q.toLowerCase()) >= 0;
-      }).slice(0, 20);
-      paintExistPick(rows);
+      paintRoster((lockerFixture.roster || []).filter(function (m) {
+        var hay = ((m.first_name || "") + " " + (m.last_name || "")).toLowerCase();
+        return !q || hay.indexOf(q) >= 0;
+      }).slice(0, 20));
       return;
     }
     var client = sb();
-    if (!client || q.length < 1) { paintExistPick([]); return; }
+    if (!client || q.length < 1) { paintRoster([]); return; }
     try {
       var res = await client.rpc("officer_search_roster", { p_q: q, p_limit: 20 });
-      if (res.error) throw res.error;
-      paintExistPick((res.data && res.data.members) || []);
+      paintRoster((res && res.data && res.data.members) || []);
     } catch (e) {
-      paintExistPick([]);
+      paintRoster([]);
     }
   }
 
-  async function saveExistingPaid() {
-    var num = (document.getElementById("hubLockerExistNumber").value || "").trim();
-    var name = (document.getElementById("hubLockerExistName").value || "").trim();
-    var email = (document.getElementById("hubLockerExistEmail").value || "").trim();
-    var note = (document.getElementById("hubLockerExistNote").value || "").trim();
-    var paid = (document.getElementById("hubLockerExistPaid").value || "").trim();
-    var amtRaw = (document.getElementById("hubLockerExistAmount").value || "").trim();
-    var amountCents = null;
-    if (amtRaw !== "") {
-      var dollars = Number(amtRaw);
-      if (!isFinite(dollars) || dollars < 0) { setOfficerMsg("Enter a valid dollar amount, or leave amount blank.", "err"); return; }
-      amountCents = Math.round(dollars * 100);
-    }
-    if (!num) { setOfficerMsg("Pick an open locker.", "err"); return; }
-    if (!name && !existingPick.memberId) { setOfficerMsg("Pick a roster member, or type a name.", "err"); return; }
+  function paintPayments(rows) {
+    var box = document.getElementById("hubLockerPayPick");
+    if (!box) return;
+    box.innerHTML = (rows || []).map(function (row) {
+      var label = (row.payer_name || "Name missing") + " · " + formatWhen(row.created_at) + " · " + money(row.amount_cents) + " · " + (row.source || "");
+      if (row.linked_locker_number) label += " · linked to " + row.linked_locker_number;
+      return '<button type="button" class="btn" data-payment-id="' + esc(row.id) + '">' + esc(label) + "</button>";
+    }).join(" ");
+  }
 
+  async function searchPayments() {
+    var q = (document.getElementById("hubLockerPaySearch").value || "").trim().toLowerCase();
     if (lockerFixture) {
-      var lock = (lockerFixture.inventory || []).find(function (l) { return l.locker_number === num && l.status === "available"; });
-      if (!lock) { setOfficerMsg("That locker is not open.", "err"); return; }
-      var paidAt = paid ? (paid + "T12:00:00-05:00") : new Date().toISOString();
-      if (amountCents == null) amountCents = lock.size === "large" ? 20000 : 7500;
-      lock.status = "paid";
-      lock.holder_name = name;
-      lock.holder_email = email || null;
-      lock.member_id = existingPick.memberId;
-      lock.notes = note || "paid end of 2025";
-      lockerFixture.reservations.push({
-        id: "fx-" + Date.now(),
-        member_id: existingPick.memberId,
-        requester_name: name,
-        requester_email: email || null,
-        size: lock.size,
-        notes: note || "paid end of 2025",
-        status: "assigned",
-        locker_id: lock.id,
-        paid_at: paidAt,
-        amount_cents: amountCents,
-        source: "existing_paid",
-        created_at: paidAt
-      });
-      paintOfficer(lockerFixture);
-      paintReport(lockerFixture);
-      setOfficerMsg("Saved. " + num + " is paid and will not be reassigned.", "ok");
-      clearExistingForm();
-      fillOpenLockerSelect(lockerFixture);
+      paintPayments((lockerFixture.payments || []).filter(function (row) {
+        return !q || String(row.payer_name || "").toLowerCase().indexOf(q) >= 0;
+      }));
       return;
     }
-
     var client = sb();
-    if (!client) { setOfficerMsg("Not signed in.", "err"); return; }
-    setOfficerMsg("Saving…", "");
+    if (!client) return;
     try {
-      var res = await client.rpc("officer_locker_add_existing", {
-        p_locker_number: num,
-        p_member_id: existingPick.memberId || null,
-        p_holder_name: name || null,
-        p_holder_email: email || null,
-        p_paid_at: paid ? (paid + "T12:00:00-05:00") : null,
-        p_amount_cents: amountCents,
-        p_note: note || null
-      });
-      if (res.error) throw res.error;
-      var data = res.data || {};
-      if (data.ok === false) throw new Error(data.message || "Could not save.");
-      setOfficerMsg(data.message || ("Saved. " + num + " is paid."), "ok");
-      clearExistingForm();
-      await loadOfficer();
-    } catch (e) {
-      setOfficerMsg((e && e.message) || "Could not save that locker.", "err");
+      var res = await client.rpc("officer_locker_find_payments", { p_query: q });
+      paintPayments((res && res.data && res.data.payments) || []);
+    } catch (e2) {
+      paintPayments([]);
     }
   }
 
-  var lockerFixture = null;
+  function onOfficerChange(ev) {
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === "hubLockerWaitPick" || t.id === "hubLockerNumber") {
+      if (t.id === "hubLockerWaitPick") {
+        var number = document.getElementById("hubLockerNumber");
+        if (number) number.innerHTML = lockerOptions(selectedSize());
+      }
+      refreshSizeWarning();
+    }
+  }
+
+  function onOfficerClick(ev) {
+    var t = ev.target;
+    if (!t || !t.getAttribute) return;
+    if (t.getAttribute("data-roster-id")) {
+      document.getElementById("hubLockerMemberId").value = t.getAttribute("data-roster-id");
+      document.getElementById("hubLockerPicked").textContent = "Selected: " + (t.getAttribute("data-roster-name") || "member");
+      var number = document.getElementById("hubLockerNumber");
+      if (number) number.innerHTML = lockerOptions(selectedSize());
+      refreshSizeWarning();
+      return;
+    }
+    if (t.getAttribute("data-payment-id")) {
+      document.getElementById("hubLockerPaymentId").value = t.getAttribute("data-payment-id");
+      setOfficerMsg("Payment selected.", "ok");
+      return;
+    }
+    var act = t.getAttribute("data-act");
+    if (!act) return;
+    ev.preventDefault();
+    if (act === "assign-wait") openPanel("assign", { reservation: t.getAttribute("data-reservation") });
+    else if (act === "move") openPanel("move", { locker: t.getAttribute("data-locker") });
+    else if (act === "comp") openPanel("comp", { locker: t.getAttribute("data-locker"), holder: t.getAttribute("data-holder") });
+    else if (act === "pay") openPanel("pay", { locker: t.getAttribute("data-locker") });
+    else if (act === "free") freeLocker(t.getAttribute("data-id"));
+  }
+
+  function rpcFailed(res) {
+    return !res || res.error || !res.data || res.data.ok === false;
+  }
+
+  function rpcMessage(res, fallback) {
+    return (res && res.data && res.data.message) || (res && res.error && res.error.message) || fallback;
+  }
+
+  async function callOfficer(name, args) {
+    if (lockerFixture) return fixtureCall(name, args);
+    var client = sb();
+    if (!client) return { data: { ok: false, message: "Not signed in." } };
+    try {
+      return await client.rpc(name, args);
+    } catch (e) {
+      return { error: e };
+    }
+  }
+
+  function fixtureCall(name, args) {
+    args = args || {};
+    if (name === "officer_locker_assign") return { data: fixtureAssign(args) };
+    if (name === "officer_locker_move") return { data: fixtureMove(args) };
+    if (name === "officer_locker_free") return { data: fixtureFree(args) };
+    if (name === "officer_locker_mark_comp") return { data: fixtureComp(args) };
+    if (name === "officer_locker_link_payment") return { data: fixtureLink(args) };
+    if (name === "officer_locker_record_payment") return { data: fixtureRecord(args) };
+    return { data: { ok: false, message: "Not available in the preview." } };
+  }
+
+  function fixtureRefresh() {
+    lockerFixture.summary = summarize(lockerFixture.lockers, lockerFixture.waiting);
+    board = lockerFixture;
+    paintBoard(lockerFixture);
+  }
+
+  function fixtureAssign(args) {
+    var waiting = args.p_reservation_id ? waitingById(args.p_reservation_id) : null;
+    var memberId = args.p_member_id || (waiting && waiting.member_id);
+    var name = waiting && waiting.holder_name;
+    if (!name && memberId) {
+      var person = (lockerFixture.roster || []).filter(function (m) { return String(m.id) === String(memberId); })[0];
+      name = person ? ((person.first_name || "") + " " + (person.last_name || "")).trim() : "";
+    }
+    if (!name) return { ok: false, message: "Choose a roster member or someone on the waiting list." };
+    var locker = lockerByNumber(args.p_locker_number);
+    if (!locker || locker.status !== "available") return { ok: false, message: "That locker is not open." };
+    var asked = waiting && waiting.size;
+    if (asked && asked !== locker.size && !args.p_confirm_size) {
+      return { ok: false, code: "size_mismatch", message: "This person asked for a " + asked + " locker. " + locker.locker_number + " is " + locker.size + ". Confirm to assign it anyway." };
+    }
+    var held = (lockerFixture.lockers || []).filter(function (row) {
+      return row.member_id && String(row.member_id) === String(memberId) && row.status !== "available";
+    })[0];
+    if (held) return { ok: false, message: "This member already has locker " + held.locker_number + ". Change their locker instead." };
+    var sameSize = !asked || asked === locker.size;
+    locker.member_id = memberId || null;
+    locker.holder_name = name;
+    locker.assigned_at = locker.assigned_at || "2026-11-01T16:00:00Z";
+    locker.payment_id = sameSize && waiting ? waiting.payment_id : null;
+    locker.paid_at = sameSize && waiting ? waiting.paid_at : null;
+    locker.amount_cents = sameSize && waiting ? waiting.amount_cents : null;
+    locker.source = sameSize && waiting ? waiting.source : "";
+    locker.paid = !!(locker.payment_id);
+    locker.status = locker.paid ? "assigned" : "pending_payment";
+    locker.size_mismatch = !!(asked && asked !== locker.size);
+    locker.reserved_size = locker.size_mismatch ? asked : null;
+    locker.unverified = false;
+    if (waiting) lockerFixture.waiting = lockerFixture.waiting.filter(function (row) { return row.id !== waiting.id; });
+    fixtureRefresh();
+    return { ok: true, message: "Assigned " + locker.locker_number + " to " + name + "." };
+  }
+
+  function fixtureMove(args) {
+    var from = lockerByNumber(args.p_from_locker_number);
+    var to = lockerByNumber(args.p_to_locker_number);
+    if (!from || !to) return { ok: false, message: "No locker with that number." };
+    if (to.status !== "available") return { ok: false, message: "The new locker is not open." };
+    if (from.size !== to.size && !args.p_confirm_size) {
+      return { ok: false, code: "size_mismatch", message: from.locker_number + " is " + from.size + ". " + to.locker_number + " is " + to.size + ". Confirm to move anyway." };
+    }
+    var same = from.size === to.size;
+    to.holder_name = from.holder_name;
+    to.member_id = from.member_id;
+    to.assigned_at = from.assigned_at;
+    to.status = from.status === "comp" ? "comp" : (same && from.payment_id ? "assigned" : "pending_payment");
+    to.payment_id = from.status === "comp" || !same ? null : from.payment_id;
+    to.paid_at = to.payment_id ? from.paid_at : null;
+    to.amount_cents = to.payment_id ? from.amount_cents : null;
+    to.source = to.payment_id ? from.source : "";
+    to.paid = to.status === "assigned";
+    to.unverified = same ? from.unverified : false;
+    to.size_mismatch = from.size_mismatch;
+    to.reserved_size = from.reserved_size;
+    from.holder_name = null;
+    from.member_id = null;
+    from.status = "available";
+    from.payment_id = null;
+    from.paid_at = null;
+    from.amount_cents = null;
+    from.source = "";
+    from.paid = false;
+    from.unverified = false;
+    from.size_mismatch = false;
+    from.assigned_at = null;
+    fixtureRefresh();
+    return { ok: true, message: "Moved " + to.holder_name + " from " + from.locker_number + " to " + to.locker_number + "." };
+  }
+
+  function fixtureFree(args) {
+    var locker = (lockerFixture.lockers || []).filter(function (row) { return String(row.id) === String(args.p_locker_id); })[0];
+    if (!locker) return { ok: false, message: "Locker not found." };
+    if (locker.holder_name && locker.status !== "comp") {
+      lockerFixture.waiting.push({
+        id: "wait-" + locker.id,
+        member_id: locker.member_id,
+        holder_name: locker.holder_name,
+        size: locker.size,
+        status: "waiting",
+        paid: !!locker.payment_id,
+        paid_at: locker.paid_at,
+        amount_cents: locker.amount_cents,
+        payment_id: locker.payment_id,
+        source: locker.source
+      });
+    }
+    var number = locker.locker_number;
+    locker.holder_name = null;
+    locker.member_id = null;
+    locker.status = "available";
+    locker.payment_id = null;
+    locker.paid_at = null;
+    locker.amount_cents = null;
+    locker.source = "";
+    locker.paid = false;
+    locker.unverified = false;
+    locker.size_mismatch = false;
+    fixtureRefresh();
+    return { ok: true, message: number + " is open." };
+  }
+
+  function fixtureComp(args) {
+    var locker = lockerByNumber(args.p_locker_number);
+    var name = (args.p_holder_name || "").trim();
+    if (!locker) return { ok: false, message: "No locker with that number." };
+    if (!name || name.indexOf("@") >= 0) return { ok: false, message: "Enter the comp holder name." };
+    locker.holder_name = name;
+    locker.status = "comp";
+    locker.payment_id = null;
+    locker.paid_at = null;
+    locker.amount_cents = null;
+    locker.source = "";
+    locker.paid = false;
+    locker.unverified = false;
+    fixtureRefresh();
+    return { ok: true, message: locker.locker_number + " is a comp locker for " + name + "." };
+  }
+
+  function fixtureLink(args) {
+    var pay = (lockerFixture.payments || []).filter(function (row) { return String(row.id) === String(args.p_payment_id); })[0];
+    if (!pay) return { ok: false, message: "That payment was not found." };
+    var locker = lockerByNumber(args.p_locker_number);
+    if (!locker) return { ok: false, message: "Choose a locker or a waiting list row." };
+    if (locker.status === "comp") return { ok: false, message: "A comp locker does not take a payment." };
+    locker.payment_id = pay.id;
+    locker.paid_at = pay.created_at;
+    locker.amount_cents = pay.amount_cents;
+    locker.source = pay.source || "Zeffy";
+    locker.paid = true;
+    locker.status = "assigned";
+    locker.unverified = false;
+    fixtureRefresh();
+    return { ok: true, message: "Payment linked. The paid date is the payment date." };
+  }
+
+  function fixtureRecord(args) {
+    var note = (args.p_note || "").trim();
+    if (!note) return { ok: false, message: "A note is required for an off-Zeffy payment." };
+    if (!args.p_paid_on) return { ok: false, message: "Enter the date the payment was received." };
+    if (!args.p_amount_cents || args.p_amount_cents <= 0) return { ok: false, message: "Enter the amount in dollars. Use Mark as comp for a locker that is not charged." };
+    var locker = lockerByNumber(args.p_locker_number);
+    if (!locker || !locker.holder_name) return { ok: false, message: "Assign a named holder before recording a payment." };
+    var id = "pay-" + Date.now();
+    locker.payment_id = id;
+    locker.paid_at = args.p_paid_on + "T16:00:00Z";
+    locker.amount_cents = args.p_amount_cents;
+    locker.source = "Off Zeffy";
+    locker.paid = true;
+    locker.status = "assigned";
+    locker.unverified = false;
+    lockerFixture.payments = lockerFixture.payments || [];
+    lockerFixture.payments.push({ id: id, payer_name: locker.holder_name, amount_cents: args.p_amount_cents, created_at: locker.paid_at, source: "Off Zeffy", description: note });
+    fixtureRefresh();
+    return { ok: true, message: "Off-Zeffy payment recorded for " + locker.holder_name + "." };
+  }
+
+  async function savePanel() {
+    if (!panelMode) return;
+    var confirmBox = document.getElementById("hubLockerPanelConfirm");
+    var confirmed = !!(confirmBox && confirmBox.checked);
+    var numberEl = document.getElementById("hubLockerNumber");
+    var number = numberEl ? numberEl.value : "";
+    var result;
+    if (panelMode.mode === "assign") {
+      var wait = document.getElementById("hubLockerWaitPick");
+      var member = document.getElementById("hubLockerMemberId");
+      var reservationId = wait && wait.value ? wait.value : null;
+      if (!reservationId && member && member.value && board) {
+        var mine = (board.waiting || []).filter(function (row) { return String(row.member_id) === String(member.value); });
+        if (mine.length === 1) reservationId = mine[0].id;
+      }
+      if (!number) { setOfficerMsg("Choose an open locker.", "err"); return; }
+      if (selectedSize() && lockerByNumber(number) && lockerByNumber(number).size !== selectedSize() && !confirmed) {
+        refreshSizeWarning();
+        setOfficerMsg("Check the box to assign a different size.", "err");
+        return;
+      }
+      result = await callOfficer("officer_locker_assign", {
+        p_member_id: member && member.value ? member.value : null,
+        p_reservation_id: reservationId,
+        p_locker_number: number,
+        p_confirm_size: confirmed
+      });
+    } else if (panelMode.mode === "move") {
+      if (!number) { setOfficerMsg("Choose an open locker.", "err"); return; }
+      result = await callOfficer("officer_locker_move", {
+        p_from_locker_number: panelMode.from,
+        p_to_locker_number: number,
+        p_confirm_size: confirmed
+      });
+    } else if (panelMode.mode === "comp") {
+      result = await callOfficer("officer_locker_mark_comp", {
+        p_locker_number: panelMode.from,
+        p_holder_name: (document.getElementById("hubLockerCompName").value || "").trim()
+      });
+    } else if (panelMode.mode === "pay") {
+      var paymentId = (document.getElementById("hubLockerPaymentId").value || "").trim();
+      var note = (document.getElementById("hubLockerPayNote").value || "").trim();
+      var paidOn = (document.getElementById("hubLockerPaidOn").value || "").trim();
+      var amountRaw = (document.getElementById("hubLockerAmount").value || "").trim();
+      if (paymentId) {
+        result = await callOfficer("officer_locker_link_payment", {
+          p_payment_id: paymentId,
+          p_locker_number: panelMode.from || null,
+          p_reservation_id: panelMode.reservationId || null
+        });
+      } else {
+        if (!note) { setOfficerMsg("A note is required for an off-Zeffy payment.", "err"); return; }
+        var dollars = Number(amountRaw);
+        if (!paidOn || !isFinite(dollars) || dollars <= 0) {
+          setOfficerMsg("Enter the date and amount, or choose a Zeffy payment.", "err");
+          return;
+        }
+        result = await callOfficer("officer_locker_record_payment", {
+          p_paid_on: paidOn,
+          p_amount_cents: Math.round(dollars * 100),
+          p_note: note,
+          p_locker_number: panelMode.from || null,
+          p_reservation_id: panelMode.reservationId || null
+        });
+      }
+    }
+    if (rpcFailed(result)) {
+      setOfficerMsg(rpcMessage(result, "Could not update the locker."), "err");
+      if (result && result.data && result.data.code === "size_mismatch") refreshSizeWarning();
+      return;
+    }
+    setOfficerMsg(rpcMessage(result, "Saved."), "ok");
+    closePanel();
+    if (!lockerFixture) await loadOfficer();
+  }
+
+  async function freeLocker(id) {
+    if (!window.confirm("Free this locker? The holder returns to the waiting list when they are not a comp.")) return;
+    var result = await callOfficer("officer_locker_free", { p_locker_id: id });
+    if (rpcFailed(result)) {
+      setOfficerMsg(rpcMessage(result, "Could not free that locker."), "err");
+      return;
+    }
+    setOfficerMsg(rpcMessage(result, "Locker is open."), "ok");
+    if (!lockerFixture) await loadOfficer();
+  }
+
   window.__kosLockerOfficerFixture = function (fx) {
     lockerFixture = fx || null;
     if (!lockerFixture) return;
+    if (!lockerFixture.summary) lockerFixture.summary = summarize(lockerFixture.lockers, lockerFixture.waiting);
     ensureOfficerCard();
-    paintOfficer(lockerFixture);
-    paintReport(lockerFixture);
+    paintBoard(lockerFixture);
   };
 
-
-  window.kosPaintLockerOfficer = function (model) { paintOfficer(model); paintReport(model || {}); };
+  window.kosPaintLockerOfficer = function (model) {
+    lockerFixture = model || null;
+    if (lockerFixture && !lockerFixture.summary) lockerFixture.summary = summarize(lockerFixture.lockers, lockerFixture.waiting);
+    paintBoard(model || {});
+  };
 
   async function loadOfficer() {
     var seq = ++officerSeq;
+    if (lockerFixture) {
+      paintBoard(lockerFixture);
+      return;
+    }
     var client = sb();
     if (!client) return;
     ensureOfficerCard();
-    var urls = defaultUrls();
-    var inventory = [];
-    var reservations = [];
     try {
-      var settings = await client.from("locker_settings").select("key,value");
-      if (settings && settings.error) throw settings.error;
-      if (settings && settings.data) applySettings(settings.data, urls);
-      var inv = await client.from("lockers").select("id,locker_number,size,holder_name,holder_email,status,notes,member_id");
-      if (inv && inv.error) throw inv.error;
-      inventory = inv.data || [];
-      var res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id,is_renewal,amount_cents,source");
-      if (res && res.error) {
-        res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id,is_renewal");
-        if (res && res.error) {
-          res = await client.from("locker_reservations").select("id,requester_name,requester_email,size,notes,status,paid_at,locker_id,created_at,member_id");
-        }
-      }
-      if (res && res.error) throw res.error;
-      reservations = (res.data || []).filter(function (r) { return r.status !== "cancelled"; });
-      var members = [];
-      var profiles = [];
-      try {
-        var mem = await client.from("members").select("id,first_name,last_name,email");
-        if (mem && !mem.error && mem.data) members = mem.data;
-      } catch (ignoreMembers) {}
-      try {
-        var prof = await client.from("profiles").select("member_id,full_name,first_name,last_name");
-        if (prof && !prof.error && prof.data) profiles = prof.data;
-      } catch (ignoreProfiles) {}
+      var res = await client.rpc("officer_locker_board");
       if (seq !== officerSeq) return;
-      paintOfficer({ urls: urls, inventory: inventory, reservations: reservations, members: members, profiles: profiles });
-      paintReport({ inventory: inventory, reservations: reservations, members: members });
+      if (!res || res.error || !res.data || res.data.ok === false) {
+        paintBoard({ urls: defaultUrls(), lockers: [], waiting: [], summary: summarize([], []) });
+        setOfficerMsg((res && res.data && res.data.message) || (res && res.error && res.error.message) || "Could not load lockers. Apply sql/kos_locker_desk.sql in Supabase, then refresh.", "err");
+        return;
+      }
+      paintBoard(res.data);
     } catch (e) {
       if (seq !== officerSeq) return;
-      paintOfficer({ urls: urls, inventory: [], reservations: [] });
-      setOfficerMsg("Could not load lockers. Apply sql/kos_locker_rentals.sql in Supabase, then refresh.", "err");
+      paintBoard({ urls: defaultUrls(), lockers: [], waiting: [], summary: summarize([], []) });
+      setOfficerMsg("Could not load lockers. Apply sql/kos_locker_desk.sql in Supabase, then refresh.", "err");
     }
   }
 
@@ -1054,7 +1252,10 @@
 
   async function saveUrls() {
     var client = sb();
-    if (!client) return;
+    if (!client || lockerFixture) {
+      setOfficerMsg(lockerFixture ? "Pay links are preview only here." : "Not signed in.", "err");
+      return;
+    }
     var small = (document.getElementById("hubLockerSmallUrl").value || "").trim();
     var large = (document.getElementById("hubLockerLargeUrl").value || "").trim();
     setOfficerMsg("Saving pay links…", "");
@@ -1073,54 +1274,14 @@
     await loadOfficer();
   }
 
-  async function onOfficerClick(ev) {
-    var t = ev.target;
-    if (!t || !t.getAttribute) return;
-    var client = sb();
-    if (!client) return;
-    var mark = t.getAttribute("data-mark-paid");
-    var markLocker = t.getAttribute("data-mark-locker");
-    var assign = t.getAttribute("data-assign");
-    var free = t.getAttribute("data-free");
-    if (!mark && !markLocker && !assign && !free) return;
-    ev.preventDefault();
-    var result;
-    if (mark) {
-      result = await client.rpc("officer_locker_mark_paid", { p_reservation_id: mark });
-      if (!result || result.error || (result.data && result.data.ok === false)) {
-        setOfficerMsg((result && result.error && result.error.message) || (result && result.data && result.data.message) || "Could not update the locker.", "err");
-        return;
-      }
-    }
-    if (markLocker) {
-      result = await client.rpc("officer_locker_mark_paid", { p_locker_id: markLocker });
-    } else if (!mark && free) {
-      if (!window.confirm("Free this locker and return it to available?")) return;
-      result = await client.rpc("officer_locker_free", { p_locker_id: free });
-    } else if (assign) {
-      var sel = document.querySelector('select[data-assign-for="' + assign + '"]');
-      var num = sel ? sel.value : "";
-      if (!num) {
-        setOfficerMsg("Choose an open locker number first.", "err");
-        return;
-      }
-      result = await client.rpc("officer_locker_assign", { p_reservation_id: assign, p_locker_number: num });
-    }
-    if (!result || result.error || (result.data && result.data.ok === false)) {
-      setOfficerMsg((result && result.error && result.error.message) || (result && result.data && result.data.message) || "Could not update the locker.", "err");
-      return;
-    }
-    setOfficerMsg("Saved.", "ok");
-    await loadOfficer();
-    await loadMember();
-  }
-
   async function detectOfficer() {
     var client = sb();
     if (!client || !client.rpc) return false;
     try {
       var res = await client.rpc("is_krewe_officer");
-      return !!(res && res.data);
+      if (res && res.data) return true;
+      var tool = await client.rpc("has_tool", { p_tool: "lockers" });
+      return !!(tool && tool.data);
     } catch (e) {
       return false;
     }
@@ -1132,17 +1293,10 @@
     var officer = false;
     try { officer = await detectOfficer(); } catch (e2) { officer = false; }
     var existing = document.getElementById("hubLockers");
-    if (officer || existing) {
+    if (officer || existing || lockerFixture) {
       ensureOfficerCard();
-      if (officer) {
+      if (officer || lockerFixture) {
         try { await loadOfficer(); } catch (e3) {}
-      } else if (!document.getElementById("hubLockerQueue")) {
-        setOfficerMsg("Sign in as an officer to load the queue and inventory.", "");
-      } else if (!officer) {
-        var q = document.getElementById("hubLockerQueue");
-        if (q && !q.children.length) {
-          setOfficerMsg("Sign in as an officer to load the queue and inventory.", "");
-        }
       }
     }
   }

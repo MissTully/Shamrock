@@ -428,8 +428,8 @@ test.describe("Membership Applications", () => {
       const stub = {
         from: () => query(),
         rpc: async (name, args) => {
+          if (name !== "reveal_membership_application_id") return { data: null, error: null };
           window.__revealArgs = args;
-          if (name !== "reveal_membership_application_id") return { data: { ok: false, message: "no" } };
           if (args.p_kind === "dl") return { data: { ok: true, dl: "F123456789012" } };
           return { data: { ok: true, ssn: "123456789" } };
         }

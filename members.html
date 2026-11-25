@@ -247,6 +247,26 @@
     cursor:not-allowed;
     background:linear-gradient(180deg,var(--green-800),var(--green-900));
   }
+  #hubLockers .locker-desk-summary{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 14px; }
+  #hubLockers .locker-desk-card{ border:1px solid rgba(168,128,28,.35); border-radius:12px; padding:10px 12px; background:#fbf7ec; }
+  #hubLockers .locker-desk-card h3{ margin:0 0 8px; font-size:16px; color:var(--green-800); }
+  #hubLockers .locker-desk-stats{ display:flex; flex-wrap:wrap; gap:8px 12px; }
+  #hubLockers .locker-desk-stat{ min-width:64px; white-space:nowrap; }
+  #hubLockers .locker-desk-stat b{ display:block; font-size:18px; color:var(--green-800); }
+  #hubLockers .locker-desk-stat span{ font-size:12px; color:var(--muted); }
+  #hubLockers .locker-desk-actions{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+  #hubLockers .locker-row-actions{ display:flex; flex-wrap:wrap; gap:4px; }
+  #hubLockers .locker-row-actions .btn{ padding:6px 8px; }
+  #hubLockers .locker-desk-panel{ border:1px solid rgba(168,128,28,.45); border-radius:12px; padding:12px; margin:0 0 12px; background:#fff; }
+  #hubLockers .locker-desk-panel label{ display:block; margin-top:8px; }
+  #hubLockers .locker-warn{ color:#7a1f2b; font-weight:700; }
+  #hubLockers details.locker-settings{ margin-top:14px; }
+  #hubLockers details.locker-settings summary{ cursor:pointer; font-weight:700; color:var(--green-800); }
+  @media (max-width:720px){
+    #hubLockers .locker-desk-summary{ grid-template-columns:1fr; }
+    #hubLockers .locker-desk-actions .btn,
+    #hubLockers .locker-desk-panel .btn{ width:100%; }
+  }
   .seg{ display:inline-flex; border:1px solid var(--green-700); border-radius:10px; overflow:hidden; margin-bottom:8px; }
   .seg button{ border:0; background:#fff; color:var(--green-800); padding:8px 16px; font-family:var(--display); cursor:pointer; }
   .seg button.on{ background:var(--green-700); color:#fff; }
@@ -3435,27 +3455,6 @@
         }},
 
       /* ---- Logistics & Coordination ---- */
-      { id:"locker_report", cat:"Logistics & Coordination", icon:"🔑", title:"Locker Assignments", secure:true,
-        desc:"Physical lockers and who holds them. Open means available.",
-        run: async()=>{
-          const { data, error } = await supabase.from("lockers").select("locker_number,size,holder_name,status,notes");
-          if(error) throw error;
-          const rows=(data||[]).slice().sort((a,b)=>{
-            const rank=(n)=>{ const m=/^([A-Za-z]+)(\d+)$/.exec(n||""); if(!m) return [9,0]; const p=m[1].toUpperCase(); return [p==="LL"?0:p==="RL"?1:p==="RS"?2:3, parseInt(m[2],10)]; };
-            const A=rank(a.locker_number), B=rank(b.locker_number);
-            return A[0]-B[0] || A[1]-B[1];
-          });
-          const by={};
-          rows.forEach(l=>{ by[l.status]=(by[l.status]||0)+1; });
-          return rStats(Object.keys(by).map(k=>({l:k,v:by[k]})).concat([{l:"Total",v:rows.length}])) +
-            rTable(["Locker","Size","Holder","Status","Notes"], rows.map(l=>[
-              l.locker_number||"(to assign)",
-              l.size||"-",
-              l.status==="available" && !l.holder_name ? "Open" : (l.holder_name||"-"),
-              l.status,
-              l.notes||"-"
-            ]));
-        }},
       { id:"carpool_board", cat:"Logistics & Coordination", icon:"🚗", title:"Carpool Board Summary",
         desc:"Drivers offering rides vs members needing one.",
         run: async()=>{
@@ -5004,7 +5003,7 @@
   <script src="assets/kos-renewals.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-dues-waivers.js?v=20261122ledger1" defer></script>
   <script src="assets/kos-dues-reporting.js?v=20261125give1" defer></script>
-<script src="assets/kos-lockers.js?v=20261105lockerexist1" defer></script>
+<script src="assets/kos-lockers.js?v=20261125lockerdesk1" defer></script>
 </body>
 </html>
 
