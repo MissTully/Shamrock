@@ -1,5 +1,5 @@
 // Description URLs are real links on the public event page and in the Hub.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("node:fs");
 const path = require("node:path");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");

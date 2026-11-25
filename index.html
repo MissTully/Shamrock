@@ -288,6 +288,7 @@ function eventDescHtml(text) {
 }
 function shareBlock(ev) {
   if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+  if (String(ev.source || "").toLowerCase() === "ikc") return "";
   const st = String(ev.status || "published").toLowerCase();
   if (st !== "published" && st !== "live") return "";
   if (ev.is_public === false) return "";
@@ -302,6 +303,26 @@ function listLabel(ev) {
     return window.kosCalendar.eventListLabel(ev) || "";
   }
   return "";
+}
+function memberRsvpHtml(ev) {
+  if (!window.kosCalendar || typeof window.kosCalendar.publicRsvpHtml !== "function") return "";
+  return window.kosCalendar.publicRsvpHtml(ev);
+}
+function ticketLinkHtml(ev) {
+  const pay = (window.kosCalendar && typeof window.kosCalendar.ticketCheckoutUrl === "function")
+    ? window.kosCalendar.ticketCheckoutUrl(ev) : (ev && ev.ticket_payment_url || "");
+  if (!pay) return "";
+  const cents = Number(ev && ev.ticket_price_cents);
+  const price = cents > 0 ? ((cents % 100 === 0) ? " ($" + (cents / 100) + ")" : " ($" + (cents / 100).toFixed(2) + ")") : "";
+  return `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets${price} &#8594;</a>`;
+}
+function hostLinkHtml(ev) {
+  if (!ev || String(ev.source || "") !== "ikc" || !ev.external_url) return "";
+  return `<a class="rsvp" href="${esc(ev.external_url)}" target="_blank" rel="noopener">Details on the host krewe's page</a>`;
+}
+function membersNoteHtml(ev) {
+  if (!ev || !ev.members_only) return "";
+  return `<span class="rsvp">Members only. The street address stays in the Member Hub.</span>`;
 }
 (async () => {
   const sinceIso = (window.kosCalendar && typeof window.kosCalendar.eventListSinceIso === "function")
@@ -356,32 +377,11 @@ function listLabel(ev) {
         : dateStr + " · " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
     })();
     const isIkc = ev.source === "ikc";
-    const n = (ev.name || "").toLowerCase();
-    const isBall = n.includes("tartan ball") && !n.includes("basket") && !n.includes("happy hour");
-    const pay = ev.ticket_payment_url
-      || (isBall ? "http://www.tampabaytartanball.com/home.html" : "")
-      || ((ev.external_url || "").toLowerCase().includes("zeffy.com") ? ev.external_url : "");
     const membersOnly = !!ev.members_only;
     const where = ev.location
       ? ev.location
       : (membersOnly ? "Address shared with members after signup" : "");
-    const action = (window.kosCalendar && window.kosCalendar.publicSignupAction)
-      ? window.kosCalendar.publicSignupAction(ev) : "";
-    const rsvp = isIkc || action === "ikc"
-      ? `<a class="rsvp" href="${esc(ev.external_url || "https://interkrewe.com/Calendar")}" target="_blank" rel="noopener">Details on the host krewe&#39;s page &#8599;</a>`
-      : (action === "parade-members" || (membersOnly && String(ev.event_type || "").toLowerCase() === "parade")
-          ? `<a class="rsvp" href="members.html">Members only. March RSVP is in the Hub &#8594;</a>`
-          : (action === "parade"
-          ? `<a class="rsvp" href="parades.html">Parade details &#8594;</a>`
-          : (action === "members" || membersOnly
-          ? `<a class="rsvp" href="members.html">Members only. Sign in for details and address &#8594;</a>`
-          : (action === "closed"
-          ? `<span class="rsvp">Registration closed</span>`
-          : (action === "tickets-soon"
-          ? `<span class="rsvp">Tickets coming soon</span>`
-          : (pay || action === "tickets"
-          ? `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets &#8594;</a>`
-          : `<a class="rsvp" href="event-signup.html?event=${esc(ev.id)}">RSVP &#8594;</a>`))))));
+    const rsvp = ticketLinkHtml(ev) + memberRsvpHtml(ev) + hostLinkHtml(ev) + membersNoteHtml(ev);
     const card = document.createElement("div");
     const featuredHere = liveFeatured(ev);
     card.className = (isIkc ? "event-card ikc" : "event-card") + (featuredHere ? " is-featured" : "");
@@ -414,22 +414,7 @@ function listLabel(ev) {
     })();
     const membersOnly = !!featuredEv.members_only;
     const where = featuredEv.location || "";
-    const pay = featuredEv.ticket_payment_url || "";
-    const action = (window.kosCalendar && window.kosCalendar.publicSignupAction)
-      ? window.kosCalendar.publicSignupAction(featuredEv) : "";
-    const rsvp = action === "parade" || action === "parade-members"
-      ? (action === "parade-members"
-        ? `<a class="rsvp" href="members.html">Members only. Sign in for details</a>`
-        : `<a class="rsvp" href="parades.html">Parade details</a>`)
-      : (action === "members" || membersOnly
-      ? `<a class="rsvp" href="members.html">Members only. Sign in for details</a>`
-      : (action === "closed"
-      ? `<span class="rsvp">Registration closed</span>`
-      : (action === "tickets-soon"
-      ? `<span class="rsvp">Tickets coming soon</span>`
-      : (pay || action === "tickets"
-      ? `<a class="rsvp" href="${esc(pay)}" target="_blank" rel="noopener noreferrer">Buy tickets</a>`
-      : `<a class="rsvp" href="event-signup.html?event=${esc(featuredEv.id)}">RSVP</a>`))));
+    const rsvp = ticketLinkHtml(featuredEv) + memberRsvpHtml(featuredEv) + hostLinkHtml(featuredEv) + membersNoteHtml(featuredEv);
     const flyerRaw = String(featuredEv.flyer_url || "").trim();
     const flyerIsPdf = /\.pdf(?:$|[?#])/i.test(flyerRaw);
     const flyerSrc = flyerRaw && !flyerIsPdf

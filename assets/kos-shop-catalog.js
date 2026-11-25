@@ -46,6 +46,27 @@
     return "$" + (v / 100).toFixed(2);
   }
 
+  function stockCount(p) {
+    if (!p || p.stock_on_hand == null || p.stock_on_hand === "") return null;
+    var n = Number(p.stock_on_hand);
+    if (!isFinite(n)) return null;
+    return n;
+  }
+
+  function isSoldOut(p) {
+    var n = stockCount(p);
+    return n != null && n <= 0;
+  }
+
+  function stockNote(p, live) {
+    if (!live) return "";
+    var n = stockCount(p);
+    if (n == null) return "";
+    if (n <= 0) return '<div class="soldout">Sold out</div>';
+    if (n <= 5) return '<div class="stock-low">Only ' + n + " left</div>";
+    return "";
+  }
+
   function visible(p) {
     var st = (p && p.status) || "draft";
     return st === "live" || st === "coming_soon";
@@ -65,12 +86,13 @@
       var im = safeUrl(p.image_url);
       var name = p.name || "Krewe product";
       var live = (p.status || "") === "live";
-      var open = live ? '<a class="product" href="' + esc(href) + '">' : '<article class="product product-soon">';
-      var close = live ? "</a>" : "</article>";
+      var sold = live && isSoldOut(p);
+      var open = (live && !sold) ? '<a class="product" href="' + esc(href) + '">' : (sold ? '<article class="product product-soldout">' : '<article class="product product-soon">');
+      var close = (live && !sold) ? "</a>" : "</article>";
       var img = im
         ? '<div class="pimg" style="background-image:url(\'' + esc(im) + "')\"></div>"
         : '<div class="pimg pimg-ph"><span class="ph-label">Photo coming soon</span></div>';
-      var soon = live ? "" : '<div class="soon">Coming soon</div>';
+      var soon = live ? stockNote(p, true) : '<div class="soon">Coming soon</div>';
       return open + img +
         '<div class="pbody"><h3>' + esc(name) + "</h3>" +
         '<div class="desc">' + esc(p.description || "") + "</div>" +

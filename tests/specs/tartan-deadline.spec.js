@@ -3,7 +3,7 @@
 // now that the October 24, 2026 ball has passed.
 // Member Hub (sign-in and both hubs) still shows a Saturday reminder through
 // the end of October 24, then hides it. That badge is an event reminder, not a ticket sale.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const HUB_LABEL = "Tartan Ball is this Saturday, October 24!";
@@ -106,10 +106,14 @@ test.describe("signed-in hubs", () => {
     await expect(badge).toHaveText(HUB_LABEL);
     await expect(badge).toHaveAttribute("href", "/tartan-ball.html");
     await expect(page.locator("#hubTartanDeadline")).toHaveCount(0);
-    const top = await page.locator("#appTop").boundingBox();
-    const box = await badge.boundingBox();
-    expect(box.y).toBeGreaterThan(top.y);
-    const banner = await page.locator("#hubGetAppBanner").boundingBox();
-    expect(box.y).toBeLessThan(banner.y);
+    // Home rebuilds when events arrive, so the first badge node can detach
+    // between a visibility check and a position read.
+    await expect.poll(async () => {
+      const top = await page.locator("#appTop").boundingBox();
+      const box = await badge.boundingBox();
+      const banner = await page.locator("#hubGetAppBanner").boundingBox();
+      if (!top || !box || !banner) return "";
+      return box.y > top.y && box.y < banner.y ? "placed" : "misplaced";
+    }).toBe("placed");
   });
 });

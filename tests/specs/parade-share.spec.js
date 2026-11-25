@@ -1,5 +1,5 @@
 // Public parade flyers and share rows. Offline fixtures only.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const SANTA_ID = "6918ff19-f232-4ddf-83d7-82f0a141eb95";

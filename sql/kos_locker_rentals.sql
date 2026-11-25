@@ -706,7 +706,7 @@ declare
   v_locker jsonb;
 begin
   v_kind := coalesce(p->>'product_kind', 'other');
-  if v_kind not in ('store', 'event', 'dues', 'donation', 'raffle', 'other') then
+  if v_kind not in ('store', 'event', 'dues', 'donation', 'raffle', 'background_check', 'other') then
     v_kind := 'other';
   end if;
   v_year := coalesce(

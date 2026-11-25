@@ -1,5 +1,7 @@
 // Playwright regression config for the Krewe of Shamrock static site.
 // Serves the repository root with Python's http.server (no build step needed).
+// Specs must import { test, expect } from ./specs/kos-fixtures so live
+// Supabase storage media is stubbed or aborted and never downloaded in CI.
 const { defineConfig } = require("@playwright/test");
 
 module.exports = defineConfig({

@@ -1,4 +1,4 @@
-# Payments — Zeffy setup for the Krewe of Shamrock (501(c)(3))
+# Payments - Zeffy setup for the Krewe of Shamrock (501(c)(3))
 
 The payments ledger and `kos_record_payment` RPC are already live. This runbook
 connects Zeffy payment notifications to the `zeffy-webhook` Supabase Edge Function,
@@ -10,10 +10,11 @@ which records payments and can auto-mark matching membership dues as paid.
 |---|---|
 | `payments` table | Ledger of online payments; officers read it in the hub. |
 | `kos_record_payment(...)` | Idempotently records a payment, matches the payer to the roster by email, and auto-marks matching dues payments. |
-| `zeffy-webhook` Edge Function | Authenticates Zeffy with a shared token, maps the payment, and calls the recorder. |
+| `zeffy-webhook` Edge Function | Authenticates Zeffy with a shared token (header `x-zeffy-token` or query `token`), maps the payment, and calls the recorder. |
+| `zeffy_webhook_receipts` | One row per webhook call, inserted with the service role. RLS is on and there is no client policy. Apply `sql/kos_zeffy_webhook_receipts.sql` in the SQL editor before relying on it. |
 | Officer desk → Dues & Payments | Same Payments gate. Tabs for the cash ledger, the dues season tracker, the waiver report, and CSV export. See TREASURER_DUES_REPORTING.md. |
 
-## Step 1 — Create Zeffy campaigns and payment forms (Patrick)
+## Step 1 - Create Zeffy campaigns and payment forms (Patrick)
 
 1. Go to [zeffy.com](https://zeffy.com), sign in or create the Krewe account, and
    complete the nonprofit verification and payout setup.
@@ -38,7 +39,7 @@ Amounts are level-driven. The rate card is `public.kos_dues_catalog` (one row pe
 
 Those amounts and links match the 2026 catalog rows. Campaigns that exist are valid until June 30. Reminder emails must use the link for that member's level and **must never** email members whose `dues_payments.paid` is true (a waiver counts as paid). Zeffy `payment.completed` via `zeffy-webhook` still auto-marks the matching unpaid `dues_payments` row. This catalog does not change that webhook.
 
-## Step 2 — Add the webhook in Zeffy (Patrick)
+## Step 2 - Add the webhook in Zeffy (Patrick)
 
 In Zeffy's integrations/developer/webhooks area, add a webhook for the
 `payment.completed` event. Use this URL template (replace the placeholder with
@@ -52,7 +53,7 @@ If Zeffy supports custom headers, prefer sending the token as
 `x-zeffy-token: YOUR_ZEFFY_WEBHOOK_TOKEN` instead of putting it in the URL. Send
 the complete JSON payment envelope, including the event `type` and payment id.
 
-## Step 3 — Configure Supabase secrets (one time)
+## Step 3 - Configure Supabase secrets (one time)
 
 In Supabase Dashboard → **Edge Functions** → `zeffy-webhook` → **Secrets**, set:
 
@@ -65,29 +66,66 @@ In Supabase Dashboard → **Edge Functions** → `zeffy-webhook` → **Secrets**
 webhook sender and cannot provide a Supabase login JWT; the function uses the
 shared `ZEFFY_WEBHOOK_TOKEN` instead.
 
+## Rotate the webhook token
+
+Do this when the token may have been exposed, and when you move Zeffy from the
+query string onto a header. The function keeps one secret, named
+`ZEFFY_WEBHOOK_TOKEN`.
+
+1. Generate a new random token. Do not put it in git, chat, or this file.
+2. In Supabase, open **Edge Functions**, then `zeffy-webhook`, then **Secrets**.
+   Set `ZEFFY_WEBHOOK_TOKEN` to the new value. Keep that name. Save.
+3. In Zeffy, set the webhook to the same new value. Prefer the header
+   `x-zeffy-token`. The query parameter `token` still works, so you can confirm
+   the header and then remove `?token=` from the URL. The function accepts the
+   header or the query parameter. Each one is compared to `ZEFFY_WEBHOOK_TOKEN`.
+4. Send a test `payment.completed`. Confirm HTTP 200, a new row in
+   `public.zeffy_webhook_receipts`, and a ledger row in `public.payments`.
+
+After step 2, a call that still sends the old token is rejected until step 3.
+Do step 3 immediately after step 2.
+
 ## Kind mapping
 
 The function first uses `metadata.kind` (or `product_kind`). Otherwise it checks
 campaign/product text in this order:
 
-- `dues` — dues, membership, member
-- `raffle` — raffle, drawing, lottery
-- `donation` — donation, donor, gift
-- `event` — event, ticket, admission, gala, ball, parade
-- `store` — store, merch, merchandise, shirt, tee, hat, kilt, apparel
-- `other` — no match
+- `dues` - dues, membership, member
+- `raffle` - raffle, drawing, lottery
+- `donation` - donation, donor, gift
+- `event` - event, ticket, admission, gala, ball, parade
+- `store` - store, merch, merchandise, shirt, tee, hat, kilt, apparel
+- `other` - no match
+
+A campaign whose name or URL contains `locker` classifies as locker. The
+`payments` check constraint does not allow `locker` (`store`, `event`, `dues`,
+`donation`, `raffle`, `background_check`, `other`), so the ledger row is stored
+as `other`. The function still calls `kos_claim_locker_from_payment` for that
+payment. `payment.created`, `payment.updated`, and `payment.completed` all
+return HTTP 200. An unpaid created or updated notice is acknowledged and is
+not written to the ledger.
 
 A payer email matching a roster member is linked automatically. Dues payments with
 a matching member and year update that member's unpaid dues row.
 
-## Step 4 — Test and monitor
+## Step 4 - Test and monitor
 
 1. Send a Zeffy test `payment.completed` notification or make a small test payment.
 2. Confirm Zeffy receives a 2xx response (`{"received":true}`).
 3. Confirm the payment appears in Officer desk → Dues & Payments → Cash ledger and that the member/year
    is marked paid when applicable. Season cash totals live on the Dues season tab and do not add this ledger row a second time.
 4. If the payer is not matched, verify the email in the Zeffy receipt and roster.
-5. Rotate the shared token in Zeffy and Supabase if it is ever exposed.
+5. Rotate the shared token in Zeffy and Supabase if it is ever exposed. Use the steps under **Rotate the webhook token**.
+
+## Weekly reconcile
+
+Once a week, compare Zeffy with the Hub.
+
+1. Export succeeded Zeffy payments for the past week.
+2. In the Supabase SQL editor, list `public.payments` where `provider` is `zeffy` and `created_at` falls in that week.
+3. List `public.zeffy_webhook_receipts` for the same week. A row whose `http_status` is not 200 did not finish. Read `error` and fix the cause. The receipt does not store the token.
+4. A Zeffy success with no `payments` row is a missed payment. Record it with a reviewed script such as `sql/kos_zeffy_backfill_missed_nov2026.sql`. Run that script in the SQL editor after reading its preview. Do not apply it from the website deploy, and do not deploy the edge function from that script.
+5. For a locker payment, confirm `locker_reservations.payment_id` points at the ledger row. For dues, confirm that member's `dues_payments.paid` is true for the year.
 
 ## Data and security notes
 

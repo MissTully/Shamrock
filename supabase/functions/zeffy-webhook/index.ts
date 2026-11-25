@@ -1,6 +1,18 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { collectTicketHolders, inferKind, ledgerProductKind, membershipYearForPayment } from "./infer-kind.mjs";
+import { webhookAccess } from "./webhook-auth.mjs";
 
 type JsonObject = Record<string, unknown>;
+
+// Shop / store before ticketing. Classification lives in infer-kind.mjs.
+// Seeded 2026 catalog URLs, used only when kos_dues_catalog cannot be read.
+// Live zeffy_url values win when the read succeeds.
+const SEEDED_DUES_CATALOG_URLS = [
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2",
+  "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership",
+];
 
 const json = (body: JsonObject, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -64,7 +76,7 @@ const collectEmailsFromObject = (obj: JsonObject, out: string[]) => {
 /**
  * Zeffy payment.completed payloads use `amount` in **cents** (integer), same as
  * item.amount. Prefer explicit *cents fields; otherwise treat `amount` as cents
- * (do NOT multiply by 100 — that produced the $80 → $8000 bug).
+ * (do NOT multiply by 100. That produced the $80 to $8000 bug).
  * Only multiply when the value clearly looks like dollars (has a fractional part).
  */
 const resolveAmountCents = (payment: JsonObject): number | undefined => {
@@ -79,91 +91,66 @@ const resolveAmountCents = (payment: JsonObject): number | undefined => {
   return Math.round(amount);
 };
 
-const inferKind = (metadata: JsonObject, payment: JsonObject): string => {
-  const explicit = text(metadata.kind, metadata.product_kind, payment.product_kind)?.toLowerCase();
-  if (explicit && ["store", "event", "dues", "donation", "raffle", "other"].includes(explicit)) {
-    return explicit;
+const loadDuesCatalogUrls = async (
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<string[]> => {
+  try {
+    const response = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/kos_dues_catalog?select=zeffy_url&active=eq.true`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          accept: "application/json",
+        },
+      },
+    );
+    if (!response.ok) {
+      console.error("kos_dues_catalog read failed", response.status);
+      return [];
+    }
+    const rows = await response.json();
+    if (!Array.isArray(rows)) return [];
+    const urls: string[] = [];
+    for (const row of rows) {
+      const url = text(asObject(row).zeffy_url);
+      if (url && !urls.includes(url)) urls.push(url);
+    }
+    return urls;
+  } catch (err) {
+    console.error("kos_dues_catalog read error", err);
+    return [];
   }
-  const description = [
-    payment.campaign,
-    payment.campaignName,
-    payment.campaign_name,
-    payment.campaign_title,
-    payment.campaignTitle,
-    payment.form_name,
-    payment.formName,
-    payment.product,
-    payment.productName,
-    payment.product_name,
-    payment.description,
-    payment.title,
-    payment.name,
-    payment.rate_title,
-    metadata.campaign_title,
-    metadata.campaign_name,
-    metadata.title,
-  ].filter(Boolean).join(" ").toLowerCase();
-  const linkBlob = [
-    payment.url,
-    payment.campaign_url,
-    payment.campaignUrl,
-    payment.share_url,
-    payment.public_url,
-    payment.publicUrl,
-    metadata.url,
-    metadata.campaign_url,
-  ].filter(Boolean).join(" ").toLowerCase();
-  // Locker rentals stay product_kind "other". payments has no locker kind.
-  // kos_claim_locker_from_payment matches the campaign text and the Zeffy URL.
-  if (
-    /\blocker/.test(description) ||
-    /\blocker/.test(linkBlob) ||
-    /krewe-locker-rental-(small|large)/.test(`${description} ${linkBlob}`)
-  ) {
-    return "other";
-  }
+};
 
-  // Shared KOS Shop Online Store, plus legacy Shop Studio ticketing campaigns
-  // whose slug ends in "-shop". Classify as store before the ticketing check
-  // below files them as events. SQL in kos_shop_unified_checkout.sql is a backstop.
-  const shopBlob = `${description} ${linkBlob} ${String(payment.campaign_slug ?? metadata.campaign_slug ?? "")}`.toLowerCase();
-  // Shared KOS Shop: match slug kos-shop or campaign name "KOS Shop" so a
-  // /ticketing/ vs /online-store/ path cannot mis-file the payment as an event.
-  if (/\bkos-shop\b/.test(shopBlob) || /\bkos shop\b/.test(shopBlob)) {
-    return "store";
+/** individual/couple campaigns from kos_runtime_flags.background_check_payments. */
+const loadBackgroundCampaigns = async (
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<JsonObject> => {
+  try {
+    const response = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/kos_runtime_flags?select=value&key=eq.background_check_payments`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          accept: "application/json",
+        },
+      },
+    );
+    if (!response.ok) {
+      console.error("background_check_payments read failed", response.status);
+      return {};
+    }
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows.length) return {};
+    return asObject(asObject(rows[0]).value);
+  } catch (err) {
+    console.error("background_check_payments read error", err);
+    return {};
   }
-  // Legacy per-item ticketing campaigns, e.g. /ticketing/krewe-of-shamrock-mug-shop.
-  if (
-    /\/ticketing\/[a-z0-9-]+-shop\b/.test(linkBlob) ||
-    /-shop\b/.test(String(payment.campaign_slug ?? metadata.campaign_slug ?? "").toLowerCase())
-  ) {
-    return "store";
-  }
-
-  const campaignType = text(
-    payment.campaign_type,
-    payment.campaignType,
-    payment.campaign_category,
-    payment.campaignCategory,
-    metadata.campaign_type,
-    metadata.campaign_category,
-  )?.toLowerCase() ?? "";
-  // Shop / store before ticketing. The KOS Shop URL lives under /ticketing/.
-  if (/(shop|store|merch)/.test(campaignType)) return "store";
-  if (/(ticket|ticketing|event)/.test(campaignType)) return "event";
-  if (/(donation|donate)/.test(campaignType)) return "donation";
-  if (/(membership|dues)/.test(campaignType)) return "dues";
-  if (/\b(dues|membership)\b/.test(description)) return "dues";
-  if (/\braffle|drawing|lottery\b/.test(description)) return "raffle";
-  if (/\bdonation|donor|gift\b/.test(description)) return "donation";
-  if (/\bevent|ticket|ticketing|admission|gala|ball|parade|golf|lunch|book club\b/.test(description)) {
-    return "event";
-  }
-  if (/\b(store|merch|merchandise|shirt|tee|hat|kilt|apparel)\b/.test(description)) return "store";
-  // Ticket line items imply an event purchase.
-  const items = asArray(payment.items);
-  if (items.some((it) => text(asObject(it).type)?.toLowerCase() === "ticket")) return "event";
-  return "other";
 };
 
 /** Prefer real contact objects; Zeffy often sets payment.contact to a UUID string. */
@@ -235,29 +222,94 @@ const slugFromText = (value: string | undefined): string | undefined => {
   return slug || undefined;
 };
 
-Deno.serve(async (req: Request) => {
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+type ReceiptLog = {
+  event_type: string | null;
+  provider_event_id: string | null;
+  http_status: number;
+  error: string | null;
+  payload: JsonObject | null;
+};
 
-  const expectedToken = Deno.env.get("ZEFFY_WEBHOOK_TOKEN");
-  if (!expectedToken) return json({ error: "Webhook token is not configured" }, 500);
+const insertReceipt = async (receipt: ReceiptLog) => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return;
+  try {
+    const response = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/zeffy_webhook_receipts`,
+      {
+        method: "POST",
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          "content-type": "application/json",
+          prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          event_type: receipt.event_type,
+          provider_event_id: receipt.provider_event_id,
+          http_status: receipt.http_status,
+          error: receipt.error,
+          payload: receipt.payload,
+        }),
+      },
+    );
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      console.error("zeffy_webhook_receipts insert failed", response.status, detail);
+    }
+  } catch (err) {
+    console.error("zeffy_webhook_receipts insert error", err);
+  }
+};
+
+Deno.serve(async (req: Request) => {
+  const receipt: ReceiptLog = {
+    event_type: null,
+    provider_event_id: null,
+    http_status: 500,
+    error: null,
+    payload: null,
+  };
+  const respond = (body: JsonObject, status = 200, error?: string) => {
+    receipt.http_status = status;
+    if (error !== undefined) receipt.error = error;
+    else if (status >= 400) receipt.error = typeof body.error === "string" ? body.error : null;
+    else receipt.error = null;
+    return json(body, status);
+  };
+  let response: Response;
+  try {
+    response = await (async () => {
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
+
   const url = new URL(req.url);
-  const suppliedToken = url.searchParams.get("token") ?? req.headers.get("x-zeffy-token");
-  if (!suppliedToken || suppliedToken !== expectedToken) return json({ error: "Unauthorized" }, 401);
+  const access = webhookAccess(
+    Deno.env.get("ZEFFY_WEBHOOK_TOKEN"),
+    req.headers.get("x-zeffy-token"),
+    url.searchParams.get("token"),
+  );
+  if (access.status !== 200) {
+    return respond({ error: access.error ?? "Unauthorized" }, access.status, access.error ?? "Unauthorized");
+  }
 
   let envelope: JsonObject;
   try {
     envelope = asObject(await req.json());
   } catch {
-    return json({ error: "Invalid JSON" }, 400);
+    return respond({ error: "Invalid JSON" }, 400);
   }
+  receipt.payload = envelope;
   const eventName = eventNameOf(envelope);
+  receipt.event_type = eventName || null;
+  receipt.provider_event_id = text(envelope.id, envelope.eventId, envelope.event_id) ?? null;
   if (eventName.startsWith("contact.") || eventName === "payment.deleted") {
     console.log("zeffy webhook ignored", eventName);
-    return json({ received: true, ignored: eventName });
+    return respond({ received: true, ignored: eventName });
   }
   if (!RECORDABLE_EVENTS.has(eventName)) {
     console.log("zeffy webhook unexpected event", eventName || "(none)");
-    return json({ error: "Unexpected event", event: eventName || null }, 400);
+    return respond({ error: "Unexpected event", event: eventName || null }, 400);
   }
 
   let payment = resolvePayment(envelope);
@@ -270,17 +322,18 @@ Deno.serve(async (req: Request) => {
     payment.transaction_id,
     asObject(envelope.data).id,
   );
+  if (earlyId) receipt.provider_event_id = earlyId;
   if (earlyId && resolveAmountCents(payment) === undefined) {
     const zeffyApiKey = Deno.env.get("ZEFFY_API_KEY");
     if (!zeffyApiKey) {
       console.log("zeffy webhook id-only payload", eventName);
-      return json({ error: "Payment amount is required" }, 400);
+      return respond({ error: "Payment amount is required" }, 400);
     }
     const loadedResponse = await fetch(
       `https://api.zeffy.com/api/v1/payments/${encodeURIComponent(earlyId)}`,
       { headers: { accept: "application/json", authorization: `Bearer ${zeffyApiKey}` } },
     );
-    if (!loadedResponse.ok) return json({ error: "Unable to load payment from Zeffy" }, 502);
+    if (!loadedResponse.ok) return respond({ error: "Unable to load payment from Zeffy" }, 502);
     const loadedBody = asObject(await loadedResponse.json());
     const loaded = resolvePayment({ data: asObject(loadedBody.data ?? loadedBody) });
     if (loaded.amount != null || text(loaded.id, loaded.payment_id)) {
@@ -290,7 +343,7 @@ Deno.serve(async (req: Request) => {
   }
   if (!paidStatus(payment) && (eventName === "payment.created" || eventName === "payment.updated")) {
     console.log("zeffy webhook ignored unpaid", eventName);
-    return json({ received: true, ignored: "not_paid", event: eventName });
+    return respond({ received: true, ignored: "not_paid", event: eventName });
   }
   const metadata = asObject(payment.metadata ?? payment.meta);
   const contact = pickContact(payment);
@@ -333,7 +386,7 @@ Deno.serve(async (req: Request) => {
     payment.transaction_id,
   );
   if (!paymentId || amountCents === undefined || amountCents < 0) {
-    return json({ error: "Payment id and amount are required" }, 400);
+    return respond({ error: "Payment id and amount are required" }, 400);
   }
 
   const zeffyApiKey = Deno.env.get("ZEFFY_API_KEY");
@@ -342,13 +395,13 @@ Deno.serve(async (req: Request) => {
       `https://api.zeffy.com/api/v1/payments/${encodeURIComponent(paymentId)}`,
       { headers: { accept: "application/json", authorization: `Bearer ${zeffyApiKey}` } },
     );
-    if (!verifyResponse.ok) return json({ error: "Unable to verify payment with Zeffy" }, 502);
+    if (!verifyResponse.ok) return respond({ error: "Unable to verify payment with Zeffy" }, 502);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
-    return json({ error: "Supabase service configuration is missing" }, 500);
+    return respond({ error: "Supabase service configuration is missing" }, 500);
   }
 
   const providerEventId = text(
@@ -359,6 +412,7 @@ Deno.serve(async (req: Request) => {
     payment.event_id,
     paymentId,
   ) ?? paymentId;
+  receipt.provider_event_id = providerEventId;
 
   const description = text(
     payment.description,
@@ -379,9 +433,13 @@ Deno.serve(async (req: Request) => {
     ? ticketItems.length
     : Math.max(1, Math.round(numberValue(payment.quantity) ?? 1));
 
-  const membershipYear = numberValue(
-    metadata.membership_year ?? metadata.membershipYear ?? payment.membership_year,
-  );
+  const membershipYear = membershipYearForPayment(metadata, payment, new Date());
+  const catalogUrls = await loadDuesCatalogUrls(supabaseUrl, serviceRoleKey);
+  const duesUrls = catalogUrls.length ? catalogUrls : SEEDED_DUES_CATALOG_URLS;
+  const backgroundCampaigns = await loadBackgroundCampaigns(supabaseUrl, serviceRoleKey);
+  const ticketHolders = collectTicketHolders(payment);
+  const logicalKind = inferKind(metadata, payment, duesUrls, backgroundCampaigns);
+  const productKind = ledgerProductKind(logicalKind);
 
   const payload: JsonObject = {
     provider: "zeffy",
@@ -415,8 +473,9 @@ Deno.serve(async (req: Request) => {
       metadata.campaign_url,
     ),
     description,
-    product_kind: inferKind(metadata, payment),
-    ...(membershipYear !== undefined ? { membership_year: Math.round(membershipYear) } : {}),
+    product_kind: productKind,
+    ticket_holders: ticketHolders,
+    membership_year: membershipYear,
     // An id-only webhook has no items or phone. Keep the API payment on data
     // so shop receipts and chair emails can read the same shape as a normal event.
     raw: loadedFromApi
@@ -439,7 +498,7 @@ Deno.serve(async (req: Request) => {
   if (!recordResponse.ok) {
     const detail = await recordResponse.text().catch(() => "");
     console.error("kos_record_payment failed", recordResponse.status, detail);
-    return json({ error: "Unable to record payment" }, 502);
+    return respond({ error: "Unable to record payment" }, 502);
   }
   const recorded = await recordResponse.json().catch(() => ({}));
   const recordedObj = asObject(recorded);
@@ -450,6 +509,48 @@ Deno.serve(async (req: Request) => {
     recordedInner.id,
     recordedInner.payment_id,
   );
+  let backgroundCheck: JsonObject | null = null;
+  if (payload.product_kind === "background_check") {
+    try {
+      const applyResponse = await fetch(
+        `${supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/kos_apply_background_check_payment`,
+        {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            authorization: `Bearer ${serviceRoleKey}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            p: {
+              payment_id: paymentRowId,
+              provider: payload.provider,
+              provider_payment_id: paymentId,
+              provider_event_id: providerEventId,
+              amount_cents: amountCents,
+              payer_email: payerEmail,
+              payer_name: payerName,
+              description,
+              campaign_url: payload.campaign_url,
+              notify: true,
+            },
+          }),
+        },
+      );
+      if (applyResponse.ok) {
+        backgroundCheck = asObject(await applyResponse.json().catch(() => ({})));
+      } else {
+        const detail = await applyResponse.text().catch(() => "");
+        console.error("kos_apply_background_check_payment failed", applyResponse.status, detail);
+        if (applyResponse.status !== 404) {
+          return respond({ error: "Unable to link background check payment" }, 502);
+        }
+      }
+    } catch (err) {
+      console.error("kos_apply_background_check_payment error", err);
+      return respond({ error: "Unable to link background check payment" }, 502);
+    }
+  }
   const guestToken = extractGuestToken(
     metadata.kos_guest,
     metadata.token,
@@ -493,5 +594,51 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error("kos_apply_parade_guest_payment error", err);
   }
-  return json({ received: true, recorded, guest_match: guestMatch });
+  let lockerClaim: JsonObject | null = null;
+  if (logicalKind === "locker") {
+    if (!paymentRowId) {
+      console.error("locker claim skipped, payment id missing");
+    } else {
+      try {
+        const claimResponse = await fetch(
+          `${supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/kos_claim_locker_from_payment`,
+          {
+            method: "POST",
+            headers: {
+              apikey: serviceRoleKey,
+              authorization: `Bearer ${serviceRoleKey}`,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({ p_payment_id: paymentRowId, p: payload }),
+          },
+        );
+        if (claimResponse.ok) {
+          lockerClaim = asObject(await claimResponse.json().catch(() => ({})));
+        } else {
+          const detail = await claimResponse.text().catch(() => "");
+          console.error("kos_claim_locker_from_payment failed", claimResponse.status, detail);
+          if (claimResponse.status !== 404) {
+            return respond({ error: "Unable to claim locker" }, 502);
+          }
+        }
+      } catch (err) {
+        console.error("kos_claim_locker_from_payment error", err);
+        return respond({ error: "Unable to claim locker" }, 502);
+      }
+    }
+  }
+  return respond({
+    received: true,
+    recorded,
+    guest_match: guestMatch,
+    background_check: backgroundCheck,
+    locker: lockerClaim,
+  });
+    })();
+  } catch (err) {
+    console.error("zeffy webhook failed", err);
+    response = respond({ error: "Unable to record payment" }, 500, "Unhandled error");
+  }
+  await insertReceipt(receipt);
+  return response;
 });

@@ -140,6 +140,7 @@
     var bits = [ev && ev.name ? ev.name : "Untitled event"];
     var at = eventWhen(ev);
     if (at) bits.push(at);
+    if (String((ev && ev.source) || "").toLowerCase() === "ikc") bits.push("IKC");
     var status = String((ev && ev.status) || "").toLowerCase();
     if (status === "cancelled" || status === "canceled") bits.push("cancelled");
     else if (status === "draft") bits.push("draft");

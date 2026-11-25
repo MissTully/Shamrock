@@ -1,6 +1,6 @@
 // Event prospects audience inside Email members. Fixtures only — SQL is not
 // applied in this environment, and nothing is sent.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 async function openEmailMembers(page) {

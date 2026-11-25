@@ -71,6 +71,36 @@
 .file-drop strong{ color:var(--green-800); }
 .file-drop input[type=file]{ display:none; }
 .file-chosen{ font-size:14px; color:var(--green-700); margin-top:8px; font-style:italic; }
+.photo-preview{
+  --kos-photo-max-h:420px;
+  --kos-photo-max-w:440px;
+  margin:0 0 18px;
+  margin-inline:0;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(168,128,28,.45);
+  background:#f7f1e3;
+  max-width:100%;
+}
+.photo-preview.kos-photo-frame{ margin-inline:0; }
+.photo-preview[hidden]{ display:none !important; }
+.photo-preview img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  image-orientation:from-image;
+  background:#f7f1e3;
+}
+@media (max-width:680px){
+  /* The tune button sits over the bottom of this form on a phone. */
+  body:has(#formPhoto) .krewe-music{ display:none; }
+}
+@media (max-width:420px){
+  .share-body{ padding:18px 14px 28px; }
+  .type-tab{ padding:10px 14px; font-size:15px; }
+  .file-drop{ padding:22px 12px; }
+}
 
 .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media(max-width:600px){ .form-row{ grid-template-columns:1fr; } }
@@ -240,8 +270,8 @@
         <div class="share-body">
           <form id="formPhoto" novalidate>
             <div class="form-group">
-              <label for="pTitle">Photo Title / Caption *</label>
-              <input id="pTitle" type="text" placeholder="What does this photo show?" required />
+              <label for="pTitle">Photo title *</label>
+              <input id="pTitle" type="text" placeholder="A short name for the officer review" required />
             </div>
             <div class="form-group">
               <label>Photo File *</label>
@@ -253,9 +283,17 @@
               </div>
               <div class="file-chosen" id="filePhotoName"></div>
             </div>
+            <div class="photo-preview kos-photo-frame" id="photoPreviewWrap" hidden>
+              <img id="photoPreview" alt="Preview of the photo you chose" />
+            </div>
+            <div class="form-group">
+              <label for="pCaption">Caption (optional)</label>
+              <input id="pCaption" type="text" maxlength="240" placeholder="Shown under the photo on the public gallery" />
+              <div class="hint">Optional. Shown under the photo on the public gallery. 240 characters max.</div>
+            </div>
             <div class="form-group">
               <label for="pDesc">Notes (optional)</label>
-              <textarea id="pDesc" placeholder="Where was this taken? Any story behind it?"></textarea>
+              <textarea id="pDesc" placeholder="Where was this taken? Any story behind it? Officers see this during review."></textarea>
             </div>
             <div class="submit-area">
               <button type="submit" class="btn btn-primary">Submit for review</button>
@@ -425,6 +463,7 @@
   <p style="margin:8px 0 0;"><a href="mailto:secretary@kreweofshamrock.com" style="color:var(--gold-light);">Contact: secretary@kreweofshamrock.com</a></p>
 </footer>
 
+<script src="assets/kos-photo-frame.js?v=20261121frame3"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -497,6 +536,7 @@ function setupFileDrop(dropId, inputId, nameId) {
       dt.items.add(e.dataTransfer.files[0]);
       input.files = dt.files;
       nameEl.textContent = e.dataTransfer.files[0].name;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 }
@@ -505,6 +545,63 @@ setupFileDrop('dropVideo', 'fileVideo', 'fileVideoName');
 setupFileDrop('dropPhoto', 'filePhoto', 'filePhotoName');
 setupFileDrop('dropArt',   'fileArt',   'fileArtName');
 setupFileDrop('dropRecipe','fileRecipe','fileRecipeName');
+
+const photoInput = document.getElementById('filePhoto');
+const photoPreviewWrap = document.getElementById('photoPreviewWrap');
+const photoPreviewImg = document.getElementById('photoPreview');
+let photoPreviewUrl = '';
+function clearPhotoPreview() {
+  if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+  photoPreviewUrl = '';
+  if (photoPreviewImg) photoPreviewImg.removeAttribute('src');
+  if (photoPreviewWrap) {
+    photoPreviewWrap.hidden = true;
+    photoPreviewWrap.classList.remove('is-fit');
+    photoPreviewWrap.style.removeProperty('--kos-photo-w');
+    photoPreviewWrap.style.removeProperty('--kos-photo-h');
+  }
+}
+let photoPreviewSeq = 0;
+let replacingPhotoFile = false;
+async function preparePhotoFile(file) {
+  if (!file || typeof window.kosNormalizePhotoFile !== 'function') return file;
+  try {
+    const next = await window.kosNormalizePhotoFile(file);
+    return next || file;
+  } catch (err) {
+    return file;
+  }
+}
+function showPhotoPreview(file) {
+  if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+  photoPreviewWrap.classList.remove('is-fit');
+  photoPreviewUrl = URL.createObjectURL(file);
+  photoPreviewImg.src = photoPreviewUrl;
+  photoPreviewWrap.hidden = false;
+  if (window.kosFitPhotoFrames) window.kosFitPhotoFrames(photoPreviewWrap);
+}
+if (photoInput) {
+  photoInput.addEventListener('change', async () => {
+    if (replacingPhotoFile) return;
+    const seq = ++photoPreviewSeq;
+    let f = photoInput.files && photoInput.files[0];
+    if (!f || !/^image\//.test(f.type || '')) {
+      clearPhotoPreview();
+      return;
+    }
+    const ready = await preparePhotoFile(f);
+    if (seq !== photoPreviewSeq) return;
+    if (ready && ready !== f) {
+      const dt = new DataTransfer();
+      dt.items.add(ready);
+      replacingPhotoFile = true;
+      photoInput.files = dt.files;
+      replacingPhotoFile = false;
+      f = ready;
+    }
+    showPhotoPreview(f);
+  });
+}
 
 // ---- Upload file to Supabase Storage ----
 async function uploadFile(bucket, file) {
@@ -617,16 +714,36 @@ document.getElementById('formPhoto').addEventListener('submit', async (e) => {
   setLoading(btn, true, 'Submit for review');
   try {
     if (!(await gatePhotoVideo('msgPhoto'))) { setLoading(btn, false, 'Submit for review'); return; }
-    const url = await uploadFile('gallery-photos', file);
-    const { error } = await sb.rpc('submit_krewe_photo', {
+    const uploadable = await preparePhotoFile(file);
+    const url = await uploadFile('gallery-photos', uploadable);
+    const caption = document.getElementById('pCaption').value.trim();
+    const base = {
       p_title: document.getElementById('pTitle').value.trim(),
       p_url: url,
       p_notes: document.getElementById('pDesc').value.trim() || null,
-    });
+    };
+    let captionSkipped = false;
+    let error = null;
+    if (caption) {
+      const withCaption = await sb.rpc('submit_krewe_photo', Object.assign({}, base, { p_caption: caption }));
+      error = withCaption.error;
+      if (error && /schema cache|could not find the function|PGRST202/i.test(error.message || '')) {
+        const again = await sb.rpc('submit_krewe_photo', base);
+        if (again.error) throw again.error;
+        captionSkipped = true;
+        error = null;
+      }
+    } else {
+      const plain = await sb.rpc('submit_krewe_photo', base);
+      error = plain.error;
+    }
     if (error) throw error;
-    showMsg('msgPhoto', 'success', 'Photo submitted for officer review. It will appear in the gallery after an officer approves it.');
+    showMsg('msgPhoto', 'success', captionSkipped
+      ? 'Photo submitted for officer review. The caption was not saved because the gallery caption update is not on the database yet. An officer can add it before approving, once that update is applied.'
+      : 'Photo submitted for officer review. It will appear in the gallery after an officer approves it.');
     e.target.reset();
     document.getElementById('filePhotoName').textContent = '';
+    clearPhotoPreview();
   } catch(err) {
     showMsg('msgPhoto', 'error', 'Upload failed: ' + err.message);
   }

@@ -2,7 +2,7 @@
 // The suite runs offline, so announcements are injected through the
 // __kosHubSetAnnouncements test fixture (mirrors __kosHubSetRole); the
 // archive's live fetch then falls back to the injected list gracefully.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const ANNOUNCEMENTS = [

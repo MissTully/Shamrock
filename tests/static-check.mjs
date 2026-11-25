@@ -124,6 +124,18 @@ if (!existsSync(manifestPath)) {
   }
 }
 
+// Playwright specs must use the shared fixture so CI never fetches live
+// Supabase storage (videos and images). See tests/specs/kos-fixtures.js.
+const specsDir = join(ROOT, "tests/specs");
+const specFiles = readdirSync(specsDir).filter((f) => f.endsWith(".spec.js"));
+const PLAYWRIGHT_IMPORT = /require\(\s*["']@playwright\/test["']\s*\)/;
+for (const file of specFiles) {
+  const src = readFileSync(join(specsDir, file), "utf8");
+  if (PLAYWRIGHT_IMPORT.test(src)) {
+    problems.push(`tests/specs/${file}: import { test, expect } from ./kos-fixtures, not @playwright/test`);
+  }
+}
+
 if (problems.length) {
   console.error(`Static check FAILED (${problems.length} problem${problems.length === 1 ? "" : "s"}):`);
   for (const p of problems) console.error("  - " + p);

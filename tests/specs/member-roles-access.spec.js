@@ -1,5 +1,5 @@
 // Member roles and access. Role fixtures drive the Hub offline.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 const rules = require("../../assets/kos-roles-access-rules.js");
 
@@ -276,6 +276,10 @@ test.describe("Member roles and access", () => {
     await expect(results).toContainText("Anna Peterson");
     await search.fill("Merged");
     await expect(results).toContainText("No matching member.");
+    await search.fill("Anna");
+    await results.locator("[data-member='anna']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Anna Peterson");
+    await expect(page.locator("#kosRolesTitles")).toBeVisible();
     assertHealthy(expect, report, "name search");
   });
 
@@ -342,6 +346,9 @@ test.describe("Member roles and access", () => {
             const id = args && args.p_member_id;
             if (id === anna.id) {
               await new Promise(function (resolve) { window.__kosReleaseAnna = resolve; });
+            } else if (window.__kosFailNextDetail) {
+              window.__kosFailNextDetail = false;
+              return { data: null, error: { message: "Could not open that member." } };
             }
             const row = id === anna.id ? anna : firstPage[0];
             return {
@@ -413,6 +420,14 @@ test.describe("Member roles and access", () => {
     await expect(page.locator("#kosRolesRoot")).toContainText("Committees: Parade");
     await expect(page.locator("#kosRolesRoot")).toContainText("Extra grant");
     await expect(page.locator("#kosRolesRoot")).not.toContainText("anna.peterson@example.test");
+    await page.locator("#kosRolesSearch").fill("");
+    await expect(results).toContainText("Pat Early00");
+    await page.evaluate(() => { window.__kosFailNextDetail = true; });
+    await results.locator("[data-member='early-0']").click();
+    await expect(page.locator("#kosRolesMember")).toHaveText("Pat Early00");
+    await expect(page.locator("#kosRolesRoot")).toContainText("Could not open that member.");
+    await expect(page.locator("#kosRolesReview")).toHaveCount(0);
+    await expect(page.locator("#kosRolesTitles")).toHaveCount(0);
     assertHealthy(expect, report, "server name search");
   });
 });

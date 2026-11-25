@@ -205,6 +205,13 @@
         <input id="email" type="email" required autocomplete="email" />
         <div class="hint">We'll use this to confirm your spot and send event reminders.</div>
 
+        <label for="phone">Phone</label>
+        <input id="phone" type="tel" autocomplete="tel" inputmode="tel" />
+        <div class="hint">Optional. Officers use this when they need to reach a guest.</div>
+
+        <p id="memberHubHint" hidden class="hint"></p>
+        <p id="paradeGuestHint" hidden class="hint">Parade guest fees are paid in the Member Hub. This form saves your name, email, phone, and how many guests you are bringing.</p>
+
         <div class="row" id="guestsRow">
           <div>
             <label for="guests">Guests you're bringing</label>
@@ -255,7 +262,7 @@
           </label>
           <div id="purchasedByWrap" style="display:none;margin-top:10px;">
             <label for="purchasedBy">Whose name is on the ticket order?</label>
-            <input id="purchasedBy" type="text" maxlength="120" placeholder="e.g. Patrick Tully — Zeffy order for 2" />
+            <input id="purchasedBy" type="text" maxlength="120" placeholder="e.g. Patrick Tully, Zeffy order for 2" />
             <div class="hint">This helps our officers match your RSVP to the Zeffy order. Bought a group of tickets yourself? RSVP with your guest count above so we know everyone who's coming.</div>
           </div>
         </div>
@@ -263,9 +270,10 @@
         <div id="plannedHoursWrap" style="display:none;">
           <label for="plannedHours">Volunteer hours you expect to work</label>
           <input id="plannedHours" type="number" min="0.5" max="24" step="0.5" placeholder="e.g. 2" />
-          <div class="hint">Optional. Signing up as a volunteer logs pending hours when a slot is open. A host or an officer confirms them. They count toward the 12-hour season goal after that.</div>
+          <div class="hint">Optional. Signing up as a volunteer logs those hours when a slot is open. They count toward the 12 hour season as soon as they are saved.</div>
         </div>
 
+        <p id="ticketAside" hidden style="margin:12px 0;"></p>
         <button id="submitBtn" type="submit">☘ Sign me up</button>
         <div id="message" class="msg"></div>
         <div id="rsvpCalendar" hidden style="margin-top:12px;"></div>
@@ -393,6 +401,7 @@
     }
     function shareBlock(ev) {
       if (!ev || !ev.id || !window.kosShare || typeof window.kosShare.html !== "function") return "";
+      if (String(ev.source || "").toLowerCase() === "ikc") return "";
       const st = String(ev.status || "published").toLowerCase();
       if (st !== "published" && st !== "live") return "";
       if (ev.is_public === false) return "";
@@ -442,6 +451,18 @@
       return ev.location || "";
     }
 
+    function memberRsvpHtml(ev) {
+      if (!window.kosCalendar || typeof window.kosCalendar.publicRsvpHtml !== "function") return "";
+      return window.kosCalendar.publicRsvpHtml(ev);
+    }
+    function ticketButtonHtml(ev) {
+      const pay = ticketCheckoutUrlFor(ev);
+      if (!pay) return "";
+      const cents = Number(ev && ev.ticket_price_cents);
+      const price = cents > 0 ? ((cents % 100 === 0) ? " ($" + (cents / 100) + ")" : " ($" + (cents / 100).toFixed(2) + ")") : "";
+      return '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy tickets' + price + "</a>";
+    }
+
     function membersOnlyLabel() {
       return "Members only. Sign in for details and address.";
     }
@@ -476,7 +497,6 @@
       const until = end && !isNaN(end) ? " · ends " + timeStr(end) : "";
       const featLabel = (window.kosCalendar && window.kosCalendar.eventListLabel)
         ? window.kosCalendar.eventListLabel(event) : "";
-      const payFeat = ticketCheckoutUrlFor(event);
       const price = event.ticket_price_cents != null ? "$" + (Number(event.ticket_price_cents) / 100).toFixed(2) : "";
       const ticketBits = [event.ticket_label, price].filter(Boolean).join(" · ");
       let media = "";
@@ -497,21 +517,10 @@
       sub.textContent = officerPinned ? "Highlighted on the public site" : "Full details for our next public Krewe event";
       const closedFeat = isRegistrationClosed(event);
       const membersOnlyFeat = !!event.members_only;
-      const featAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
-        ? window.kosCalendar.publicSignupAction(event) : "";
-      const ctaFeat = (featAction === "parade" || featAction === "parade-members")
-        ? (featAction === "parade-members"
-          ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-          : '<a class="btn btn-primary" href="parades.html">Parade details</a>')
-        : (featAction === "members" || membersOnlyFeat)
-        ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-        : (featAction === "closed" || closedFeat)
-        ? '<a class="btn" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">Registration closed</a>'
-        : (featAction === "tickets-soon")
-        ? '<span class="btn">Tickets coming soon</span>'
-        : (payFeat
-        ? '<a class="btn btn-primary" href="' + esc(payFeat) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
-        : '<a class="btn btn-primary" href="#rsvpForm" data-featured-event="' + esc(event.id) + '">RSVP</a>');
+      const ctaFeat = ticketButtonHtml(event) + memberRsvpHtml(event) +
+        (String(event.source || "").toLowerCase() === "ikc" && event.external_url
+          ? '<a class="btn" href="' + esc(event.external_url) + '" target="_blank" rel="noopener noreferrer">Details on the host krewe\'s page</a>'
+          : "");
       content.innerHTML = '<div class="ft-media"><div class="framed ornate"><span class="crn tr"></span><span class="crn bl"></span>' + media + '</div></div>' +
         '<div class="ft-text"><h2>' + esc(event.name || "Upcoming event") + '</h2>' +
         '<p><b>' + esc(when + until + (featLabel ? " · " + featLabel : "")) + '</b></p>' +
@@ -549,7 +558,6 @@
         const when = !isNaN(d) ? (hasTime(d) ? dateStrShort(d) + ", " + timeStr(d) : dateStrShort(d)) : "Date TBD";
         const prevLabel = (window.kosCalendar && window.kosCalendar.eventListLabel)
           ? window.kosCalendar.eventListLabel(ev) : "";
-        const pay = ticketCheckoutUrlFor(ev);
         const price = ev.ticket_price_cents != null ? "$" + (Number(ev.ticket_price_cents) / 100).toFixed(2) : "";
         const ticketBits = [ev.ticket_label, price].filter(Boolean).join(" · ");
         let media;
@@ -562,17 +570,10 @@
         }
         const closedPrev = isRegistrationClosed(ev);
         const membersOnlyPrev = !!ev.members_only;
-        const prevAction = (window.kosCalendar && window.kosCalendar.publicSignupAction)
-          ? window.kosCalendar.publicSignupAction(ev) : "";
-        const cta = (prevAction === "members" || membersOnlyPrev)
-          ? '<a class="btn btn-primary" href="members.html">Members only. Sign in</a>'
-          : (prevAction === "closed" || closedPrev)
-          ? '<a class="btn" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">Registration closed</a>'
-          : (prevAction === "tickets-soon")
-          ? '<span class="btn">Tickets coming soon</span>'
-          : (pay
-          ? '<a class="btn btn-primary" href="' + esc(pay) + '" target="_blank" rel="noopener noreferrer">Buy Tickets</a>'
-          : '<a class="btn btn-primary" href="#rsvpForm" data-preview-event="' + esc(ev.id) + '">RSVP</a>');
+        const cta = ticketButtonHtml(ev) + memberRsvpHtml(ev) +
+          (String(ev.source || "").toLowerCase() === "ikc" && ev.external_url
+            ? '<a class="btn" href="' + esc(ev.external_url) + '" target="_blank" rel="noopener noreferrer">Details on the host krewe\'s page</a>'
+            : "");
         const featuredCard = !!(window.kosCalendar && window.kosCalendar.isLiveFeatured && window.kosCalendar.isLiveFeatured(ev));
         return '<article class="ev-card' + (featuredCard ? ' is-featured' : '') + '">' +
           '<div class="ev-media">' + media + '</div>' +
@@ -629,7 +630,7 @@
       }
       eventSelect.innerHTML = '<option value="">Select an event…</option>';
       // Month grids below are Krewe-only. Dates to Remember keeps IKC.
-      // RSVP stays Krewe-only — IKC details live on the host krewe's site.
+      // Krewe events use the guest form. Ticket links sit beside the quiet RSVP.
       const ours = data.filter((ev)=> ev.source !== "ikc");
       let rafflePrices = {};
       try {
@@ -673,10 +674,15 @@
         const opt = document.createElement("option");
         opt.value = ev.id; opt.textContent = `${ev.name} (${when}${loc}${ev.members_only ? " · Members only" : ""})`;
         if (ev.members_only) opt.dataset.membersOnly = "1";
+        if (ev.event_type) opt.dataset.eventType = String(ev.event_type).toLowerCase();
         const redirect = ticketCheckoutUrl(ev);
         if (redirect) {
           opt.dataset.redirect = redirect;
           opt.dataset.checkoutKind = isMainTartanBall(ev) ? "tartan" : "zeffy";
+          if (ev.ticket_price_cents) {
+            const cents = Number(ev.ticket_price_cents);
+            opt.dataset.ticketPrice = (cents % 100 === 0) ? ("$" + (cents / 100)) : ("$" + (cents / 100).toFixed(2));
+          }
         } else if (isPaidWithoutLink(ev)) {
           opt.dataset.needsTickets = "1";
         }
@@ -785,10 +791,48 @@
           mealSelect.value = "";
         }
       }
+      function paintParadeHint(opt) {
+        const hint = document.getElementById("paradeGuestHint");
+        if (!hint) return;
+        hint.hidden = !(opt && opt.dataset.eventType === "parade");
+      }
+      function paintMemberHint() {
+        const hint = document.getElementById("memberHubHint");
+        if (!hint || hint.dataset.signedIn !== "1") return;
+        const id = eventSelect.value;
+        const hub = id ? ("members.html#events/" + encodeURIComponent(id)) : "members.html#events";
+        hint.hidden = false;
+        hint.innerHTML = 'You\'re signed in. <a href="' + hub + '">RSVP in the Member Hub</a>. This form uses the email on your member record.';
+      }
+      function paintTicketAside(opt) {
+        const aside = document.getElementById("ticketAside");
+        if (!aside) return;
+        if (!opt || !opt.value) {
+          aside.hidden = true;
+          aside.textContent = "";
+          return;
+        }
+        if (opt.dataset.redirect) {
+          const price = opt.dataset.ticketPrice ? (" (" + opt.dataset.ticketPrice + ")") : "";
+          aside.hidden = false;
+          aside.innerHTML = '<a class="btn" href="' + esc(opt.dataset.redirect) + '" target="_blank" rel="noopener noreferrer">Buy tickets' + price + "</a>";
+          return;
+        }
+        if (opt.dataset.needsTickets === "1") {
+          aside.hidden = false;
+          aside.textContent = "Tickets coming soon. You can still RSVP.";
+          return;
+        }
+        aside.hidden = true;
+        aside.textContent = "";
+      }
       function syncSignupButton() {
         const opt = eventSelect.selectedOptions[0];
         btn.disabled = false;
         syncCollectFields();
+        paintTicketAside(opt);
+        paintParadeHint(opt);
+        paintMemberHint();
         if (opt && opt.dataset.membersOnly === "1") {
           haveTicketWrap.style.display = "none";
           haveTicketBox.checked = false;
@@ -814,7 +858,7 @@
         haveTicketWrap.style.display = ticketedAttendee ? "block" : "none";
         if (!ticketedAttendee) haveTicketBox.checked = false;
         purchasedByWrap.style.display = ticketAlreadyPurchased() ? "block" : "none";
-        // Volunteers / organizers RSVP free — never send them to Zeffy/ticket checkout.
+        // Volunteers and organizers RSVP free. The ticket link stays beside the button.
         if (isVolunteerRole()) {
           if (opt && opt.value && volunteerSlotsFull(opt)) {
             btn.textContent = "Volunteer slots are full";
@@ -828,32 +872,25 @@
           }
           const left = opt && opt.value ? volunteerSlotsLeft(opt) : null;
           const slotLine = left == null
-            ? "Volunteering is free. You will be signed up without ticket checkout. Pending hours are logged for the host or an officer to confirm."
-            : "Volunteering is free. " + left + (left === 1 ? " volunteer slot left." : " volunteer slots left.") + " Signing up logs pending hours for the host or an officer to confirm.";
+            ? "Volunteering is free. You will be signed up without ticket checkout. Your hours are logged when you sign up."
+            : "Volunteering is free. " + left + (left === 1 ? " volunteer slot left." : " volunteer slots left.") + " Signing up logs your hours.";
           showMessage(slotLine, "success");
           return;
         }
         if (ticketedAttendee && ticketAlreadyPurchased()) {
           btn.textContent = "☘ Sign me up (ticket purchased)";
-          showMessage("Your ticket is covered — you’ll RSVP without checkout so we know you’re coming.", "success");
+          showMessage("Your ticket is covered. You'll RSVP without checkout so we know you're coming.", "success");
           return;
         }
+        btn.textContent = "☘ Sign me up";
         if (opt && opt.dataset.redirect) {
-          btn.textContent = "☘ Buy Tickets";
-          if (opt.dataset.checkoutKind === "tartan") {
-            showMessage("Tartan Ball tickets are sold on the Tampa Bay Tartan Ball site. Tap Buy Tickets to continue.", "success");
-          } else {
-            showMessage("Tickets for this event are sold on Zeffy. Tap Buy Tickets to continue checkout. Someone already bought your ticket? Check the box above.", "success");
-          }
+          showMessage(opt.dataset.checkoutKind === "tartan"
+            ? "RSVP here so the krewe knows you're coming. Buy tickets on the Tampa Bay Tartan Ball site when you are ready to pay."
+            : "RSVP here so the krewe knows you're coming. Buy tickets is next to this button. Someone already bought your ticket? Check the box above.", "success");
         } else if (opt && opt.dataset.needsTickets) {
-          btn.textContent = "☘ Tickets coming soon";
-          btn.disabled = true;
-          showMessage("Paid tickets for this event aren’t linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
-        } else {
-          btn.textContent = "☘ Sign me up";
-          if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Volunteering is free/i.test(message.textContent || "")) {
-            message.className = "msg"; message.textContent = "";
-          }
+          showMessage("Tickets are not linked yet. You can still RSVP.", "success");
+        } else if (/Zeffy|Tampa Bay Tartan Ball|Tickets for this event|Paid tickets|Volunteering is free|Buy tickets/i.test(message.textContent || "")) {
+          message.className = "msg"; message.textContent = "";
         }
       }
       try {
@@ -884,6 +921,7 @@
         }
       }
       syncSignupButton();
+      recognizeMember();
       const dropdownActions = { members: 1, closed: 1, tickets: 1, "tickets-soon": 1, rsvp: 1 };
       const signupEvents = (ours || []).filter((ev) => {
         if (window.kosCalendar && window.kosCalendar.publicSignupAction && window.kosCalendar.signupDropdownAction) {
@@ -1049,14 +1087,14 @@
       const now = new Date();
       const allDated = (events || [])
         .filter((e)=> e.start_time && String(e.status || "published").toLowerCase() !== "cancelled")
-        .map((e)=> ({ date: new Date(e.start_time), end: e.end_time ? new Date(e.end_time) : null, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only, start_time: e.start_time, end_time: e.end_time }))
+        .map((e)=> ({ id: e.id, date: new Date(e.start_time), end: e.end_time ? new Date(e.end_time) : null, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only, start_time: e.start_time, end_time: e.end_time, event_type: e.event_type, source: e.source, ticket_payment_url: e.ticket_payment_url, ticket_price_cents: e.ticket_price_cents, registration_closes_at: e.registration_closes_at, external_url: e.external_url }))
         .filter((e)=> !isNaN(e.date))
         .sort((a, b)=> a.date - b.date);
       // Rolling feed: hide events after they have ended, soonest first.
       const dated = allDated.filter((e)=> stillOnDatesList(e, now));
       const undated = (events || [])
         .filter((e)=> !e.start_time && String(e.status || "published").toLowerCase() === "published")
-        .map((e)=> ({ name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only }));
+        .map((e)=> ({ id: e.id, name: e.name, location: publicWhere(e), description: e.description || "", ikc: isIkcEvent(e), url: e.external_url || "", membersOnly: !!e.members_only, event_type: e.event_type, source: e.source, ticket_payment_url: e.ticket_payment_url, ticket_price_cents: e.ticket_price_cents, registration_closes_at: e.registration_closes_at, external_url: e.external_url, start_time: e.start_time, end_time: e.end_time }));
       // Month grids are Krewe of Shamrock only, starting at the current month.
       const nowP = nyFields(now);
       const kosDated = allDated.filter((e)=> !e.ikc).filter((e)=> {
@@ -1088,9 +1126,9 @@
           const name = ev.ikc && ev.url
             ? '<a href="' + esc(ev.url) + '" target="_blank" rel="noopener" style="color:#cdb9ec;text-decoration:none;">' + esc(ev.name) + ' &#8599;</a>'
             : esc(ev.name);
-          return '<li data-source="' + (ev.ikc ? "ikc" : "krewe") + '" style="display:flex;gap:14px;align-items:baseline;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
+          return '<li data-source="' + (ev.ikc ? "ikc" : "krewe") + '" style="display:flex;gap:14px;align-items:flex-start;padding:9px 14px;border-bottom:1px solid rgba(236,208,126,.16);">' +
                  '<span style="flex:1 1 220px;font-family:var(--display);font-size:14px;color:var(--gold-light);">' + esc(when) + '</span>' +
-                 '<span style="flex:1;">' + chip + name + loc + listDetail(ev) + '</span></li>';
+                 '<span style="flex:1 1 280px;">' + chip + name + loc + listDetail(ev) + memberRsvpHtml(ev) + '</span></li>';
         };
         if (!dated.length && !undated.length) {
           listEl.innerHTML = '<li style="padding:18px 14px;text-align:center;color:#f1ead4;">More dates coming soon.</li>';
@@ -1126,10 +1164,6 @@
           return;
         }
       }
-      if (!volunteering && selected && selected.dataset.needsTickets) {
-        showMessage("Paid tickets for this event aren't linked yet. An officer needs to paste the Zeffy campaign URL in Event Studio.", "error");
-        return;
-      }
       message.className = "msg"; btn.disabled = true; btn.textContent = "Submitting…";
       const role = roleEarly;
       const plannedRaw = document.getElementById("plannedHours").value;
@@ -1155,7 +1189,8 @@
       const mealChoice = (mealEl && mealWrapEl && mealWrapEl.style.display !== "none")
         ? (mealEl.value || "").trim() || null
         : null;
-      const { data, error } = await supabase.rpc("rsvp_to_event", {
+      const phone = (document.getElementById("phone").value || "").trim();
+      const payload = {
         p_event_id: eventSelect.value,
         p_first_name: document.getElementById("firstName").value.trim(),
         p_last_name: document.getElementById("lastName").value.trim(),
@@ -1169,7 +1204,14 @@
         p_ticket_type: ticketLabel,
         p_payment_status: payStatus,
         p_meal_choice: mealChoice
-      });
+      };
+      if (phone) payload.p_phone = phone;
+      let { data, error } = await supabase.rpc("rsvp_to_event", payload);
+      if (error && phone && /p_phone|schema cache|Could not find the function/i.test(error.message || "")) {
+        delete payload.p_phone;
+        payload.p_note = [note, "Phone: " + phone].filter(Boolean).join(". ");
+        ({ data, error } = await supabase.rpc("rsvp_to_event", payload));
+      }
       if (error) {
         btn.disabled = false; resync();
         showMessage("Something went wrong submitting your RSVP. Please try again.", "error");
@@ -1180,17 +1222,13 @@
         showMessage((data && data.message) || "Please check your details and try again.", "error");
         return;
       }
-      // After saving intent, open Zeffy (or Tartan Ball) checkout when buying tickets.
       if (goingToCheckout && data.status !== "waitlisted") {
-        window.open(selected.dataset.redirect, "_blank", "noopener,noreferrer");
         btn.disabled = false;
         form.reset();
         document.getElementById("guests").value = "0";
         if (raffleEl) raffleEl.value = "0";
         resync();
-        showMessage(selected.dataset.checkoutKind === "tartan"
-          ? "Details saved. Opening Tampa Bay Tartan Ball tickets in a new tab."
-          : "Details saved (guests + raffle). Opening Zeffy ticket checkout in a new tab.", "success");
+        showMessage("You're signed up. Use Buy tickets when you are ready to pay.", "success");
         const calPending = document.getElementById("rsvpCalendar");
         if (calPending && selected && selected.dataset.startTime && window.kosCalendar) {
           const icsPending = {
@@ -1212,8 +1250,8 @@
         const pendingHrs = data.volunteer_hours_pending;
         doneMsg = (doneMsg ? doneMsg + " " : "") + (
           pendingHrs
-            ? pendingHrs + " volunteer hours are pending approval."
-            : "Pending volunteer hours were logged for the host or an officer to confirm."
+            ? pendingHrs + " volunteer hours were logged."
+            : "Volunteer hours were logged."
         );
       }
       if (data.status !== "waitlisted" && data.meeting_url) {
@@ -1236,6 +1274,28 @@
         }
       }
     });
+
+    async function recognizeMember() {
+      const hint = document.getElementById("memberHubHint");
+      try {
+        const sessionRes = await supabase.auth.getSession();
+        const session = sessionRes && sessionRes.data && sessionRes.data.session;
+        if (!session) return;
+        const out = await supabase.rpc("get_my_krewe_profile");
+        const profile = out && out.data;
+        if (!profile || !profile.email) return;
+        const first = document.getElementById("firstName");
+        const last = document.getElementById("lastName");
+        const email = document.getElementById("email");
+        const phone = document.getElementById("phone");
+        if (first && !first.value && profile.first_name) first.value = profile.first_name;
+        if (last && !last.value && profile.last_name) last.value = profile.last_name;
+        if (email && !email.value) email.value = profile.email;
+        if (phone && !phone.value && profile.phone) phone.value = profile.phone;
+        if (hint) hint.dataset.signedIn = "1";
+        if (typeof window.__kosSyncSignup === "function") window.__kosSyncSignup();
+      } catch (_) {}
+    }
 
     loadEvents();
   </script>

@@ -1,5 +1,5 @@
 // Who's coming: Officer Desk RSVP list. Fixtures only. The SQL file is not applied.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 const fs = require("fs");
 const path = require("path");
@@ -28,7 +28,8 @@ function fixture() {
   const basket = "ev-basket";
   return {
     events: [
-      { id: basket, name: "Basket Social", start_time: addDays(today, 12), status: "published" },
+      { id: basket, name: "Basket Social", start_time: addDays(today, 12), status: "published", source: "krewe" },
+      { id: "ev-ikc", name: "Fill the Float Toy Drive", start_time: addDays(today, 16), status: "published", source: "ikc" },
       { id: "ev-quiz", name: "Pub quiz", start_time: addDays(today, 20), status: "published" },
       { id: "ev-meeting", name: "General meeting", start_time: addDays(today, -1), status: "published" },
       { id: "ev-golf", name: "Mini Golf and Lunch", start_time: addDays(today, -40), status: "published" }
@@ -93,7 +94,22 @@ function fixture() {
           }
         ]
       },
-      "ev-golf": { rows: [] }
+      "ev-golf": { rows: [] },
+      "ev-ikc": {
+        rows: [
+          {
+            name: "Nia Walsh",
+            audience: "Member",
+            source: "Member RSVP",
+            status: "registered",
+            guests: 3,
+            signed_up_at: addDays(today, -1),
+            phone: "(813) 555-0110",
+            email: "nia@example.com",
+            counts: true
+          }
+        ]
+      }
     }
   };
 }
@@ -184,13 +200,17 @@ test.describe("Who's coming", () => {
 
     const picker = card.locator("#kosWcPicker");
     await expect(picker).toContainText("Basket Social");
+    await expect(picker).toContainText("Fill the Float Toy Drive");
+    await expect(picker).toContainText("IKC");
     await expect(picker).toContainText("Pub quiz");
     await expect(picker).toContainText("General meeting");
     await expect(picker).not.toContainText("Mini Golf");
     const labels = await picker.locator(".kos-wc-event").allInnerTexts();
     expect(labels[0]).toContain("Basket Social");
-    expect(labels[1]).toContain("Pub quiz");
-    expect(labels[2]).toContain("General meeting");
+    expect(labels[1]).toContain("Fill the Float Toy Drive");
+    expect(labels[1]).toContain("IKC");
+    expect(labels[2]).toContain("Pub quiz");
+    expect(labels[3]).toContain("General meeting");
     await expect(picker.locator('[aria-pressed="true"]')).toContainText("Basket Social");
     const eventBtn = picker.locator(".kos-wc-event").first();
     expect((await eventBtn.boundingBox()).height).toBeGreaterThanOrEqual(44);
@@ -270,6 +290,19 @@ test.describe("Who's coming", () => {
     expect(csv).not.toMatch(/[—–]/);
 
     await shot(page, card.locator("#kosWcRoster"), "whos-coming-list-390.png");
+    await picker.getByRole("button", { name: /Fill the Float Toy Drive/ }).click();
+    await expect(picker.locator('[aria-pressed="true"]')).toContainText("IKC");
+    await expect(list).toContainText("Nia Walsh");
+    await expect(list).toContainText("Guests: 3");
+    await expect(card.locator("#kosWcMembers")).toHaveText("4");
+    await expect(card.locator("#kosWcCombined")).toHaveText("4");
+    const [ikcDownload] = await Promise.all([
+      page.waitForEvent("download"),
+      card.locator("#kosWcCsv").click()
+    ]);
+    expect(ikcDownload.suggestedFilename()).toBe("whos-coming-fill-the-float-toy-drive.csv");
+    const ikcCsv = fs.readFileSync(await ikcDownload.path(), "utf8");
+    expect(ikcCsv).toContain("Nia Walsh,Member,Member RSVP,Registered,3");
     assertHealthy(expect, report, "whos coming list");
   });
 });

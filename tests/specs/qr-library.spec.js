@@ -3,7 +3,7 @@
 // the live database, so these tests mount the studio script on a light page
 // with a stubbed Supabase client: rendering, anonymous scan counts, the
 // slug auto-fill, and Show QR are covered end to end in the browser.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 async function mountStudio(page) {
   await page.goto("/raffle-qr-sheet.html"); // loads vendor QRCode + kosQR

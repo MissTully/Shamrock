@@ -73,10 +73,12 @@ test("SantaFest share page includes Open Graph and Twitter tags", async () => {
   assert.equal(html.includes(">Share on Facebook<"), false);
   assert.equal(html.includes("123 Hidden Lane"), false);
   assert.equal(html.includes("Gate code 4321"), false);
-  assert.match(html, /Parade details/);
+  assert.match(html, /class="kos-quiet-rsvp"[^>]*>RSVP</);
+  assert.match(html, /\/event-signup\.html\?event=fixture-santafest#rsvpForm/);
+  assert.equal(html.includes("Sign in to RSVP"), false);
+  assert.equal(html.includes("/members.html?next="), false);
   assert.match(html, /class="share-kicker">Parade</);
   assert.match(html, /href="\/parades\.html">Back to Parades</);
-  assert.equal(html.includes("/event-signup.html?event=fixture-santafest"), false);
 });
 
 test("unpublished, cancelled, private, and missing events do not leak", async () => {
@@ -172,9 +174,40 @@ test("an Inter-Krewe event links to the host site", () => {
   });
   assert.match(html, /href="https:\/\/example-krewe\.example\/rsvp"/);
   assert.match(html, /Details on the host krewe/);
+  assert.equal(html.includes("Sign in to RSVP"), false);
+  assert.equal(/<a class="kos-quiet-rsvp"/.test(html), false);
+  assert.equal(html.includes(">RSVP<"), false);
   assert.equal(html.includes("/event-signup.html?event="), false);
+  assert.equal(html.includes("Share on my Facebook"), false);
+  assert.equal(html.includes("Copy link"), false);
+  assert.equal(html.includes('class="kos-share"'), false);
+  assert.equal(html.includes("kos-share-native"), false);
+  assert.equal(html.includes("Share in our Krewe group"), false);
   assert.equal(html.includes('href="/parades.html"'), false);
-  assert.equal(html.includes('href="/members.html"'), false);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+});
+
+test("a ticketed event keeps member RSVP beside Buy tickets", () => {
+  const html = share.renderEventSharePage({
+    id: "b7fe09b4-cbff-4c86-8007-878b3836041c",
+    name: "Holly Jolly Light Up Party (Bar Crawl)",
+    source: "krewe",
+    status: "published",
+    is_public: true,
+    event_type: "social",
+    start_time: "2026-12-12T23:00:00.000Z",
+    location: "Tampa",
+    ticket_payment_url: "https://pci.jotform.com/form/262187545644061",
+    ticket_price_cents: 2500,
+    description: "Bar crawl."
+  });
+  assert.match(html, /class="kos-quiet-rsvp"[^>]*>RSVP</);
+  assert.match(html, /\/event-signup\.html\?event=b7fe09b4-cbff-4c86-8007-878b3836041c#rsvpForm/);
+  assert.equal(html.includes("Sign in to RSVP"), false);
+  assert.match(html, /Buy tickets \(\$25\)/);
+  assert.match(html, /https:\/\/pci\.jotform\.com\/form\/262187545644061/);
+  assert.equal(html.includes("Share in our Krewe group"), false);
+  assert.equal(html.includes("—"), false);
 });
 
 test("the members group URL is one shared constant and stays off the public page", () => {

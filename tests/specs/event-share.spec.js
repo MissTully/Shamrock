@@ -1,5 +1,5 @@
 // Share buttons and the per-event page. Offline fixtures only.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const SANTA_ID = "6918ff19-f232-4ddf-83d7-82f0a141eb95";
@@ -267,10 +267,11 @@ test.describe("public event share buttons", () => {
     const featured = shareBar(page.locator("#featured-event"));
     await featured.scrollIntoViewIfNeeded();
     await expectPublicShareBar(featured, SANTA_ID);
-    await expect(page.locator("#featured-event")).toContainText("Parade details");
+    await expect(page.locator("#featured-event a.kos-quiet-rsvp")).toHaveAttribute("href", "/event-signup.html?event=" + SANTA_ID + "#rsvpForm");
+    await expect(page.locator("#featured-event")).not.toContainText("Sign in to RSVP");
 
     const card = page.locator("#eventPreviewStrip .ev-card", { hasText: "Morning Coffee" });
-    await expect(card).toContainText("Registration closed");
+    await expect(card).toContainText("Registration is closed");
     await expectPublicShareBar(shareBar(card), "started-social");
     await expectNoHorizontalOverflow(page);
 

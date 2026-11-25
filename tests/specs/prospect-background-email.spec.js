@@ -1,7 +1,7 @@
 // Sample of the Move to background check prospect email.
 // The live letter is built in SQL. This checks the rendered sample and that
 // the SQL keeps the pause off and stores the payment links outside the HTML.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const fs = require("fs");
 const path = require("path");
 
@@ -13,20 +13,12 @@ const SQL = fs.readFileSync(
 const LINKS = [
   ["Finish your application", "membership-full-application.html?token="],
   ["Pay the individual fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-individual"],
-  ["Pay the couple fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"],
-  ["Pay Full Krewe dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership"],
-  ["Pay Associate dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-associate-membership"],
-  ["Pay Auxiliary dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-auxiliary-membership"],
-  ["Pay leave of absence dues", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-membership-2"]
+  ["Pay the couple fee", "https://www.zeffy.com/en-US/ticketing/krewe-of-shamrock-background-check-couple"]
 ];
 
 const EXPLAINERS = [
   ["Just you on the application.", "Pay the individual fee"],
-  ["The two of you, applying together.", "Pay the couple fee"],
-  ["You're a voting member, and you march in all the parades", "Pay Full Krewe dues"],
-  ["There's no vote, and you don't take on the 12/12 volunteer commitment.", "Pay Associate dues"],
-  ["The fee already includes the background check and the membership portion.", "Pay Auxiliary dues"],
-  ["That's leave of absence.", "Pay leave of absence dues"]
+  ["The two of you, applying together.", "Pay the couple fee"]
 ];
 
 test("prospect email sample shows an explainer before each pay link", async ({ page }) => {
@@ -35,7 +27,9 @@ test("prospect email sample shows an explainer before each pay link", async ({ p
   await expect(body).toContainText("We're so glad you're joining the Krewe of Shamrock");
   await expect(body).toContainText("Let's finish your application");
   await expect(body).toContainText("Your background check fee");
-  await expect(body).toContainText("Pick the membership that fits");
+  await expect(body).toContainText("Membership dues come later");
+  await expect(body).toContainText("Your dues link comes after the background check passes");
+  await expect(body).not.toContainText("Pay Full Krewe dues");
   await expect(body).toContainText("treasurer@kreweofshamrock.com");
   await expect(body).toContainText("Welcome to the Krewe. We can't wait to have you with us.");
   await expect(body).not.toContainText("If you didn't ask to join");
@@ -51,8 +45,11 @@ test("prospect email sample shows an explainer before each pay link", async ({ p
   }
   expect(html).not.toMatch(/\d{3}-\d{2}-\d{4}/);
   expect(html).not.toContain("—");
+  expect(html).not.toContain("Pay Full Krewe dues");
+  expect(html).not.toContain("Pay Associate dues");
+  expect(html).not.toContain("zeffy.com/en-US/ticketing/krewe-of-shamrock-membership");
   await page.screenshot({
-    path: "/opt/cursor/artifacts/screenshots/prospect-background-check-email.png",
+    path: "/opt/cursor/artifacts/background-check-email.png",
     fullPage: true
   });
 });
@@ -110,6 +107,41 @@ test("joining packet template SQL keeps payment links out of the editable letter
   );
   expect(defaults).toContain("We're glad you're joining the Krewe");
   expect(defaults).toContain("We're so glad you're joining the Krewe of Shamrock");
+  expect(defaults).toContain("Membership dues come later");
+  expect(defaults).toContain("Your dues link comes after the background check passes");
+  expect(defaults).toContain("The rest of this note is simply how to finish joining");
+  expect(defaults).not.toContain("The Membership Chair has opened the background check");
+  expect(defaults).not.toContain("does not include a dues pay button");
   expect(defaults).not.toMatch(/https?:\/\//);
   expect(defaults).not.toContain("—");
+  expect(templateSql).not.toContain("Pay Full Krewe dues");
+
+  const seedSql = fs.readFileSync(
+    path.join(__dirname, "../../sql/kos_joining_packet_template_seed.sql"),
+    "utf8"
+  );
+  expect(seedSql).toContain("create table if not exists public.kos_joining_packet_template");
+  expect(seedSql).toContain("on conflict (id) do nothing");
+  expect(seedSql).toContain("kos_prospect_background_check_email_html(text, text, jsonb)");
+  expect(seedSql).toContain("jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))");
+  expect(seedSql).toContain("Membership dues come later");
+  expect(seedSql).toContain("The rest of this note is simply how to finish joining");
+  expect(seedSql).not.toContain("The Membership Chair has opened the background check");
+  expect(seedSql).not.toContain("does not include a dues pay button");
+  expect(seedSql).not.toContain("Pay Full Krewe dues");
+  expect(seedSql).not.toContain("update public.kos_runtime_flags");
+  expect(seedSql).not.toMatch(/membership_prospect_emails'[\s\S]{0,200}'enabled',\s*true/);
+
+  const invoiceSql = fs.readFileSync(
+    path.join(__dirname, "../../sql/kos_membership_background_check_invoice.sql"),
+    "utf8"
+  );
+  const sendFn = invoiceSql.slice(
+    invoiceSql.indexOf("function public.send_membership_full_application"),
+    invoiceSql.indexOf("function public.submit_membership_full_application")
+  );
+  expect(sendFn).toContain("kos_prospect_background_check_email_html(text,text,jsonb)");
+  expect(sendFn).toContain("jsonb_build_object('fee_type', coalesce(rec.application_fee_type, ''))");
+  expect(sendFn).not.toContain("Pay Full Krewe dues");
+  expect(sendFn).toContain("does not include a dues link");
 });

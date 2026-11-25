@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
 
+# Cancel an in-progress run when the same branch or pull request is pushed
+# again, so a burst of commits does not stack full Playwright suites.
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   regression:
     runs-on: ubuntu-latest

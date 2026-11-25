@@ -126,10 +126,14 @@ test("merchandise co-chairs include merchandise reports, and finance reports sit
   const treasurer = rules.toolsForTitles(["treasurer"]);
   assert.ok(treasurer.includes("reports.finance"));
   assert.ok(treasurer.includes("payments"));
+  assert.ok(treasurer.includes("renewals"));
   assert.ok(!treasurer.includes("applications"));
   const president = rules.toolsForTitles(["president"]);
   assert.ok(president.includes("reports.finance"));
   assert.ok(president.includes("applications"));
+  assert.ok(president.includes("renewals"));
+  assert.ok(rules.toolsForTitles(["chair_membership"]).includes("renewals"));
+  assert.ok(!rules.toolsForTitles(["secretary"]).includes("renewals"));
   const finance = rules.toolsForTitles(["chair_finance"]);
   assert.ok(finance.includes("reports.finance"));
 });

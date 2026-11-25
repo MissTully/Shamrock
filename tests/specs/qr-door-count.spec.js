@@ -1,7 +1,7 @@
 // Live door count (Phase 4 of QR_LIBRARY_BUILD_PLAN.md). Mounts the real QR
 // studio script against a stubbed database client, as qr-library.spec.js
 // does, and drives the "Live door count" button on a meeting row.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 
 async function mountStudioWithMeeting(page) {
   await page.goto("/raffle-qr-sheet.html"); // loads vendor QRCode + kosQR

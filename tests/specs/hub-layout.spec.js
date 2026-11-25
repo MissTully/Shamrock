@@ -1,6 +1,6 @@
 // Computer Hub vs phone app, #get-app on both, and layout shift.
 // Offline fixtures only. This does not write to the live database.
-const { test, expect } = require("@playwright/test");
+const { test, expect } = require("./kos-fixtures");
 const { watchPage, assertHealthy, unlockMemberHub } = require("./helpers");
 
 const ANNOUNCEMENT = {
