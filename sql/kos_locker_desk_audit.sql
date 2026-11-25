@@ -13,6 +13,8 @@
 --     (Kate Sorsby was on the report for LL2 and missing from inventory).
 --   * Links a locker payment only when one reservation matches the payer
 --     and the size. Paid date becomes payments.created_at.
+--   * Otherwise links it straight to a held locker when the payer is the
+--     holder and the size matches (Doug Tully, RL7 large).
 --   * Marks LL4 comp for King and Queen and drops any payment on it.
 --   * Clears paid_at when no payment is linked, including dates that only
 --     existed because the inventory was seeded on 2026-09-30.
@@ -223,6 +225,75 @@ from (
 ) src
 where l.id = src.locker_id
   and l.payment_id is null;
+
+-- 3b) A holder who paid but has no open reservation (Doug Tully on RL7:
+-- his small request was cancelled when he took the large locker).
+-- Link the payment straight to the locker when the payer is the holder,
+-- the size agrees, and exactly one held locker matches. Never LL4 or comp.
+do $$
+declare
+  rec record;
+  v_count int;
+  v_lock uuid;
+  v_num text;
+  v_name text;
+  v_size text;
+begin
+  for rec in
+    select
+      p.id,
+      p.member_id,
+      p.payer_name,
+      public.kos_locker_payment_size_safe(p.description, p.amount_cents, p.raw) as locker_size
+    from public.payments p
+    where lower(p.status) in ('succeeded', 'paid', 'complete', 'completed')
+      and public.kos_locker_payment_size_safe(p.description, p.amount_cents, p.raw) is not null
+      and not exists (select 1 from public.lockers l where l.payment_id = p.id)
+      and not exists (
+        select 1 from public.locker_reservations r
+        where r.payment_id = p.id and r.status <> 'cancelled'
+      )
+    order by p.created_at, p.id
+  loop
+    select count(*) into v_count
+    from public.lockers l
+    where l.payment_id is null
+      and l.status is distinct from 'comp'
+      and upper(l.locker_number) <> 'LL4'
+      and (l.member_id is not null or nullif(btrim(coalesce(l.holder_name, '')), '') is not null)
+      and (rec.locker_size = 'unknown' or l.size = rec.locker_size)
+      and public.kos_locker_audit_name_match(l.member_id, l.holder_name, rec.member_id, rec.payer_name);
+
+    if v_count <> 1 then
+      continue;
+    end if;
+
+    select l.id, l.locker_number,
+           coalesce(public.kos_locker_person_name(l.member_id, l.holder_name), 'Name missing'),
+           l.size
+      into v_lock, v_num, v_name, v_size
+    from public.lockers l
+    where l.payment_id is null
+      and l.status is distinct from 'comp'
+      and upper(l.locker_number) <> 'LL4'
+      and (l.member_id is not null or nullif(btrim(coalesce(l.holder_name, '')), '') is not null)
+      and (rec.locker_size = 'unknown' or l.size = rec.locker_size)
+      and public.kos_locker_audit_name_match(l.member_id, l.holder_name, rec.member_id, rec.payer_name)
+    limit 1;
+
+    update public.lockers
+       set payment_id = rec.id,
+           payment_unverified = false
+     where id = v_lock
+       and payment_id is null;
+
+    insert into locker_audit_report (sort, kind, locker_number, member_name, size, detail)
+    values (
+      31, 'payment_linked', v_num, v_name, v_size,
+      'Linked the holder''s locker payment to this locker. Paid date is the payment date.'
+    );
+  end loop;
+end $$;
 
 -- 4) LL4 is the comp locker.
 with fixed as (

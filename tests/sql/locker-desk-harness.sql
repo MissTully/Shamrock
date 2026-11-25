@@ -123,7 +123,8 @@ insert into public.members (id, first_name, last_name) values
   ('11111111-1111-4111-8111-111111111102', 'Casey', 'Morgan'),
   ('11111111-1111-4111-8111-111111111103', 'Kim', 'Kelly'),
   ('11111111-1111-4111-8111-111111111104', 'Peter', 'Caughey'),
-  ('11111111-1111-4111-8111-111111111105', 'Sam', 'Example');
+  ('11111111-1111-4111-8111-111111111105', 'Sam', 'Example'),
+  ('11111111-1111-4111-8111-111111111106', 'Drew', 'Holder');
 
 insert into public.lockers (id, locker_number, size, holder_name, status, notes, member_id, created_at) values
   ('22222222-2222-4222-8222-222222222201', 'LL2', 'large', null, 'available', 'Tim Fitzpatrick inventory 2026-09-30.', null, '2026-09-30'),
@@ -133,11 +134,13 @@ insert into public.lockers (id, locker_number, size, holder_name, status, notes,
   ('22222222-2222-4222-8222-222222222205', 'RL5', 'large', 'Sam Example', 'assigned', null, '11111111-1111-4111-8111-111111111105', '2026-09-30'),
   ('22222222-2222-4222-8222-222222222206', 'RS1', 'small', null, 'available', null, null, '2026-09-30'),
   ('22222222-2222-4222-8222-222222222207', 'LL6', 'large', null, 'available', null, null, '2026-09-30'),
-  ('22222222-2222-4222-8222-222222222208', 'RS2', 'small', null, 'available', null, null, '2026-09-30');
+  ('22222222-2222-4222-8222-222222222208', 'RS2', 'small', null, 'available', null, null, '2026-09-30'),
+  ('22222222-2222-4222-8222-222222222209', 'RL7', 'large', 'Drew Holder', 'paid', 'Tim Fitzpatrick inventory 2026-09-30.', '11111111-1111-4111-8111-111111111106', '2026-09-30');
 
 insert into public.payments (id, provider, provider_event_id, amount_cents, status, payer_name, description, product_kind, member_id, created_at) values
   ('33333333-3333-4333-8333-333333333301', 'zeffy', 'evt-casey', 7500, 'succeeded', 'Casey Morgan', 'Krewe locker rental small', 'other', '11111111-1111-4111-8111-111111111102', '2026-10-06 16:00+00'),
-  ('33333333-3333-4333-8333-333333333302', 'zeffy', 'evt-kate', 20000, 'succeeded', 'Kate Example', 'Krewe locker rental large', 'other', null, '2026-10-03 16:00+00');
+  ('33333333-3333-4333-8333-333333333302', 'zeffy', 'evt-kate', 20000, 'succeeded', 'Kate Example', 'Krewe locker rental large', 'other', null, '2026-10-03 16:00+00'),
+  ('33333333-3333-4333-8333-333333333303', 'zeffy', 'evt-drew', 20000, 'succeeded', 'Drew Holder', 'Krewe locker rental large', 'other', null, '2026-11-10 16:00+00');
 
 alter table public.locker_reservations disable trigger locker_reservation_paid_from_payment;
 insert into public.locker_reservations (id, member_id, requester_name, size, status, locker_id, paid_at, payment_id, created_at) values
@@ -145,7 +148,9 @@ insert into public.locker_reservations (id, member_id, requester_name, size, sta
   ('44444444-4444-4444-8444-444444444402', '11111111-1111-4111-8111-111111111104', 'Peter Caughey', 'large', 'assigned', '22222222-2222-4222-8222-222222222203', '2026-09-30', null, '2026-09-02'),
   ('44444444-4444-4444-8444-444444444403', '11111111-1111-4111-8111-111111111102', 'Casey Morgan', 'small', 'queued', null, null, '33333333-3333-4333-8333-333333333301', '2026-10-01'),
   ('44444444-4444-4444-8444-444444444404', null, 'Kate Example', 'large', 'assigned', '22222222-2222-4222-8222-222222222201', '2026-09-30', null, '2026-09-20'),
-  ('44444444-4444-4444-8444-444444444405', '11111111-1111-4111-8111-111111111105', 'Sam Example', 'small', 'queued', null, null, null, '2026-09-15');
+  ('44444444-4444-4444-8444-444444444405', '11111111-1111-4111-8111-111111111105', 'Sam Example', 'small', 'queued', null, null, null, '2026-09-15'),
+  -- Holder of a large locker whose old small request was cancelled.
+  ('44444444-4444-4444-8444-444444444406', '11111111-1111-4111-8111-111111111106', 'Drew Holder', 'small', 'cancelled', null, null, null, '2026-09-13');
 alter table public.locker_reservations enable trigger locker_reservation_paid_from_payment;
 
 select set_config('kos.test_officer', '0', false);
@@ -255,6 +260,25 @@ begin
     where kind = 'unverified' and locker_number = 'RL3'
   ) then
     raise exception 'unverified exception missing';
+  end if;
+
+  -- Holder paid with no open reservation: payment goes straight to the locker.
+  if (select payment_id from public.lockers where locker_number = 'RL7')
+     is distinct from '33333333-3333-4333-8333-333333333303'::uuid then
+    raise exception 'RL7 should carry the holder''s large locker payment';
+  end if;
+  if (select status from public.lockers where locker_number = 'RL7') <> 'assigned' then
+    raise exception 'RL7 should be assigned once its payment is linked';
+  end if;
+  if not exists (
+    select 1 from locker_audit_report
+    where kind = 'payment_linked' and locker_number = 'RL7'
+  ) then
+    raise exception 'RL7 link should be on the officer list';
+  end if;
+  -- Kate's payment must not jump to another locker.
+  if (select count(*) from public.lockers where payment_id = '33333333-3333-4333-8333-333333333302') > 1 then
+    raise exception 'one payment must cover at most one locker';
   end if;
 end $$;
 
